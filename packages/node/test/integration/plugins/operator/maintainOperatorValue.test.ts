@@ -7,7 +7,7 @@ import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     createTestWallet,
     setupTestOperatorContract,
     sponsor,
@@ -45,7 +45,7 @@ describe('maintainOperatorValue', () => {
             }
         })
         const sponsorer = await createTestWallet()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)

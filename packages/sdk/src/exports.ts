@@ -94,7 +94,7 @@ export {
 import {
     delegate,
     undelegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     setupTestOperatorContract,
     SetupTestOperatorContractOpts,
     SetupOperatorContractReturnType,
@@ -105,7 +105,7 @@ import {
     unstake,
     getProvider,
     createTestWallet,
-    DeploySponsorshipContractOpts,
+    DeployTestSponsorshipContractOpts,
     getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
@@ -118,7 +118,7 @@ import {
 const _operatorContractUtils = {
     delegate,
     undelegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     setupTestOperatorContract,
     sponsor,
     stake,
@@ -131,7 +131,7 @@ const _operatorContractUtils = {
     getOperatorContract
 }
 export { _operatorContractUtils }
-export type { SetupTestOperatorContractOpts, SetupOperatorContractReturnType, DeployTestOperatorContractOpts, DeploySponsorshipContractOpts }
+export type { SetupTestOperatorContractOpts, SetupOperatorContractReturnType, DeployTestOperatorContractOpts, DeployTestSponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Eip1193Provider, Overrides } from 'ethers'

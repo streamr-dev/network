@@ -10,7 +10,7 @@ import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     createTestWallet,
     getProvider,
     setupTestOperatorContract,
@@ -50,10 +50,10 @@ describe('checkOperatorValueBreach', () => {
         const { operatorWallet, operatorContract } = await setupTestOperatorContract(deployConfig)
         const sponsorer = await createTestWallet()
         await delegate(operatorWallet, await operatorContract.getAddress(), 20000n)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
+        const sponsorship1 = await deployTestSponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship1.getAddress(), 25000n)
         await stake(operatorContract, await sponsorship1.getAddress(), 10000n)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200n, streamId, deployer: operatorWallet })
+        const sponsorship2 = await deployTestSponsorshipContract({ earningsPerSecond: 200n, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship2.getAddress(), 25000n)
         await stake(operatorContract, await sponsorship2.getAddress(), 10000n)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()

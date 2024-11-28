@@ -14,7 +14,7 @@ import { createClient, createTestStream, formConfig, startBroker } from '../../.
 
 const {
     delegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     createTestWallet,
     setupTestOperatorContract,
     sponsor,
@@ -55,7 +55,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(subscriber, module)
 
         const sponsorer = await createTestWallet()
-        const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
         await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
@@ -113,7 +113,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(client, module)
 
         const sponsorer = await createTestWallet()
-        const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
         await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)

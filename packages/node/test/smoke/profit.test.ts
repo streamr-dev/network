@@ -36,7 +36,7 @@ const {
     setupTestOperatorContract,
     getProvider,
     createTestWallet,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     sponsor,
     delegate,
     undelegate,
@@ -106,7 +106,7 @@ describe('profit', () => {
                 operatorsCutPercent: OPERATORS_CUT_PERCENTAGE
             }
         }))
-        sponsorshipContract = await deploySponsorshipContract({
+        sponsorshipContract = await deployTestSponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas

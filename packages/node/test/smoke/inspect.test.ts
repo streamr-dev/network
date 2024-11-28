@@ -40,7 +40,7 @@ const {
     setupTestOperatorContract,
     getProvider,
     createTestWallet,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     delegate,
     stake,
     getTestTokenContract,
@@ -222,7 +222,7 @@ describe('inspect', () => {
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await createTestWallet()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {

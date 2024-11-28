@@ -8,7 +8,7 @@ import { Operator } from '../../src/contracts/Operator'
 import {
     SetupOperatorContractReturnType,
     delegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     getTestAdminWallet,
     setupTestOperatorContract,
     sponsor,
@@ -68,11 +68,11 @@ describe('Operator', () => {
         streamId2 = concurrentTasks[1]
         deployedOperator = concurrentTasks[2]
 
-        sponsorship1 = await deploySponsorshipContract({
+        sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
             deployer: deployedOperator.operatorWallet
         })
-        sponsorship2 = await deploySponsorshipContract({
+        sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })

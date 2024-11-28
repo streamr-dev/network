@@ -108,7 +108,7 @@ export async function deployTestOperatorContract(opts: DeployTestOperatorContrac
  * @deprecated
  * @hidden
  */
-export interface DeploySponsorshipContractOpts {
+export interface DeployTestSponsorshipContractOpts {
     streamId: string
     deployer: Wallet
     minOperatorCount?: number
@@ -123,7 +123,7 @@ export interface DeploySponsorshipContractOpts {
     }
 }
 
-export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
+export async function deployTestSponsorshipContract(opts: DeployTestSponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
