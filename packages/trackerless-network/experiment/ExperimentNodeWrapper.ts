@@ -82,6 +82,22 @@ export class ExperimentNodeWrapper {
             }
         })
         this.send(message)
+        setInterval(() => {
+            const memoryUsedInMB = process.memoryUsage().heapUsed / 1024 / 1024
+            if (memoryUsedInMB > 150) {
+                logger.warn('Memory usage exceeded 150MB, sending alert')
+                const message = ExperimentClientMessage.create({
+                    id: this.id,
+                    payload: {
+                        oneofKind: 'highMemoryAlarm',
+                        highMemoryAlarm: {
+                            memoryUsage: memoryUsedInMB
+                        }
+                    }
+                })
+                this.send(message)
+            }
+        }, 30 * 1000)
     }
 
     createNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string): void {

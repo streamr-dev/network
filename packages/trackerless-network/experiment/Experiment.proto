@@ -32,6 +32,7 @@ message ExperimentClientMessage {
         ExperimentResults experimentResults = 4;
         InstructionCompleted instructionCompleted = 5;
         PropagationResults propagationResults = 6;
+        HighMemoryAlarm highMemoryAlarm = 7;
     }
 }
 
@@ -109,4 +110,8 @@ message MeasureTimeToData {
 
 message PingExperiment {
     repeated string ips = 1;
+}
+
+message HighMemoryAlarm {
+    int64 memoryUsage = 1;
 }

@@ -233,7 +233,6 @@ const run = async () => {
         logger.info('all nodes started')
     }
     logger.info(`experiment ${experiment} completed`)
-
     if (env === 'aws') {
         await Promise.all(REGIONS.map(async (region) => stopAwsNodes(region)))
     } else if (env === 'local') {

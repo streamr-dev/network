@@ -111,6 +111,12 @@ export interface ExperimentClientMessage {
          */
         propagationResults: PropagationResults;
     } | {
+        oneofKind: "highMemoryAlarm";
+        /**
+         * @generated from protobuf field: HighMemoryAlarm highMemoryAlarm = 7;
+         */
+        highMemoryAlarm: HighMemoryAlarm;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -302,6 +308,15 @@ export interface PingExperiment {
      */
     ips: string[];
 }
+/**
+ * @generated from protobuf message HighMemoryAlarm
+ */
+export interface HighMemoryAlarm {
+    /**
+     * @generated from protobuf field: int64 memoryUsage = 1;
+     */
+    memoryUsage: number;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
@@ -331,7 +346,8 @@ class ExperimentClientMessage$Type extends MessageType<ExperimentClientMessage> 
             { no: 3, name: "started", kind: "message", oneof: "payload", T: () => Started },
             { no: 4, name: "experimentResults", kind: "message", oneof: "payload", T: () => ExperimentResults },
             { no: 5, name: "instructionCompleted", kind: "message", oneof: "payload", T: () => InstructionCompleted },
-            { no: 6, name: "propagationResults", kind: "message", oneof: "payload", T: () => PropagationResults }
+            { no: 6, name: "propagationResults", kind: "message", oneof: "payload", T: () => PropagationResults },
+            { no: 7, name: "highMemoryAlarm", kind: "message", oneof: "payload", T: () => HighMemoryAlarm }
         ]);
     }
 }
@@ -541,6 +557,18 @@ class PingExperiment$Type extends MessageType<PingExperiment> {
  * @generated MessageType for protobuf message PingExperiment
  */
 export const PingExperiment = new PingExperiment$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class HighMemoryAlarm$Type extends MessageType<HighMemoryAlarm> {
+    constructor() {
+        super("HighMemoryAlarm", [
+            { no: 1, name: "memoryUsage", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message HighMemoryAlarm
+ */
+export const HighMemoryAlarm = new HighMemoryAlarm$Type();
 /**
  * @generated ServiceType for protobuf service RoutingExperimentRpc
  */

@@ -6,6 +6,7 @@ import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from 
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
+import { memoryUsage } from 'process'
 
 interface ExperimentNode {
     socket: WebSocket
@@ -77,7 +78,9 @@ export class ExperimentController {
                     } else if (message.payload.oneofKind === 'propagationResults') {
                         this.resultsReceived.add(message.id)
                         writeResultsRow(this.resultFilePath, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
-                    }
+                    } else if (message.payload.oneofKind === 'highMemoryAlarm') {
+                        logger.warn('high memory alarm', { id: message.id, memoryUsage: message.payload.highMemoryAlarm.memoryUsage })
+                    } 
                 })
             })
         })
