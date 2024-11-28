@@ -79,7 +79,7 @@ export class ExperimentController {
                         this.resultsReceived.add(message.id)
                         writeResultsRow(this.resultFilePath, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
                     } else if (message.payload.oneofKind === 'highMemoryAlarm') {
-                        logger.warn('high memory alarm', { id: message.id, memoryUsage: message.payload.highMemoryAlarm.memoryUsage })
+                        logger.warn('high memory alarm', { id: message.id, memoryUsage: message.payload.highMemoryAlarm.memoryUsage / 1024 / 1024 })
                     } 
                 })
             })

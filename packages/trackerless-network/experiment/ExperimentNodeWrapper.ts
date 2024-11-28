@@ -83,8 +83,8 @@ export class ExperimentNodeWrapper {
         })
         this.send(message)
         setInterval(() => {
-            const memoryUsedInMB = process.memoryUsage().heapUsed / 1024 / 1024
-            if (memoryUsedInMB > 150) {
+            const memoryUsedInMB = process.memoryUsage().heapUsed
+            if (memoryUsedInMB > 150 * 1024 * 1024) {
                 logger.warn('Memory usage exceeded 150MB, sending alert')
                 const message = ExperimentClientMessage.create({
                     id: this.id,
