@@ -33,7 +33,7 @@ export interface SetupTestOperatorContractOpts {
  * @deprecated
  * @hidden
  */
-export interface SetupOperatorContractReturnType {
+export interface SetupTestOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: OperatorContract
     nodeWallets: (Wallet & SignerWithProvider)[]
@@ -43,7 +43,7 @@ const logger = new Logger(module)
 
 export async function setupTestOperatorContract(
     opts?: SetupTestOperatorContractOpts
-): Promise<SetupOperatorContractReturnType> {
+): Promise<SetupTestOperatorContractReturnType> {
     const operatorWallet = await createTestWallet()
     const operatorContract = await deployTestOperatorContract({
         deployer: operatorWallet,

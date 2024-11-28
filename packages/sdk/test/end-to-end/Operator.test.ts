@@ -6,7 +6,7 @@ import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
-    SetupOperatorContractReturnType,
+    SetupTestOperatorContractReturnType,
     delegate,
     deployTestSponsorshipContract,
     getTestAdminWallet,
@@ -45,7 +45,7 @@ async function createStream(): Promise<StreamID> {
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (wallet: Wallet | undefined, operator: SetupTestOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     const contractAddress = toEthereumAddress(await operator.operatorContract.getAddress())
     return client.getOperator(contractAddress)
@@ -56,7 +56,7 @@ describe('Operator', () => {
     let streamId2: StreamID
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
-    let deployedOperator: SetupOperatorContractReturnType
+    let deployedOperator: SetupTestOperatorContractReturnType
 
     beforeAll(async () => {
         const concurrentTasks = await Promise.all([

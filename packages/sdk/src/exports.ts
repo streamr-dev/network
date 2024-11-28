@@ -97,7 +97,7 @@ import {
     deployTestSponsorshipContract,
     setupTestOperatorContract,
     SetupTestOperatorContractOpts,
-    SetupOperatorContractReturnType,
+    SetupTestOperatorContractReturnType,
     deployTestOperatorContract,
     DeployTestOperatorContractOpts,
     sponsor,
@@ -131,7 +131,7 @@ const _operatorContractUtils = {
     getOperatorContract
 }
 export { _operatorContractUtils }
-export type { SetupTestOperatorContractOpts, SetupOperatorContractReturnType, DeployTestOperatorContractOpts, DeployTestSponsorshipContractOpts }
+export type { SetupTestOperatorContractOpts, SetupTestOperatorContractReturnType, DeployTestOperatorContractOpts, DeployTestSponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Eip1193Provider, Overrides } from 'ethers'
