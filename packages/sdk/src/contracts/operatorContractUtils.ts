@@ -134,7 +134,6 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
 export interface DeploySponsorshipContractOpts {
     streamId: string
     deployer: Wallet
-    metadata?: string
     minOperatorCount?: number
     earningsPerSecond?: bigint
     chainConfig?: {
@@ -158,7 +157,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         (opts.minOperatorCount ?? 1).toString(),
         opts.streamId,
-        opts.metadata ?? '{}',
+        '{}',
         [
             chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
