@@ -68,7 +68,6 @@ export interface DeployTestOperatorContractOpts {
     deployer: Wallet
     operatorsCutPercent?: number
     metadata?: string
-    operatorTokenName?: string
 }
 
 /**
@@ -85,7 +84,7 @@ export async function deployTestOperatorContract(opts: DeployTestOperatorContrac
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
         parseEther('1') * BigInt(opts.operatorsCutPercent ?? 0) / 100n,
-        opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
+        `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
             TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
