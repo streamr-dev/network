@@ -194,8 +194,7 @@ export const delegate = async (
     await transferTokens(delegator, operatorContractAddress, amountWei, await delegator.getAddress(), token)
 }
 
-export const undelegate = async (delegator: Signer, operatorContract: OperatorContract, amount: bigint
-): Promise<void> => {
+export const undelegate = async (delegator: Signer, operatorContract: OperatorContract, amount: bigint): Promise<void> => {
     await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
 }
 
