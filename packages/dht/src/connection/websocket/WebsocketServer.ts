@@ -60,6 +60,7 @@ export class WebsocketServer extends EventEmitter<Events> {
     // If tlsCertificate has been given the tls boolean is ignored
     // TODO: could be simplified?
     private startServer(port: number, tls: boolean): Promise<void> {
+        logger.info('Starting Websocket server on', { port, tls })
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
