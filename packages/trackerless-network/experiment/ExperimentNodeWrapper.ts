@@ -192,7 +192,7 @@ export class ExperimentNodeWrapper {
     async joinStreamPart(streamPartId: string, neighborCount: number): Promise<void> {
         logger.info('joining stream part ', { streamPartId, neighborCount })
         const streamPart = StreamPartIDUtils.parse(streamPartId)
-        await this.node!.join(streamPart, { minCount: neighborCount, timeout: 20000 })
+        await this.node!.join(streamPart, { minCount: neighborCount, timeout: 60000 })
         const results = ExperimentClientMessage.create({
             id: this.id,
             payload: {
