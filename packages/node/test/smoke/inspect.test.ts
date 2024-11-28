@@ -62,11 +62,12 @@ const CLOSE_EXPIRED_FLAGS_MAX_AGE = 30 * 1000
 const VALID_OPERATOR_COUNT = 3  // one flagger and at least two voters are needed (see VoteKickPolicy.sol:166)
 const MAX_TEST_RUN_TIME = 15 * 60 * 1000
 
-const DELEGATE_WEI = 50000
-const STAKE_WEI = 10000
-const REVIEWER_REWARD_WEI = 700
-const FLAGGER_REWARD_WEI = 900
+const DELEGATE_WEI = 50000n
+const STAKE_WEI = 10000n
+const REVIEWER_REWARD_WEI = 700n
+const FLAGGER_REWARD_WEI = 900n
 const SLASHING_FRACTION = 0.25
+const SLASHING_WEI = BigInt(SLASHING_FRACTION * Number(STAKE_WEI))
 
 // two operators and a sponsorship which have been created in dev-chain init
 const PRE_BAKED_OPERATORS = [{
@@ -221,7 +222,7 @@ describe('inspect', () => {
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0, streamId, deployer: sponsorer })
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {
@@ -312,7 +313,7 @@ describe('inspect', () => {
 
         // assert slashing and rewards
         const token = getTestTokenContract().connect(getProvider())
-        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_FRACTION * STAKE_WEI)
+        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_WEI)
         expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_WEI - STAKE_WEI + FLAGGER_REWARD_WEI)
         for (const voter of flags[0].votes.map((vote) => vote.voter)) {
             expect(await getTokenBalance(voter, token)).toEqual(DELEGATE_WEI - STAKE_WEI + REVIEWER_REWARD_WEI)

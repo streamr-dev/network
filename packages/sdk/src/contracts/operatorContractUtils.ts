@@ -136,7 +136,7 @@ export interface DeploySponsorshipContractOpts {
     deployer: Wallet
     metadata?: string
     minOperatorCount?: number
-    earningsPerSecond?: number
+    earningsPerSecond?: bigint
     chainConfig?: {
         contracts: {
             SponsorshipFactory: string
@@ -222,19 +222,19 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
-export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
-    logger.debug('Delegate', { amount })
+export const delegate = async (delegator: Wallet, operatorContractAddress: string, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+    logger.debug('Delegate', { amountWei })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
-    await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
+    await transferTokens(delegator, operatorContractAddress, amountWei, delegator.address, token)
 }
 
-export const undelegate = async (delegator: Wallet, operatorContract: OperatorContract, amount: number): Promise<void> => {
+export const undelegate = async (delegator: Wallet, operatorContract: OperatorContract, amount: bigint): Promise<void> => {
     await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
 }
 
-export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: number): Promise<void> => {
+export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: bigint): Promise<void> => {
     logger.debug('Stake', { amount })
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()
 }
@@ -244,15 +244,15 @@ export const unstake = async (operatorContract: OperatorContract, sponsorshipCon
     await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
-export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
-    logger.debug('Sponsor', { amount })
+export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+    logger.debug('Sponsor', { amountWei })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
-    await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, token)
+    await transferTokens(sponsorer, sponsorshipContractAddress, amountWei, undefined, token)
 }
 
-export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestTokenContract): Promise<void> => {
-    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
+export const transferTokens = async (from: Wallet, to: string, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
+    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amountWei.toString()), data ?? '0x'))
     await tx.wait()
 }
 

@@ -21,6 +21,8 @@ const {
     stake
 } = _operatorContractUtils
 
+const SPONSOR_AMOUNT = 10000n
+
 describe('OperatorPlugin', () => {
 
     let broker: Broker
@@ -54,9 +56,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 10000)
-        await delegate(operatorWallet, await operatorContract.getAddress(), 10000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
+        await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
 
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
@@ -112,9 +114,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 10000)
-        await delegate(operatorWallet, await operatorContract.getAddress(), 10000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
+        await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
 
         const operatorContractAddress = await operatorContract.getAddress()
         broker = await startBroker({
