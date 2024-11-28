@@ -23,15 +23,6 @@ const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
  */
 export interface SetupTestOperatorContractOpts {
     nodeCount?: number
-    chainConfig?: {
-        contracts: {
-            DATA: string
-            OperatorFactory: string
-            OperatorDefaultDelegationPolicy: string
-            OperatorDefaultExchangeRatePolicy: string
-            OperatorDefaultUndelegationPolicy: string
-        }
-    }
     operatorConfig?: {
         operatorsCutPercent?: number
         metadata?: string
@@ -55,7 +46,7 @@ export async function setupTestOperatorContract(
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await createTestWallet()
     const operatorContract = await deployOperatorContract({
-        chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
+        chainConfig: TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
