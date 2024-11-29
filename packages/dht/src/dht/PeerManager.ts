@@ -155,7 +155,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (this.options.hasConnection(contact.getNodeId())) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + nodeId)
+                logger.debug('starting ping ' + nodeId)
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${nodeId}`)
