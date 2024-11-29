@@ -152,7 +152,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const nodeId = toNodeId(peerDescriptor)
             // Important to lock here, before the ping result is known
             this.options.connectionLocker?.weakLockConnection(nodeId, this.options.lockId)
-            if (this.options.hasConnection(contact.getNodeId())) {
+            if (true === true) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
                 logger.trace('starting ping ' + nodeId)
