@@ -1,14 +1,8 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { 
-    ConnectionLocker,
-    DhtAddress,
-    DhtCallContext,
-    ListeningRpcCommunicator,
-    toNodeId,
-    PeerDescriptor
-} from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, DhtCallContext, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { StreamPartID } from '@streamr/utils'
 import { Empty } from '../../../generated/google/protobuf/empty'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import {
     CloseTemporaryConnection,
     TemporaryConnectionRequest,

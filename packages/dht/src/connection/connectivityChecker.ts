@@ -1,8 +1,10 @@
 import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents3 } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
-import { ConnectivityRequest, ConnectivityResponse, Message } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import {
+    ConnectivityRequest, ConnectivityResponse,
+    Message, PeerDescriptor
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'

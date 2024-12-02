@@ -1,4 +1,4 @@
-import { ConnectivityMethod, PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { ConnectivityMethod, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
 function convertUnsignedIntegerToBuffer(number: number): Buffer {
     const buffer = Buffer.alloc(4)

@@ -4,7 +4,7 @@
 import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
-import { PeerDescriptor } from "../../dht/protos/PeerDescriptor";
+import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message MessageID
  */
@@ -208,7 +208,7 @@ export interface StreamPartHandshakeResponse {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional peerDescriptor.PeerDescriptor interleaveTargetDescriptor = 3;
+     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
     interleaveTargetDescriptor?: PeerDescriptor;
 }
@@ -219,7 +219,7 @@ export interface InterleaveRequest {
     /**
      * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
      *
-     * @generated from protobuf field: peerDescriptor.PeerDescriptor interleaveTargetDescriptor = 1;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 1;
      */
     interleaveTargetDescriptor?: PeerDescriptor;
 }
@@ -258,7 +258,7 @@ export interface NeighborUpdate {
      */
     removeMe: boolean;
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor neighborDescriptors = 3;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighborDescriptors = 3;
      */
     neighborDescriptors: PeerDescriptor[];
 }
@@ -312,11 +312,11 @@ export interface StreamPartitionInfo {
      */
     id: string;
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor controlLayerNeighbors = 2;
+     * @generated from protobuf field: repeated dht.PeerDescriptor controlLayerNeighbors = 2;
      */
     controlLayerNeighbors: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
+     * @generated from protobuf field: repeated dht.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
      */
     deprecatedContentDeliveryLayerNeighbors: PeerDescriptor[];
     /**
@@ -329,7 +329,7 @@ export interface StreamPartitionInfo {
  */
 export interface ContentDeliveryLayerNeighborInfo {
     /**
-     * @generated from protobuf field: peerDescriptor.PeerDescriptor peerDescriptor = 1;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
      */
     peerDescriptor?: PeerDescriptor;
     /**
@@ -342,11 +342,11 @@ export interface ContentDeliveryLayerNeighborInfo {
  */
 export interface ControlLayerInfo {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor neighbors = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
      */
     neighbors: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor connections = 2;
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
      */
     connections: PeerDescriptor[];
 }
@@ -360,7 +360,7 @@ export interface NodeInfoRequest {
  */
 export interface NodeInfoResponse {
     /**
-     * @generated from protobuf field: peerDescriptor.PeerDescriptor peerDescriptor = 1;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
      */
     peerDescriptor?: PeerDescriptor;
     /**

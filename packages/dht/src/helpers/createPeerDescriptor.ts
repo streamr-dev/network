@@ -8,9 +8,9 @@ import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescr
 import { DhtAddress, DhtAddressRaw, toDhtAddressRaw } from '../identifiers'
 import {
     ConnectivityResponse,
-    
+    NodeType,
+    PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
 
 const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddressRaw => {
     // nodeId is calculated as 

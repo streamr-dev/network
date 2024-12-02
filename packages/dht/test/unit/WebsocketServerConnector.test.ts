@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { WebsocketServerConnector } from '../../src/connection/websocket/WebsocketServerConnector'
-import { NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockConnection } from '../utils/mock/MockConnection'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'

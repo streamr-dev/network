@@ -1,10 +1,10 @@
 import {
     HandshakeError,
     IceCandidate,
+    PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebrtcConnectionRequest
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'

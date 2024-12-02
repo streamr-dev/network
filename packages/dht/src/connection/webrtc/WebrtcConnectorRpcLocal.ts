@@ -4,10 +4,10 @@ import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/Address
 import { Empty } from '../../../generated/google/protobuf/empty'
 import {
     IceCandidate,
+    PeerDescriptor,
     RtcAnswer,
     RtcOffer
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { IWebrtcConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
