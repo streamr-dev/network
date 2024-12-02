@@ -38,7 +38,7 @@ const stream = await streamr.createStream({
 });
 console.log(
   `Stream created: ${stream.id}. It has ${
-    await stream.getPartitionCount()
+    stream.getPartitionCount()
   } partitions.`
 );
 ```
