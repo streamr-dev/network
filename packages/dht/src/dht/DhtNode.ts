@@ -327,8 +327,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         for (const pruneTarget of pruneTargets) {
             await scheduleAtInterval(
                 async () => {
-                    // const nodes = pruneTarget()
-                    // await this.peerManager!.pruneOfflineNodes(nodes)
+                    const nodes = pruneTarget()
+                    await this.peerManager!.pruneOfflineNodes(nodes)
                 }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal
             )
         }
