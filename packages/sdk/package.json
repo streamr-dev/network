@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node bin/generate-config-validator.js && bash vendor-hack.sh",
+    "prebuild": "node bin/generate-config-validator.js",
     "postbuild": "bash copy-package.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
@@ -104,7 +104,6 @@
     "p-limit": "^3.1.0",
     "p-memoize": "4.0.4",
     "p-throttle": "4.1.1",
-    "quick-lru": "^7.0.0",
     "readable-stream": "^4.5.2",
     "reflect-metadata": "^0.2.1",
     "sqlite": "^5.1.1",
