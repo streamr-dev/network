@@ -1,6 +1,5 @@
 import { wait } from '@streamr/utils'
 import { CachingMap } from '../../src/utils/CachingMap'
-import { createCacheMap } from '../../src/utils/Mapping'
 
 const DEFAULT_OPTS = {
     maxSize: 10000,
@@ -11,10 +10,7 @@ const DEFAULT_OPTS = {
 describe('CachingMap', () => {
     it('caches & be cleared', async () => {
         const fn = jest.fn()
-        const cache = createCacheMap({
-            valueFactory: fn,
-            ...DEFAULT_OPTS
-        })
+        const cache = new CachingMap(fn, DEFAULT_OPTS)
         await cache.get()
         expect(fn).toHaveBeenCalledTimes(1)
         await cache.get()
@@ -29,10 +25,10 @@ describe('CachingMap', () => {
         expect(fn).toHaveBeenCalledTimes(3)
         await cache.get(2)
         expect(fn).toHaveBeenCalledTimes(3)
-        cache.invalidate(([v]) => v === 1)
+        cache.invalidate((v) => v === 1)
         await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(4)
-        cache.invalidate(([v]) => v === 1)
+        cache.invalidate((v) => v === 1)
         await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(5)
     })
@@ -44,10 +40,7 @@ describe('CachingMap', () => {
             return 3
         }
 
-        const cache = createCacheMap({
-            valueFactory: fn,
-            ...DEFAULT_OPTS
-        })
+        const cache = new CachingMap(fn, DEFAULT_OPTS)
         const a: number = await cache.get('abc') // ok
         expect(a).toEqual(3)
         // @ts-expect-error not enough args
@@ -60,13 +53,15 @@ describe('CachingMap', () => {
         // @ts-expect-error wrong return type
         const c: string = await cache.get('abc')
         expect(c).toEqual(3)
-        cache.invalidate(([_d]) => true)
-        const cache2 = createCacheMap({
-            valueFactory: fn,
-            ...DEFAULT_OPTS
+        cache.invalidate((_d: string) => true)
+        const cache2 = new CachingMap(fn, {
+            ...DEFAULT_OPTS,
+            cacheKey: ([s]) => {
+                return s.length
+            }
         })
 
-        cache2.invalidate(([_d]) => true)
+        cache2.invalidate((_d: number) => true)
     })
 
     it('does memoize consecutive calls', async () => {
@@ -75,10 +70,7 @@ describe('CachingMap', () => {
             i += 1
             return i
         }
-        const memoized = createCacheMap({
-            valueFactory: fn,
-            ...DEFAULT_OPTS
-        })
+        const memoized = new CachingMap(fn, DEFAULT_OPTS)
         const firstCall = memoized.get()
         const secondCall = memoized.get()
 
@@ -95,11 +87,12 @@ describe('CachingMap', () => {
             return key
         })
 
-        const cache = 
-        createCacheMap({
-            valueFactory: fn,
+        const cache = new CachingMap(fn, {
             maxSize: 10000,
-            maxAge: 1800000
+            maxAge: 1800000,
+            cacheKey: ([v]) => {
+                return v
+            }
         })
         const task = Promise.all([
             cache.get(taskId1),

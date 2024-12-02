@@ -1,10 +1,10 @@
+import { CachingMap } from '../../src/utils/CachingMap'
 import { wait } from '@streamr/utils'
-import { createCacheMap } from '../../src/utils/Mapping'
 
 describe('CachingMap', () => {
 
     let plainFn: jest.Mock<Promise<string>, [key1: string, key2: string]>
-    let cache: any
+    let cache: CachingMap<string, string, [key1: string, key2: string]>
 
     beforeEach(() => {
         plainFn = jest.fn()
@@ -12,10 +12,10 @@ describe('CachingMap', () => {
             await wait(100)
             return `${key1}${key2}`.toUpperCase()
         })
-        cache = createCacheMap({
-            valueFactory: plainFn,
+        cache = new CachingMap(plainFn as any, {
             maxSize: 10000,
-            maxAge: 30 * 60 * 1000
+            maxAge: 30 * 60 * 1000,
+            cacheKey: ([key1, key2]) => `${key1};${key2}`
         })
     })
 
