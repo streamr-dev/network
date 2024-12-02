@@ -45,7 +45,7 @@ describe('StoreRpcRemote', () => {
 
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.throwStoreDataError)
-        await expect(rpcRemote.storeData(request)).rejects.toThrowError(
+        await expect(rpcRemote.storeData(request)).rejects.toThrow(
             'Could not store data to'
             + ` ${toNodeId(serverPeerDescriptor)} from ${toNodeId(clientPeerDescriptor)}`
             + ' Error: Mock'

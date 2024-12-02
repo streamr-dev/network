@@ -106,10 +106,15 @@ describe('content delivery layer node with real connections', () => {
             dhtNode2.stop(),
             dhtNode3.stop(),
             dhtNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode1.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode2.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode3.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode5.stop(),
             (epDhtNode.getTransport() as ConnectionManager).stop(),
             (dhtNode1.getTransport() as ConnectionManager).stop(),

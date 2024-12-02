@@ -35,7 +35,7 @@ describe('StreamrClient', () => {
             }
         })
         const stream = await createTestStream(client, module)
-        streamDefinition = stream.getStreamParts()[0]
+        streamDefinition = (await stream.getStreamParts())[0]
         const publisherWallet = fastWallet()
         await stream.grantPermissions({
             userId: publisherWallet.address,

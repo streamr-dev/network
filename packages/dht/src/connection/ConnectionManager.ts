@@ -308,7 +308,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.metrics.sendMessagesPerSecond.record(1)
 
         if (this.endpoints.get(nodeId)!.connected) {
-            return (connection as ManagedConnection).send(binary)
+            (connection as ManagedConnection).send(binary)
         } else {
             return (this.endpoints.get(nodeId)! as ConnectingEndpoint).buffer.push(binary)
         }

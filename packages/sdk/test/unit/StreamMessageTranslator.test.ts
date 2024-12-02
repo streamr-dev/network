@@ -25,7 +25,7 @@ import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 
-export const createStreamMessage = (
+const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
     publisherId: UserID,

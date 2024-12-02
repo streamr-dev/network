@@ -51,14 +51,14 @@ export class StorageConfig {
         this.clusterSize = clusterSize
         this.myIndexInCluster = myIndexInCluster
         this.listener = listener
-        this.storagePoller = new StoragePoller(clusterId, pollInterval, streamrClient, (streams, block) => {
-            const streamParts = streams.flatMap((stream: Stream) => ([
-                ...this.createMyStreamParts(stream)
-            ]))
+        this.storagePoller = new StoragePoller(clusterId, pollInterval, streamrClient, async (streams, block) => {
+            const streamParts = (await Promise.all(streams.map(async (stream: Stream) => {
+                return [...await this.createMyStreamParts(stream)]
+            }))).flat()
             this.handleDiff(this.synchronizer.ingestSnapshot(new Set<StreamPartID>(streamParts), block))
         })
-        this.storageEventListener = new StorageEventListener(clusterId, streamrClient, (stream, type, block) => {
-            const streamParts = this.createMyStreamParts(stream)
+        this.storageEventListener = new StorageEventListener(clusterId, streamrClient, async (stream, type, block) => {
+            const streamParts = await this.createMyStreamParts(stream)
             this.handleDiff(this.synchronizer.ingestPatch(streamParts, type, block))
         })
         this.abortController = new AbortController()
@@ -82,8 +82,8 @@ export class StorageConfig {
         return this.synchronizer.getState()
     }
 
-    private createMyStreamParts(stream: Stream): Set<StreamPartID> {
-        return new Set<StreamPartID>(stream.getStreamParts().filter((streamPart) => {
+    private async createMyStreamParts(stream: Stream): Promise<Set<StreamPartID>> {
+        return new Set<StreamPartID>((await stream.getStreamParts()).filter((streamPart) => {
             const hashedIndex = keyToArrayIndex(this.clusterSize, streamPart)
             return hashedIndex === this.myIndexInCluster
         }))

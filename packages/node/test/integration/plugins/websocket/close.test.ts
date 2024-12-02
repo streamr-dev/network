@@ -16,7 +16,7 @@ describe('close', () => {
         client.on('close', onClose)
         server.stop()
         await wait(100)
-        expect(onClose).toBeCalled()
+        expect(onClose).toHaveBeenCalled()
     })
 
     it('paused client doesn\'t prevent server stop', async () => {

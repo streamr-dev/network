@@ -52,7 +52,7 @@ export const addStreamToStorageNode = async (
                 'storage node did not respond'
             )
         } finally {
-            streamRegistry.invalidateStreamCache(streamId)
+            streamRegistry.invalidatePermissionCaches(streamId)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     } else {

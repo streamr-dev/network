@@ -74,7 +74,7 @@ describe('parallel key exchange', () => {
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey),
                 signatureValidator: mock<SignatureValidator>(),
-                messageSigner: new MessageSigner(authentication),
+                messageSigner: new MessageSigner(authentication)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

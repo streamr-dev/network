@@ -1,19 +1,11 @@
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { Mapping } from '../../utils/Mapping'
+import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CachingMap } from '../../utils/CachingMap'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
-
-const STORAGE_NODE_CACHE_KEY = Symbol('STORAGE_NODE_CACHE_KEY')
-const STORAGE_NODE_CACHE_OPTS = {
-    maxSize: 10000,
-    maxAge: 30 * 60 * 1000,
-    cacheKey: () => STORAGE_NODE_CACHE_KEY
-}
 
 const createMessageChain = (
     context: OrderedMessageChainContext,
@@ -38,14 +30,10 @@ const createMessageChain = (
     }
     const chain = new OrderedMessageChain(context, abortSignal)
     chain.on('unfillableGap', (gap: Gap) => onUnfillableGap(gap))
-    // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
-    // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-    // - also note that this is a cache which contains just one item (as streamPartId always the same)
-    const storageNodeCache = new CachingMap(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), STORAGE_NODE_CACHE_OPTS)
     const gapFiller = new GapFiller({
         chain,
         resend,
-        getStorageNodeAddresses: () => storageNodeCache.get(),
+        getStorageNodeAddresses: () => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
@@ -74,21 +62,23 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
-            const chain = createMessageChain(
-                {
-                    streamPartId, 
-                    publisherId, 
-                    msgChainId
-                },
-                getStorageNodes,
-                onUnfillableGap,
-                resends,
-                config,
-                this.abortController.signal
-            )
-            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
-            return chain
+        this.chains = createLazyMap({
+            valueFactory: async (publisherId: UserID, msgChainId: string) => {
+                const chain = createMessageChain(
+                    {
+                        streamPartId, 
+                        publisherId, 
+                        msgChainId
+                    },
+                    getStorageNodes,
+                    onUnfillableGap,
+                    resends,
+                    config,
+                    this.abortController.signal
+                )
+                chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+                return chain
+            }
         })
     }
 

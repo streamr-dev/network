@@ -20,10 +20,8 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
-import { Stream } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
-import { StreamrClient } from '../StreamrClient'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
@@ -104,7 +102,14 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const CACHE_KEY_SEPARATOR = '|'
+const formCacheKeyPrefix = (streamId: StreamID): string => {
+    return `${streamId}|`
+}
+
+const invalidateCache = (cache: CachingMap<string, any, any>, streamId: StreamID): void => {
+    const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
+    cache.invalidate(matchTarget)
+}
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
@@ -119,10 +124,10 @@ export class StreamRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly getStreamMetadata_cached: CachingMap<string, StreamMetadata, [StreamID]>
-    private readonly isStreamPublisher_cached: CachingMap<string, boolean, [StreamID, UserID]>
-    private readonly isStreamSubscriber_cached: CachingMap<string, boolean, [StreamID, UserID]>
-    private readonly hasPublicSubscribePermission_cached: CachingMap<string, boolean, [StreamID]>
+    private readonly metadataCache: CachingMap<string, StreamMetadata, [StreamID]>
+    private readonly publisherCache: CachingMap<string, boolean, [StreamID, UserID]>
+    private readonly subscriberCache: CachingMap<string, boolean, [StreamID, UserID]>
+    private readonly publicSubscribePermissionCache: CachingMap<string, boolean, [StreamID]>
 
     /** @internal */
     constructor(
@@ -163,31 +168,25 @@ export class StreamRegistry {
             }),
             loggerFactory
         })
-        this.getStreamMetadata_cached = new CachingMap((streamId: StreamID) => {
+        this.metadataCache = new CachingMap((streamId: StreamID) => {
             return this.getStreamMetadata_nonCached(streamId)
         }, {
             ...config.cache,
-            cacheKey: ([streamId]): string => {
-                return `${streamId}${CACHE_KEY_SEPARATOR}`
-            }
+            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
         })
-        this.isStreamPublisher_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamPublisher(streamId, userId, false)
+        this.publisherCache = new CachingMap((streamId: StreamID, userId: UserID) => {
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
         }, {
             ...config.cache,
-            cacheKey([streamId, userId]): string {
-                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
         })
-        this.isStreamSubscriber_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamSubscriber(streamId, userId, false)
+        this.subscriberCache = new CachingMap((streamId: StreamID, userId: UserID) => {
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
         }, {
             ...config.cache,
-            cacheKey([streamId, userId]): string {
-                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
         })
-        this.hasPublicSubscribePermission_cached = new CachingMap((streamId: StreamID) => {
+        this.publicSubscribePermissionCache = new CachingMap((streamId: StreamID) => {
             return this.hasPermission({
                 streamId,
                 public: true,
@@ -195,9 +194,7 @@ export class StreamRegistry {
             })
         }, {
             ...config.cache,
-            cacheKey([streamId]): string {
-                return ['PublicSubscribe', streamId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
         })
     }
 
@@ -247,6 +244,7 @@ export class StreamRegistry {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, JSON.stringify(metadata), ethersOverrides))
         }
+        this.populateMetadataCache(streamId, metadata)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -264,7 +262,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.invalidateStreamCache(streamId)
+        this.populateMetadataCache(streamId, metadata)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -275,7 +273,8 @@ export class StreamRegistry {
             streamId,
             ethersOverrides
         ))
-        this.invalidateStreamCache(streamId)
+        invalidateCache(this.metadataCache, streamId)
+        this.invalidatePermissionCaches(streamId)
     }
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
@@ -294,19 +293,21 @@ export class StreamRegistry {
         return parseMetadata(metadata)
     }
 
-    searchStreams(
+    async* searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy,
-        client: StreamrClient
-    ): AsyncIterable<Stream> {
-        return _searchStreams(
+        orderBy: SearchStreamsOrderBy
+    ): AsyncGenerator<StreamID> {
+        const queryResult = _searchStreams(
             term,
             permissionFilter,
             orderBy,
-            this.theGraphClient,
-            this.logger,
-            client)
+            this.theGraphClient)
+        for await (const item of queryResult) {
+            const id = toStreamID(item.stream.id)
+            this.populateMetadataCache(id, parseMetadata(item.stream.metadata))
+            yield id
+        }
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
@@ -462,7 +463,7 @@ export class StreamRegistry {
         ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.invalidateStreamCache(streamId)
+        this.invalidatePermissionCaches(streamId)
         await this.connectToContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -484,7 +485,7 @@ export class StreamRegistry {
         for (const item of items) {
             validatePermissionAssignments(item.assignments)
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.invalidateStreamCache(streamId)
+            this.invalidatePermissionCaches(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.userId
@@ -516,42 +517,30 @@ export class StreamRegistry {
     // Caching
     // --------------------------------------------------------------------------------------------
 
-    getStreamMetadata(streamId: StreamID, useCache = true): Promise<StreamMetadata> {
-        if (useCache) {
-            return this.getStreamMetadata_cached.get(streamId)
-        } else {
-            return this.getStreamMetadata_nonCached(streamId)
-        }
+    getStreamMetadata(streamId: StreamID): Promise<StreamMetadata> {
+        return this.metadataCache.get(streamId)
     }
 
-    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
-            return this.isStreamPublisher_cached.get(streamId, userId)
-        } else {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
-        }
+    isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.publisherCache.get(streamId, userId)
     }
 
-    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
-            return this.isStreamSubscriber_cached.get(streamId, userId)
-        } else {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
-        }
+    isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.subscriberCache.get(streamId, userId)
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
-        return this.hasPublicSubscribePermission_cached.get(streamId)
+        return this.publicSubscribePermissionCache.get(streamId)
+    }
+
+    populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {
+        this.metadataCache.set([streamId], metadata)
     }
     
-    invalidateStreamCache(streamId: StreamID): void {
-        this.logger.debug('Clear caches matching stream', { streamId })
-        // include separator so startsWith(streamid) doesn't match streamid-something
-        const target = `${streamId}${CACHE_KEY_SEPARATOR}`
-        const matchTarget = (s: string) => s.startsWith(target)
-        this.getStreamMetadata_cached.invalidate(matchTarget)
-        this.isStreamPublisher_cached.invalidate(matchTarget)
-        this.isStreamSubscriber_cached.invalidate(matchTarget)
+    invalidatePermissionCaches(streamId: StreamID): void {
+        this.logger.trace('Clear permission caches for stream', { streamId })
+        invalidateCache(this.publisherCache, streamId)
+        invalidateCache(this.subscriberCache, streamId)
         // TODO should also clear cache for hasPublicSubscribePermission?
     }
 }

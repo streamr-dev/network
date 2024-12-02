@@ -12,7 +12,7 @@ import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { StreamDefinition } from '../types'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 
@@ -68,11 +68,15 @@ export class Publisher {
         this.authentication = authentication
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
-        this.messageFactories = new Mapping(async (streamId: StreamID) => {
-            return this.createMessageFactory(streamId)
+        this.messageFactories = createLazyMap({
+            valueFactory: async (streamId: StreamID) => {
+                return this.createMessageFactory(streamId)
+            }
         })
-        this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+        this.groupKeyQueues = createLazyMap({
+            valueFactory: async (streamId: StreamID) => {
+                return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+            }
         })
     }
 
