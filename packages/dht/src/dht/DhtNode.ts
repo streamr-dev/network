@@ -126,7 +126,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 
 const logger = new Logger(module)
 
-const PERIODICAL_PING_INTERVAL = 2 * 60 * 1000
+const PERIODICAL_PING_INTERVAL = 5 * 60 * 1000
 
 // TODO move this to trackerless-network package and change serviceId to be a required paramater
 export const CONTROL_LAYER_NODE_SERVICE_ID = 'layer0'
@@ -327,8 +327,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         for (const pruneTarget of pruneTargets) {
             await scheduleAtInterval(
                 async () => {
-                    const nodes = pruneTarget()
-                    await this.peerManager!.pruneOfflineNodes(nodes)
+                    // const nodes = pruneTarget()
+                    // await this.peerManager!.pruneOfflineNodes(nodes)
                 }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal
             )
         }
