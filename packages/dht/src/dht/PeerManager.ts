@@ -68,6 +68,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     private activeContacts: Set<DhtAddress>
     private ringContacts: RingContactList<DhtNodeRpcRemote>
     private randomContacts: RandomContactList<DhtNodeRpcRemote>
+    private recentlyPingedCache: Map<DhtAddress, number> = new Map()
     private stopped: boolean = false
     private readonly options: PeerManagerOptions
 
@@ -121,6 +122,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
+        this.recentlyPingedCache.set(newContact.getNodeId(), Date.now())
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
             referenceId: this.options.localNodeId,
             allowToContainReferenceId: false
@@ -152,12 +154,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const nodeId = toNodeId(peerDescriptor)
             // Important to lock here, before the ping result is known
             this.options.connectionLocker?.weakLockConnection(nodeId, this.options.lockId)
-            if (this.options.hasConnection(contact.getNodeId())) {
+            if (this.options.hasConnection(contact.getNodeId()) && (this.recentlyPingedCache.has(nodeId) && Date.now() - this.recentlyPingedCache.get(nodeId)! < 60 * 1000)) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
                 logger.debug('starting ping ' + nodeId)
                 contact.ping().then((result) => {
                     if (result) {
+                        this.recentlyPingedCache.set(nodeId, Date.now())
                         logger.trace(`Added new contact ${nodeId}`)
                     } else {
                         logger.trace('ping failed ' + nodeId)
