@@ -100,6 +100,7 @@
     "idb": "^8.0.0",
     "lit-siwe": "^1.1.8",
     "lodash": "^4.17.21",
+    "lru-cache": "^11.0.2",
     "node-fetch": "^2.7.0",
     "p-limit": "^3.1.0",
     "p-memoize": "4.0.4",
