@@ -102,7 +102,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const invalidateCache = (cache: Mapping<[StreamID, ...any[]], any>, streamId: StreamID): void => {
+const invalidateCache = <K extends [StreamID, ...any[]]>(cache: Mapping<K, any>, streamId: StreamID): void => {
     cache.invalidate(([key]) => key === streamId)
 }
 
@@ -164,25 +164,25 @@ export class StreamRegistry {
             loggerFactory
         })
         this.metadataCache = new Mapping({
-            valueFactory: (streamId: StreamID) => {
+            valueFactory: ([streamId]) => {
                 return this.getStreamMetadata_nonCached(streamId)
             },
             ...config.cache
         })
         this.publisherCache = new Mapping({
-            valueFactory: (streamId: StreamID, userId: UserID) => {
+            valueFactory: ([streamId, userId]) => {
                 return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
             },
             ...config.cache
         })
         this.subscriberCache = new Mapping({
-            valueFactory: (streamId: StreamID, userId: UserID) => {
+            valueFactory: ([streamId, userId]) => {
                 return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
             }, 
             ...config.cache
         })
         this.publicSubscribePermissionCache = new Mapping({
-            valueFactory: (streamId: StreamID) => {
+            valueFactory: ([streamId]) => {
                 return this.hasPermission({
                     streamId,
                     public: true,

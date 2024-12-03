@@ -69,12 +69,12 @@ export class Publisher {
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
         this.messageFactories = createLazyMap({
-            valueFactory: async (streamId: StreamID) => {
+            valueFactory: async ([streamId]) => {
                 return this.createMessageFactory(streamId)
             }
         })
         this.groupKeyQueues = createLazyMap({
-            valueFactory: async (streamId: StreamID) => {
+            valueFactory: async ([streamId]) => {
                 return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
             }
         })

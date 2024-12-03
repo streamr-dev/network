@@ -63,7 +63,7 @@ export class OrderMessages {
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
         this.chains = createLazyMap({
-            valueFactory: async (publisherId: UserID, msgChainId: string) => {
+            valueFactory: async ([publisherId, msgChainId]) => {
                 const chain = createMessageChain(
                     {
                         streamPartId, 

@@ -5,7 +5,7 @@ import { MarkRequired } from 'ts-essentials'
 type KeyType = (string | number | symbol)[]
 
 interface BaseOptions<K extends KeyType, V> {
-    valueFactory: (...args: K) => Promise<V>
+    valueFactory: (key: K) => Promise<V>
     isCacheableValue?: (value: V) => boolean
 }
 
@@ -68,7 +68,7 @@ export class Mapping<K extends KeyType, V> {
         } else {
             let item = this.delegate.get(lookupKey)
             if (item === undefined) {
-                const promise = this.opts.valueFactory(...key)
+                const promise = this.opts.valueFactory(key)
                 this.pendingPromises.set(lookupKey, promise)
                 let value
                 try {

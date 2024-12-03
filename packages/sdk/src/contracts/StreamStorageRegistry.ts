@@ -79,7 +79,7 @@ export class StreamStorageRegistry {
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
         this.storageNodesCache = new Mapping({
-            valueFactory: (query: StreamID | typeof GET_ALL_STORAGE_NODES) => {
+            valueFactory: ([query]) => {
                 return this.getStorageNodes_nonCached(query)
             },
             ...config.cache

@@ -5,8 +5,8 @@ import { range } from 'lodash'
 describe('Mapping', () => {
 
     it('create', async () => {
-        const mapping = createLazyMap({
-            valueFactory: async (p1: string, p2: number) => `${p1}${p2}`
+        const mapping = createLazyMap<[string, number], string>({
+            valueFactory: async ([p1, p2]: [string, number]) => `${p1}${p2}`
         })
         expect(await mapping.get(['foo', 1])).toBe('foo1')
         expect(await mapping.get(['bar', 2])).toBe('bar2')
@@ -14,8 +14,8 @@ describe('Mapping', () => {
 
     it('memorize', async () => {
         let evaluationIndex = 0
-        const mapping = createLazyMap({
-            valueFactory: async (_p: string) => {
+        const mapping = createLazyMap<[string], number>({
+            valueFactory: async (_p) => {
                 const result = evaluationIndex
                 evaluationIndex++
                 return result
@@ -37,7 +37,7 @@ describe('Mapping', () => {
     })
 
     it('rejections are not cached', async () => {
-        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             throw new Error(`error ${p1}-${p2}`)
         })
         const mapping = createLazyMap({ valueFactory })
@@ -47,7 +47,7 @@ describe('Mapping', () => {
     })
 
     it('throws are not cached', async () => {
-        const valueFactory = jest.fn().mockImplementation((p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(([p1, p2]: [string, number]) => {
             throw new Error(`error ${p1}-${p2}`)
         })
         const mapping = createLazyMap({ valueFactory })
@@ -57,7 +57,7 @@ describe('Mapping', () => {
     })
 
     it('isCacheableValue', async () => {
-        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             return `${p1}${p2}`
         })
         const mapping = createLazyMap({ valueFactory, isCacheableValue: (value: string) => value === 'foo1' })
@@ -74,7 +74,7 @@ describe('Mapping', () => {
     })
     
     it('concurrency', async () => {
-        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             await wait(50)
             return `${p1}${p2}`
         })
@@ -98,7 +98,7 @@ describe('Mapping', () => {
 
     it('max size', async () => {
         const SIZE = 3
-        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             return `${p1}${p2}`
         })
         const mapping = createCacheMap({ valueFactory, maxSize: 3 })
@@ -121,7 +121,7 @@ describe('Mapping', () => {
     it('max age', async () => {
         const MAX_AGE = 100
         const JITTER = 50
-        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+        const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             return `${p1}${p2}`
         })
         const mapping = createCacheMap({ valueFactory, maxSize: 999999, maxAge: MAX_AGE })
@@ -132,8 +132,8 @@ describe('Mapping', () => {
     })
 
     it('invalidate', async () => {
-        const mapping = createLazyMap({
-            valueFactory: async (p1: string, p2: number) => `${p1}${p2}`,
+        const mapping = createLazyMap<[string, number], string>({
+            valueFactory: async ([p1, p2]: [string, number]) => `${p1}${p2}`,
         })
         mapping.set(['foo', 1], 'foo1')
         mapping.set(['bar', 1], 'bar1')
