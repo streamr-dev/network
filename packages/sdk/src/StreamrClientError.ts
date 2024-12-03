@@ -22,11 +22,13 @@ export type StreamrClientErrorCode =
 export class StreamrClientError extends Error {
 
     public readonly code: StreamrClientErrorCode
+    public readonly messageId?: MessageID
 
     constructor(message: string, code: StreamrClientErrorCode, streamMessage?: StreamMessage) {
         super(streamMessage === undefined ? message : `${message} (messageId=${formMessageIdDescription(streamMessage.messageId)})`)
         this.code = code
         this.name = this.constructor.name
+        this.messageId = streamMessage?.messageId
     }
 }
 
