@@ -152,7 +152,9 @@ describe('Validator2', () => {
                 signature: Buffer.from(msg.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects tampered content', async () => {
@@ -161,7 +163,9 @@ describe('Validator2', () => {
                 content: utf8ToBinary('{"attack":true}')
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects tampered newGroupKey', async () => {
@@ -170,7 +174,9 @@ describe('Validator2', () => {
                 newGroupKey: new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects messages from unpermitted publishers', async () => {
@@ -211,7 +217,9 @@ describe('Validator2', () => {
                 signature: Buffer.from(groupKeyRequest.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidGroupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidGroupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects messages to invalid publishers', async () => {
@@ -254,7 +262,9 @@ describe('Validator2', () => {
                 signature: Buffer.from(groupKeyResponse.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidGroupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidGroupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects group key responses on unexpected streams', async () => {
