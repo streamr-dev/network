@@ -102,7 +102,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const invalidateCache = <K extends [StreamID, ...any[]]>(cache: Mapping<K, any>, streamId: StreamID): void => {
+const invalidateCache = <K extends ([StreamID, ...any[]] | StreamID)>(cache: Mapping<K, any>, streamId: StreamID): void => {
     cache.invalidate(([key]) => key === streamId)
 }
 
@@ -119,10 +119,10 @@ export class StreamRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly metadataCache: Mapping<[StreamID], StreamMetadata>
+    private readonly metadataCache: Mapping<StreamID, StreamMetadata>
     private readonly publisherCache: Mapping<[StreamID, UserID], boolean>
     private readonly subscriberCache: Mapping<[StreamID, UserID], boolean>
-    private readonly publicSubscribePermissionCache: Mapping<[StreamID], boolean>
+    private readonly publicSubscribePermissionCache: Mapping<StreamID, boolean>
 
     /** @internal */
     constructor(
@@ -164,7 +164,7 @@ export class StreamRegistry {
             loggerFactory
         })
         this.metadataCache = createCacheMap({
-            valueFactory: ([streamId]) => {
+            valueFactory: (streamId) => {
                 return this.getStreamMetadata_nonCached(streamId)
             },
             ...config.cache
@@ -513,7 +513,7 @@ export class StreamRegistry {
     // --------------------------------------------------------------------------------------------
 
     getStreamMetadata(streamId: StreamID): Promise<StreamMetadata> {
-        return this.metadataCache.get([streamId])
+        return this.metadataCache.get(streamId)
     }
 
     isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
@@ -525,11 +525,11 @@ export class StreamRegistry {
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
-        return this.publicSubscribePermissionCache.get([streamId])
+        return this.publicSubscribePermissionCache.get(streamId)
     }
 
     populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {
-        this.metadataCache.set([streamId], metadata)
+        this.metadataCache.set(streamId, metadata)
     }
     
     invalidatePermissionCaches(streamId: StreamID): void {

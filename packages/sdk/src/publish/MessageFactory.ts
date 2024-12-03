@@ -37,7 +37,7 @@ export class MessageFactory {
     private readonly streamId: StreamID
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
-    private readonly defaultMessageChainIds: Mapping<[number], string>
+    private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     // eslint-disable-next-line max-len
     private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
@@ -53,7 +53,7 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
-        this.defaultMessageChainIds = createLazyMap<[number], string>({
+        this.defaultMessageChainIds = createLazyMap<number, string>({
             valueFactory: async () => {
                 return createRandomMsgChainId()
             }
@@ -89,8 +89,8 @@ export class MessageFactory {
                 : this.getDefaultPartition(partitionCount)
         }
 
-        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get([partition])
-        const msgChainKey = formLookupKey(partition, msgChainId)
+        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+        const msgChainKey = formLookupKey([partition, msgChainId])
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)

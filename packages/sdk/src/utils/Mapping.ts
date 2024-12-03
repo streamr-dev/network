@@ -1,20 +1,18 @@
-import { formLookupKey } from './utils'
+import { formLookupKey, LookupKeyType } from './utils'
 import LRU from '../../vendor/quick-lru'
-import { MarkRequired } from 'ts-essentials'
+import { MarkRequired } from 'ts-essentials' 
 
-type KeyType = (string | number | symbol)[]
-
-interface BaseOptions<K extends KeyType, V> {
+interface BaseOptions<K extends LookupKeyType, V> {
     valueFactory: (key: K) => Promise<V>
     isCacheableValue?: (value: V) => boolean
 }
 
-interface CacheMapOptions<K extends KeyType, V> extends BaseOptions<K, V> {
+interface CacheMapOptions<K extends LookupKeyType, V> extends BaseOptions<K, V> {
     maxSize: number
     maxAge?: number
 }
 
-type LazyMapOptions<K extends KeyType, V> = BaseOptions<K, V>
+type LazyMapOptions<K extends LookupKeyType, V> = BaseOptions<K, V>
 
 interface Item<K, V> {
     key: K
@@ -34,7 +32,7 @@ interface Item<K, V> {
  * `get()` calls were cache misses, i.e. affecting significantly cases where the
  * `isCacheableValue()` returns `true`.)
  */
-export class Mapping<K extends KeyType, V> {
+export class Mapping<K extends LookupKeyType, V> {
 
     private readonly delegate: Map<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
@@ -61,7 +59,7 @@ export class Mapping<K extends KeyType, V> {
     }
 
     async get(key: K): Promise<V> {
-        const lookupKey = formLookupKey(...key)
+        const lookupKey = formLookupKey(key)
         const pendingPromise = this.pendingPromises.get(lookupKey)
         if (pendingPromise !== undefined) {
             return await pendingPromise
@@ -86,7 +84,7 @@ export class Mapping<K extends KeyType, V> {
     }
 
     set(key: K, value: V): void {
-        this.delegate.set(formLookupKey(...key), { key, value })
+        this.delegate.set(formLookupKey(key), { key, value })
     }
 
     invalidate(predicate: (key: K) => boolean): void {
@@ -104,10 +102,10 @@ export class Mapping<K extends KeyType, V> {
     }
 }
 
-export const createCacheMap = <K extends KeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
+export const createCacheMap = <K extends LookupKeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
     return new Mapping<K, V>(opts)
 }
 
-export const createLazyMap = <K extends KeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
+export const createLazyMap = <K extends LookupKeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
     return new Mapping<K, V>(opts)
 }

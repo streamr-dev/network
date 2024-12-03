@@ -14,18 +14,18 @@ describe('Mapping', () => {
 
     it('memorize', async () => {
         let evaluationIndex = 0
-        const mapping = createLazyMap<[string], number>({
+        const mapping = createLazyMap<string, number>({
             valueFactory: async (_p) => {
                 const result = evaluationIndex
                 evaluationIndex++
                 return result
             }
         })
-        expect(await mapping.get(['foo'])).toBe(0)
-        expect(await mapping.get(['foo'])).toBe(0)
-        expect(await mapping.get(['bar'])).toBe(1)
-        expect(await mapping.get(['bar'])).toBe(1)
-        expect(await mapping.get(['foo'])).toBe(0)
+        expect(await mapping.get('foo')).toBe(0)
+        expect(await mapping.get('foo')).toBe(0)
+        expect(await mapping.get('bar')).toBe(1)
+        expect(await mapping.get('bar')).toBe(1)
+        expect(await mapping.get('foo')).toBe(0)
     })
 
     it('undefined', async () => {

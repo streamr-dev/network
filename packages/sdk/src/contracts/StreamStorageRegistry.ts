@@ -45,7 +45,7 @@ export class StreamStorageRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly storageNodesCache: Mapping<[StreamID | typeof GET_ALL_STORAGE_NODES], EthereumAddress[]>
+    private readonly storageNodesCache: Mapping<StreamID | typeof GET_ALL_STORAGE_NODES, EthereumAddress[]>
 
     constructor(
         streamIdBuilder: StreamIDBuilder,
@@ -79,7 +79,7 @@ export class StreamStorageRegistry {
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
         this.storageNodesCache = createCacheMap({
-            valueFactory: ([query]) => {
+            valueFactory: (query) => {
                 return this.getStorageNodes_nonCached(query)
             },
             ...config.cache
@@ -133,7 +133,7 @@ export class StreamStorageRegistry {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
-        this.storageNodesCache.invalidate((key) => key[0] === streamId)
+        this.storageNodesCache.invalidate((key) => key === streamId)
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
@@ -142,7 +142,7 @@ export class StreamStorageRegistry {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
-        this.storageNodesCache.invalidate((key) => key[0] === streamId)
+        this.storageNodesCache.invalidate((key) => key === streamId)
     }
 
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
@@ -191,7 +191,7 @@ export class StreamStorageRegistry {
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         const query = (streamIdOrPath !== undefined) ? await this.streamIdBuilder.toStreamID(streamIdOrPath) : GET_ALL_STORAGE_NODES
-        return this.storageNodesCache.get([query])
+        return this.storageNodesCache.get(query)
     }
 
     private async getStorageNodes_nonCached(query: StreamID | typeof GET_ALL_STORAGE_NODES): Promise<EthereumAddress[]> {

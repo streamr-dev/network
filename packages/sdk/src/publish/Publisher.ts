@@ -43,8 +43,8 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
 
-    private readonly messageFactories: Mapping<[StreamID], MessageFactory>
-    private readonly groupKeyQueues: Mapping<[StreamID], GroupKeyQueue>
+    private readonly messageFactories: Mapping<StreamID, MessageFactory>
+    private readonly groupKeyQueues: Mapping<StreamID, GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
@@ -69,12 +69,12 @@ export class Publisher {
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
         this.messageFactories = createLazyMap({
-            valueFactory: async ([streamId]) => {
+            valueFactory: async (streamId) => {
                 return this.createMessageFactory(streamId)
             }
         })
         this.groupKeyQueues = createLazyMap({
-            valueFactory: async ([streamId]) => {
+            valueFactory: async (streamId) => {
                 return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
             }
         })
@@ -104,7 +104,7 @@ export class Publisher {
         return this.concurrencyLimit(async () => {
             const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             try {
-                const messageFactory = await this.messageFactories.get([streamId])
+                const messageFactory = await this.messageFactories.get(streamId)
                 const message = await messageFactory.createMessage(
                     content,
                     {
@@ -124,7 +124,7 @@ export class Publisher {
     }
 
     getGroupKeyQueue(streamId: StreamID): Promise<GroupKeyQueue> {
-        return this.groupKeyQueues.get([streamId])
+        return this.groupKeyQueues.get(streamId)
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
@@ -132,7 +132,7 @@ export class Publisher {
             streamId,
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
-            groupKeyQueue: await this.groupKeyQueues.get([streamId]),
+            groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
             messageSigner: this.messageSigner
         })
