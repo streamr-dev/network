@@ -69,7 +69,11 @@ const validateMessage = async (
     const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
     const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
-        throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
+        throw new StreamrClientError(
+            `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
+            'INVALID_PARTITION', 
+            streamMessage
+        )
     }
     const sender = streamMessage.getPublisherId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
