@@ -66,6 +66,12 @@ export interface ExperimentServerMessage {
          */
         pingExperiment: PingExperiment;
     } | {
+        oneofKind: "getNeighborsRequest";
+        /**
+         * @generated from protobuf field: GetNeighborsRequest getNeighborsRequest = 10;
+         */
+        getNeighborsRequest: GetNeighborsRequest;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -116,6 +122,12 @@ export interface ExperimentClientMessage {
          * @generated from protobuf field: HighMemoryAlarm highMemoryAlarm = 7;
          */
         highMemoryAlarm: HighMemoryAlarm;
+    } | {
+        oneofKind: "getNeighborsResponse";
+        /**
+         * @generated from protobuf field: GetNeighborsResponse getNeighborsResponse = 8;
+         */
+        getNeighborsResponse: GetNeighborsResponse;
     } | {
         oneofKind: undefined;
     };
@@ -317,6 +329,24 @@ export interface HighMemoryAlarm {
      */
     memoryUsage: number;
 }
+/**
+ * @generated from protobuf message GetNeighborsRequest
+ */
+export interface GetNeighborsRequest {
+    /**
+     * @generated from protobuf field: string streamPartId = 1;
+     */
+    streamPartId: string;
+}
+/**
+ * @generated from protobuf message GetNeighborsResponse
+ */
+export interface GetNeighborsResponse {
+    /**
+     * @generated from protobuf field: repeated string neighbors = 1;
+     */
+    neighbors: string[];
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
@@ -329,7 +359,8 @@ class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> 
             { no: 6, name: "routingExperiment", kind: "message", oneof: "instruction", T: () => RoutingExperiment },
             { no: 7, name: "publishOnInterval", kind: "message", oneof: "instruction", T: () => PublishOnInterval },
             { no: 8, name: "MeasureTimeToData", kind: "message", jsonName: "MeasureTimeToData", oneof: "instruction", T: () => MeasureTimeToData },
-            { no: 9, name: "pingExperiment", kind: "message", oneof: "instruction", T: () => PingExperiment }
+            { no: 9, name: "pingExperiment", kind: "message", oneof: "instruction", T: () => PingExperiment },
+            { no: 10, name: "getNeighborsRequest", kind: "message", oneof: "instruction", T: () => GetNeighborsRequest }
         ]);
     }
 }
@@ -347,7 +378,8 @@ class ExperimentClientMessage$Type extends MessageType<ExperimentClientMessage> 
             { no: 4, name: "experimentResults", kind: "message", oneof: "payload", T: () => ExperimentResults },
             { no: 5, name: "instructionCompleted", kind: "message", oneof: "payload", T: () => InstructionCompleted },
             { no: 6, name: "propagationResults", kind: "message", oneof: "payload", T: () => PropagationResults },
-            { no: 7, name: "highMemoryAlarm", kind: "message", oneof: "payload", T: () => HighMemoryAlarm }
+            { no: 7, name: "highMemoryAlarm", kind: "message", oneof: "payload", T: () => HighMemoryAlarm },
+            { no: 8, name: "getNeighborsResponse", kind: "message", oneof: "payload", T: () => GetNeighborsResponse }
         ]);
     }
 }
@@ -569,6 +601,30 @@ class HighMemoryAlarm$Type extends MessageType<HighMemoryAlarm> {
  * @generated MessageType for protobuf message HighMemoryAlarm
  */
 export const HighMemoryAlarm = new HighMemoryAlarm$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetNeighborsRequest$Type extends MessageType<GetNeighborsRequest> {
+    constructor() {
+        super("GetNeighborsRequest", [
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetNeighborsRequest
+ */
+export const GetNeighborsRequest = new GetNeighborsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetNeighborsResponse$Type extends MessageType<GetNeighborsResponse> {
+    constructor() {
+        super("GetNeighborsResponse", [
+            { no: 1, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetNeighborsResponse
+ */
+export const GetNeighborsResponse = new GetNeighborsResponse$Type();
 /**
  * @generated ServiceType for protobuf service RoutingExperimentRpc
  */

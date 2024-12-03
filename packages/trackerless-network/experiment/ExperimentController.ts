@@ -30,6 +30,7 @@ export class ExperimentController {
     private readonly nodeCount: number
     private readonly resultFilePath: string
     private readonly resultsReceived: Set<string> = new Set()
+    private readonly topologyResult: Map<string, string[]> = new Map()
     private instructionsCompleted = 0
 
     constructor(nodeCount: number, resultFilePath: string) {
@@ -80,7 +81,9 @@ export class ExperimentController {
                         writeResultsRow(this.resultFilePath, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
                     } else if (message.payload.oneofKind === 'highMemoryAlarm') {
                         logger.warn('high memory alarm', { id: message.id, memoryUsage: message.payload.highMemoryAlarm.memoryUsage / 1024 / 1024 })
-                    } 
+                    } else if (message.payload.oneofKind === 'getNeighborsResponse') {
+                        this.topologyResult.set(message.id, message.payload.getNeighborsResponse.neighbors)
+                    }
                 })
             })
         })
@@ -261,9 +264,32 @@ export class ExperimentController {
         const streamPart = StreamPartIDUtils.parse('experiment#0')
         await this.joinStreamPart(streamPart)
         logger.info('all nodes joined stream part')
+        logger.info('Getting network topology')
+        await this.getStreamTopology(streamPart)
+        logger.info('Starting publishing')
         await this.publishMessage(streamPart)
         logger.info('all nodes published message')
         await this.pullPropagationResults(streamPart)      
+    }
+
+    async getStreamTopology(streamPartId: StreamPartID): Promise<void> {
+        this.topologyResult.clear()
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'getNeighborsRequest',
+                    getNeighborsRequest: {
+                        streamPartId: streamPartId.toString()
+                    }
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
+        await waitForCondition(() => this.topologyResult.size === this.nodeCount, 10 * 60 * 1000, 100)
+        const sumOfNeighbors = Array.from(this.topologyResult.values()).reduce((acc, neighbors) => acc + neighbors.length, 0)
+        const averageNeighbors = sumOfNeighbors / this.nodeCount
+        logger.info('average number of neighbors', { averageNeighbors })
     }
 
     async startPublisher(publisher: string, streamPartId: string): Promise<void> {

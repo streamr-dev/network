@@ -180,6 +180,9 @@ export class ExperimentNodeWrapper {
             } else if (message.instruction.oneofKind === 'pingExperiment') {
                 const instruction = message.instruction.pingExperiment
                 setImmediate(() => this.pingExperiment(instruction.ips))
+            } else if (message.instruction.oneofKind === 'getNeighborsRequest') {
+                const instruction = message.instruction.getNeighborsRequest
+                setImmediate(() => this.getNeighbors(instruction.streamPartId))
             }
         })
     }
@@ -347,6 +350,20 @@ export class ExperimentNodeWrapper {
                 oneofKind: 'experimentResults',
                 experimentResults: {
                     results: JSON.stringify(results)
+                }
+            }
+        }))
+    }
+
+    getNeighbors(streamPartId: string): void {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        const neighbors = this.node!.getNeighbors(streamPart).map((n) => n.toString())
+        this.send(ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'getNeighborsResponse',
+                getNeighborsResponse: {
+                    neighbors
                 }
             }
         }))

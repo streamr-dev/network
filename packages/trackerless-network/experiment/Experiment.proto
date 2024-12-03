@@ -21,6 +21,7 @@ message ExperimentServerMessage {
         PublishOnInterval publishOnInterval = 7;
         MeasureTimeToData MeasureTimeToData = 8;
         PingExperiment pingExperiment = 9;
+        GetNeighborsRequest getNeighborsRequest = 10;
     }
 }
 
@@ -33,6 +34,7 @@ message ExperimentClientMessage {
         InstructionCompleted instructionCompleted = 5;
         PropagationResults propagationResults = 6;
         HighMemoryAlarm highMemoryAlarm = 7;
+        GetNeighborsResponse getNeighborsResponse = 8;
     }
 }
 
@@ -114,4 +116,12 @@ message PingExperiment {
 
 message HighMemoryAlarm {
     int64 memoryUsage = 1;
+}
+
+message GetNeighborsRequest {
+    string streamPartId = 1;
+}
+
+message GetNeighborsResponse {
+    repeated string neighbors = 1;
 }
