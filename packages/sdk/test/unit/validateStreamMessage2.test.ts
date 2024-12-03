@@ -19,7 +19,6 @@ import { GroupKeyResponse } from './../../src/protocol/GroupKeyResponse'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { ValidationError } from './../../src/protocol/ValidationError'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
@@ -182,7 +181,9 @@ describe('Validator2', () => {
         it('rejects messages from unpermitted publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
 
-            await expect(getValidator().validate(msg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(msg)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(msg.getPublisherId(), msg.getStreamId())
         })
 
@@ -208,7 +209,9 @@ describe('Validator2', () => {
         it('rejects group key requests on unexpected streams', async () => {
             groupKeyRequest.getStreamId = jest.fn().mockReturnValue('foo')
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
         })
 
         it('rejects invalid signatures', async () => {
@@ -226,7 +229,9 @@ describe('Validator2', () => {
             isPublisher = jest.fn().mockResolvedValue(false)
             const publisher = await publisherAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
         })
 
@@ -234,7 +239,9 @@ describe('Validator2', () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
             const subscriber = await subscriberAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
         })
 
@@ -270,14 +277,18 @@ describe('Validator2', () => {
         it('rejects group key responses on unexpected streams', async () => {
             groupKeyResponse.getStreamId = jest.fn().mockReturnValue('foo')
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
         })
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
             const publisher = await publisherAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
         })
 
@@ -285,7 +296,9 @@ describe('Validator2', () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
             const subscriber = await subscriberAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
         })
 
