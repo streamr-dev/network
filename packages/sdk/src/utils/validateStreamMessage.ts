@@ -5,6 +5,7 @@ import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
+import { StreamrClientError } from '../StreamrClientError'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -56,7 +57,7 @@ const doValidate = async (
                 streamRegistry
             )
         default:
-            throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
+            throw new StreamrClientError(`Unknown message type: ${streamMessage.messageType}!`, 'UNKNOWN_DATA_FORMAT', streamMessage)
     }
 }
 

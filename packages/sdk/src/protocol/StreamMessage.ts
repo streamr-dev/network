@@ -1,11 +1,10 @@
 import { StreamID, StreamPartID, UserID, binaryToUtf8 } from '@streamr/utils'
+import { StreamrClientError } from '../StreamrClientError'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID } from './MessageID'
 import { MessageRef } from './MessageRef'
-import { StreamMessageError } from './StreamMessageError'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
-import { StreamrClientError } from '../StreamrClientError'
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -159,7 +158,7 @@ export class StreamMessage implements StreamMessageOptions {
                 throw new StreamrClientError(`Unable to parse JSON: ${err}`, 'INVALID_MESSAGE_CONTENT', this)
             }
         } else {
-            throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
+            throw new StreamrClientError(`Unknown content type: ${this.contentType}`, 'UNKNOWN_DATA_FORMAT', this)
         }
     }
 

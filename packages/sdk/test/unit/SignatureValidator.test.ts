@@ -1,4 +1,3 @@
-import { StreamrClientError } from './../../src/StreamrClientError'
 import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -8,9 +7,9 @@ import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade
 import { MessageRef } from '../../src/protocol/MessageRef'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
+import { StreamrClientError } from './../../src/StreamrClientError'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { formMessageIdDescription } from '../../src/StreamrClientError'
 
 describe('SignatureValidator', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
