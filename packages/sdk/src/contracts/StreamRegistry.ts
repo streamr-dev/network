@@ -182,7 +182,7 @@ export class StreamRegistry {
             ...config.cache
         })
         this.publicSubscribePermissionCache = createCacheMap({
-            valueFactory: ([streamId]) => {
+            valueFactory: (streamId) => {
                 return this.hasPermission({
                     streamId,
                     public: true,
