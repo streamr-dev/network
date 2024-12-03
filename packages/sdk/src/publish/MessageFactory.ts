@@ -17,7 +17,7 @@ import {
 } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
@@ -53,7 +53,7 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
-        this.defaultMessageChainIds = new Mapping<[number], string>({
+        this.defaultMessageChainIds = createLazyMap<[number], string>({
             valueFactory: async () => {
                 return createRandomMsgChainId()
             }

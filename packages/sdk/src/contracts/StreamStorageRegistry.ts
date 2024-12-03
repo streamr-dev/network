@@ -14,7 +14,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { initContractEventGateway, waitForTx } from './contract'
-import { Mapping } from '../utils/Mapping'
+import { createCacheMap, Mapping } from '../utils/Mapping'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -78,7 +78,7 @@ export class StreamStorageRegistry {
             )
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
-        this.storageNodesCache = new Mapping({
+        this.storageNodesCache = createCacheMap({
             valueFactory: ([query]) => {
                 return this.getStorageNodes_nonCached(query)
             },

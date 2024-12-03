@@ -42,7 +42,7 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { Mapping } from '../utils/Mapping'
+import { createCacheMap, Mapping } from '../utils/Mapping'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
@@ -163,25 +163,25 @@ export class StreamRegistry {
             }),
             loggerFactory
         })
-        this.metadataCache = new Mapping({
+        this.metadataCache = createCacheMap({
             valueFactory: ([streamId]) => {
                 return this.getStreamMetadata_nonCached(streamId)
             },
             ...config.cache
         })
-        this.publisherCache = new Mapping({
+        this.publisherCache = createCacheMap({
             valueFactory: ([streamId, userId]) => {
                 return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
             },
             ...config.cache
         })
-        this.subscriberCache = new Mapping({
+        this.subscriberCache = createCacheMap({
             valueFactory: ([streamId, userId]) => {
                 return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
             }, 
             ...config.cache
         })
-        this.publicSubscribePermissionCache = new Mapping({
+        this.publicSubscribePermissionCache = createCacheMap({
             valueFactory: ([streamId]) => {
                 return this.hasPermission({
                     streamId,
