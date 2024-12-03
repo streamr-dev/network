@@ -82,6 +82,7 @@ export const propagationResults = async (filePath: string): Promise<void> => {
     let sumPropagationTime = 0
     let sumHops = 0
     let numOfLines = 0
+    let sumMessagesReceived = 0
     file.on('line', (line: string) => {
         const parsedLine = JSON.parse(line)
         for (const resultLine of parsedLine.results) {
@@ -89,9 +90,11 @@ export const propagationResults = async (filePath: string): Promise<void> => {
             numOfLines += 1
             sumPropagationTime += results.time
             sumHops += results.hops
+            sumMessagesReceived += results.numOfMessages
         }
     })
     await waitForEvent(file, 'close')
     console.log('mean propagation time:', sumPropagationTime / numOfLines)
     console.log('mean hops:', sumHops / numOfLines)
+    console.log('mean messages received:', sumMessagesReceived / numOfLines)
 } 
