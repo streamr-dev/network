@@ -176,14 +176,14 @@ export class ExperimentController {
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
         this.instructionsCompleted = 0
-        const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 4, async (node) => {
+        const nodes = shuffle(Array.from(this.clients.values()))
+        await this.runBatchedOperation(nodes, 8, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'joinStreamPart',
                     joinStreamPart: {
                         streamPartId: streamPartId.toString(),
-                        neighborCount: 3
+                        neighborCount: 4
                     }
                 }
             })
