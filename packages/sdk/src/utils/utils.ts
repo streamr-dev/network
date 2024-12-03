@@ -97,7 +97,7 @@ export class MaxSizedSet<T extends string> {
     private readonly delegate: LRUCache<T, true>
 
     constructor(maxSize: number) {
-        this.delegate = new LRUCache<T, true>({ maxSize })
+        this.delegate = new LRUCache<T, true>({ max: maxSize })
     }
 
     add(value: T): void {
