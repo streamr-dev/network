@@ -263,7 +263,9 @@ export class ExperimentController {
     async runPropagationExperiment(streamPartId: string): Promise<void> {
         const streamPart = StreamPartIDUtils.parse('experiment#0')
         await this.joinStreamPart(streamPart)
-        logger.info('all nodes joined stream part')
+        const secondsToWait = 60
+        logger.info('all nodes joined stream part waiting ' + secondsToWait + ' seconds for network to stabilize')
+        await wait(secondsToWait * 1000)
         logger.info('Getting network topology')
         await this.getStreamTopology(streamPart)
         logger.info('Starting publishing')
