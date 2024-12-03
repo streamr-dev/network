@@ -238,6 +238,7 @@ const run = async () => {
     } else if (env === 'local') {
         await Promise.all(localNodes.map((node) => node.stop()))
     }
+    logger.info('all nodes stopped', { nodeCount })
     await controller.stop()
 
     await calculateResults(filePath)

@@ -439,6 +439,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         return [JSON.stringify({
             time: sumPropagationTime / numOfLines,
             hops: sumHops / numOfLines,
+            numOfMessages: numOfLines,
             id: this.options.experimentId
         })]
     }
