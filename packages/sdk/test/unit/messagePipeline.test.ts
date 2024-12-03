@@ -151,7 +151,7 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Invalid JSON')
+        expect(error.message).toContain('Unable to parse JSON')
         expect(output).toEqual([])
     })
 

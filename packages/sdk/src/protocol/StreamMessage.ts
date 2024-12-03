@@ -1,11 +1,11 @@
 import { StreamID, StreamPartID, UserID, binaryToUtf8 } from '@streamr/utils'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
-import { InvalidJsonError } from './InvalidJsonError'
 import { MessageID } from './MessageID'
 import { MessageRef } from './MessageRef'
 import { StreamMessageError } from './StreamMessageError'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
+import { StreamrClientError } from '../StreamrClientError'
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -155,11 +155,8 @@ export class StreamMessage implements StreamMessageOptions {
             try {
                 return JSON.parse(binaryToUtf8(this.content))
             } catch (err: any) {
-                throw new InvalidJsonError(
-                    this.getStreamId(),
-                    err,
-                    this,
-                )
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                throw new StreamrClientError(`Unable to parse JSON: ${err}`, 'INVALID_MESSAGE_CONTENT', this)
             }
         } else {
             throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
