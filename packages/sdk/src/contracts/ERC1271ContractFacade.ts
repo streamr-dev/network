@@ -45,7 +45,7 @@ export class ERC1271ContractFacade {
         if (cachedValue !== undefined) {
             return cachedValue
         } else {
-            const contract = await this.contractsByAddress.get(contractAddress)
+            const contract = await this.contractsByAddress.get([contractAddress])
             const result = await contract.isValidSignature(hash(payload), signature)
             const isValid = result === SUCCESS_MAGIC_VALUE
             this.publisherCache.set(cacheKey, isValid)

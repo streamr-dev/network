@@ -104,7 +104,7 @@ export class Publisher {
         return this.concurrencyLimit(async () => {
             const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             try {
-                const messageFactory = await this.messageFactories.get(streamId)
+                const messageFactory = await this.messageFactories.get([streamId])
                 const message = await messageFactory.createMessage(
                     content,
                     {
@@ -124,7 +124,7 @@ export class Publisher {
     }
 
     getGroupKeyQueue(streamId: StreamID): Promise<GroupKeyQueue> {
-        return this.groupKeyQueues.get(streamId)
+        return this.groupKeyQueues.get([streamId])
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
@@ -132,7 +132,7 @@ export class Publisher {
             streamId,
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
-            groupKeyQueue: await this.groupKeyQueues.get(streamId),
+            groupKeyQueue: await this.groupKeyQueues.get([streamId]),
             signatureValidator: this.signatureValidator,
             messageSigner: this.messageSigner
         })

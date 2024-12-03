@@ -99,7 +99,7 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get([msg.getPublisherId(), msg.getMsgChainId()])
                 chain.addMessage(msg)
             }
             await Promise.all([...this.chains.values()].map((chain) => chain.waitUntilIdle()))

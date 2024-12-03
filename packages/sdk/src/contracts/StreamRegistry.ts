@@ -513,19 +513,19 @@ export class StreamRegistry {
     // --------------------------------------------------------------------------------------------
 
     getStreamMetadata(streamId: StreamID): Promise<StreamMetadata> {
-        return this.metadataCache.get(streamId)
+        return this.metadataCache.get([streamId])
     }
 
     isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
-        return this.publisherCache.get(streamId, userId)
+        return this.publisherCache.get([streamId, userId])
     }
 
     isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
-        return this.subscriberCache.get(streamId, userId)
+        return this.subscriberCache.get([streamId, userId])
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
-        return this.publicSubscribePermissionCache.get(streamId)
+        return this.publicSubscribePermissionCache.get([streamId])
     }
 
     populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {

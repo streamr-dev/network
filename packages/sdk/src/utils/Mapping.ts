@@ -60,7 +60,7 @@ export class Mapping<K extends KeyType, V> {
         }
     }
 
-    async get(...key: K): Promise<V> {
+    async get(key: K): Promise<V> {
         const lookupKey = formLookupKey(...key)
         const pendingPromise = this.pendingPromises.get(lookupKey)
         if (pendingPromise !== undefined) {

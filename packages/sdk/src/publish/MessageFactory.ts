@@ -89,7 +89,7 @@ export class MessageFactory {
                 : this.getDefaultPartition(partitionCount)
         }
 
-        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get([partition])
         const msgChainKey = formLookupKey(partition, msgChainId)
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)

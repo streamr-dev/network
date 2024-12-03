@@ -191,7 +191,7 @@ export class StreamStorageRegistry {
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         const query = (streamIdOrPath !== undefined) ? await this.streamIdBuilder.toStreamID(streamIdOrPath) : GET_ALL_STORAGE_NODES
-        return this.storageNodesCache.get(query)
+        return this.storageNodesCache.get([query])
     }
 
     private async getStorageNodes_nonCached(query: StreamID | typeof GET_ALL_STORAGE_NODES): Promise<EthereumAddress[]> {
