@@ -369,14 +369,13 @@ export class StreamRegistry {
     // --------------------------------------------------------------------------------------------
 
     async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         if (isPublicPermissionQuery(query)) {
             const permissionType = streamPermissionToSolidityType(query.permission)
-            return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
+            return this.streamRegistryContractReadonly.hasPublicPermission(query.streamId, permissionType)
         } else {
             const chainPermissions = query.allowPublic
-                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, query.userId)
-                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, query.userId)
+                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(query.streamId, query.userId)
+                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(query.streamId, query.userId)
             const permissions = convertChainPermissionsToStreamPermissions(chainPermissions)
             return permissions.includes(query.permission)
         }
