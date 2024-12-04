@@ -80,11 +80,7 @@ const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
 const parseStoragePath = (summary: string): string | undefined => {
     const match = summary.match(/streamr-node ([^\s]w+)/)
-    if (match !== null) {
-        return match[1]
-    } else {
-        return undefined
-    }
+    return (match !== null) ? match[1] : undefined
 }
 
 const expectPathsEqual = (actual: string | undefined, expected: string): void => {
