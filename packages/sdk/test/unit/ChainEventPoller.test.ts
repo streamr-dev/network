@@ -15,16 +15,16 @@ const createAbi = (eventName: string) => {
         name: eventName,
         anonymous: false,
         inputs: [{
-            'indexed': false,
-            'internalType': 'string',
-            'name': 'param1',
-            'type': 'string'
+            indexed: false,
+            internalType: 'string',
+            name: 'param1',
+            type: 'string'
         },
         {
-            'indexed': false,
-            'internalType': 'string',
-            'name': 'param2',
-            'type': 'string'
+            indexed: false,
+            internalType: 'string',
+            name: 'param2',
+            type: 'string'
         }]
     }]
 }
@@ -55,7 +55,7 @@ describe('ChainEventPoller', () => {
         const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
         const POLL_INTERVAL = 100
         let blockNumber = INITIAL_BLOCK_NUMBER
-        const provider = {
+        const provider: Partial<AbstractProvider> = {
             getLogs: jest.fn().mockImplementation(async () => {
                 const result = [createEventLogItem(EVENT_NAME, EVENT_ARGS, blockNumber)]
                 blockNumber++
@@ -144,7 +144,7 @@ describe('ChainEventPoller', () => {
         const CONTRACT_INTERFACE_FRAGMENT_1 = new Interface(createAbi(EVENT_NAME_1)).getEvent(EVENT_NAME_1)!
         const CONTRACT_INTERFACE_FRAGMENT_2 = new Interface(createAbi(EVENT_NAME_2)).getEvent(EVENT_NAME_2)!
         const POLL_INTERVAL = 100
-        const provider = {
+        const provider: Partial<AbstractProvider> = {
             getLogs: jest.fn().mockImplementation(async () => {
                 return [
                     createEventLogItem(EVENT_NAME_1, ['arg-foo1', ''], 150),
@@ -237,7 +237,7 @@ describe('ChainEventPoller', () => {
             invocationHistory = []
             let getBlockNumberCallCount = 0
             let queryFilterCallCount = 0
-            const provider = {
+            const provider: Partial<AbstractProvider> = {
                 getLogs: jest.fn().mockImplementation(async (filter: { fromBlock: number }) => {
                     invocationHistory.push(`getLogs(fromBlock=${filter.fromBlock})`)
                     return onGetLogs(queryFilterCallCount++)

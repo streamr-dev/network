@@ -89,7 +89,7 @@ export class ChainEventPoller {
                     const filter = {
                         address: uniq(this.listeners.map((l) => l.contractAddress)),
                         topics: [uniq(this.listeners.map((l) => l.contractInterfaceFragment.topicHash))],
-                        fromBlock: fromBlock
+                        fromBlock
                     }
                     const logItems = await provider.getLogs(filter)
                     events = []
