@@ -24,7 +24,7 @@ export class ChainEventPoller {
 
     constructor(
         rpcProviderSource: RpcProviderSource,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.providers = rpcProviderSource.getSubProviders()
         this.pollInterval = config.contracts.pollInterval
