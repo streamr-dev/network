@@ -30,17 +30,19 @@ const createAbi = (eventName: string) => {
 }
 
 const createEventLogItem = (
-    eventName: string, eventArgs: any[], blockNumber: number
+    eventName: string,
+    eventArgs: any[],
+    blockNumber: number
 ): Partial<Log> => {
     const contractInterface = new Interface(createAbi(eventName))
     return {
-        blockNumber: blockNumber,
+        blockNumber,
         address: CONTRACT_ADDRESS,
         ...contractInterface.encodeEventLog(eventName, eventArgs)
     }
 }
 
-const createChainEventPoller = (provider: AbstractProvider, pollInterval: number ) => {
+const createChainEventPoller = (provider: AbstractProvider, pollInterval: number) => {
     return new ChainEventPoller(
         { getSubProviders: () => [provider] } as any,
         { contracts: { pollInterval } } as any
@@ -68,9 +70,9 @@ describe('ChainEventPoller', () => {
         const poller = createChainEventPoller(provider as any, POLL_INTERVAL)
 
         const listener1 = jest.fn()
-        poller.on({ 
-            onEvent: listener1, 
-            contractInterfaceFragment: CONTRACT_INTERFACE_FRAGMENT, 
+        poller.on({
+            onEvent: listener1,
+            contractInterfaceFragment: CONTRACT_INTERFACE_FRAGMENT,
             contractAddress: CONTRACT_ADDRESS
         })
 
@@ -198,7 +200,7 @@ describe('ChainEventPoller', () => {
 
         await wait(1.5 * POLL_INTERVAL)
         expect(provider.getLogs).toHaveBeenNthCalledWith(
-            2, 
+            2,
             {
                 address: [CONTRACT_ADDRESS],
                 topics: [[CONTRACT_INTERFACE_FRAGMENT_1.topicHash, CONTRACT_INTERFACE_FRAGMENT_2.topicHash]],
