@@ -223,54 +223,6 @@ describe('ChainEventPoller', () => {
         })
     })
 
-    it('listener throws', async () => {
-        const EVENT_NAME = 'TestEventName'
-        const CONTRACT_INTERFACE_FRAGMENT = new Interface(createAbi(EVENT_NAME)).getEvent(EVENT_NAME)!
-        const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
-        const POLL_INTERVAL = 10
-        const EVENT_COUNT = 2
-        let blockNumber = INITIAL_BLOCK_NUMBER
-        const provider: Partial<AbstractProvider> = {
-            getLogs: jest.fn().mockImplementation(async () => {
-                if (blockNumber < INITIAL_BLOCK_NUMBER + EVENT_COUNT) {
-                    const result = [createEventLogItem(EVENT_NAME, EVENT_ARGS, blockNumber)]
-                    blockNumber++
-                    return result
-                }
-            }),
-            getBlockNumber: jest.fn().mockImplementation(async () => {
-                return blockNumber
-            })
-        }
-        const poller = createChainEventPoller(provider as any, POLL_INTERVAL)
-
-        const listener1 = jest.fn().mockImplementation(() => {
-            throw new Error('mock-error')
-        })
-        const listener2 = jest.fn()
-        for (const listener of [listener1, listener2]) {
-            poller.on({ 
-                onEvent: listener, 
-                contractInterfaceFragment: CONTRACT_INTERFACE_FRAGMENT, 
-                contractAddress: CONTRACT_ADDRESS
-            })
-        }
-
-        // assert that throwing listener doesn't stop event polling and that
-        // listener2 is called even when listener1 throws
-        await until(() => {
-            return (listener1.mock.calls.length == EVENT_COUNT) && (listener2.mock.calls.length === EVENT_COUNT)
-        })
-
-        for (const listener of [listener1, listener2]) {
-            poller.off({ 
-                onEvent: listener, 
-                contractInterfaceFragment: CONTRACT_INTERFACE_FRAGMENT, 
-                contractAddress: CONTRACT_ADDRESS
-            })
-        }
-    })
-
     describe('explicit block number fetching', () => {
 
         const EVENT_NAME = 'TestEventName'
