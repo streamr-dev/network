@@ -337,9 +337,8 @@ export class ExperimentNodeWrapper {
         for (const ip of ips) {
             try {
                 logger.info('pinging', { ip })
-                const started = now()
                 const result = await ping.promise.probe(ip)
-                results.push({ ip, time: Date.now() - started })
+                results.push({ ip, time: result.time })
             } catch (e) {
                 results.push({ ip, time: 10000 })
             }
