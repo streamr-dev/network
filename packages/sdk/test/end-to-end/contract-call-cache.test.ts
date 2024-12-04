@@ -14,7 +14,7 @@ import {
 } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
-export const waitForTheGraphToHaveIndexed = async (streamId: StreamID, client: StreamrClient): Promise<void> => {
+const waitForTheGraphToHaveIndexed = async (streamId: StreamID, client: StreamrClient): Promise<void> => {
     await until(async () => {
         const streams = await collect(client.searchStreams(streamId, undefined))
         return streams.length > 0
@@ -88,6 +88,16 @@ describe('contract call cache', () => {
             const stream = (await nextValue(client.searchStreams(existingStreamId, undefined)[Symbol.asyncIterator]()))!
             await stream.getMetadata()
             expect(getMethodCalls()).toHaveLength(0)
+        })
+
+        it('is not in cache after calling deleteStream()', async () => {
+            const stream = await client.createStream(createRelativeTestStreamId(module))
+            await client.deleteStream(stream.id)
+            const otherClient = createTestClient(authenticatedUser.privateKey)
+            await otherClient.createStream(stream.id)
+            await otherClient.destroy()
+            await client.getStreamMetadata(stream.id)
+            expect(getMethodCalls()).toHaveLength(1)
         })
 
         it('cache updated when calling setStreamMetatadata()', async () => {

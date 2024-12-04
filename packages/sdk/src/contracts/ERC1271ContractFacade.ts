@@ -1,11 +1,10 @@
-import { BrandedString, EthereumAddress, MapWithTtl, UserID, hash, recoverSignerUserId, toUserId } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { BrandedString, EthereumAddress, hash, MapWithTtl, recoverSignerUserId, toUserId, UserID } from '@streamr/utils'
+import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
 import ERC1271ContractArtifact from '../ethereumArtifacts/IERC1271Abi.json'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { ContractFactory } from './ContractFactory'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
@@ -20,15 +19,14 @@ function formCacheKey(contractAddress: EthereumAddress, signerUserId: UserID): C
 @scoped(Lifecycle.ContainerScoped)
 export class ERC1271ContractFacade {
 
-    private readonly contractsByAddress: Mapping<[EthereumAddress], ERC1271Contract>
+    private readonly contractsByAddress: Mapping<EthereumAddress, ERC1271Contract>
     private readonly publisherCache = new MapWithTtl<CacheKey, boolean>(() => CACHE_TTL)
 
     constructor(
         contractFactory: ContractFactory,
-        rpcProviderSource: RpcProviderSource,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
+        rpcProviderSource: RpcProviderSource
     ) {
-        this.contractsByAddress = new Mapping<[EthereumAddress], ERC1271Contract>({
+        this.contractsByAddress = createLazyMap<EthereumAddress, ERC1271Contract>({
             valueFactory: async (address) => {
                 return contractFactory.createReadContract(
                     address,
@@ -36,8 +34,7 @@ export class ERC1271ContractFacade {
                     rpcProviderSource.getProvider(),
                     'erc1271Contract'
                 ) as ERC1271Contract
-            },
-            maxSize: config.cache.maxSize
+            }
         })
     }
 

@@ -154,10 +154,14 @@ export function generateClientId(): string {
     return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
+export type LookupKeyType = (string | number | symbol) | (string | number | symbol)[]
+
 // A unique internal identifier to some list of primitive values. Useful
 // e.g. as a map key or a cache key.
-export const formLookupKey = <K extends (string | number | symbol)[]>(...args: K): string => {
-    return args.map((a) => a.toString()).join('|')
+export const formLookupKey = <K extends LookupKeyType>(key: K): string => {
+    return Array.isArray(key)
+        ? key.map((a) => a.toString()).join('|')
+        : key.toString()
 }
 
 /** @internal */

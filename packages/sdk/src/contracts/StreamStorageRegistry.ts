@@ -14,7 +14,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { initContractEventGateway, waitForTx } from './contract'
-import { Mapping } from '../utils/Mapping'
+import { createCacheMap, Mapping } from '../utils/Mapping'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -45,7 +45,7 @@ export class StreamStorageRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly storageNodesCache: Mapping<[string | typeof GET_ALL_STORAGE_NODES], EthereumAddress[]>
+    private readonly storageNodesCache: Mapping<StreamID | typeof GET_ALL_STORAGE_NODES, EthereumAddress[]>
 
     constructor(
         streamIdBuilder: StreamIDBuilder,
@@ -78,8 +78,8 @@ export class StreamStorageRegistry {
             )
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
-        this.storageNodesCache = new Mapping({
-            valueFactory: (query: string | typeof GET_ALL_STORAGE_NODES) => {
+        this.storageNodesCache = createCacheMap({
+            valueFactory: (query) => {
                 return this.getStorageNodes_nonCached(query)
             },
             ...config.cache
@@ -190,13 +190,14 @@ export class StreamStorageRegistry {
     }
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
-        return this.storageNodesCache.get(streamIdOrPath ?? GET_ALL_STORAGE_NODES)
+        const query = (streamIdOrPath !== undefined) ? await this.streamIdBuilder.toStreamID(streamIdOrPath) : GET_ALL_STORAGE_NODES
+        return this.storageNodesCache.get(query)
     }
 
-    private async getStorageNodes_nonCached(query: string | typeof GET_ALL_STORAGE_NODES): Promise<EthereumAddress[]> {
+    private async getStorageNodes_nonCached(query: StreamID | typeof GET_ALL_STORAGE_NODES): Promise<EthereumAddress[]> {
         let queryResults: NodeQueryResult[]
         if (query !== GET_ALL_STORAGE_NODES) {
-            const streamId = await this.streamIdBuilder.toStreamID(query)
+            const streamId = query
             this.logger.debug('Get storage nodes of stream', { streamId })
             queryResults = await collect(this.theGraphClient.queryEntities<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {

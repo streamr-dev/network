@@ -17,7 +17,7 @@ import {
 } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
@@ -30,7 +30,6 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
-    cacheMaxSize: number
 }
 
 export class MessageFactory {
@@ -38,7 +37,7 @@ export class MessageFactory {
     private readonly streamId: StreamID
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
-    private readonly defaultMessageChainIds: Mapping<[partition: number], string>
+    private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     // eslint-disable-next-line max-len
     private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
@@ -54,11 +53,10 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
-        this.defaultMessageChainIds = new Mapping({
-            valueFactory: async (_partition: number) => {
+        this.defaultMessageChainIds = createLazyMap<number, string>({
+            valueFactory: async () => {
                 return createRandomMsgChainId()
-            },
-            maxSize: opts.cacheMaxSize
+            }
         })
     }
 
@@ -92,7 +90,7 @@ export class MessageFactory {
         }
 
         const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
-        const msgChainKey = formLookupKey(partition, msgChainId)
+        const msgChainKey = formLookupKey([partition, msgChainId])
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)

@@ -41,8 +41,8 @@ describe('publishEndpoint', () => {
         await postMessage({
             foo: 'bar'
         }, queryParams).expect(200)
-        expect(streamrClient.publish).toBeCalledTimes(1)
-        expect(streamrClient.publish).toBeCalledWith({
+        expect(streamrClient.publish).toHaveBeenCalledTimes(1)
+        expect(streamrClient.publish).toHaveBeenCalledWith({
             streamId: MOCK_STREAM_ID,
             streamPartition: expectedPartition
         }, {
@@ -99,7 +99,7 @@ describe('publishEndpoint', () => {
         await postMessage({
             foo: 2
         }, {})
-        expect(streamrClient.publish).toBeCalledTimes(2)
+        expect(streamrClient.publish).toHaveBeenCalledTimes(2)
         const firstMessageMsgChainId = streamrClient.publish.mock.calls[0][2].msgChainId
         const secondMessageMsgChainId = streamrClient.publish.mock.calls[1][2].msgChainId
         expect(firstMessageMsgChainId).toBeDefined()

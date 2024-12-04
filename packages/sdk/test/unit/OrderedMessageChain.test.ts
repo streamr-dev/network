@@ -41,17 +41,17 @@ describe('OrderedMessageChain', () => {
     }
 
     const expectFoundGaps = (gaps: Gap[], allResolved = true) => {
-        expect(onGapFound).toBeCalledTimes(gaps.length)
+        expect(onGapFound).toHaveBeenCalledTimes(gaps.length)
         for (let i = 0; i < gaps.length; i++) {
             expect(onGapFound).toHaveBeenNthCalledWith(i + 1, gaps[i])
         }
         if (allResolved) {
-            expect(onGapResolved).toBeCalledTimes(gaps.length)
+            expect(onGapResolved).toHaveBeenCalledTimes(gaps.length)
         }
     }
 
     const expectUnfillableGaps = (gaps: Gap[]) => {
-        expect(onUnfillableGap).toBeCalledTimes(gaps.length)
+        expect(onUnfillableGap).toHaveBeenCalledTimes(gaps.length)
         for (let i = 0; i < gaps.length; i++) {
             expect(onUnfillableGap).toHaveBeenNthCalledWith(i + 1, gaps[i])
         }
@@ -84,7 +84,7 @@ describe('OrderedMessageChain', () => {
         expectFoundGaps([
             createGap(1, 3)
         ], false)
-        expect(onGapResolved).not.toBeCalled()
+        expect(onGapResolved).not.toHaveBeenCalled()
     })
 
     it('fill single gap', () => {
@@ -215,7 +215,7 @@ describe('OrderedMessageChain', () => {
             expectUnfillableGaps([
                 createGap(2, 4)
             ])
-            expect(onGapResolved).toBeCalledTimes(1)
+            expect(onGapResolved).toHaveBeenCalledTimes(1)
         })
 
         it('find only the current gap when resolving all messages', () => {

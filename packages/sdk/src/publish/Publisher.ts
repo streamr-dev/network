@@ -1,7 +1,7 @@
 import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -12,10 +12,9 @@ import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { StreamDefinition } from '../types'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -44,8 +43,8 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
 
-    private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
-    private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly messageFactories: Mapping<StreamID, MessageFactory>
+    private readonly groupKeyQueues: Mapping<StreamID, GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
@@ -53,14 +52,12 @@ export class Publisher {
     private readonly authentication: Authentication
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
-    private readonly config: Pick<StrictStreamrClientConfig, 'cache'>
 
     constructor(
         node: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner
@@ -71,18 +68,15 @@ export class Publisher {
         this.authentication = authentication
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
-        this.config = config
-        this.messageFactories = new Mapping({
-            valueFactory: async (streamId: StreamID) => {
+        this.messageFactories = createLazyMap({
+            valueFactory: async (streamId) => {
                 return this.createMessageFactory(streamId)
-            },
-            maxSize: config.cache.maxSize
+            }
         })
-        this.groupKeyQueues = new Mapping({
-            valueFactory: async (streamId: StreamID) => {
+        this.groupKeyQueues = createLazyMap({
+            valueFactory: async (streamId) => {
                 return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
-            },
-            maxSize: config.cache.maxSize
+            }
         })
     }
 
@@ -140,8 +134,7 @@ export class Publisher {
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
-            messageSigner: this.messageSigner,
-            cacheMaxSize: this.config.cache.maxSize
+            messageSigner: this.messageSigner
         })
     }
 }

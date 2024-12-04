@@ -20,15 +20,14 @@ describe('Publisher', () => {
             streamRegistry as any,
             createGroupKeyManager(undefined, authentication),
             streamIdBuilder,
-            { cache: { maxSize: 999999 } } as any,
             authentication,
             mock<SignatureValidator>(),
-            mock<MessageSigner>(),
+            mock<MessageSigner>()
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {
             await publisher.publish(streamId, {})
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             code: 'MISSING_PERMISSION',
             // eslint-disable-next-line max-len
             message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await authentication.getUserId()}`

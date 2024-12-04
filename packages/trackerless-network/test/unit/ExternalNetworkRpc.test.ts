@@ -1,10 +1,10 @@
 import { Message } from '@streamr/dht'
 import { ExternalNetworkRpc, SERVICE_ID } from '../../src/logic/ExternalNetworkRpc'
+import { HandshakeRequest, HandshakeResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { RpcMessage } from '@streamr/proto-rpc'
 import { Any } from '../../generated/google/protobuf/any'
 import { HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 
 describe('ExternalNetworkRpc', () => {
 
@@ -23,7 +23,7 @@ describe('ExternalNetworkRpc', () => {
     })
 
     it('registers method', async () => {
-        rpc.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', () => fn())
+        rpc.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', () => fn())
         transport.emit('message', Message.create({
             serviceId: SERVICE_ID,
             body: {
@@ -33,7 +33,7 @@ describe('ExternalNetworkRpc', () => {
                         request: 'request',
                         method: 'handshake'
                     },
-                    body: Any.pack(StreamPartHandshakeRequest.create(), StreamPartHandshakeRequest)
+                    body: Any.pack(HandshakeRequest.create(), HandshakeRequest)
                 })
             }
         }))

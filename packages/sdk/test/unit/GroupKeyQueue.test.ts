@@ -28,8 +28,8 @@ describe('GroupKeyQueue', () => {
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
-        expect(groupKeyStore.set).toBeCalledTimes(1)
-        expect(groupKeyStore.set).toBeCalledWith(groupKey.id, await authentication.getUserId(), groupKey.data)
+        expect(groupKeyStore.set).toHaveBeenCalledTimes(1)
+        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await authentication.getUserId(), groupKey.data)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

@@ -1,7 +1,6 @@
 import { DhtAddress, toDhtAddressRaw } from '../identifiers'
 import { Any } from '../../generated/google/protobuf/any'
-import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from './contact/RpcRemote'
 
