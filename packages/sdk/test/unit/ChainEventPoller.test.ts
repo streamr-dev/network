@@ -323,5 +323,13 @@ describe('ChainEventPoller', () => {
         await until(() => {
             return (listener1.mock.calls.length == EVENT_COUNT) && (listener2.mock.calls.length === EVENT_COUNT)
         })
+
+        for (const listener of [listener1, listener2]) {
+            poller.off({ 
+                onEvent: listener, 
+                contractInterfaceFragment: CONTRACT_INTERFACE_FRAGMENT, 
+                contractAddress: CONTRACT_ADDRESS
+            })
+        }
     })
 })
