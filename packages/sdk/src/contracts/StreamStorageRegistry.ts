@@ -15,6 +15,7 @@ import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { initContractEventGateway, waitForTx } from './contract'
 import { CachingMap } from '../utils/CachingMap'
+import { Interface } from 'ethers'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -51,6 +52,7 @@ export class StreamStorageRegistry {
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
+        chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -70,13 +72,6 @@ export class StreamStorageRegistry {
             rpcProviderSource.getProvider(),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return contractFactory.createEventContract(
-                toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), 
-                StreamStorageRegistryArtifact,
-                p
-            )
-        }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
         this.getStorageNodes_cached = new CachingMap((streamIdOrPath?: string) => {
             return this.getStorageNodes_nonCached(streamIdOrPath)
@@ -88,7 +83,6 @@ export class StreamStorageRegistry {
         })
     }
 
-    // eslint-disable-next-line class-methods-use-this
     private initStreamAssignmentEventListeners(
         eventEmitter: StreamrClientEventEmitter,
         chainEventPoller: ChainEventPoller,
@@ -99,8 +93,13 @@ export class StreamStorageRegistry {
             nodeAddress: toEthereumAddress(nodeAddress),
             blockNumber
         })
+        const contractAddress = toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress)
+        const contractInterface = new Interface(StreamStorageRegistryArtifact)
         initContractEventGateway({
-            sourceName: 'Added', 
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Added')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'streamAddedToStorageNode',
             targetEmitter: eventEmitter,
@@ -108,7 +107,10 @@ export class StreamStorageRegistry {
             loggerFactory
         })
         initContractEventGateway({
-            sourceName: 'Removed', 
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Removed')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'streamRemovedFromFromStorageNode',
             targetEmitter: eventEmitter,

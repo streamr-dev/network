@@ -2,8 +2,9 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { capitalize } from 'lodash'
+import { capitalize, random } from 'lodash'
 import { DestroySignal } from '../../src/DestroySignal'
+import { EventListenerDefinition } from '../../src/contracts/ChainEventPoller'
 import {
     Operator,
     OperatorEvents,
@@ -38,56 +39,43 @@ describe(parsePartitionFromReviewRequestMetadata, () => {
     })
 })
 
-const POLL_INTERVAL = 100
+const POLL_INTERVAL = 50
 const OPERATOR_CONTRACT_ADDRESS = randomEthereumAddress()
 const SPONSORSHIP_ADDRESS = randomEthereumAddress()
-const INITIAL_BLOCK_NUMBER = 111
-const EVENT_BLOCK_NUMBER = 222
 
-const createOperator = (eventName: string, args: any[]) => {
-    const fakeContract = {
-        queryFilter: (eventNames: string[][], fromBlock: number) => {
-            if ((eventNames[0][0] === eventName) && (fromBlock <= EVENT_BLOCK_NUMBER)) {
-                return [{
-                    fragment: {
-                        name: eventName
-                    },
-                    args,
-                    blockNumber: EVENT_BLOCK_NUMBER
-                }]
-            } else {
-                return []
-            }
-        },
-        runner: {
-            provider: {
-                getBlockNumber: async () => INITIAL_BLOCK_NUMBER
+const createOperator = (eventName: string, eventArgs: any[]): Operator => {
+    const chainEventPoller = {
+        on: (definition: EventListenerDefinition) => {
+            if (definition.contractInterfaceFragment.name === eventName) {
+                setTimeout(() => {
+                    definition.onEvent(...eventArgs)
+                }, random(POLL_INTERVAL))
             }
         }
     }
+    const contractFactory = {
+        createReadContract: () => ({})
+    }
+    const rpcProviderSource = {
+        getProvider: () => ({})
+    }
     return new Operator(
         OPERATOR_CONTRACT_ADDRESS,
-        {
-            createReadContract: () => fakeContract,
-            createEventContract: () => fakeContract
-        } as any,
-        {
-            getProvider: () => undefined,
-            getSubProviders: () => ['dummy']
-        } as any,
+        contractFactory as any,
+        rpcProviderSource as any,
+        chainEventPoller as any,
         undefined as any,
         undefined as any,
         new DestroySignal(),
         mockLoggerFactory(),
-        undefined as any,
-        POLL_INTERVAL
+        undefined as any
     )
 }
 
 describe('Operator', () => {
 
     describe('reviewRequest listener', () => {
-    
+
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
             const operator = createOperator(
                 'ReviewRequest',
@@ -96,16 +84,15 @@ describe('Operator', () => {
             const listener = jest.fn()
             operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
-            expect(listener).toHaveBeenLastCalledWith({ 
-                sponsorship: SPONSORSHIP_ADDRESS, 
+            expect(listener).toHaveBeenLastCalledWith({
+                sponsorship: SPONSORSHIP_ADDRESS,
                 targetOperator: OPERATOR_CONTRACT_ADDRESS,
                 partition: 7,
                 votingPeriodStartTimestamp: 1000 * 1000,
                 votingPeriodEndTimestamp: 1050 * 1000
             })
-            operator.off('reviewRequested', listener)
         })
-    
+
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
             const operator = createOperator(
                 'ReviewRequest',
@@ -115,7 +102,6 @@ describe('Operator', () => {
             operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).not.toHaveBeenCalled()
-            operator.off('reviewRequested', listener)
         })
     })
 
@@ -129,10 +115,9 @@ describe('Operator', () => {
             const listener = jest.fn()
             operator.on(eventName as keyof OperatorEvents, listener)
             await wait(1.5 * POLL_INTERVAL)
-            expect(listener).toHaveBeenLastCalledWith({ 
+            expect(listener).toHaveBeenLastCalledWith({
                 sponsorship: SPONSORSHIP_ADDRESS
             })
-            operator.off(eventName as keyof OperatorEvents, listener)
         })
     })
 })
