@@ -78,7 +78,7 @@ const IMPORTED_PRIVATE_KEY =
 
 const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
-const parseStoragePath = (summary: string): string | undefined => {
+const extractStoragePath = (summary: string): string | undefined => {
     const match = summary.match(/streamr-node ([^\s]w+)/)
     return (match !== null) ? match[1] : undefined
 }
@@ -172,7 +172,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('prints out the generated private key onto the screen if told to', async () => {
@@ -235,7 +235,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Flee Kit Stomach\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates given private key', async () => {
@@ -314,7 +314,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates the operator address', async () => {
@@ -402,7 +402,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables websocket plugin on a custom port', async () => {
@@ -460,7 +460,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on the default port', async () => {
@@ -522,7 +522,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on a custom port', async () => {
@@ -584,7 +584,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on the default port', async () => {
@@ -647,7 +647,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on a custom port', async () => {
@@ -708,7 +708,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on default ports', async () => {
@@ -781,7 +781,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on custom ports', async () => {
@@ -852,7 +852,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates port number values', async () => {
@@ -962,7 +962,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('disallows taking default ports if they are inexplicitly used', async () => {
@@ -1039,7 +1039,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('allows to uses a custom file path for the config file', async () => {
@@ -1249,7 +1249,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expectPathsEqual(parseStoragePath(summary), storagePath)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('tells the user to fund their node address if the balance is too low', async () => {
