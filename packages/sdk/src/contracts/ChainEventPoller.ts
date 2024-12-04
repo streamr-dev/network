@@ -124,7 +124,15 @@ export class ChainEventPoller {
                             (l) => (l.contractAddress === event.contractAddress) && (l.contractInterfaceFragment.name === event.name)
                         )
                         for (const listener of listeners) {
-                            listener.onEvent(...event.args, event.blockNumber)
+                            try {
+                                listener.onEvent(...event.args, event.blockNumber)
+                            } catch (err) {
+                                logger.error('Event listener threw error', {
+                                    eventName: listener.contractInterfaceFragment.name,
+                                    blockNumber: event.blockNumber,
+                                    err
+                                })
+                            }
                         }
                     }
                     newFromBlock = Math.max(...events.map((e) => e.blockNumber)) + 1
