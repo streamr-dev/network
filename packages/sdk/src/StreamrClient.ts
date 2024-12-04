@@ -476,8 +476,8 @@ export class StreamrClient {
     /**
      * Checks whether the given permission is in effect.
      */
-    hasPermission(query: PermissionQuery): Promise<boolean> {
-        return this.streamRegistry.hasPermission(toInternalPermissionQuery(query))
+    async hasPermission(query: PermissionQuery): Promise<boolean> {
+        return this.streamRegistry.hasPermission(await toInternalPermissionQuery(query, this.streamIdBuilder))
     }
 
     /**

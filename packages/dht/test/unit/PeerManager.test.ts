@@ -4,7 +4,7 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager } from '../../src/dht/PeerManager'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { DhtAddress, randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
-import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 

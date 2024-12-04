@@ -1,6 +1,6 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
 import { Logger } from '@streamr/utils'

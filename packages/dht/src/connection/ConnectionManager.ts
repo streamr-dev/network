@@ -9,10 +9,10 @@ import {
     LockRequest,
     LockResponse,
     Message,
+    PeerDescriptor,
     UnlockRequest,
     SetPrivateRequest
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'

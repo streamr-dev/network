@@ -1,23 +1,21 @@
-import { formLookupKey } from './utils'
+import { formLookupKey, LookupKeyType } from './utils'
 import LRU from '../../vendor/quick-lru'
-import { MarkRequired } from 'ts-essentials'
+import { MarkRequired } from 'ts-essentials' 
 
-type KeyType = (string | number)[]
-
-interface BaseOptions<K extends KeyType, V> {
-    valueFactory: (...args: K) => Promise<V>
+interface BaseOptions<K extends LookupKeyType, V> {
+    valueFactory: (key: K) => Promise<V>
     isCacheableValue?: (value: V) => boolean
 }
 
-interface CacheMapOptions<K extends KeyType, V> extends BaseOptions<K, V> {
+interface CacheMapOptions<K extends LookupKeyType, V> extends BaseOptions<K, V> {
     maxSize: number
     maxAge?: number
 }
 
-type LazyMapOptions<K extends KeyType, V> = BaseOptions<K, V>
+type LazyMapOptions<K extends LookupKeyType, V> = BaseOptions<K, V>
 
-// an wrapper object is used so that we can store undefined values
-interface ValueWrapper<V> {
+interface Item<K, V> {
+    key: K
     value: V
 }
 
@@ -34,9 +32,9 @@ interface ValueWrapper<V> {
  * `get()` calls were cache misses, i.e. affecting significantly cases where the
  * `isCacheableValue()` returns `true`.)
  */
-export class Mapping<K extends KeyType, V> {
+export class Mapping<K extends LookupKeyType, V> {
 
-    private readonly delegate: Map<string, ValueWrapper<V>>
+    private readonly delegate: Map<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: MarkRequired<CacheMapOptions<K, V> | LazyMapOptions<K, V>, 'isCacheableValue'>
 
@@ -47,12 +45,12 @@ export class Mapping<K extends KeyType, V> {
      **/
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {
-            this.delegate = new LRU<string, ValueWrapper<V>>({
+            this.delegate = new LRU<string, Item<K, V>>({
                 maxSize: opts.maxSize,
                 maxAge: opts.maxAge
             })
         } else {
-            this.delegate = new Map<string, ValueWrapper<V>>()
+            this.delegate = new Map<string, Item<K, V>>()
         }
         this.opts = {
             isCacheableValue: () => true,
@@ -60,44 +58,54 @@ export class Mapping<K extends KeyType, V> {
         }
     }
 
-    async get(...args: K): Promise<V> {
-        const key = formLookupKey(...args)
-        const pendingPromise = this.pendingPromises.get(key)
+    async get(key: K): Promise<V> {
+        const lookupKey = formLookupKey(key)
+        const pendingPromise = this.pendingPromises.get(lookupKey)
         if (pendingPromise !== undefined) {
             return await pendingPromise
         } else {
-            let valueWrapper = this.delegate.get(key)
-            if (valueWrapper === undefined) {
-                const promise = this.opts.valueFactory(...args)
-                this.pendingPromises.set(key, promise)
+            let item = this.delegate.get(lookupKey)
+            if (item === undefined) {
+                const promise = this.opts.valueFactory(key)
+                this.pendingPromises.set(lookupKey, promise)
                 let value
                 try {
                     value = await promise
                 } finally {
-                    this.pendingPromises.delete(key)
+                    this.pendingPromises.delete(lookupKey)
                 }
-                valueWrapper = { value }
+                item = { key, value }
                 if (this.opts.isCacheableValue(value)) {
-                    this.delegate.set(key, valueWrapper)
+                    this.delegate.set(lookupKey, item)
                 }
             }
-            return valueWrapper.value
+            return item.value
         }
     }
 
-    values(): V[] {
-        const result: V[] = []
-        for (const wrapper of this.delegate.values()) {
-            result.push(wrapper.value)
+    set(key: K, value: V): void {
+        this.delegate.set(formLookupKey(key), { key, value })
+    }
+
+    invalidate(predicate: (key: K) => boolean): void {
+        for (const [lookupKey, item] of this.delegate.entries()) {
+            if (predicate(item.key)) {
+                this.delegate.delete(lookupKey)
+            }
         }
-        return result
+    }
+
+    *values(): IterableIterator<V> {
+        for (const item of this.delegate.values()) {
+            yield item.value
+        }
     }
 }
 
-export const createCacheMap = <K extends KeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
+export const createCacheMap = <K extends LookupKeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
     return new Mapping<K, V>(opts)
 }
 
-export const createLazyMap = <K extends KeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
+export const createLazyMap = <K extends LookupKeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
     return new Mapping<K, V>(opts)
 }
