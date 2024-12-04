@@ -38,7 +38,7 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /(\.jsx|\.js|\.ts)$/,
+                    test: /(\.jsx|\.js|\.ts|\.mts)$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
                         loader: 'babel-loader',
@@ -116,7 +116,7 @@ module.exports = (env, argv) => {
                     path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
-                    path.resolve('./src/utils/persistence/BrowserPersistence.ts')
+                    path.resolve('./src/utils/persistence/BrowserPersistence.mts')
                 )
             },
             fallback: {

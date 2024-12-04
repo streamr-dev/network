@@ -18,7 +18,7 @@
     ],
     "exclude": [
         "src/exports-esm.mjs",
-        "src/utils/persistence/BrowserPersistence.ts"
+        "src/utils/persistence/BrowserPersistence.mts"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
