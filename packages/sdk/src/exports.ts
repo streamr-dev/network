@@ -94,18 +94,18 @@ export {
 import {
     delegate,
     undelegate,
-    deploySponsorshipContract,
-    setupOperatorContract,
-    SetupOperatorContractOpts,
-    SetupOperatorContractReturnType,
-    deployOperatorContract,
-    DeployOperatorContractOpts,
+    deployTestSponsorshipContract,
+    setupTestOperatorContract,
+    SetupTestOperatorContractOpts,
+    SetupTestOperatorContractReturnType,
+    deployTestOperatorContract,
+    DeployTestOperatorContractOpts,
     sponsor,
     stake,
     unstake,
-    getProvider,
-    generateWalletWithGasAndTokens,
-    DeploySponsorshipContractOpts,
+    getTestProvider,
+    createTestWallet,
+    DeployTestSponsorshipContractOpts,
     getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
@@ -118,20 +118,20 @@ import {
 const _operatorContractUtils = {
     delegate,
     undelegate,
-    deploySponsorshipContract,
-    setupOperatorContract,
+    deployTestSponsorshipContract,
+    setupTestOperatorContract,
     sponsor,
     stake,
     unstake,
-    getProvider,
-    generateWalletWithGasAndTokens,
-    deployOperatorContract,
+    getTestProvider,
+    createTestWallet,
+    deployTestOperatorContract,
     getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
 }
 export { _operatorContractUtils }
-export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
+export type { SetupTestOperatorContractOpts, SetupTestOperatorContractReturnType, DeployTestOperatorContractOpts, DeployTestSponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Eip1193Provider, Overrides } from 'ethers'

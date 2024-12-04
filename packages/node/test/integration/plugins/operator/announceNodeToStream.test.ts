@@ -10,7 +10,7 @@ const TIMEOUT = 40 * 1000
 describe('announceNodeToStream', () => {
 
     it('publishes to stream', async () => {
-        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
+        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupTestOperatorContract({
             nodeCount: 1
         })
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())

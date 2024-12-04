@@ -1,16 +1,16 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
-    SetupOperatorContractReturnType,
+    SetupTestOperatorContractReturnType,
     delegate,
-    deploySponsorshipContract,
+    deployTestSponsorshipContract,
     getTestAdminWallet,
-    setupOperatorContract,
+    setupTestOperatorContract,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
@@ -38,41 +38,41 @@ const createTheGraphClient = (): TheGraphClient => {
     })
 }
 
-async function createStream(): Promise<string> {
+async function createStream(): Promise<StreamID> {
     const client = createClient(await fetchPrivateKeyWithGas())
     const streamId = (await client.createStream(`/${Date.now()}`)).id
     await client.destroy()
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (wallet: Wallet | undefined, operator: SetupTestOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     const contractAddress = toEthereumAddress(await operator.operatorContract.getAddress())
     return client.getOperator(contractAddress)
 }
 
 describe('Operator', () => {
-    let streamId1: string
-    let streamId2: string
+    let streamId1: StreamID
+    let streamId2: StreamID
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
-    let deployedOperator: SetupOperatorContractReturnType
+    let deployedOperator: SetupTestOperatorContractReturnType
 
     beforeAll(async () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1 })
+            setupTestOperatorContract({ nodeCount: 1 })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
         deployedOperator = concurrentTasks[2]
 
-        sponsorship1 = await deploySponsorshipContract({
+        sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
             deployer: deployedOperator.operatorWallet
         })
-        sponsorship2 = await deploySponsorshipContract({
+        sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })
@@ -80,8 +80,8 @@ describe('Operator', () => {
     }, 90 * 1000)
 
     it('getStakedOperators', async () => {
-        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), 20000)
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
+        await delegate(deployedOperator.operatorWallet, toEthereumAddress(await deployedOperator.operatorContract.getAddress()), 20000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship1.getAddress()), 10000n)
         const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
         const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
         expect(randomOperatorAddress).toBeDefined()
@@ -105,9 +105,9 @@ describe('Operator', () => {
 
     it('getSponsorships, getOperatorsInSponsorship', async () => {
         const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-        await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000)
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
-        await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000)
+        await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship1.getAddress()), 10000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship2.getAddress()), 10000n)
 
         const operator = await getOperator(undefined, deployedOperator)
 
@@ -136,14 +136,14 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract()
+        const target = await setupTestOperatorContract()
 
-        await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), 50000)
+        await sponsor(flagger.operatorWallet, toEthereumAddress(await sponsorship2.getAddress()), 50000n)
 
-        await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), 20000)
-        await delegate(target.operatorWallet, await target.operatorContract.getAddress(), 30000)
-        await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000)
-        await stake(target.operatorContract, await sponsorship2.getAddress(), 25000)
+        await delegate(flagger.operatorWallet, toEthereumAddress(await flagger.operatorContract.getAddress()), 20000n)
+        await delegate(target.operatorWallet, toEthereumAddress(await target.operatorContract.getAddress()), 30000n)
+        await stake(flagger.operatorContract, toEthereumAddress(await sponsorship2.getAddress()), 15000n)
+        await stake(target.operatorContract, toEthereumAddress( await sponsorship2.getAddress()), 25000n)
 
         const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
         await contractFacade.flag(

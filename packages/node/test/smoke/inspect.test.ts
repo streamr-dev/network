@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, StreamID, TheGraphClient, wait, until } from '@streamr/utils'
+import { Logger, StreamID, TheGraphClient, wait, until, toEthereumAddress, EthereumAddress } from '@streamr/utils'
 import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { Broker, createBroker } from '../../src/broker'
@@ -37,10 +37,10 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
  */
 
 const {
-    setupOperatorContract,
-    getProvider,
-    generateWalletWithGasAndTokens,
-    deploySponsorshipContract,
+    setupTestOperatorContract,
+    getTestProvider,
+    createTestWallet,
+    deployTestSponsorshipContract,
     delegate,
     stake,
     getTestTokenContract,
@@ -62,18 +62,19 @@ const CLOSE_EXPIRED_FLAGS_MAX_AGE = 30 * 1000
 const VALID_OPERATOR_COUNT = 3  // one flagger and at least two voters are needed (see VoteKickPolicy.sol:166)
 const MAX_TEST_RUN_TIME = 15 * 60 * 1000
 
-const DELEGATE_WEI = 50000
-const STAKE_WEI = 10000
-const REVIEWER_REWARD_WEI = 700
-const FLAGGER_REWARD_WEI = 900
+const DELEGATE_WEI = 50000n
+const STAKE_WEI = 10000n
+const REVIEWER_REWARD_WEI = 700n
+const FLAGGER_REWARD_WEI = 900n
 const SLASHING_FRACTION = 0.25
+const SLASHING_WEI = BigInt(SLASHING_FRACTION * Number(STAKE_WEI))
 
 // two operators and a sponsorship which have been created in dev-chain init
 const PRE_BAKED_OPERATORS = [{
-    contractAddress: '0x8ac1cee54b9133ab7fe5418c826be60a6353d95e',
+    contractAddress: toEthereumAddress('0x8ac1cee54b9133ab7fe5418c826be60a6353d95e'),
     privateKey: '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 }, {
-    contractAddress: '0xb63c856cf861a88f4fa8587716fdc4e69cdf9ef1',
+    contractAddress: toEthereumAddress('0xb63c856cf861a88f4fa8587716fdc4e69cdf9ef1'),
     privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
 }]
 const PRE_BAKED_SPONSORSHIP = '0x5fb705aeb6f9a84499c202fc02c33d6f249dc26a'
@@ -90,9 +91,9 @@ const createStream = async (): Promise<StreamID> => {
 }
 
 const createOperator = async (
-    pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: string, isFreerider: boolean
+    pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: EthereumAddress, isFreerider: boolean
 ): Promise<Operator> => {
-    const operator = await setupOperatorContract({
+    const operator = await setupTestOperatorContract({
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
@@ -125,7 +126,7 @@ const createTheGraphClient = (): TheGraphClient => {
 const configureBlockchain = async (): Promise<void> => {
     const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
-    const provider = getProvider() as JsonRpcProvider
+    const provider = getTestProvider() as JsonRpcProvider
     await provider.send('evm_setAutomine', [true])
     await createStream()  // just some transaction
     await provider.send('evm_setAutomine', [false])
@@ -220,8 +221,8 @@ describe('inspect', () => {
         await streamrConfig.setSlashingFraction(parseEther(String(SLASHING_FRACTION)))
         logger.info('Setup sponsorship')
         const streamId = await createStream()
-        const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0, streamId, deployer: sponsorer })
+        const sponsorer = await createTestWallet()
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {
@@ -251,7 +252,7 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getProvider())) as any
+            const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getTestProvider())) as any
             await (await contract.unstake(PRE_BAKED_SPONSORSHIP)).wait()
         }
 
@@ -271,7 +272,7 @@ describe('inspect', () => {
             await operator.node.stop()
         }
         // revert to dev-chain default mining interval
-        await (getProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
+        await (getTestProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
     })
 
     /*
@@ -311,8 +312,8 @@ describe('inspect', () => {
         }
 
         // assert slashing and rewards
-        const token = getTestTokenContract().connect(getProvider())
-        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_FRACTION * STAKE_WEI)
+        const token = getTestTokenContract().connect(getTestProvider())
+        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_WEI)
         expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_WEI - STAKE_WEI + FLAGGER_REWARD_WEI)
         for (const voter of flags[0].votes.map((vote) => vote.voter)) {
             expect(await getTokenBalance(voter, token)).toEqual(DELEGATE_WEI - STAKE_WEI + REVIEWER_REWARD_WEI)

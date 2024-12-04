@@ -12,9 +12,9 @@ import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
+    deployTestOperatorContract,
+    deployTestSponsorshipContract,
+    createTestWallet,
     stake
 } = _operatorContractUtils
 
@@ -65,13 +65,13 @@ describe('MaintainTopologyService', () => {
     })
 
     it('happy path', async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens()
+        const operatorWallet = await createTestWallet()
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
-        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
-        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
+        const sponsorship1 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
+        const sponsorship2 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
+        const operatorContract = await deployTestOperatorContract({ deployer: operatorWallet })
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000n)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000n)
         
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
@@ -104,7 +104,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), await stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000n)
         await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...await stream1.getStreamParts(),

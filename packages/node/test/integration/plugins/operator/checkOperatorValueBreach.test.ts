@@ -1,19 +1,19 @@
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import {
-    SetupOperatorContractOpts,
+    SetupTestOperatorContractOpts,
     _operatorContractUtils,
 } from '@streamr/sdk'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, toEthereumAddress, until } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
-    getProvider,
-    setupOperatorContract,
+    deployTestSponsorshipContract,
+    createTestWallet,
+    getTestProvider,
+    setupTestOperatorContract,
     sponsor,
     stake
 } = _operatorContractUtils
@@ -30,8 +30,8 @@ const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
 
 describe('checkOperatorValueBreach', () => {
 
-    let streamId: string
-    let deployConfig: SetupOperatorContractOpts
+    let streamId: StreamID
+    let deployConfig: SetupTestOperatorContractOpts
 
     beforeAll(async () => {
         const client = createClient(STREAM_CREATION_KEY)
@@ -46,19 +46,19 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
-        const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
-        const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
+        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupTestOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorWallet, operatorContract } = await setupTestOperatorContract(deployConfig)
+        const sponsorer = await createTestWallet()
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000n)
+        const sponsorship1 = await deployTestSponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000n)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000n)
+        const sponsorship2 = await deployTestSponsorshipContract({ earningsPerSecond: 200n, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000n)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000n)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getTestProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
         const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))

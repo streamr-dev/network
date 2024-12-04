@@ -3,17 +3,17 @@ import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { until } from '@streamr/utils'
+import { until, toEthereumAddress } from '@streamr/utils'
 import { Contract, Wallet, formatEther, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
 
 /*
  * The test needs these dependencies:
- * - dev-chain in Docker: 
+ * - dev-chain in Docker:
  *   streamr-docker-dev start dev-chain-fast deploy-network-subgraphs-fastchain
  * - DHT entry point:
  *   <network-repo-root>/bin/run-entry-point.sh
- * 
+ *
  * Given:
  * - one sponsorship
  * - one operator who mines the sponsorship by running one node
@@ -33,10 +33,10 @@ import { createClient, createTestStream, startBroker } from '../utils'
  */
 
 const {
-    setupOperatorContract,
-    getProvider,
-    generateWalletWithGasAndTokens,
-    deploySponsorshipContract,
+    setupTestOperatorContract,
+    getTestProvider,
+    createTestWallet,
+    deployTestSponsorshipContract,
     sponsor,
     delegate,
     undelegate,
@@ -46,24 +46,24 @@ const {
     getTestAdminWallet
 } = _operatorContractUtils
 
-const SPONSOR_AMOUNT = 6000
-const OPERATOR_DELEGATED_AMOUNT = 5000
-const EXTERNAL_DELEGATED_AMOUNT = 5260
-const EARNINGS_PER_SECOND = 1000
+const SPONSOR_AMOUNT = 6000n
+const OPERATOR_DELEGATED_AMOUNT = 5000n
+const EXTERNAL_DELEGATED_AMOUNT = 5260n
+const EARNINGS_PER_SECOND = 1000n
 const OPERATORS_CUT_PERCENTAGE = 10
 const PROTOCOL_FEE_PERCENTAGE = 5
-const PROTOCOL_FEE = SPONSOR_AMOUNT * (PROTOCOL_FEE_PERCENTAGE / 100)
+const PROTOCOL_FEE = BigInt(Number(SPONSOR_AMOUNT) * (PROTOCOL_FEE_PERCENTAGE / 100))
 const TOTAL_PROFIT = SPONSOR_AMOUNT - PROTOCOL_FEE
 const TOTAL_DELEGATED = OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
-const OPERATORS_CUT = TOTAL_PROFIT * (OPERATORS_CUT_PERCENTAGE / 100)
+const OPERATORS_CUT = BigInt(Number(TOTAL_PROFIT) * (OPERATORS_CUT_PERCENTAGE / 100))
 const OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * OPERATOR_DELEGATED_AMOUNT / TOTAL_DELEGATED + OPERATORS_CUT
 const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * EXTERNAL_DELEGATED_AMOUNT / TOTAL_DELEGATED
-// If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between 
+// If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between
 // the operator and the delegator based on their respective delegated amounts. However, if there are withdrawals,
 // the operator gets a larger share of the profit. This happens because the operator's delegated amount
 // grows by both their profit share and their cut of the total profit, while the external delegator's amount
 // only grows by their profit share.
-const PROFIT_INACCURACY = 50
+const PROFIT_INACCURACY = 50n
 
 describe('profit', () => {
 
@@ -75,20 +75,20 @@ describe('profit', () => {
     let sponsorshipContract: Sponsorship
 
     const getBalances = async (): Promise<{
-        operator: number
-        delegator: number
-        sponsor: number
-        admin: number
-        operatorContract: number
+        operator: bigint
+        delegator: bigint
+        sponsor: bigint
+        admin: bigint
+        operatorContract: bigint
     }> => {
-        const dataToken = getTestTokenContract().connect(getProvider())
+        const dataToken = getTestTokenContract().connect(getTestProvider())
         const adminWallet = getTestAdminWallet()
         return {
-            operator: Number(formatEther(await dataToken.balanceOf(operatorWallet.address))),
-            delegator: Number(formatEther(await dataToken.balanceOf(delegatorWallet.address))),
-            sponsor: Number(formatEther(await dataToken.balanceOf(sponsorWallet.address))),
-            admin: Number(formatEther(await dataToken.balanceOf(adminWallet.address))),
-            operatorContract: Number(formatEther(await dataToken.balanceOf(await operatorContract.getAddress()))),
+            operator: BigInt(formatEther(await dataToken.balanceOf(operatorWallet.address))),
+            delegator: BigInt(formatEther(await dataToken.balanceOf(delegatorWallet.address))),
+            sponsor: BigInt(formatEther(await dataToken.balanceOf(sponsorWallet.address))),
+            admin: BigInt(formatEther(await dataToken.balanceOf(adminWallet.address))),
+            operatorContract: BigInt(formatEther(await dataToken.balanceOf(await operatorContract.getAddress()))),
         }
     }
 
@@ -100,19 +100,19 @@ describe('profit', () => {
             operatorWallet,
             operatorContract,
             nodeWallets: [operatorNodeWallet]
-        } = await setupOperatorContract({
+        } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercent: OPERATORS_CUT_PERCENTAGE
             }
         }))
-        sponsorshipContract = await deploySponsorshipContract({
+        sponsorshipContract = await deployTestSponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas
         })
-        sponsorWallet = await generateWalletWithGasAndTokens()
-        delegatorWallet = await generateWalletWithGasAndTokens()
+        sponsorWallet = await createTestWallet()
+        delegatorWallet = await createTestWallet()
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
             streamrConfigABI
@@ -123,11 +123,15 @@ describe('profit', () => {
 
     it('happy path', async () => {
         const beforeBalances = await getBalances()
-        await sponsor(sponsorWallet, await sponsorshipContract.getAddress(), SPONSOR_AMOUNT)
-        await delegate(operatorWallet, await operatorContract.getAddress(), OPERATOR_DELEGATED_AMOUNT)
-        await delegate(delegatorWallet, await operatorContract.getAddress(), EXTERNAL_DELEGATED_AMOUNT)
-        await stake(operatorContract, await sponsorshipContract.getAddress(), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
- 
+        await sponsor(sponsorWallet, toEthereumAddress(await sponsorshipContract.getAddress()), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), OPERATOR_DELEGATED_AMOUNT)
+        await delegate(delegatorWallet, toEthereumAddress(await operatorContract.getAddress()), EXTERNAL_DELEGATED_AMOUNT)
+        await stake(
+            operatorContract,
+            toEthereumAddress(await sponsorshipContract.getAddress()),
+            OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
+        )
+
         const broker = await startBroker({
             privateKey: operatorNodeWallet.privateKey,
             extraPlugins: {
@@ -152,7 +156,7 @@ describe('profit', () => {
         })
         await broker.stop()
 
-        await unstake(operatorContract, await sponsorshipContract.getAddress())
+        await unstake(operatorContract, toEthereumAddress(await sponsorshipContract.getAddress()))
         await undelegate(
             delegatorWallet,
             operatorContract,

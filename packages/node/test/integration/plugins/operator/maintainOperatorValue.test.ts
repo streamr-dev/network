@@ -1,27 +1,28 @@
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, toEthereumAddress, until } from '@streamr/utils'
 import { multiply } from '../../../../src/helpers/multiply'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
-    setupOperatorContract,
+    deployTestSponsorshipContract,
+    createTestWallet,
+    setupTestOperatorContract,
     sponsor,
     stake
 } = _operatorContractUtils
 
 const logger = new Logger(module)
 
-const STAKE_AMOUNT = 10000
+const SPONSOR_AMOUNT = 25000n
+const STAKE_AMOUNT = 10000n
 const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorValue', () => {
 
-    let streamId: string
+    let streamId: StreamID
 
     beforeAll(async () => {
         logger.debug('Creating stream for the test')
@@ -37,15 +38,15 @@ describe('maintainOperatorValue', () => {
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContract, nodeWallets } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercent: 10
             }
         })
-        const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
+        const sponsorer = await createTestWallet()
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
