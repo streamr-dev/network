@@ -1,7 +1,7 @@
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { Mapping } from '../../utils/Mapping'
+import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
@@ -62,21 +62,23 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
-            const chain = createMessageChain(
-                {
-                    streamPartId, 
-                    publisherId, 
-                    msgChainId
-                },
-                getStorageNodes,
-                onUnfillableGap,
-                resends,
-                config,
-                this.abortController.signal
-            )
-            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
-            return chain
+        this.chains = createLazyMap({
+            valueFactory: async ([publisherId, msgChainId]) => {
+                const chain = createMessageChain(
+                    {
+                        streamPartId, 
+                        publisherId, 
+                        msgChainId
+                    },
+                    getStorageNodes,
+                    onUnfillableGap,
+                    resends,
+                    config,
+                    this.abortController.signal
+                )
+                chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+                return chain
+            }
         })
     }
 
@@ -97,10 +99,10 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get([msg.getPublisherId(), msg.getMsgChainId()])
                 chain.addMessage(msg)
             }
-            await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
+            await Promise.all([...this.chains.values()].map((chain) => chain.waitUntilIdle()))
             this.outBuffer.endWrite()
         } catch (err) {
             this.outBuffer.endWrite(err)

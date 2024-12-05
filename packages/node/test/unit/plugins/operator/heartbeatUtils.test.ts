@@ -11,13 +11,13 @@ describe('heartbeatUtils', () => {
                 tls: false
             }
         })
-        expect(() => HeartbeatMessageSchema.parse(msg)).not.toThrowError()
+        expect(() => HeartbeatMessageSchema.parse(msg)).not.toThrow()
     })
 
     it('invalid message does not pass validation', () => {
         const msg = createHeartbeatMessage({
             foo: 'bar'
         } as any)
-        expect(() => HeartbeatMessageSchema.parse(msg)).toThrowError(ZodError)
+        expect(() => HeartbeatMessageSchema.parse(msg)).toThrow(ZodError)
     })
 })

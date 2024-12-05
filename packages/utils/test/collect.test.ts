@@ -42,6 +42,6 @@ describe('collect', () => {
             yield 1
             throw new Error('mock-error')
         }()
-        await expect(() => collect(source)).rejects.toThrowError('mock-error')
+        await expect(() => collect(source)).rejects.toThrow('mock-error')
     })
 })

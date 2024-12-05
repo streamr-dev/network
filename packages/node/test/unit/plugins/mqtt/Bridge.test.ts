@@ -48,7 +48,7 @@ describe('MQTT Bridge', () => {
 
         it('onMessageReceived', async () => {
             await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 { id: MOCK_STREAM_ID, partition: undefined },
                 MOCK_CONTENT,
                 { msgChainId: expect.any(String) }
@@ -57,13 +57,13 @@ describe('MQTT Bridge', () => {
 
         it('onSubscribed', async () => {
             await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
-            expect(streamrClient.subscribe).toBeCalledWith(`${MOCK_STREAM_ID}#0`, expect.anything())
+            expect(streamrClient.subscribe).toHaveBeenCalledWith(`${MOCK_STREAM_ID}#0`, expect.anything())
         })
 
         it('onUnsubscribed', async () => {
             await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
             bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
-            expect(subscription.unsubscribe).toBeCalled()
+            expect(subscription.unsubscribe).toHaveBeenCalled()
         })
     
     })
@@ -104,7 +104,7 @@ describe('MQTT Bridge', () => {
     
         it('publish with partition', async () => {
             await bridge.onMessageReceived(`${MOCK_TOPIC}?partition=5`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_TOPIC,
                     partition: 5
@@ -119,7 +119,7 @@ describe('MQTT Bridge', () => {
 
         it('publish with partition key', async () => {
             await bridge.onMessageReceived(`${MOCK_TOPIC}?partitionKey=mock-key`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_TOPIC,
                     partition: undefined
@@ -135,7 +135,7 @@ describe('MQTT Bridge', () => {
 
         it('publish with partition key field', async () => {
             await bridge.onMessageReceived(`${MOCK_TOPIC}?partitionKeyField=foo`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_TOPIC,
                     partition: undefined
@@ -151,7 +151,7 @@ describe('MQTT Bridge', () => {
 
         it('subscribe', async () => {
             await bridge.onSubscribed(`${MOCK_TOPIC}?partition=5`, MOCK_CLIENT_ID)
-            expect(streamrClient.subscribe).toBeCalledWith(
+            expect(streamrClient.subscribe).toHaveBeenCalledWith(
                 `${MOCK_TOPIC}#5`,
                 expect.anything()
             )

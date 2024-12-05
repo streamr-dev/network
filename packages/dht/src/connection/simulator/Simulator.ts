@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { SimulatorConnector } from './SimulatorConnector'
 import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
@@ -191,7 +191,8 @@ export class Simulator {
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')
-            return operation.association.connectedCallback!('Target connector not found')
+            operation.association.connectedCallback!('Target connector not found')
+            return
         }
 
         target.handleIncomingConnection(operation.sourceConnection)

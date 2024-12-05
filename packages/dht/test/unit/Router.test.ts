@@ -3,11 +3,11 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { Router } from '../../src/dht/routing/Router'
 import { 
     Message,
+    PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { DhtAddress, toNodeId, randomDhtAddress } from '../../src/identifiers'

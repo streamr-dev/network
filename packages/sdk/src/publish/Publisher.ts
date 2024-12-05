@@ -1,7 +1,7 @@
 import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -12,7 +12,7 @@ import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { StreamDefinition } from '../types'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 
@@ -43,8 +43,8 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
 
-    private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
-    private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly messageFactories: Mapping<StreamID, MessageFactory>
+    private readonly groupKeyQueues: Mapping<StreamID, GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
@@ -68,11 +68,15 @@ export class Publisher {
         this.authentication = authentication
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
-        this.messageFactories = new Mapping(async (streamId: StreamID) => {
-            return this.createMessageFactory(streamId)
+        this.messageFactories = createLazyMap({
+            valueFactory: async (streamId) => {
+                return this.createMessageFactory(streamId)
+            }
         })
-        this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+        this.groupKeyQueues = createLazyMap({
+            valueFactory: async (streamId) => {
+                return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+            }
         })
     }
 

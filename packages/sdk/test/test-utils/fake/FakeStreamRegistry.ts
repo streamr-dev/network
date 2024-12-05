@@ -168,21 +168,21 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    invalidateMetadataCache(): void {
+    populateMetadataCache(): void {
         // no-op
     }
-    
+
     // eslint-disable-next-line class-methods-use-this
     invalidatePermissionCaches(): void {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
+    async isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+    async isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -201,7 +201,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncGenerator<StreamID> {
         throw new Error('not implemented')
     }
 

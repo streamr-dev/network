@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { until } from '@streamr/utils'

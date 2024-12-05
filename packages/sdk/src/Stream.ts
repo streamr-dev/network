@@ -15,8 +15,7 @@ import {
     PermissionAssignment,
     PublicPermissionQuery,
     UserPermissionQuery,
-    toInternalPermissionAssignment,
-    toInternalPermissionQuery
+    toInternalPermissionAssignment
 } from './permission'
 
 /**
@@ -26,17 +25,14 @@ import {
  */
 export class Stream {
     readonly id: StreamID
-    private metadata: StreamMetadata
     private readonly client: StreamrClient
 
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: StreamMetadata,
         client: StreamrClient
     ) {
         this.id = id
-        this.metadata = metadata
         this.client = client
     }
 
@@ -50,23 +46,15 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream.
-     */
-    async setMetadata(metadata: StreamMetadata): Promise<void> {
-        await this.client.setStreamMetadata(this.id, metadata)
-        this.metadata = metadata
-    }
-
-    /**
      * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
      *
      * @category Important
      */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
-        return this.client.hasPermission(toInternalPermissionQuery({
+        return this.client.hasPermission({
             streamId: this.id,
             ...query
-        }))
+        })
     }
 
     /**
@@ -122,16 +110,16 @@ export class Stream {
     /**
      * Returns the partitions of the stream.
      */
-    getStreamParts(): StreamPartID[] {
-        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    async getStreamParts(): Promise<StreamPartID[]> {
+        return range(0, await this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
     }
 
-    getPartitionCount(): number {
-        return getPartitionCount(this.getMetadata())
+    async getPartitionCount(): Promise<number> {
+        return getPartitionCount(await this.getMetadata())
     }
 
-    getDescription(): string | undefined {
-        const value = this.getMetadata().description
+    async getDescription(): Promise<string | undefined> {
+        const value = (await this.getMetadata()).description
         if (isString(value)) {
             return value
         } else {
@@ -141,7 +129,7 @@ export class Stream {
 
     async setDescription(description: string): Promise<void> {
         await this.setMetadata({
-            ...this.getMetadata(),
+            ...await this.getMetadata(),
             description
         })
     }
@@ -149,8 +137,8 @@ export class Stream {
     /**
      * Gets the value of `storageDays` field
      */
-    getStorageDayCount(): number | undefined {
-        const value = this.getMetadata().storageDays
+    async getStorageDayCount(): Promise<number | undefined> {
+        const value = (await this.getMetadata()).storageDays
         if (isNumber(value)) {
             return value
         } else {
@@ -163,7 +151,7 @@ export class Stream {
      */
     async setStorageDayCount(count: number): Promise<void> {
         await this.setMetadata({
-            ...this.getMetadata(),
+            ...await this.getMetadata(),
             storageDays: count
         })
     }
@@ -171,7 +159,14 @@ export class Stream {
     /**
      * Returns the metadata of the stream.
      */
-    getMetadata(): StreamMetadata {
-        return this.metadata
+    async getMetadata(): Promise<StreamMetadata> {
+        return this.client.getStreamMetadata(this.id)
+    }
+
+    /**
+     * Updates the metadata of the stream.
+     */
+    async setMetadata(metadata: StreamMetadata): Promise<void> {
+        await this.client.setStreamMetadata(this.id, metadata)
     }
 }

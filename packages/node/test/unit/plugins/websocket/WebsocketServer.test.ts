@@ -74,7 +74,7 @@ describe('WebsocketServer', () => {
 
         it('without parameters', async () => {
             await connectAndPublish()
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
@@ -88,7 +88,7 @@ describe('WebsocketServer', () => {
 
         it('valid partition', async () => {
             await connectAndPublish({ partition: 50 })
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_STREAM_ID,
                     partition: 50
@@ -102,7 +102,7 @@ describe('WebsocketServer', () => {
 
         it('valid partitionKey', async () => {
             await connectAndPublish({ partitionKey: 'mock-key' })
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
@@ -117,7 +117,7 @@ describe('WebsocketServer', () => {
 
         it('valid partitionKeyField', async () => {
             await connectAndPublish({ partitionKeyField: 'foo' })
-            expect(streamrClient.publish).toBeCalledWith(
+            expect(streamrClient.publish).toHaveBeenCalledWith(
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
@@ -149,14 +149,14 @@ describe('WebsocketServer', () => {
         it('without parameters', async () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM)
             await waitForEvent(wsClient, 'open')
-            expect(streamrClient.subscribe).toBeCalledTimes(1)
-            expect(streamrClient.subscribe).toBeCalledWith({ id: MOCK_STREAM_ID, partition: undefined }, expect.anything())
+            expect(streamrClient.subscribe).toHaveBeenCalledTimes(1)
+            expect(streamrClient.subscribe).toHaveBeenCalledWith({ id: MOCK_STREAM_ID, partition: undefined }, expect.anything())
         })
 
         it('valid partitions', async () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '0,2,5' })
             await waitForEvent(wsClient, 'open')
-            expect(streamrClient.subscribe).toBeCalledTimes(3)
+            expect(streamrClient.subscribe).toHaveBeenCalledTimes(3)
             expect(streamrClient.subscribe).toHaveBeenNthCalledWith(1, { id: MOCK_STREAM_ID, partition: 0 }, expect.anything())
             expect(streamrClient.subscribe).toHaveBeenNthCalledWith(2, { id: MOCK_STREAM_ID, partition: 2 }, expect.anything())
             expect(streamrClient.subscribe).toHaveBeenNthCalledWith(3, { id: MOCK_STREAM_ID, partition: 5 }, expect.anything())

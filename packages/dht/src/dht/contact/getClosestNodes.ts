@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { PeerDescriptor } from '../../exports'
 import { DhtAddress } from '../../identifiers'
 import { Contact } from './Contact'
 import { SortedContactList } from './SortedContactList'

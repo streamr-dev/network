@@ -1,7 +1,7 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { DhtAddress, toNodeId } from '../../identifiers'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'
 import { RingContacts } from '../contact/RingContactList'

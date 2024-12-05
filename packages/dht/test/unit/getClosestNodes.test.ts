@@ -10,7 +10,7 @@ describe('getClosestNodes', () => {
     it('happy path', () => {
         const peerDescriptors = range(10).map(() => createMockPeerDescriptor())
         const referenceId = randomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n), 2)))
+        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n)), 2))
 
         const actual = getClosestNodes(
             referenceId,

@@ -148,7 +148,7 @@ describe('StreamRegistry', () => {
 
         it('get a non-existing Stream', async () => {
             const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrError({
+            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrClientError({
                 code: 'STREAM_NOT_FOUND'
             })
         }, TIMEOUT)
@@ -208,11 +208,11 @@ describe('StreamRegistry', () => {
         it('returns true for valid publishers', async () => {
             const userId = await client.getUserId()
             const valid = await client.isStreamPublisher(createdStream.id, userId)
-            return expect(valid).toBe(true)
+            expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
-            return expect(valid).toBe(false)
+            expect(valid).toBe(false)
         }, TIMEOUT)
     })
 
@@ -227,11 +227,11 @@ describe('StreamRegistry', () => {
         it('returns true for valid subscribers', async () => {
             const userId = await client.getUserId()
             const valid = await client.isStreamSubscriber(createdStream.id, userId)
-            return expect(valid).toBe(true)
+            expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
-            return expect(valid).toBe(false)
+            expect(valid).toBe(false)
         }, TIMEOUT)
     })
 
@@ -241,16 +241,18 @@ describe('StreamRegistry', () => {
             await createdStream.setMetadata({
                 description
             })
+            const createdMetadata = await createdStream.getMetadata()
             await until(async () => {
                 try {
-                    return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
+                    const queriedMetadata = await (await client.getStream(createdStream.id)).getMetadata()
+                    return queriedMetadata.description === createdMetadata.description
                 } catch {
                     return false
                 }
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.getMetadata()).toEqual({
+            expect(await updatedStream.getMetadata()).toEqual({
                 description
             })
         }, TIMEOUT)

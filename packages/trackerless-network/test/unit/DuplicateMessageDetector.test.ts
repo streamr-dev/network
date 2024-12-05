@@ -60,10 +60,10 @@ describe('gap handling', () => {
     })
 
     test('gap division', () => {
-        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0)))
+        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5)))
+        expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]')
     })
 
@@ -84,10 +84,10 @@ describe('gap handling', () => {
     })
 
     test('full contraction', () => {
-        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10)))
+        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 20|0], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0)))
+        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(100|0, Infinity|Infinity]')
     })
 })
@@ -153,28 +153,28 @@ describe('erroneous messages that overlap gaps', () => {
     })
 
     it('completely around gap', () => {
-        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(30, 0))).toThrowError(GapMisMatchError)
+        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(30, 0))).toThrow(GapMisMatchError)
     })
 
     it('previousNumber below gap while number in gap', () => {
-        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(15, 0))).toThrowError(GapMisMatchError)
+        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(15, 0))).toThrow(GapMisMatchError)
     })
 
     it('previousNumber in gap while number over gap', () => {
-        expect(() => detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 5))).toThrowError(GapMisMatchError)
+        expect(() => detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 5))).toThrow(GapMisMatchError)
     })
 
     it('completely around multiple gaps', () => {
-        expect(() => detector.markAndCheck(new NumberPair(10, 0), new NumberPair(200, 0))).toThrowError(GapMisMatchError)
+        expect(() => detector.markAndCheck(new NumberPair(10, 0), new NumberPair(200, 0))).toThrow(GapMisMatchError)
     })
 })
 
 test('checks that number > previousNumber', () => {
     const detector = new DuplicateMessageDetector()
     expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0)))
-        .toThrowError(InvalidNumberingError)
+        .toThrow(InvalidNumberingError)
     expect(() => detector.markAndCheck(new NumberPair(5, 5), new NumberPair(5, 5)))
-        .toThrowError(InvalidNumberingError)
+        .toThrow(InvalidNumberingError)
 })
 
 test('lowest gaps get dropped when reaching maximum number of gaps', () => {

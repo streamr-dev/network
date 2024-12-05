@@ -3,7 +3,6 @@ import 'reflect-metadata'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamID, TheGraphClient, collect, toStreamID } from '@streamr/utils'
 import { SearchStreamsResultItem, searchStreams } from '../../src/contracts/searchStreams'
-import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()
 
@@ -44,9 +43,7 @@ describe('searchStreams', () => {
             '/',
             undefined,
             orderBy,
-            theGraphClient as any,
-            mockLoggerFactory().createLogger(module),
-            undefined as any,
+            theGraphClient as any
         ))
 
         const graphQLquery = ((theGraphClient as any).queryEntities as jest.Mock).mock.calls[0][0]()

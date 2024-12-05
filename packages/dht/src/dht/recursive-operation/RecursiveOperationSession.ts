@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { 
     DataEntry,
+    PeerDescriptor,
     RecursiveOperationResponse,
     RecursiveOperation,
     RouteMessageWrapper,
@@ -9,7 +10,6 @@ import {
     RecursiveOperationRequest,
     Message
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'

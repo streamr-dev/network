@@ -1,5 +1,4 @@
-import { ConnectivityResponse } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { ConnectivityResponse, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { createPeerDescriptor } from '../../../src/helpers/createPeerDescriptor'
 import { NatType } from '../../../src/connection/ConnectionManager'
 import { ipv4ToNumber, Logger } from '@streamr/utils'

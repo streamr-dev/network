@@ -36,7 +36,7 @@ describe('events', () => {
             const onResendComplete = jest.fn()
             subscription.once('resendCompleted', onResendComplete)
             await client.destroy()
-            expect(onResendComplete).not.toBeCalled()
+            expect(onResendComplete).not.toHaveBeenCalled()
             // @ts-expect-error private
             expect(subscription.eventEmitter.listenerCount()).toBe(0)
         })
