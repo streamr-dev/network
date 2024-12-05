@@ -108,7 +108,7 @@ export class StreamStorageRegistry {
         initContractEventGateway({
             sourceName: 'Removed', 
             sourceEmitter: chainEventPoller,
-            targetName: 'streamRemovedFromFromStorageNode',
+            targetName: 'streamRemovedFromStorageNode',
             targetEmitter: eventEmitter,
             transformation,
             loggerFactory
