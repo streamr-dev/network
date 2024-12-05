@@ -652,7 +652,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     public getDiagnosticInfo(): Record<string, unknown> {
         const managedConnections: ManagedConnection[] = Array.from(this.endpoints.values())
             .filter((endpoint) => endpoint.connected)
-            .map((endpoint) => endpoint.connection as ManagedConnection)
+            .map((endpoint) => endpoint.connection)
         return {
             connections: managedConnections.map((connection) => connection.getDiagnosticInfo()),
             connectionCount: this.endpoints.size
