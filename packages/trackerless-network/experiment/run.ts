@@ -10,7 +10,18 @@ const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin', 'pinging' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
-const nodeCountPerRegion = parseInt(process.argv[4])
+const numOfRepeats = parseInt(process.argv[4])
+
+const nodeCounts = [
+    1,
+    2,
+    4,
+    // 8,
+    // 16,
+    // 32,
+    // 64,
+    // 128
+]
 
 const REGIONS = [
     'eu-north-1',
@@ -157,10 +168,9 @@ const stopAwsNodes = async (region: string) => {
     }
 }
 
-const run = async () => {
-    const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
-    const filePath = `results/${experiment}/${datetime}.json`
+const run = async (nodeCountPerRegion: number, resultName: string) => {
     const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
+    const filePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${0}.json`
     const controller = new ExperimentController(nodeCount, filePath) 
     controller.createServer()
     let localNodes: ExperimentNodeWrapper[] = []
@@ -244,4 +254,9 @@ const run = async () => {
     await calculateResults(filePath)
 }
 
-run()
+(async () => {
+    for (const nodeCount of nodeCounts) {
+        const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
+        await run(nodeCount, datetime)
+    }
+})();

@@ -49,12 +49,17 @@ export class ExperimentController {
 
 
     // Control experiment 1: layer 0 join times
-
+        // 1. Results graphs for layer 0 join times
+        // 2. Results graphs for layer 0 join times CDF
     // Control experiment 2: routing from node to node 
-
+        // 1. Results graphs for routing from node to node
+        // 2. Results graphs for routing from node to node CDF
     // Control experiment 3: time to data (storage, layer1 join, time to first neighbor, time to fist message)
-
+        // 1. Results graphs for time to data
+        // 2. Results graphs for time to data CDF
     // Control experiment 4: mean message propagation time
+        // 1. Results graphs for mean message propagation time
+        // 2. Results graphs for message propagation time CDF
 
     createServer() {
         this.httpServer = http.createServer()
