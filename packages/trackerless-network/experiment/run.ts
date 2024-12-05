@@ -7,7 +7,7 @@ import 'dotenv/config'
 import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
 
 const envs = [ 'local', 'aws' ]
-const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin', 'pinging' ]
+const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin', 'pinging', 'reset' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
 const numOfRepeats = parseInt(process.argv[4])
@@ -255,8 +255,13 @@ const run = async (nodeCountPerRegion: number, resultName: string) => {
 }
 
 (async () => {
-    for (const nodeCount of nodeCounts) {
-        const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
-        await run(nodeCount, datetime)
+    if (experiment === 'reset') {
+        await run(0, 'reset')
+    } else {
+        for (const nodeCount of nodeCounts) {
+            const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
+            await run(nodeCount, datetime)
+        }
     }
+    
 })();
