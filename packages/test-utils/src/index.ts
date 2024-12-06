@@ -7,7 +7,7 @@ import express, { Request, Response } from 'express'
 import http from 'http'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
-import fetch from '@streamr/fetch'
+import fetch, { Response as FetchResponse } from '@streamr/fetch'
 import { Readable } from 'stream'
 
 export type Event = string
@@ -258,21 +258,35 @@ export class KeyServer {
     }
 }
 
+async function fetchPrivateKey(): Promise<FetchResponse> {
+    const controller = new AbortController()
+
+    const { signal } = controller
+
+    const timeoutId = setTimeout(() => {
+        controller.abort()
+    }, 5000)
+
+    try {
+        return fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
+            signal
+        })
+    } finally {
+        clearTimeout(timeoutId)
+    }
+}
+
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
     try {
-        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            timeout: 5 * 1000
-        })
+        response = await fetchPrivateKey()
     } catch (_e) {
         try {
             await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
         } catch (_e2) {
             // no-op
         } finally {
-            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 5 * 1000
-            })
+            response = await fetchPrivateKey()
         }
     }
 
