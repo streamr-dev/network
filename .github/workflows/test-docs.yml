@@ -22,3 +22,6 @@ jobs:
       - name: Build documentation
         working-directory: ./docs
         run: npm ci && npm run build
+      - name: API docs smoke test
+        working-directory: ./docs
+        run: ./api-docs-smoke-test.sh
