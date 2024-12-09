@@ -1,3 +1,4 @@
+import { StreamMessage } from './exports'
 import { MessageID } from './protocol/MessageID'
 
 export type StreamrClientErrorCode =
@@ -9,7 +10,11 @@ export type StreamrClientErrorCode =
     'CLIENT_DESTROYED' |
     'PIPELINE_ERROR' |
     'UNSUPPORTED_OPERATION' |
+    'UNKNOWN_DATA_FORMAT' |
+    'INVALID_MESSAGE_CONTENT' |
     'INVALID_STREAM_METADATA' |
+    'INVALID_SIGNATURE' |
+    'INVALID_PARTITION' |
     'DECRYPT_ERROR' |
     'STORAGE_NODE_ERROR' |
     'UNKNOWN_ERROR'
@@ -17,14 +22,16 @@ export type StreamrClientErrorCode =
 export class StreamrClientError extends Error {
 
     public readonly code: StreamrClientErrorCode
+    public readonly messageId?: MessageID
 
-    constructor(message: string, code: StreamrClientErrorCode) {
-        super(message)
+    constructor(message: string, code: StreamrClientErrorCode, streamMessage?: StreamMessage) {
+        super(streamMessage === undefined ? message : `${message} (messageId=${formMessageIdDescription(streamMessage.messageId)})`)
         this.code = code
         this.name = this.constructor.name
+        this.messageId = streamMessage?.messageId
     }
 }
 
-export const formMessageIdDescription = (messageId: MessageID): string => {
+const formMessageIdDescription = (messageId: MessageID): string => {
     return JSON.stringify(messageId)
 }

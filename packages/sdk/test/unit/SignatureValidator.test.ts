@@ -7,6 +7,7 @@ import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade
 import { MessageRef } from '../../src/protocol/MessageRef'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
+import { StreamrClientError } from './../../src/StreamrClientError'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
@@ -172,8 +173,8 @@ describe('SignatureValidator', () => {
 
         it('not passing signature validation scenario', async () => {
             erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
-            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toEqual(
-                new Error('Signature validation failed')
+            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toThrowStreamrClientError(
+                new StreamrClientError('Signature validation failed', 'INVALID_SIGNATURE', message)
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
@@ -184,8 +185,8 @@ describe('SignatureValidator', () => {
 
         it('failing signature validation scenario', async () => {
             erc1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
-            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toEqual(
-                new Error('An error occurred during address recovery from signature: Error: random issue')
+            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toThrowStreamrClientError(
+                new StreamrClientError('An error occurred during address recovery from signature: Error: random issue', 'INVALID_SIGNATURE', message)
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
