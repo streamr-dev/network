@@ -97,12 +97,12 @@ describe('Mapping', () => {
     })
 
     it('max size', async () => {
-        const maxSize = 3
+        const MAX_SIZE = 3
         const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             return `${p1}${p2}`
         })
-        const mapping = createCacheMap({ valueFactory, maxSize })
-        const ids = range(maxSize)
+        const mapping = createCacheMap({ valueFactory, maxSize: MAX_SIZE })
+        const ids = range(MAX_SIZE)
         /**
          * Each call to `get` is considered usage. The following populates the cache with
          * entries for: foo0, foo1, foo2 (3 in total).
@@ -110,22 +110,22 @@ describe('Mapping', () => {
         for (const id of ids) {
             await mapping.get(['foo', id])
         }
-        expect(valueFactory).toHaveBeenCalledTimes(maxSize)
+        expect(valueFactory).toHaveBeenCalledTimes(MAX_SIZE)
         /**
          * Calling `get` on a key that's not in the cache causes usage. It will discard
          * an item associated to `foo0` key (least recently used).
          */
         await mapping.get(['foo', -1])
-        expect(valueFactory).toHaveBeenCalledTimes(maxSize + 1)
+        expect(valueFactory).toHaveBeenCalledTimes(MAX_SIZE + 1)
         /**
          * The current list of keys (most-to-least recently used) goes as follows: foo-1,
-         * foo2, foo1. Going through all ids now will reconstruct the initial collection
+         * foo2, foo1. Going through all ids below will reconstruct the initial collection
          * causing 3 hits.
          */
         for (const id of ids) {
             await mapping.get(['foo', id])
         }
-        expect(valueFactory).toHaveBeenCalledTimes(maxSize + 1 + 3)
+        expect(valueFactory).toHaveBeenCalledTimes(MAX_SIZE + 1 + MAX_SIZE)
     })
 
     it('max age', async () => {
