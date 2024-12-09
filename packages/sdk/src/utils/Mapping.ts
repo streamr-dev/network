@@ -54,7 +54,8 @@ export class Mapping<K extends LookupKeyType, V> {
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {
             this.delegate = new LRUCache<string, Item<K, V>>({
-                max: opts.maxSize,
+                maxSize: opts.maxSize,
+                sizeCalculation: () => 1,
                 ttl: opts.maxAge
             })
         } else {
