@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.browser.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDirs": ["src", "test"],
+    "noImplicitOverride": false
+  },
+  "include": [
+    "src/**/*",
+    "package.json"
+  ],
+  "exclude": [
+    "src/connection/webrtc/NodeWebrtcConnection.ts",
+    "src/connection/websocket/NodeWebsocketClientConnection.ts",
+    "src/connection/simulator/*"
+  ]
+}
