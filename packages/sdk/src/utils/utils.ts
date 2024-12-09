@@ -8,7 +8,7 @@ import { ContractTransactionReceipt } from 'ethers'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
-import LRU from '../../vendor/quick-lru'
+import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
@@ -92,12 +92,12 @@ export function formStorageNodeAssignmentStreamId(clusterAddress: string): Strea
     return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
-export class MaxSizedSet<T> {
+export class MaxSizedSet<T extends string> {
 
-    private readonly delegate: LRU<T, true>
+    private readonly delegate: LRUCache<T, true>
 
     constructor(maxSize: number) {
-        this.delegate = new LRU<T, true>({ maxSize })
+        this.delegate = new LRUCache<T, true>({ maxSize, sizeCalculation: () => 1 })
     }
 
     add(value: T): void {
