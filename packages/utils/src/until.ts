@@ -1,6 +1,5 @@
 import { asAbortable } from './asAbortable'
 import { wait } from './wait'
-import compact from 'lodash/compact'
 import { composeAbortSignals } from './composeAbortSignals'
 
 function throwError(userAborted: boolean, conditionFn: () => any, onTimeoutContext?: () => string): never {
@@ -37,10 +36,10 @@ export const until = async (
         throwError(userAborted, conditionFn, onTimeoutContext)
     }
     abortSignal?.addEventListener('abort', () => { userAborted = true }, { once: true })
-    const timeoutAbortSignal: AbortSignal = (AbortSignal as any).timeout(timeout) // TODO: remove `as any` cast when @types/node has support...
-    const composedSignal = composeAbortSignals(...compact([timeoutAbortSignal, abortSignal]))
+    const timeoutAbortSignal: AbortSignal = AbortSignal.timeout(timeout)
+    const composedSignal = composeAbortSignals(timeoutAbortSignal, abortSignal)
     try {
-        while (true) {
+        for (;;) {
             const result = await asAbortable(Promise.resolve(conditionFn()), composedSignal)
             if (result) {
                 return

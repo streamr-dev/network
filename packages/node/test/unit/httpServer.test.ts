@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from '@streamr/fetch'
 import { startServer, stopServer } from '../../src/httpServer'
-import { wait } from '@streamr/utils'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
