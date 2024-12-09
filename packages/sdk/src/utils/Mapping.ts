@@ -19,7 +19,7 @@ interface Item<K, V> {
     value: V
 }
 
-interface LRU<K extends string, V> {
+interface CacheMap<K extends string, V> {
     get(key: K): V | undefined
     set(key: K, value: V): void
     delete(key: K): void
@@ -42,7 +42,7 @@ interface LRU<K extends string, V> {
  */
 export class Mapping<K extends LookupKeyType, V> {
 
-    private readonly delegate: LRU<string, Item<K, V>>
+    private readonly delegate: CacheMap<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: MarkRequired<CacheMapOptions<K, V> | LazyMapOptions<K, V>, 'isCacheableValue'>
 
