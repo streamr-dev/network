@@ -11,7 +11,6 @@ import { ipv4ToNumber, Logger, wait } from '@streamr/utils'
 import { attachConnectivityRequestHandler, DISABLE_CONNECTIVITY_PROBE } from '../connectivityRequestHandler'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionType, IConnection } from '../IConnection'
-import queryString from 'querystring'
 import { isMaybeSupportedVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/version'
 import { shuffle } from 'lodash'
 import { sendConnectivityRequest } from '../connectivityChecker'
@@ -75,7 +74,8 @@ export class WebsocketServerConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as WebsocketServerConnection
-                const query = queryString.parse(serverSocket.resourceURL.query as string ?? '')
+                const urlParams = new URLSearchParams(serverSocket.resourceURL.query as string ?? '')
+                const query = Object.fromEntries(urlParams.entries())
                 const action = query.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteIpAddress() })
                 if (action === 'connectivityRequest') {
