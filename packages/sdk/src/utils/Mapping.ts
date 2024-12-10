@@ -1,6 +1,6 @@
+import { LRUCache } from 'lru-cache'
+import { MarkRequired } from 'ts-essentials'
 import { formLookupKey, LookupKeyType } from './utils'
-import LRU from '../../vendor/quick-lru'
-import { MarkRequired } from 'ts-essentials' 
 
 interface BaseOptions<K extends LookupKeyType, V> {
     valueFactory: (key: K) => Promise<V>
@@ -19,6 +19,14 @@ interface Item<K, V> {
     value: V
 }
 
+interface CacheMap<K extends string, V> {
+    get(key: K): V | undefined
+    set(key: K, value: V): void
+    delete(key: K): void
+    values(): Iterable<V>
+    entries(): Iterable<[K, V]>
+}
+
 /*
  * A map that lazily creates values. The factory function is called only when a key
  * is accessed for the first time. Subsequent calls to `get()` return the cached value
@@ -34,7 +42,7 @@ interface Item<K, V> {
  */
 export class Mapping<K extends LookupKeyType, V> {
 
-    private readonly delegate: Map<string, Item<K, V>>
+    private readonly delegate: CacheMap<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: MarkRequired<CacheMapOptions<K, V> | LazyMapOptions<K, V>, 'isCacheableValue'>
 
@@ -45,9 +53,10 @@ export class Mapping<K extends LookupKeyType, V> {
      **/
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {
-            this.delegate = new LRU<string, Item<K, V>>({
+            this.delegate = new LRUCache<string, Item<K, V>>({
                 maxSize: opts.maxSize,
-                maxAge: opts.maxAge
+                sizeCalculation: () => 1,
+                ttl: opts.maxAge
             })
         } else {
             this.delegate = new Map<string, Item<K, V>>()
