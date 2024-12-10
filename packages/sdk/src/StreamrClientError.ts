@@ -25,11 +25,20 @@ export class StreamrClientError extends Error {
     public readonly messageId?: MessageID
 
     constructor(message: string, code: StreamrClientErrorCode, streamMessage?: StreamMessage) {
-        super(streamMessage === undefined ? message : `${message} (messageId=${formMessageIdDescription(streamMessage.messageId)})`)
+        super(`${message} ${formErrorMessageSuffix(code, streamMessage)}`)
         this.code = code
         this.name = this.constructor.name
         this.messageId = streamMessage?.messageId
     }
+}
+
+const formErrorMessageSuffix = (code: StreamrClientErrorCode, streamMessage?: StreamMessage): string => {
+    const parts: string[] = []
+    parts.push(`code=${code}`)
+    if (streamMessage !== undefined) {
+        parts.push(`messageId=${formMessageIdDescription(streamMessage.messageId)}`)
+    }
+    return `(${parts.join(', ')})`
 }
 
 const formMessageIdDescription = (messageId: MessageID): string => {
