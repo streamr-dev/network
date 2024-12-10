@@ -1,6 +1,6 @@
 import { ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSignals'
 import range from 'lodash/range'
-import fetch from 'node-fetch'
+import fetch from '@streamr/fetch'
 
 describe('composeAbortSignals', () => {
     let controllers: AbortController[]

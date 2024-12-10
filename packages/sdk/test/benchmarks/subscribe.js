@@ -1,6 +1,6 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
-const fetch = require('node-fetch')
+const fetch = require('@streamr/fetch')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')

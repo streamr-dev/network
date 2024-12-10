@@ -6,7 +6,7 @@ import {
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
 import compact from 'lodash/compact'
-import fetch, { Response } from 'node-fetch'
+import fetch, { Response } from '@streamr/fetch'
 import { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'

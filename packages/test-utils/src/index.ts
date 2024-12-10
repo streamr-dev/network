@@ -7,7 +7,7 @@ import express, { Request, Response } from 'express'
 import http from 'http'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
-import fetch from 'node-fetch'
+import fetch from '@streamr/fetch'
 import { Readable } from 'stream'
 
 export type Event = string

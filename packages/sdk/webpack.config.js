@@ -101,7 +101,7 @@ module.exports = (env, argv) => {
                 http: path.resolve('./src/shim/http-https.ts'),
                 https: path.resolve('./src/shim/http-https.ts'),
                 buffer: require.resolve('buffer/'),
-                'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
+                '@streamr/fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
                 '@streamr/utils': path.resolve('../utils/src/exports.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),

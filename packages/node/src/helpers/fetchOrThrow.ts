@@ -1,4 +1,4 @@
-import fetch, { RequestInit, Response } from 'node-fetch'
+import fetch, { RequestInit, Response } from '@streamr/fetch'
 import { merge } from '@streamr/utils'
 
 const DEFAULT_TIMEOUT = 30 * 1000

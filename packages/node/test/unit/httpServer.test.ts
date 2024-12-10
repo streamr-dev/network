@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { Server } from 'http'
-import fetch from 'node-fetch'
+import fetch from '@streamr/fetch'
 import { startServer, stopServer } from '../../src/httpServer'
 import { wait } from '@streamr/utils'
 
