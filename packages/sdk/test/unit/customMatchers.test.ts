@@ -73,7 +73,7 @@ describe('custom matchers', () => {
                 const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
                 expect(() => {
                     expect(actual).not.toEqualStreamrClientError(actual)
-                }).toThrow('treamrClientErrors are equal')
+                }).toThrow('StreamrClientErrors are equal')
             })
         })
     })
