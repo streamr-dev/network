@@ -10,14 +10,14 @@ export type StreamrClientErrorCode =
     'CLIENT_DESTROYED' |
     'PIPELINE_ERROR' |
     'UNSUPPORTED_OPERATION' |
-    'UNKNOWN_DATA_FORMAT' |
     'INVALID_MESSAGE_CONTENT' |
     'INVALID_STREAM_METADATA' |
     'INVALID_SIGNATURE' |
     'INVALID_PARTITION' |
     'DECRYPT_ERROR' |
     'STORAGE_NODE_ERROR' |
-    'UNKNOWN_ERROR'
+    'UNKNOWN_ERROR' |
+    'ASSERTION_FAILED'
 
 export class StreamrClientError extends Error {
 

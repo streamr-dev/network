@@ -56,7 +56,7 @@ const doValidate = async (
                 streamRegistry
             )
         default:
-            throw new StreamrClientError(`Unknown message type: ${streamMessage.messageType}!`, 'UNKNOWN_DATA_FORMAT', streamMessage)
+            throw new StreamrClientError(`Unknown message type: ${streamMessage.messageType}!`, 'ASSERTION_FAILED', streamMessage)
     }
 }
 

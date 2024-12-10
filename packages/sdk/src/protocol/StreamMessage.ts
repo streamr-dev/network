@@ -158,7 +158,7 @@ export class StreamMessage implements StreamMessageOptions {
                 throw new StreamrClientError(`Unable to parse JSON: ${err}`, 'INVALID_MESSAGE_CONTENT', this)
             }
         } else {
-            throw new StreamrClientError(`Unknown content type: ${this.contentType}`, 'UNKNOWN_DATA_FORMAT', this)
+            throw new StreamrClientError(`Unknown content type: ${this.contentType}`, 'ASSERTION_FAILED', this)
         }
     }
 
