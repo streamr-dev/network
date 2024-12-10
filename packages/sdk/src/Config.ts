@@ -11,6 +11,9 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 
 export interface ProviderAuthConfig {
+    /**
+     * The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type is from the `ethers` library.
+     */
     ethereum: Eip1193Provider
 }
 

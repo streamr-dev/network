@@ -7,6 +7,9 @@ import { pLimitFn } from './utils/promises'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
+/**
+ * The {@link https://docs.ethers.org/v6/api/providers/abstract-signer/#AbstractSigner AbstractSigner} type is from the `ethers` library.
+ */
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {

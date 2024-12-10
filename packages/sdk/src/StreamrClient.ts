@@ -756,6 +756,8 @@ export class StreamrClient {
     /**
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
+     *
+     * The {@link https://docs.ethers.org/v6/api/contract/#Overrides Overrides} type is from the `ethers` library.
      */
     getEthersOverrides(): Promise<Overrides> {
         return _getEthersOverrides(this.rpcProviderSource, this.config)
