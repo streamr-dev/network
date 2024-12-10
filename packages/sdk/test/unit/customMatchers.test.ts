@@ -1,5 +1,7 @@
 import { StreamrClientError } from '../../src/StreamrClientError'
 
+const ESCAPED_ANSI_COLOR_REGEXP = '(\\x1B\\[\\d+m)?'
+
 describe('custom matchers', () => {
 
     describe('toThrowStreamrClientError', () => {
@@ -35,7 +37,8 @@ describe('custom matchers', () => {
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                }).toThrow('Not an instance of StreamrClientError:\nReceived: "TestClass"')
+                // eslint-disable-next-line max-len
+                }).toThrow(new RegExp(`Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"TestClass"${ESCAPED_ANSI_COLOR_REGEXP}`))
             })
 
             it('unexpected primitive', () => {
@@ -45,7 +48,8 @@ describe('custom matchers', () => {
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                }).toThrow('Not an instance of StreamrClientError:\nReceived: "mock-error')
+                // eslint-disable-next-line max-len
+                }).toThrow(new RegExp(`Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"mock-error"${ESCAPED_ANSI_COLOR_REGEXP}`))
             })
 
             it('inverse', () => {
