@@ -65,8 +65,14 @@ const createAssertionErrors = (
         if (actualError.code !== expectedError.code) {
             assertionErrors.push(formErrorMessage('code', expectedError.code, actualError.code))
         }
-        if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
-            assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
+        if (expectedError.message !== undefined) {
+            // similar matching logic as in https://jestjs.io/docs/expect#tothrowerror
+            const isMatch = (expectedError instanceof Error)
+                ? (actualError.message === expectedError.message)
+                : actualError.message.includes(expectedError.message)
+            if (!isMatch) {
+                assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
+            }
         }
     }
     return assertionErrors
