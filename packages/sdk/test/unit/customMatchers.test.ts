@@ -45,7 +45,7 @@ describe('custom matchers', () => {
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                }).toThrow('Not an instance of StreamrClientError:\nReceived: "mock-error')
+                }).toThrow('Not an instance of StreamrClientError:\nReceived: "mock-error"')
             })
 
             it('inverse', () => {
