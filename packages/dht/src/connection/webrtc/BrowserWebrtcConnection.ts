@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
@@ -53,13 +55,13 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
+            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
             if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.trace(`conn.onGatheringStateChange: ${this.peerConnection?.iceGatheringState}`)
         }
 
