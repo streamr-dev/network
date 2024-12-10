@@ -34,22 +34,10 @@ const createRequest = async (endpoint: string, headers?: Record<string, string>)
      */
     await wait(10)
 
-    const controller = new AbortController()
-
-    const { signal } = controller
-
-    const timeoutId = setTimeout(() => {
-        controller.abort()
-    }, 9000)
-
-    try {
-        return await fetch(`http://127.0.0.1:${PORT}/${endpoint}`, {
-            signal,
-            headers
-        })
-    } finally {
-        clearTimeout(timeoutId)
-    }
+    return await fetch(`http://127.0.0.1:${PORT}/${endpoint}`, {
+        signal: AbortSignal.timeout(9000),
+        headers
+    })
 }
 
 describe('HttpServer', () => {
