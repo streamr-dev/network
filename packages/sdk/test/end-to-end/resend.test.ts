@@ -29,8 +29,8 @@ describe('resend', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            publisherClient?.destroy(),
-            resendClient?.destroy(),
+            publisherClient.destroy(),
+            resendClient.destroy(),
         ])
     }, TIMEOUT)
 

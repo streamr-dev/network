@@ -48,8 +48,8 @@ describe('WebsocketServer', () => {
     })
 
     afterEach(async () => {
-        wsClient?.close()
-        await wsServer?.stop()
+        wsClient.close()
+        await wsServer.stop()
     })
 
     describe.each([

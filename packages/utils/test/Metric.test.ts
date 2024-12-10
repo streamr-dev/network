@@ -30,7 +30,7 @@ describe('metrics', () => {
         })
     
         afterEach(() => {
-            abortController?.abort()
+            abortController.abort()
         })
     
         it('happy path', async () => {

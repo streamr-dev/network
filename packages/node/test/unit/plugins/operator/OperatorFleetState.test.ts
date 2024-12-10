@@ -51,7 +51,7 @@ describe(OperatorFleetState, () => {
     })
 
     afterEach(() => {
-        state?.destroy()
+        state.destroy()
     })
 
     it('cannot double start', async () => {

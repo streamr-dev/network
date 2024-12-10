@@ -74,12 +74,12 @@ describe('broker subscriptions', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            mqttClient1?.end(true),
-            mqttClient2?.end(true),
-            client1?.destroy(),
-            client2?.destroy(),
-            broker1?.stop(),
-            broker2?.stop(),
+            mqttClient1.end(true),
+            mqttClient2.end(true),
+            client1.destroy(),
+            client2.destroy(),
+            broker1.stop(),
+            broker2.stop(),
         ])
 
     })

@@ -59,7 +59,7 @@ describe(StorageConfig, () => {
     })
 
     afterEach(() => {
-        storageConfig?.destroy()
+        storageConfig.destroy()
     })
 
     it('state starts empty', () => {

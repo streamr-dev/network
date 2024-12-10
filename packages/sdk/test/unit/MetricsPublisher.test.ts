@@ -70,7 +70,7 @@ describe('MetricsPublisher', () => {
     })
 
     afterEach(() => {
-        destroySignal?.destroy()
+        destroySignal.destroy()
     })
 
     it('happy path', async () => {

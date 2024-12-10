@@ -38,7 +38,7 @@ describe('StorageConfig', () => {
     })
 
     afterAll(async () => {
-        await cassandraClient?.shutdown()
+        await cassandraClient.shutdown()
     })
 
     beforeEach(async () => {
@@ -50,7 +50,7 @@ describe('StorageConfig', () => {
     afterEach(async () => {
         await client.destroy()
         await Promise.allSettled([
-            storageNode?.stop(),
+            storageNode.stop(),
         ])
     })
 

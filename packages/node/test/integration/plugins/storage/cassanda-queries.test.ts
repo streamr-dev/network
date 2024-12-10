@@ -121,7 +121,7 @@ describe('cassanda-queries', () => {
     })
 
     afterAll(async () => {
-        await storage?.close() // also cleans up realClient
+        await storage.close() // also cleans up realClient
     })
 
     beforeEach(async () => {

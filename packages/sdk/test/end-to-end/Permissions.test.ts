@@ -27,7 +27,7 @@ describe('Stream permissions', () => {
     }, TIMEOUT)
 
     afterAll(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     beforeEach(async () => {

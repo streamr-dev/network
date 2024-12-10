@@ -40,8 +40,8 @@ describe('dataMetadataEndpoints', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            client1?.destroy(),
-            storageNode?.stop()
+            client1.destroy(),
+            storageNode.stop()
         ])
     }, TIMEOUT)
 

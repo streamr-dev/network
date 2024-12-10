@@ -38,14 +38,14 @@ describe('OperatorPlugin', () => {
     }, 30 * 1000)
 
     afterEach(async () => {
-        await broker?.stop()
+        await broker.stop()
     })
 
     async function waitForHeartbeatMessage(operatorContractAddress: EthereumAddress): Promise<void> {
         const client = createClient(fastPrivateKey())
         const sub = await client.subscribe(formCoordinationStreamId(operatorContractAddress))
         await collect(sub, 1)
-        await client?.destroy()
+        await client.destroy()
     }
 
     it('accepts proxy connections', async () => {

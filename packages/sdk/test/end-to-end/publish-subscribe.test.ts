@@ -76,8 +76,8 @@ describe('publish-subscribe', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            publisherClient?.destroy(),
-            subscriberClient?.destroy(),
+            publisherClient.destroy(),
+            subscriberClient.destroy(),
         ])
     }, TIMEOUT)
 

@@ -55,11 +55,11 @@ describe('Resends2', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     afterAll(async () => {
-        await publisher?.destroy()
+        await publisher.destroy()
     })
 
     it('throws if no storage assigned', async () => {

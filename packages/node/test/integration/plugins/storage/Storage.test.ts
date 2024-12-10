@@ -136,8 +136,8 @@ describe('Storage', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            storage?.close(),
-            cassandraClient?.shutdown()
+            storage.close(),
+            cassandraClient.shutdown()
         ])
     })
 

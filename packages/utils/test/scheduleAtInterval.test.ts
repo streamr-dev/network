@@ -15,7 +15,7 @@ describe('scheduleAtInterval', () => {
     })
 
     afterEach(() => {
-        abortController?.abort()
+        abortController.abort()
     })
 
     it('execute at start enabled', async () => {

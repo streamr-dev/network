@@ -35,7 +35,7 @@ describe('unsubscribe', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     it('Subscription#unsubscribe', async () => {
