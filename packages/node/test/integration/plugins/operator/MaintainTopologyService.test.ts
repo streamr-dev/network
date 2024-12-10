@@ -60,8 +60,8 @@ describe('MaintainTopologyService', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
-        await operatorFleetState?.destroy()
+        await client.destroy()
+        await operatorFleetState.destroy()
     })
 
     it('happy path', async () => {
@@ -82,7 +82,7 @@ describe('MaintainTopologyService', () => {
             0
         )
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
-        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
+        operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(
             createClient(operatorWallet.privateKey).getOperator(toEthereumAddress(operatorContractAddress))
         )
