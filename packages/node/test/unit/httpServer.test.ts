@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from '@streamr/fetch'
 import { startServer, stopServer } from '../../src/httpServer'
+import { wait } from '@streamr/utils'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
@@ -25,6 +26,14 @@ const startTestServer = (...endpoints: Endpoint[]) => {
 }
 
 const createRequest = async (endpoint: string, headers?: Record<string, string>) => {
+    /**
+     * @todo Remove the following `wait` when https://github.com/node-fetch/node-fetch/issues/1735
+     * gets fixed.
+     *
+     * Update(11 Dec 2024): The issue is still a thing.
+     */
+    await wait(10)
+
     const controller = new AbortController()
 
     const { signal } = controller
