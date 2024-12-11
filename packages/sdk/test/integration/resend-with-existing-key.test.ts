@@ -9,7 +9,6 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -68,8 +67,9 @@ describe('resend with existing key', () => {
         await collect(messageStream)
         expect(onError).toHaveBeenCalled()
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(StreamrClientError)
-        expect(error.code).toBe('DECRYPT_ERROR')
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR'
+        })
     }
 
     beforeEach(async () => {

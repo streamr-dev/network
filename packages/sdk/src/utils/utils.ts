@@ -8,7 +8,7 @@ import { ContractTransactionReceipt } from 'ethers'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
-import LRU from '../../vendor/quick-lru'
+import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
@@ -92,12 +92,12 @@ export function formStorageNodeAssignmentStreamId(clusterAddress: string): Strea
     return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
-export class MaxSizedSet<T> {
+export class MaxSizedSet<T extends string> {
 
-    private readonly delegate: LRU<T, true>
+    private readonly delegate: LRUCache<T, true>
 
     constructor(maxSize: number) {
-        this.delegate = new LRU<T, true>({ maxSize })
+        this.delegate = new LRUCache<T, true>({ maxSize, sizeCalculation: () => 1 })
     }
 
     add(value: T): void {
@@ -154,10 +154,14 @@ export function generateClientId(): string {
     return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
+export type LookupKeyType = (string | number | symbol) | (string | number | symbol)[]
+
 // A unique internal identifier to some list of primitive values. Useful
 // e.g. as a map key or a cache key.
-export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
-    return args.join('|')
+export const formLookupKey = <K extends LookupKeyType>(key: K): string => {
+    return Array.isArray(key)
+        ? key.map((a) => a.toString()).join('|')
+        : key.toString()
 }
 
 /** @internal */

@@ -177,12 +177,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
+    async isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+    async isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this

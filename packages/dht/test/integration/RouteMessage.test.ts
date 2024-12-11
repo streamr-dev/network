@@ -1,6 +1,5 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { Message, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, until } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'

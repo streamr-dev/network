@@ -1,6 +1,9 @@
 import { ConnectionType } from '../IConnection'
-import { HandshakeError } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+
+import {
+    HandshakeError,
+    PeerDescriptor,
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'

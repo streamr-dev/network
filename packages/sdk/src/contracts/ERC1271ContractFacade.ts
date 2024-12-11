@@ -19,14 +19,14 @@ function formCacheKey(contractAddress: EthereumAddress, signerUserId: UserID): C
 @scoped(Lifecycle.ContainerScoped)
 export class ERC1271ContractFacade {
 
-    private readonly contractsByAddress: Mapping<[EthereumAddress], ERC1271Contract>
+    private readonly contractsByAddress: Mapping<EthereumAddress, ERC1271Contract>
     private readonly publisherCache = new MapWithTtl<CacheKey, boolean>(() => CACHE_TTL)
 
     constructor(
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource
     ) {
-        this.contractsByAddress = createLazyMap<[EthereumAddress], ERC1271Contract>({
+        this.contractsByAddress = createLazyMap<EthereumAddress, ERC1271Contract>({
             valueFactory: async (address) => {
                 return contractFactory.createReadContract(
                     address,

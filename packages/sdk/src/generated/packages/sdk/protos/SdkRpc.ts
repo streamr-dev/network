@@ -3,7 +3,7 @@
 // tslint:disable
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
-import { PeerDescriptor } from "../../dht/protos/PeerDescriptor";
+import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message OperatorDiscoveryRequest
  */
@@ -18,7 +18,7 @@ export interface OperatorDiscoveryRequest {
  */
 export interface OperatorDiscoveryResponse {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor operators = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor operators = 1;
      */
     operators: PeerDescriptor[];
 }

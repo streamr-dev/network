@@ -1,5 +1,6 @@
-import { ChangeFieldType, HexString, toUserId, UserID } from '@streamr/utils'
+import { ChangeFieldType, HexString, StreamID, toUserId, UserID } from '@streamr/utils'
 import { MaxUint256 } from 'ethers'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 export enum StreamPermission {
     EDIT = 'edit',
@@ -24,7 +25,9 @@ export interface PublicPermissionQuery {
 
 export type PermissionQuery = UserPermissionQuery | PublicPermissionQuery
 
-export type InternalPermissionQuery = ChangeFieldType<UserPermissionQuery, 'userId', UserID> | PublicPermissionQuery
+export type InternalUserPermissionQuery = ChangeFieldType<ChangeFieldType<UserPermissionQuery, 'streamId', StreamID>, 'userId', UserID>
+export type InternalPublicPermissionQuery = ChangeFieldType<PublicPermissionQuery, 'streamId', StreamID>
+export type InternalPermissionQuery = InternalUserPermissionQuery | InternalPublicPermissionQuery
 
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
@@ -55,14 +58,18 @@ export interface ChainPermissions {
     canGrant: boolean
 }
 
-export const isPublicPermissionQuery = (query: InternalPermissionQuery): query is PublicPermissionQuery => {
-    return (query as PublicPermissionQuery).public === true
+export const isPublicPermissionQuery = (query: InternalPermissionQuery): query is InternalPublicPermissionQuery => {
+    return (query as InternalPublicPermissionQuery).public === true
 }
 
-export const toInternalPermissionQuery = (query: PermissionQuery): InternalPermissionQuery => {
-    return ('userId' in query) 
-        ? { ...query, userId: toUserId(query.userId) }
-        : query
+export const toInternalPermissionQuery = async (query: PermissionQuery, streamIdBuilder: StreamIDBuilder): Promise<InternalPermissionQuery> => {
+    const typedBaseQuery = {
+        ...query,
+        streamId: await streamIdBuilder.toStreamID(query.streamId)
+    }
+    return ('userId' in typedBaseQuery)
+        ? { ...typedBaseQuery, userId: toUserId(typedBaseQuery.userId) }
+        : typedBaseQuery
 }
 
 export const isPublicPermissionAssignment = (assignment: InternalPermissionAssignment): assignment is PublicPermissionAssignment => {
