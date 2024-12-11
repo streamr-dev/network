@@ -7,7 +7,6 @@ import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
 import { StreamrClient } from './../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 /*
  * Subscriber has subscribed to a stream, and the publisher updates the encryption key for that stream.

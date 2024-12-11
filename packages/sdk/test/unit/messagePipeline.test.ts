@@ -22,7 +22,6 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 const CONTENT = {
     foo: 'bar'
