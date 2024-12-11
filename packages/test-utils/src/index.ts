@@ -259,21 +259,9 @@ export class KeyServer {
 }
 
 async function fetchPrivateKey(): Promise<FetchResponse> {
-    const controller = new AbortController()
-
-    const { signal } = controller
-
-    const timeoutId = setTimeout(() => {
-        controller.abort()
-    }, 5000)
-
-    try {
-        return fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            signal
-        })
-    } finally {
-        clearTimeout(timeoutId)
-    }
+    return fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
+        signal: AbortSignal.timeout(5000)
+    })
 }
 
 export async function fetchPrivateKeyWithGas(): Promise<string> {
