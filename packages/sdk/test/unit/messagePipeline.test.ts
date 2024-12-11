@@ -169,9 +169,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(StreamrClientError)
-        expect(error.code).toBe('DECRYPT_ERROR')
-        expect(error.message).toMatch(/Could not get encryption key/)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR',
+            message: 'Could not get encryption key'
+        })
         expect(output).toEqual([])
         expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledTimes(1)
         expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(StreamPartIDUtils.getStreamID(streamPartId))

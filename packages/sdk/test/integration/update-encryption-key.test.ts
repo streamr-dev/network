@@ -161,8 +161,9 @@ describe('update encryption key', () => {
                 mockId: 2
             })
             await until(() => onError.mock.calls.length > 0, 10 * 1000)
-            expect(onError.mock.calls[0][0]).toBeInstanceOf(StreamrClientError)
-            expect(onError.mock.calls[0][0].code).toBe('DECRYPT_ERROR')
+            expect(onError.mock.calls[0][0]).toEqualStreamrClientError({
+                code: 'DECRYPT_ERROR'
+            })
         }, 10 * 1000)
     })
 })
