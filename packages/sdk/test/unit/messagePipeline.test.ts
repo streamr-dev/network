@@ -135,7 +135,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Signature validation failed')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_SIGNATURE',
+            message: 'Signature validation failed'
+        })
         expect(output).toEqual([])
     })
 
@@ -150,7 +153,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Unable to parse JSON')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_MESSAGE_CONTENT',
+            message: 'Unable to parse JSON'
+        })
         expect(output).toEqual([])
     })
 
