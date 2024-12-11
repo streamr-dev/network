@@ -13,7 +13,7 @@ import {
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { Logger, MetricsContext, StreamPartID, UserID } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -21,7 +21,7 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
-import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
+import { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
 import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
 import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
@@ -329,19 +329,20 @@ export class NetworkNodeFacade {
         return this.cachedNode!.createExternalRpcClient(clientClass)
     }
 
-    async registerExternalRpcMethod<
-        RequestClass extends IMessageType<RequestType>,
-        ResponseClass extends IMessageType<ResponseType>,
-        RequestType extends object,
-        ResponseType extends object
-    >(
-        request: RequestClass,
-        response: ResponseClass,
-        name: string, 
-        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
-    ): Promise<void> {
+    async registerOperator(opts: {
+        getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[]
+    }): Promise<void> {
         const node = await this.getNode()
-        node.registerExternalNetworkRpcMethod(request, response, name, fn)
+        node.registerExternalNetworkRpcMethod(
+            OperatorDiscoveryRequest,
+            OperatorDiscoveryResponse,
+            'discoverOperators', 
+            async (request: OperatorDiscoveryRequest) => {
+                const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
+                const operators = opts.getAssignedNodesForStreamPart(streamPartId)
+                return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
+            }
+        )
     }
 
     private isStarting(): boolean {
