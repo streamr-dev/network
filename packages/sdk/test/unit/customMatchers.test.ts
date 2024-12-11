@@ -10,9 +10,20 @@ describe('custom matchers', () => {
             const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
             expect(() => {
                 throw error
+            }).toThrowStreamrClientError(error)
+            expect(() => {
+                throw error
+            }).not.toThrowStreamrClientError(new StreamrClientError('bar', 'UNKNOWN_ERROR'))
+            expect(() => {
+                throw error
             }).toThrowStreamrClientError({
-                code: error.code,
-                message: error.message
+                code: 'UNKNOWN_ERROR',
+                message: 'bar'
+            })
+            expect(() => {
+                throw error
+            }).toThrowStreamrClientError({
+                code: 'UNKNOWN_ERROR'
             })
         })
 
@@ -65,9 +76,14 @@ describe('custom matchers', () => {
 
         it('happy path', () => {
             const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
+            expect(error).toEqualStreamrClientError(error)
+            expect(error).not.toEqualStreamrClientError(new StreamrClientError('bar', 'UNKNOWN_ERROR'))
             expect(error).toEqualStreamrClientError({
-                code: error.code,
-                message: error.message
+                code: 'UNKNOWN_ERROR',
+                message: 'bar'
+            })
+            expect(error).toEqualStreamrClientError({
+                code: 'UNKNOWN_ERROR'
             })
         })
 
@@ -77,7 +93,7 @@ describe('custom matchers', () => {
                 const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
                 expect(() => {
                     expect(actual).not.toEqualStreamrClientError(actual)
-                }).toThrow('treamrClientErrors are equal')
+                }).toThrow('StreamrClientErrors are equal')
             })
         })
     })
