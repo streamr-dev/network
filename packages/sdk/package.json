@@ -89,7 +89,7 @@
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.4.1",
     "@streamr/dht": "102.0.0-beta.0",
-    "@streamr/fetch": "^0.0.1",
+    "@streamr/fetch": "^0.0.2",
     "@streamr/proto-rpc": "102.0.0-beta.0",
     "@streamr/trackerless-network": "102.0.0-beta.0",
     "@streamr/utils": "102.0.0-beta.0",

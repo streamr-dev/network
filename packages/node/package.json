@@ -31,7 +31,7 @@
     "@inquirer/prompts": "^7.2.0",
     "@streamr/config": "^5.4.1",
     "@streamr/dht": "102.0.0-beta.0",
-    "@streamr/fetch": "^0.0.1",
+    "@streamr/fetch": "^0.0.2",
     "@streamr/sdk": "102.0.0-beta.0",
     "@streamr/utils": "102.0.0-beta.0",
     "aedes": "^0.51.3",
