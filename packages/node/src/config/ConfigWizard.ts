@@ -9,7 +9,7 @@ import omit from 'lodash/omit'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
-import fetch from 'node-fetch'
+import fetch from '@streamr/fetch'
 import {
     CURRENT_CONFIGURATION_VERSION,
     formSchemaUrl,

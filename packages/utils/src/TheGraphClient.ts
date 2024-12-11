@@ -1,3 +1,4 @@
+import { Response as FetchResponse } from '@streamr/fetch'
 import { Gate } from './Gate'
 import { Logger } from './Logger'
 import { wait } from './wait'
@@ -8,10 +9,7 @@ export interface GraphQLQuery {
     variables?: Record<string, any>
 }
 
-// compatible with fetch and node-fetch (alternatively we could use Response from node-fetch if add that as a dependency)
-export interface FetchResponse {
-    text: () => Promise<string>
-}
+export { FetchResponse }
 
 /**
  * Query one entity with queryEntity method, and a list of entitities with queryEntities method.

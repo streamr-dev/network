@@ -10,29 +10,32 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
  * aforementioned instance of AbortSignal will have more and more listeners added
  * but never cleaned.
  */
-export function composeAbortSignals(...signals: AbortSignal[]): ComposedAbortSignal {
-    if (signals.length === 0) {
-        throw new Error('must provide at least one AbortSignal')
-    }
+export function composeAbortSignals(...signals: (AbortSignal | undefined | null)[]): ComposedAbortSignal {
+    const actualSignals = signals.filter(Boolean) as AbortSignal[]
 
-    const preAbortedSignal = signals.find((s) => s.aborted)
-    if (preAbortedSignal !== undefined) {
-        return Object.assign(preAbortedSignal, { destroy: () => {} })
-    }
+    const controller = new AbortController()
 
-    const abortController = new AbortController()
-    const destroy = () => {
-        for (const signal of signals) {
-            signal.removeEventListener('abort', abort)
+    function destroy() {
+        for (const signal of actualSignals) {
+            signal.removeEventListener('abort', onAbort)
         }
-        signals = [] // allow gc
     }
-    const abort = () => {
+
+    function onAbort() {
+        controller.abort()
+
         destroy()
-        abortController.abort()
     }
-    for (const signal of signals) {
-        signal.addEventListener('abort', abort)
+
+    for (const signal of actualSignals) {
+        if (signal.aborted) {
+            onAbort()
+
+            break
+        }
+
+        signal.addEventListener('abort', onAbort, { once: true })
     }
-    return Object.assign(abortController.signal, { destroy })
+
+    return Object.assign(controller.signal, { destroy })
 }

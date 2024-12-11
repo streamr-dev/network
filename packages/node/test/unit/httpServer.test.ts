@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { Server } from 'http'
-import fetch from 'node-fetch'
+import fetch from '@streamr/fetch'
 import { startServer, stopServer } from '../../src/httpServer'
 import { wait } from '@streamr/utils'
 
@@ -26,9 +26,16 @@ const startTestServer = (...endpoints: Endpoint[]) => {
 }
 
 const createRequest = async (endpoint: string, headers?: Record<string, string>) => {
-    await wait(10) // TODO: remove when fixed https://github.com/node-fetch/node-fetch/issues/1735
+    /**
+     * @todo Remove the following `wait` when https://github.com/node-fetch/node-fetch/issues/1735
+     * gets fixed.
+     *
+     * Update(11 Dec 2024): The issue is still a thing.
+     */
+    await wait(10)
+
     return await fetch(`http://127.0.0.1:${PORT}/${endpoint}`, {
-        timeout: 9 * 1000,
+        signal: AbortSignal.timeout(9000),
         headers
     })
 }

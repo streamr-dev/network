@@ -52,7 +52,7 @@ const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(
     () => '{"data":{"operator":{"nodes":[]}}}'
 )
 
-jest.mock('node-fetch', () => {
+jest.mock('@streamr/fetch', () => {
     return () => {
         const result = fakeFetchResponseBody()
         if (typeof result === 'string') {
