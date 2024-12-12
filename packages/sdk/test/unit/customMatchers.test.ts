@@ -1,5 +1,7 @@
 import { StreamrClientError } from '../../src/StreamrClientError'
 
+const ESCAPED_ANSI_COLOR_REGEXP = '(\\x1B\\[\\d+m)?'
+
 describe('custom matchers', () => {
 
     describe('toThrowStreamrClientError', () => {
@@ -8,9 +10,20 @@ describe('custom matchers', () => {
             const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
             expect(() => {
                 throw error
+            }).toThrowStreamrClientError(error)
+            expect(() => {
+                throw error
+            }).not.toThrowStreamrClientError(new StreamrClientError('bar', 'UNKNOWN_ERROR'))
+            expect(() => {
+                throw error
             }).toThrowStreamrClientError({
-                code: error.code,
-                message: error.message
+                code: 'UNKNOWN_ERROR',
+                message: 'bar'
+            })
+            expect(() => {
+                throw error
+            }).toThrowStreamrClientError({
+                code: 'UNKNOWN_ERROR'
             })
         })
 
@@ -35,7 +48,8 @@ describe('custom matchers', () => {
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                }).toThrow('Not an instance of StreamrClientError:\nReceived: "TestClass"')
+                // eslint-disable-next-line max-len
+                }).toThrow(new RegExp(`Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"TestClass"${ESCAPED_ANSI_COLOR_REGEXP}`))
             })
 
             it('unexpected primitive', () => {
@@ -45,7 +59,8 @@ describe('custom matchers', () => {
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                }).toThrow('Not an instance of StreamrClientError:\nReceived: "mock-error')
+                // eslint-disable-next-line max-len
+                }).toThrow(new RegExp(`Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"mock-error"${ESCAPED_ANSI_COLOR_REGEXP}`))
             })
 
             it('inverse', () => {
@@ -61,9 +76,14 @@ describe('custom matchers', () => {
 
         it('happy path', () => {
             const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
+            expect(error).toEqualStreamrClientError(error)
+            expect(error).not.toEqualStreamrClientError(new StreamrClientError('bar', 'UNKNOWN_ERROR'))
             expect(error).toEqualStreamrClientError({
-                code: error.code,
-                message: error.message
+                code: 'UNKNOWN_ERROR',
+                message: 'bar'
+            })
+            expect(error).toEqualStreamrClientError({
+                code: 'UNKNOWN_ERROR'
             })
         })
 
@@ -73,7 +93,7 @@ describe('custom matchers', () => {
                 const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
                 expect(() => {
                     expect(actual).not.toEqualStreamrClientError(actual)
-                }).toThrow('treamrClientErrors are equal')
+                }).toThrow('StreamrClientErrors are equal')
             })
         })
     })
