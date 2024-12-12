@@ -1,0 +1,48 @@
+const fs = require('fs')
+const path = require('path')
+const { promisify } = require('util')
+
+import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
+
+const modes = [ 'propagation', 'join', 'routing', 'timetodata' ]
+
+const rootDirectory = process.argv[2]
+const experiment = process.argv[3]
+
+if (rootDirectory === undefined) {
+    throw new Error('root directory must be provided')
+}
+
+if (experiment === undefined || !modes.includes(experiment)) {
+    throw new Error('experiment must be provided')
+}
+
+const run = async (): Promise<void> => {
+
+    const readdir = promisify(fs.readdir)
+
+    const nodeCountDirectories = await readdir(rootDirectory)
+    const results: Map<string, Map<string, unknown>> = new Map()
+    for (const nodeCountDirectory of nodeCountDirectories) {
+        const nodeCountDirectoryPath = path.join(rootDirectory, nodeCountDirectory)
+        const results = await readdir(nodeCountDirectoryPath)
+        results.set(nodeCountDirectory, new Map())
+        for (const result of results) {
+            const filePath = path.join(rootDirectory, nodeCountDirectory, result)
+            let parsed: unknown
+            if (experiment === 'propagation') {
+                parsed = await propagationResults(filePath)
+            } else if (experiment === 'join') {
+                parsed = await joinResults(filePath)
+            } else if (experiment === 'routing') {
+                parsed = await routingResults(filePath)
+            } else if (experiment === 'timetodata') {
+                parsed = await timeToDataResults(filePath)
+            }
+            results.get(nodeCountDirectory)!.set(result, parsed)
+        }
+    }
+    console.log(results)
+}
+
+run()

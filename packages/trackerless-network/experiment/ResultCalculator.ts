@@ -2,7 +2,7 @@ import { waitForEvent } from '@streamr/utils'
 import fs from 'fs'
 const readline = require('readline')
 
-export const joinResults = async (filePath: string): Promise<void> => {
+export const joinResults = async (filePath: string): Promise<unknown> => {
     const file = readline.createInterface({
         input: fs.createReadStream(filePath),
         output: process.stdout,
@@ -17,9 +17,10 @@ export const joinResults = async (filePath: string): Promise<void> => {
     })
     await waitForEvent(file, 'close')
     console.log('avg:', sum / numOfLines)
+    return { avg: sum / numOfLines }
 }
 
-export const routingResults = async (filePath: string): Promise<void> => {
+export const routingResults = async (filePath: string): Promise<unknown> => {
     const file = readline.createInterface({
         input: fs.createReadStream(filePath),
         output: process.stdout,
@@ -43,13 +44,21 @@ export const routingResults = async (filePath: string): Promise<void> => {
         }
     })
     await waitForEvent(file, 'close')
-    console.log('rtt avg:', rttSum / numOfLines)
-    console.log('time to receiver avg:', timeToReceiverSum / numOfLines)
-    console.log('time to requestor avg:', timeToRequestorSum / numOfLines)
-    console.log('hop avg:', hopSum / numOfLines)
+
+    const avgRtt = rttSum / numOfLines
+    const avgTimeToReceiver = timeToReceiverSum / numOfLines
+    const avgTimeToRequestor = timeToRequestorSum / numOfLines
+    const avgHop = hopSum / numOfLines
+
+    console.log('rtt avg:', avgRtt)
+    console.log('time to receiver avg:', avgTimeToReceiver)
+    console.log('time to requestor avg:', avgTimeToRequestor)
+    console.log('hop avg:', avgHop)
+
+    return { rtt: avgRtt, timeToReceiver: avgTimeToReceiver, timeToRequestor: avgTimeToRequestor, hop: avgHop }
 }
 
-export const timeToDataResults = async (filePath: string): Promise<void> => {
+export const timeToDataResults = async (filePath: string): Promise<unknown> => {
     const file = readline.createInterface({
         input: fs.createReadStream(filePath),
         output: process.stdout,
@@ -68,12 +77,16 @@ export const timeToDataResults = async (filePath: string): Promise<void> => {
         numOfLines += 1
     })
     await waitForEvent(file, 'close')
-    console.log('time to data avg:', sumTimeToData / numOfLines)
-    console.log('layer1 join avg:', sumLayer1Join / numOfLines)
-    console.log('entry point fetch avg:', sumEntryPointFetch / numOfLines)
+    const avgTimeToData = sumTimeToData / numOfLines
+    const avgLayer1Join = sumLayer1Join / numOfLines
+    const avgEntryPointFetch = sumEntryPointFetch / numOfLines
+    console.log('time to data avg:', avgTimeToData)
+    console.log('layer1 join avg:', avgLayer1Join)
+    console.log('entry point fetch avg:', avgEntryPointFetch)
+    return { timeToData: avgTimeToData, layer1Join: avgLayer1Join, entryPointFetch: avgEntryPointFetch }
 }
 
-export const propagationResults = async (filePath: string): Promise<void> => {
+export const propagationResults = async (filePath: string): Promise<unknown> => {
     const file = readline.createInterface({
         input: fs.createReadStream(filePath),
         output: process.stdout,
@@ -94,7 +107,15 @@ export const propagationResults = async (filePath: string): Promise<void> => {
         }
     })
     await waitForEvent(file, 'close')
-    console.log('mean propagation time:', sumPropagationTime / numOfLines)
-    console.log('mean hops:', sumHops / numOfLines)
-    console.log('mean messages received:', sumMessagesReceived / numOfLines)
+
+    const avgPropagationTime = sumPropagationTime / numOfLines
+    const avgHops = sumHops / numOfLines
+    const avgMessagesReceived = sumMessagesReceived / numOfLines
+
+    console.log('mean propagation time:', avgPropagationTime)
+    console.log('mean hops:', avgHops)
+    console.log('mean messages received:', avgMessagesReceived)
+    
+    return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived }
+    
 } 

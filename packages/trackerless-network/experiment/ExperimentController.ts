@@ -180,6 +180,7 @@ export class ExperimentController {
     }
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
+        logger.info('Starting join stream part commands')
         this.instructionsCompleted = 0
         const nodes = shuffle(Array.from(this.clients.values()))
         await this.runBatchedOperation(nodes, 8, async (node) => {

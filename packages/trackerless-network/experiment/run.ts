@@ -261,8 +261,8 @@ const run = async (nodeCountPerRegion: number, resultName: string) => {
     if (experiment === 'reset') {
         await run(0, 'reset')
     } else {
+        const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
         for (const nodeCount of nodeCounts) {
-            const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
             await run(nodeCount, datetime)
         }
     }
