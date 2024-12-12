@@ -22,11 +22,11 @@ const run = async (): Promise<void> => {
     const readdir = promisify(fs.readdir)
 
     const nodeCountDirectories = await readdir(rootDirectory)
-    const results: Map<string, Map<string, unknown>> = new Map()
+    const processedResults: Map<string, Map<string, unknown>> = new Map()
     for (const nodeCountDirectory of nodeCountDirectories) {
         const nodeCountDirectoryPath = path.join(rootDirectory, nodeCountDirectory)
         const results = await readdir(nodeCountDirectoryPath)
-        results.set(nodeCountDirectory, new Map())
+        processedResults.set(nodeCountDirectory, new Map())
         for (const result of results) {
             const filePath = path.join(rootDirectory, nodeCountDirectory, result)
             let parsed: unknown
@@ -39,10 +39,10 @@ const run = async (): Promise<void> => {
             } else if (experiment === 'timetodata') {
                 parsed = await timeToDataResults(filePath)
             }
-            results.get(nodeCountDirectory)!.set(result, parsed)
+            processedResults.get(nodeCountDirectory)!.set(result, parsed)
         }
     }
-    console.log(results)
+    console.log(processedResults)
 }
 
 run()
