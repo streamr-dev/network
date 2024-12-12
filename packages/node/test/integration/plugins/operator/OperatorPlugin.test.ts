@@ -123,16 +123,19 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress
+                    operatorContractAddress,
+                    heartbeatUpdateIntervalInMs: 100,
+                    fleetState: {
+                        warmupPeriodInMs: 0
+                    }
                 }
             }
         })
         await until(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
-        // Ensure that heartbeat has been sent (setting heartbeatUpdateIntervalInMs lower did not help)
         await waitForHeartbeatMessage(toEthereumAddress(operatorContractAddress))
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         const operators = await client.getNode().discoverOperators(brokerDescriptor, toStreamPartID(stream.id, DEFAULT_STREAM_PARTITION))
         expect(operators[0].nodeId).toEqual(brokerDescriptor.nodeId)
-    }, 60 * 1000)
+    })
 
 })
