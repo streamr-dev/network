@@ -68,7 +68,7 @@ export interface NetworkNodeStub {
     >(
         request: RequestClass,
         response: ResponseClass,
-        name: string, 
+        name: string,
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void
 
@@ -127,14 +127,14 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = await this.getEntryPoints()
-        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ?
             peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor,
-                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null) 
+                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null)
                     ? this.config.network.controlLayer.websocketPortRange
                     : undefined
             },
@@ -234,7 +234,7 @@ export class NetworkNodeFacade {
         const node = await this.getNode()
         node.broadcast(StreamMessageTranslator.toProtobuf(msg))
     }
-    
+
     addMessageListener(listener: (msg: OldStreamMessage) => void): void {
         this.messageListeners.push(listener)
     }
@@ -319,7 +319,7 @@ export class NetworkNodeFacade {
             sourceDescriptor: await this.getPeerDescriptor(),
             targetDescriptor: peerDescriptorTranslator(leader)
         })
-        return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))   
+        return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))
     }
 
     private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
@@ -336,7 +336,7 @@ export class NetworkNodeFacade {
         node.registerExternalNetworkRpcMethod(
             OperatorDiscoveryRequest,
             OperatorDiscoveryResponse,
-            'discoverOperators', 
+            'discoverOperators',
             async (request: OperatorDiscoveryRequest) => {
                 const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
                 const operators = opts.getAssignedNodesForStreamPart(streamPartId)
