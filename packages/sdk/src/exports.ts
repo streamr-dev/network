@@ -80,8 +80,6 @@ export {
     StreamMessageType
 } from './protocol/StreamMessage'
 
-export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
-
 // These are exported for the internal Operator class
 export {
     Operator,
