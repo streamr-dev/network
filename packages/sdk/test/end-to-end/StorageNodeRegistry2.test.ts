@@ -28,8 +28,8 @@ describe('StorageNodeRegistry2', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            client?.destroy(),
-            storageNodeClient?.destroy()
+            client.destroy(),
+            storageNodeClient.destroy()
         ])
     })
 

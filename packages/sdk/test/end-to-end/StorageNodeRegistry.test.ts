@@ -26,8 +26,8 @@ describe('StorageNodeRegistry', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            creatorClient?.destroy(),
-            listenerClient?.destroy()
+            creatorClient.destroy(),
+            listenerClient.destroy()
         ])
     })
 

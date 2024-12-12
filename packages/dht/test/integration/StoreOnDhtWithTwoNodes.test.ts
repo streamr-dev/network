@@ -26,7 +26,7 @@ describe('Storing data in DHT with two peers', () => {
     afterEach(async () => {
         await entryPoint.stop()
         await otherNode.stop()
-        simulator?.stop()
+        simulator!.stop()
     })
 
     it('Node can store on two peer DHT', async () => {
