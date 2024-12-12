@@ -134,6 +134,7 @@ export class WebsocketServer extends EventEmitter<Events> {
     public stop(): Promise<void> {
         this.abortController.abort()
         this.removeAllListeners()
+        this.httpServer?.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer!.close()
             for (const ws of this.wsServer!.clients) {
