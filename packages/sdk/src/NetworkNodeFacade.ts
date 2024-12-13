@@ -204,7 +204,7 @@ export class NetworkNodeFacade {
 
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    getNode(): Promise<NetworkNodeStub> {
+    getNode(): Promise<Omit<NetworkNodeStub, 'start' | 'stop'>> {
         this.destroySignal.assertNotDestroyed()
         return this.startNodeTask()
     }
