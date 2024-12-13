@@ -3,11 +3,10 @@ import cors from 'cors'
 import crypto, { randomBytes } from 'crypto'
 import { Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
-import express, { Request, Response } from 'express'
+import express from 'express'
 import http from 'http'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
-import fetch from 'node-fetch'
 import { Readable } from 'stream'
 
 export type Event = string
@@ -262,7 +261,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
     try {
         response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            timeout: 5 * 1000
+            signal: AbortSignal.timeout(5000)
         })
     } catch (_e) {
         try {
@@ -270,8 +269,8 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         } catch (_e2) {
             // no-op
         } finally {
-            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 5 * 1000
+            response = response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
+                signal: AbortSignal.timeout(5000)
             })
         }
     }
@@ -311,7 +310,7 @@ export class Queue<T> {
 
 export const startTestServer = async (
     endpoint: string,
-    onRequest: (req: Request, res: Response) => Promise<void>
+    onRequest: (req: express.Request, res: express.Response) => Promise<void>
 ): Promise<{ url: string, stop: () => Promise<void> }> => {
     const app = express()
     app.get(endpoint, async (req, res) => {

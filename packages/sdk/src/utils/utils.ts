@@ -5,8 +5,6 @@ import {
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
-import compact from 'lodash/compact'
-import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
@@ -174,7 +172,20 @@ export const createTheGraphClient = (
         fetch: (url: string, init?: Record<string, unknown>) => {
             // eslint-disable-next-line no-underscore-dangle
             const timeout = config._timeouts.theGraph.fetchTimeout
-            return fetch(url, merge({ timeout }, init))
+
+            const signals = [AbortSignal.timeout(timeout)]
+
+            if (init?.signal instanceof AbortSignal) {
+                signals.push(init.signal)
+            }
+
+            const signal = composeAbortSignals(...signals)
+
+            try {
+                return fetch(url, merge(init, { signal }))
+            } finally {
+                signal.destroy()
+            }
         },
         // eslint-disable-next-line no-underscore-dangle
         indexTimeout: config._timeouts.theGraph.indexTimeout,
@@ -210,7 +221,7 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
 ): AsyncGenerator<Uint8Array, void, undefined> {
     logger.debug('Send HTTP request', { url })
     const abortController = new AbortController()
-    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
+    const fetchAbortSignal = composeAbortSignals(abortController.signal, abortSignal)
     const response: Response = await fetch(url, {
         signal: fetchAbortSignal
     })
