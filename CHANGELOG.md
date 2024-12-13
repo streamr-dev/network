@@ -110,6 +110,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add new command `streamr mock-data generate-binary` for generating random binary data (hexadecimal)
+
 #### Changed
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
