@@ -200,7 +200,11 @@ const run = async (nodeCountPerRegion: number, resultName: string, runs: number)
             localNodes = startLocalNodes(nodeCount)
             await controller.waitForClients()
         } else if (env === 'aws') {
-            await startAwsInstances(controller, nodeCountPerRegion)
+            if (repeat === 0) {
+                await startAwsInstances(controller, nodeCountPerRegion)
+            } else {
+                await controller.waitForClients()
+            }
         }
         logger.info('all clients connected')
         if (experiment === 'join') {
