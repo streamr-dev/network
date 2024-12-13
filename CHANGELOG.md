@@ -110,6 +110,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add support for publishing binary data with `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
+
 #### Changed
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
