@@ -269,7 +269,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         } catch (_e2) {
             // no-op
         } finally {
-            response = response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
+            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
                 signal: AbortSignal.timeout(5000)
             })
         }
