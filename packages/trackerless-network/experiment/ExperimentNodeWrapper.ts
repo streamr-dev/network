@@ -4,7 +4,7 @@ import { NetworkNode } from '../src/NetworkNode'
 import { NetworkStack } from '../src/NetworkStack'
 import { ExperimentClientMessage, ExperimentServerMessage, GetRoutingPath, Hello, RoutingPath } from './generated/packages/trackerless-network/experiment/Experiment'
 import { DhtCallContext, DhtNode, NodeType, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { binaryToHex, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { binaryToHex, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
@@ -184,7 +184,10 @@ export class ExperimentNodeWrapper {
                 const instruction = message.instruction.getNeighborsRequest
                 setImmediate(() => this.getNeighbors(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'stopNodeRequest') {
-                setImmediate(() => process.exit(1))
+                setImmediate(async () => { 
+                    await wait(10000)
+                    process.exit(1)
+                })
             }
         })
     }
