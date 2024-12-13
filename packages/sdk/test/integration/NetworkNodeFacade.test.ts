@@ -23,7 +23,7 @@ describe('NetworkNodeFacade', () => {
 
         let client: StreamrClient
 
-        const getNode = (): Promise<NetworkNodeStub> => {
+        const getNode = (): Promise<Omit<NetworkNodeStub, 'start' | 'stop'>> => {
             return client.getNode().getNode()
         }
 
