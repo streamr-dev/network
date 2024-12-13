@@ -192,6 +192,7 @@ const startAwsInstances = async (controller: ExperimentController, nodeCountPerR
 const run = async (nodeCountPerRegion: number, resultName: string, runs: number) => {
     const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
     for (let repeat = 0; repeat < runs; repeat++) {
+        logger.info('starting experiment', { experiment, nodeCount, repeat })
         const filePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${repeat}.json`
         const controller = new ExperimentController(nodeCount, filePath) 
         controller.createServer()
