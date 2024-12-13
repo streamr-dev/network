@@ -168,102 +168,113 @@ const stopAwsNodes = async (region: string) => {
     }
 }
 
-const run = async (nodeCountPerRegion: number, resultName: string) => {
-    const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
-    const filePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${0}.json`
-    const controller = new ExperimentController(nodeCount, filePath) 
-    controller.createServer()
-    let localNodes: ExperimentNodeWrapper[] = []
+const startAwsInstances = async (controller: ExperimentController, nodeCountPerRegion: number) => {
     const instances = new Map<string, { domain: string, region: string }>()
-    if (env === 'local') {
-        localNodes = startLocalNodes(nodeCount)
-        await controller.waitForClients()
-    } else if (env === 'aws') {
-        await Promise.all(REGIONS.map(async (region) => {
-            await startAwsNodes(region, nodeCountPerRegion)
-            const seenInRegion = await waitForInstances(region, nodeCountPerRegion)
-            seenInRegion.forEach((value, key) => instances.set(key, value))
-        }))
-        logger.info('all aws instances started')
-        let lastCount: number 
-        const waitLogger = () => {
-            const startedIps = controller.getIps()
-            if (lastCount !== startedIps.size) {
-                const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
-                logger.info('waiting for instances to connect', { startingInstances })
-            }
-            lastCount = startedIps.size
-                       
+    await Promise.all(REGIONS.map(async (region) => {
+        await startAwsNodes(region, nodeCountPerRegion)
+        const seenInRegion = await waitForInstances(region, nodeCountPerRegion)
+        seenInRegion.forEach((value, key) => instances.set(key, value))
+    }))
+    logger.info('all aws instances started')
+    let lastCount: number 
+    const waitLogger = () => {
+        const startedIps = controller.getIps()
+        if (lastCount !== startedIps.size) {
+            const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
+            logger.info('waiting for instances to connect', { startingInstances })
         }
-        await controller.waitForClients(() => waitLogger())
+        lastCount = startedIps.size
+                   
+    }
+    await controller.waitForClients(() => waitLogger())
+}
 
-    }
-    logger.info('all clients connected')
-    if (experiment === 'join') {
-        const entryPointId = await controller.startEntryPoint()
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId, false)
-        logger.info('all nodes started')
-        await controller.runJoinExperiment(entryPointId)
-        logger.info('experiment done')
-    } else if (experiment === 'propagation') { 
-        const entryPointId = await controller.startEntryPoint(false, true)
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId, true, false, true)
-        logger.info('all nodes started')
-        await controller.runPropagationExperiment(entryPointId)
-    } else if (experiment === 'routing') {
-        const entryPointId = await controller.startEntryPoint(true)
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId, true, true)
-        logger.info('all nodes started')
-        await wait(10000)
-        await controller.runRoutingExperiment()
-        logger.info('experiment done')
-    } else if (experiment === 'timetodata') {
-        const entryPointId = await controller.startEntryPoint()
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId, false)
-        logger.info('all nodes started')
-        await controller.runTimeToDataExperiment(entryPointId)
-        logger.info('experiment done')
-    } else if (experiment === 'scalingjoin') {
-        const entryPointId = await controller.startEntryPoint()
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId, false)
-        logger.info('all nodes started')
-        await controller.runScalingJoinExperiment(entryPointId)
-    } else if (experiment === 'pinging') {
-        logger.info('Starting pinging experiment')
-        await controller.runPingingExperiment()
-    } else {
-        const entryPointId = await controller.startEntryPoint(true)
-        logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId)
-        logger.info('all nodes started')
-    }
-    logger.info(`experiment ${experiment} completed`)
-    if (env === 'aws') {
-        await Promise.all(REGIONS.map(async (region) => { 
-            await stopAwsNodes(region)
-            await waitForInstances(region, 0)
-        }))
-    } else if (env === 'local') {
-        await Promise.all(localNodes.map((node) => node.stop()))
-    }
-    logger.info('all nodes stopped', { nodeCount })
-    await controller.stop()
+const run = async (nodeCountPerRegion: number, resultName: string, runs: number) => {
+    const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
+    for (let repeat = 0; repeat < runs; repeat++) {
+        const filePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${repeat}.json`
+        const controller = new ExperimentController(nodeCount, filePath) 
+        controller.createServer()
+        let localNodes: ExperimentNodeWrapper[] = []
+        if (env === 'local') {
+            localNodes = startLocalNodes(nodeCount)
+            await controller.waitForClients()
+        } else if (env === 'aws') {
+            await startAwsInstances(controller, nodeCountPerRegion)
+        }
+        logger.info('all clients connected')
+        if (experiment === 'join') {
+            const entryPointId = await controller.startEntryPoint()
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId, false)
+            logger.info('all nodes started')
+            await controller.runJoinExperiment(entryPointId)
+            logger.info('experiment done')
+        } else if (experiment === 'propagation') { 
+            const entryPointId = await controller.startEntryPoint(false, true)
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId, true, false, true)
+            logger.info('all nodes started')
+            await controller.runPropagationExperiment('experiment#0')
+        } else if (experiment === 'routing') {
+            const entryPointId = await controller.startEntryPoint(true)
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId, true, true)
+            logger.info('all nodes started')
+            await wait(10000)
+            await controller.runRoutingExperiment()
+            logger.info('experiment done')
+        } else if (experiment === 'timetodata') {
+            const entryPointId = await controller.startEntryPoint()
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId, false)
+            logger.info('all nodes started')
+            await controller.runTimeToDataExperiment(entryPointId)
+            logger.info('experiment done')
+        } else if (experiment === 'scalingjoin') {
+            const entryPointId = await controller.startEntryPoint()
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId, false)
+            logger.info('all nodes started')
+            await controller.runScalingJoinExperiment(entryPointId)
+        } else if (experiment === 'pinging') {
+            logger.info('Starting pinging experiment')
+            await controller.runPingingExperiment()
+        } else {
+            const entryPointId = await controller.startEntryPoint(true)
+            logger.info('entry point started', { entryPointId })
+            await controller.startNodes(entryPointId)
+            logger.info('all nodes started')
+        }
+        logger.info(`experiment ${experiment} completed`)
+        if (env === 'aws') {
+            if (repeat === runs - 1) {
+                await Promise.all(REGIONS.map(async (region) => { 
+                    await stopAwsNodes(region)
+                    await waitForInstances(region, 0)
+                }))
+            } else {
+                controller.stopNodes()
+            }
 
-    await calculateResults(filePath)
+        } else if (env === 'local') {
+            await Promise.all(localNodes.map((node) => node.stop()))
+        }
+        logger.info('all nodes stopped', { nodeCount })
+        await controller.stop()
+
+        await calculateResults(filePath)
+    }
+    
 }
 
 (async () => {
     if (experiment === 'reset') {
-        await run(0, 'reset')
+        await run(0, 'reset', 1)
     } else {
         const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
         for (const nodeCount of nodeCounts) {
-            await run(nodeCount, datetime)
+            await run(nodeCount, datetime, numOfRepeats)
         }
     }
     

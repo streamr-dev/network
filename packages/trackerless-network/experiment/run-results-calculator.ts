@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
 
+import { writeResultsRow } from "./ExperimentController"
 import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
 
 const modes = [ 'propagation', 'join', 'routing', 'timetodata' ]
@@ -20,7 +21,8 @@ if (experiment === undefined || !modes.includes(experiment)) {
 const run = async (): Promise<void> => {
 
     const readdir = promisify(fs.readdir)
-
+    
+    const processedFilePath = path.join(rootDirectory, 'processed.csv')
     const nodeCountDirectories = await readdir(rootDirectory)
     const processedResults: Map<string, Map<string, unknown>> = new Map()
     for (const nodeCountDirectory of nodeCountDirectories) {
@@ -42,7 +44,15 @@ const run = async (): Promise<void> => {
             processedResults.get(nodeCountDirectory)!.set(result, parsed)
         }
     }
-    console.log(processedResults)
+    writeResultsRow(processedFilePath, `nodes, run, propagationTime, hops, messagesReceived`)
+    processedResults.forEach((value, key) => {
+        const nodeCount = key.split('-')[2]
+        value.forEach((innerValue: any, innerKey) => {
+            const run = innerKey.split('.')[0]
+            writeResultsRow(processedFilePath, `${nodeCount}, ${run}, ${innerValue.propagationTime}, ${innerValue.hops}, ${innerValue.messagesReceived}`)
+        })
+    })
+
 }
 
 run()

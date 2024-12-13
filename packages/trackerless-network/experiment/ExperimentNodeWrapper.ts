@@ -183,6 +183,8 @@ export class ExperimentNodeWrapper {
             } else if (message.instruction.oneofKind === 'getNeighborsRequest') {
                 const instruction = message.instruction.getNeighborsRequest
                 setImmediate(() => this.getNeighbors(instruction.streamPartId))
+            } else if (message.instruction.oneofKind === 'stopNodeRequest') {
+                setImmediate(() => this.stop())
             }
         })
     }

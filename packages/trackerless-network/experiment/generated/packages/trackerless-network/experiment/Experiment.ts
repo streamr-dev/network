@@ -72,6 +72,12 @@ export interface ExperimentServerMessage {
          */
         getNeighborsRequest: GetNeighborsRequest;
     } | {
+        oneofKind: "stopNodeRequest";
+        /**
+         * @generated from protobuf field: StopNodeRequest stopNodeRequest = 11;
+         */
+        stopNodeRequest: StopNodeRequest;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -347,6 +353,11 @@ export interface GetNeighborsResponse {
      */
     neighbors: string[];
 }
+/**
+ * @generated from protobuf message StopNodeRequest
+ */
+export interface StopNodeRequest {
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
@@ -360,7 +371,8 @@ class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> 
             { no: 7, name: "publishOnInterval", kind: "message", oneof: "instruction", T: () => PublishOnInterval },
             { no: 8, name: "MeasureTimeToData", kind: "message", jsonName: "MeasureTimeToData", oneof: "instruction", T: () => MeasureTimeToData },
             { no: 9, name: "pingExperiment", kind: "message", oneof: "instruction", T: () => PingExperiment },
-            { no: 10, name: "getNeighborsRequest", kind: "message", oneof: "instruction", T: () => GetNeighborsRequest }
+            { no: 10, name: "getNeighborsRequest", kind: "message", oneof: "instruction", T: () => GetNeighborsRequest },
+            { no: 11, name: "stopNodeRequest", kind: "message", oneof: "instruction", T: () => StopNodeRequest }
         ]);
     }
 }
@@ -625,6 +637,16 @@ class GetNeighborsResponse$Type extends MessageType<GetNeighborsResponse> {
  * @generated MessageType for protobuf message GetNeighborsResponse
  */
 export const GetNeighborsResponse = new GetNeighborsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StopNodeRequest$Type extends MessageType<StopNodeRequest> {
+    constructor() {
+        super("StopNodeRequest", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StopNodeRequest
+ */
+export const StopNodeRequest = new StopNodeRequest$Type();
 /**
  * @generated ServiceType for protobuf service RoutingExperimentRpc
  */

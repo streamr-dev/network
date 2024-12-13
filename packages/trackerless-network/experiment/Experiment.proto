@@ -22,6 +22,7 @@ message ExperimentServerMessage {
         MeasureTimeToData MeasureTimeToData = 8;
         PingExperiment pingExperiment = 9;
         GetNeighborsRequest getNeighborsRequest = 10;
+        StopNodeRequest stopNodeRequest = 11;
     }
 }
 
@@ -124,4 +125,8 @@ message GetNeighborsRequest {
 
 message GetNeighborsResponse {
     repeated string neighbors = 1;
+}
+
+message StopNodeRequest {
+
 }

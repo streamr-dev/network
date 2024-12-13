@@ -14,7 +14,7 @@ interface ExperimentNode {
     ip?: string
 }
 
-const writeResultsRow = (file: string, line: string) => {
+export const writeResultsRow = (file: string, line: string) => {
     const dir = file.split('/').slice(0, -1).join('/')
     fs.mkdirSync(dir, { recursive: true })
     fs.appendFileSync(file, line + '\n')
@@ -267,7 +267,7 @@ export class ExperimentController {
     }
 
     async runPropagationExperiment(streamPartId: string): Promise<void> {
-        const streamPart = StreamPartIDUtils.parse('experiment#0')
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
         await this.joinStreamPart(streamPart)
         const secondsToWait = 60
         logger.info('all nodes joined stream part waiting ' + secondsToWait + ' seconds for network to stabilize')
@@ -333,6 +333,20 @@ export class ExperimentController {
         Array.from(this.clients.values()).map((client) => client.socket.close())
         this.httpServer!.close()
         this.wss!.close()
+    }
+
+    async stopNodes(): Promise<void> {
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'stopNodeRequest',
+                    stopNodeRequest: {
+                    }
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
     }
 
     private async runBatchedOperation(nodes: ExperimentNode[], batchSize: number, operation: (node: ExperimentNode) => Promise<void>, untilCondition: (requiredCount: number) => boolean) {
