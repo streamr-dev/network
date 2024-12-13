@@ -185,7 +185,7 @@ export class ExperimentNodeWrapper {
                 setImmediate(() => this.getNeighbors(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'stopNodeRequest') {
                 setImmediate(async () => { 
-                    await wait(10000)
+                    await wait(5000)
                     process.exit(1)
                 })
             }
