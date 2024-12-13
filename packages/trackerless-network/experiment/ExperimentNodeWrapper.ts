@@ -127,7 +127,7 @@ export class ExperimentNodeWrapper {
             networkNode: {
                 experimentId: this.id,
                 includeRouteToMessages: storeMessagePaths,
-                propagationResultPath: path.resolve(path.resolve(__dirname), this.id + '_messages.json')
+                propagationResultPath: path.resolve(path.resolve(__dirname), this.id + '_' + v4()  + '_messages.json')
             }
         })
         this.node = new NetworkNode(stack)
