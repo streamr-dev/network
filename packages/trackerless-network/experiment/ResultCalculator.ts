@@ -94,6 +94,8 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     })   
     let sumPropagationTime = 0
     let sumHops = 0
+    let maxHops = 0
+    let maxPropagationTime = 0
     let numOfLines = 0
     let sumMessagesReceived = 0
     file.on('line', (line: string) => {
@@ -104,6 +106,12 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
             sumPropagationTime += results.time
             sumHops += results.hops
             sumMessagesReceived += results.numOfMessages
+            if (results.hops > maxHops) {
+                maxHops = results.hops
+            }
+            if (results.time > maxPropagationTime) {
+                maxPropagationTime = results.time
+            }
         }
     })
     await waitForEvent(file, 'close')
@@ -111,11 +119,10 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     const avgPropagationTime = sumPropagationTime / numOfLines
     const avgHops = sumHops / numOfLines
     const avgMessagesReceived = sumMessagesReceived / numOfLines
-
     console.log('mean propagation time:', avgPropagationTime)
     console.log('mean hops:', avgHops)
     console.log('mean messages received:', avgMessagesReceived)
-    
-    return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived }
+
+    return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived, maxHops, maxPropagationTime }
     
 } 
