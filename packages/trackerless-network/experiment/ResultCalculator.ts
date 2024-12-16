@@ -122,7 +122,9 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     console.log('mean propagation time:', avgPropagationTime)
     console.log('mean hops:', avgHops)
     console.log('mean messages received:', avgMessagesReceived)
-
+    console.log('max hops:', maxHops)
+    console.log('max propagation time:', maxPropagationTime)
+    
     return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived, maxHops, maxPropagationTime }
     
 } 
