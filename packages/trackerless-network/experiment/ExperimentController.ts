@@ -209,7 +209,7 @@ export class ExperimentController {
             }
         })
         const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 2, async (node) => {
+        await this.runBatchedOperation(nodes, 6, async (node) => {
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }, (current) => current === this.instructionsCompleted)
         await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)

@@ -426,20 +426,25 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             terminal: false
         })
         let sumPropagationTime = 0
+        let maxPropagationTime = 0
         let sumHops = 0
+        let maxHops = 0
         let numOfLines = 0
         file.on('line', (line: string) => {
             const results = JSON.parse(line)
             numOfLines += 1
             sumPropagationTime += results.time
             sumHops += results.hops
-        
+            maxPropagationTime = Math.max(maxPropagationTime, results.time)
+            maxHops = Math.max(maxHops, results.hops)
         })
         await waitForEvent(file, 'close')
         return [JSON.stringify({
             time: sumPropagationTime / numOfLines,
             hops: sumHops / numOfLines,
             numOfMessages: numOfLines,
+            maxTime: maxPropagationTime,
+            maxHops: maxHops,
             id: this.options.experimentId
         })]
     }
