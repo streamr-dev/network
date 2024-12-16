@@ -2,7 +2,7 @@ import http from 'http'
 import { Socket } from 'net'
 import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
-import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
+import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
@@ -29,13 +29,15 @@ export class ExperimentController {
     private clients: Map<string, ExperimentNode> = new Map()
     private readonly nodeCount: number
     private readonly resultFilePath: string
+    private readonly topologyFilePath: string
     private readonly resultsReceived: Set<string> = new Set()
     private readonly topologyResult: Map<string, string[]> = new Map()
     private instructionsCompleted = 0
 
-    constructor(nodeCount: number, resultFilePath: string) {
+    constructor(nodeCount: number, resultFilePath: string, topologyFilePath: string) {
         this.nodeCount = nodeCount
         this.resultFilePath = resultFilePath
+        this.topologyFilePath = topologyFilePath
     }
 
 
@@ -297,7 +299,15 @@ export class ExperimentController {
         await waitForCondition(() => this.topologyResult.size === this.nodeCount, 10 * 60 * 1000, 100)
         const sumOfNeighbors = Array.from(this.topologyResult.values()).reduce((acc, neighbors) => acc + neighbors.length, 0)
         const averageNeighbors = sumOfNeighbors / this.nodeCount
+        this.topologyResult.forEach((neighbors, id) => {
+            writeResultsRow(this.topologyFilePath, JSON.stringify({ id, neighbors: neighbors.map((nodeId) => this.getExperimentNodeId(nodeId)) }))
+        })
         logger.info('average number of neighbors', { averageNeighbors })
+    }
+
+    getExperimentNodeId(nodeId: string): string {
+        const entry = Array.from(this.clients.entries()).find(([id, node]) => areEqualBinaries(hexToBinary(nodeId), node.peerDescriptor!.nodeId))
+        return entry![0]
     }
 
     async startPublisher(publisher: string, streamPartId: string): Promise<void> {

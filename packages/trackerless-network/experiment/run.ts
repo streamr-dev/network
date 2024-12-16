@@ -13,11 +13,11 @@ const env = process.argv[3]
 const numOfRepeats = parseInt(process.argv[4])
 
 const nodeCounts = [
-    1,
-    2,
-    4,
+    // 1,
+    // 2,
+    // 4,
     // 8,
-    // 16,
+    16,
     // 32,
     // 64,
     // 128
@@ -193,8 +193,9 @@ const run = async (nodeCountPerRegion: number, resultName: string, runs: number)
     const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
     for (let repeat = 0; repeat < runs; repeat++) {
         logger.info('starting experiment', { experiment, nodeCount, repeat })
-        const filePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${repeat}.json`
-        const controller = new ExperimentController(nodeCount, filePath) 
+        const resultFilePath = `results/${experiment}/${resultName}/node-count-${nodeCount}/${repeat}.json`
+        const topologyFilePath = `topology/${experiment}/${resultName}/node-count-${nodeCount}/${repeat}.json`
+        const controller = new ExperimentController(nodeCount, resultFilePath, topologyFilePath) 
         controller.createServer()
         let localNodes: ExperimentNodeWrapper[] = []
         if (env === 'local') {
@@ -268,7 +269,7 @@ const run = async (nodeCountPerRegion: number, resultName: string, runs: number)
         logger.info('all nodes stopped', { nodeCount })
         await controller.stop()
 
-        await calculateResults(filePath)
+        await calculateResults(resultFilePath)
     }
     
 }

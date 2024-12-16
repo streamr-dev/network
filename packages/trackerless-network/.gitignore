@@ -16,5 +16,6 @@ coverage
 FirstMessageTime.log
 Topology.csv
 
+topology/
 results/
 .env
