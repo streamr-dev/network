@@ -71,7 +71,7 @@
     "lodash-webpack-plugin": "^0.11.6",
     "nightwatch": "^3.9.0",
     "node-polyfill-webpack-plugin": "^4.1.0",
-    "terser-webpack-plugin": "^5.3.10",
+    "terser-webpack-plugin": "^5.3.11",
     "ts-loader": "^9.5.1",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
@@ -97,7 +97,7 @@
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
-    "idb": "^8.0.0",
+    "idb": "^8.0.1",
     "lit-siwe": "^1.1.8",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.2",
@@ -113,7 +113,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
     "uuid": "^11.0.3",
-    "zod": "^3.22.4"
+    "zod": "^3.24.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
