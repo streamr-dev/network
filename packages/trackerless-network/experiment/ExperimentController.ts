@@ -168,7 +168,7 @@ export class ExperimentController {
 
     async runRoutingExperiment(): Promise<void> {
         const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 16, async (node) => {
+        await this.runBatchedOperation(nodes, 24, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'routingExperiment',
