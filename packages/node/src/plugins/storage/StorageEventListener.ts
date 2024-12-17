@@ -41,11 +41,11 @@ export class StorageEventListener {
 
     start(): void {
         this.streamrClient.on('streamAddedToStorageNode', this.onAddToStorageNode)
-        this.streamrClient.on('streamRemovedFromFromStorageNode', this.onRemoveFromStorageNode)
+        this.streamrClient.on('streamRemovedFromStorageNode', this.onRemoveFromStorageNode)
     }
 
     destroy(): void {
         this.streamrClient.off('streamAddedToStorageNode', this.onAddToStorageNode)
-        this.streamrClient.off('streamRemovedFromFromStorageNode', this.onRemoveFromStorageNode)
+        this.streamrClient.off('streamRemovedFromStorageNode', this.onRemoveFromStorageNode)
     }
 }

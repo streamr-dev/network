@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option optimize_for = CODE_SIZE;
 
-import "packages/dht/protos/PeerDescriptor.proto";
+import "packages/dht/protos/DhtRpc.proto";
 
 service OperatorDiscovery {
   rpc discoverOperators (OperatorDiscoveryRequest) returns (OperatorDiscoveryResponse);
@@ -13,5 +13,5 @@ message OperatorDiscoveryRequest {
 }
 
 message OperatorDiscoveryResponse {
-    repeated peerDescriptor.PeerDescriptor operators = 1;
+    repeated dht.PeerDescriptor operators = 1;
 }

@@ -10,8 +10,8 @@ import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sp
 import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
 import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
-import type { TestToken as TestTokenContract } from '../ethereumArtifacts/TestToken'
-import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
+import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
+import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 import { SignerWithProvider } from '../Authentication'
 import crypto from 'crypto'
 
@@ -149,8 +149,8 @@ export function getTestProvider(): Provider {
     })
 }
 
-export function getTestTokenContract(): TestTokenContract {
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
+export function getTestTokenContract(): DATATokenContract {
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenArtifact) as unknown as DATATokenContract
 }
 
 export const getTestAdminWallet = (): Wallet => {
@@ -185,7 +185,7 @@ export const delegate = async (
     delegator: Signer,
     operatorContractAddress: EthereumAddress,
     amountWei: bigint,
-    token?: TestTokenContract
+    token?: DATATokenContract
 ): Promise<void> => {
     logger.debug('Delegate', { amountWei })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
@@ -212,7 +212,7 @@ export const sponsor = async (
     sponsorer: Signer,
     sponsorshipContractAddress: EthereumAddress,
     amountWei: bigint,
-    token?: TestTokenContract
+    token?: DATATokenContract
 ): Promise<void> => {
     logger.debug('Sponsor', { amountWei })
     // eslint-disable-next-line max-len
@@ -220,7 +220,7 @@ export const sponsor = async (
     await transferTokens(sponsorer, sponsorshipContractAddress, amountWei, undefined, token)
 }
 
-const transferTokens = async (from: Signer, to: EthereumAddress, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
+const transferTokens = async (from: Signer, to: EthereumAddress, amountWei: bigint, data?: string, token?: DATATokenContract): Promise<void> => {
     const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amountWei.toString()), data ?? '0x'))
     await tx.wait()
 }

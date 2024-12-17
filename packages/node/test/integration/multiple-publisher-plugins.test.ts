@@ -130,7 +130,7 @@ describe('multiple publisher plugins', () => {
     })
 
     afterEach(async () => {
-        await broker?.stop()
+        await broker.stop()
     })
 
     it('subscribe by StreamrClient', async () => {

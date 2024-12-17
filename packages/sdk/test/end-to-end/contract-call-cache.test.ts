@@ -90,6 +90,16 @@ describe('contract call cache', () => {
             expect(getMethodCalls()).toHaveLength(0)
         })
 
+        it('is not in cache after calling deleteStream()', async () => {
+            const stream = await client.createStream(createRelativeTestStreamId(module))
+            await client.deleteStream(stream.id)
+            const otherClient = createTestClient(authenticatedUser.privateKey)
+            await otherClient.createStream(stream.id)
+            await otherClient.destroy()
+            await client.getStreamMetadata(stream.id)
+            expect(getMethodCalls()).toHaveLength(1)
+        })
+
         it('cache updated when calling setStreamMetatadata()', async () => {
             const NEW_METADATA = { foo: Date.now() }
             await client.setStreamMetadata(existingStreamId, NEW_METADATA)

@@ -75,7 +75,7 @@ describe('searchStreams', () => {
     }, TIMEOUT)
 
     afterAll(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     it('search term matches', async () => {

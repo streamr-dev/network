@@ -5,7 +5,7 @@ import {
     _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, until } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
@@ -21,6 +21,7 @@ const {
     stake
 } = _operatorContractUtils
 
+const DEFAULT_STREAM_PARTITION = 0
 const SPONSOR_AMOUNT = 10000n
 
 describe('OperatorPlugin', () => {
@@ -40,14 +41,14 @@ describe('OperatorPlugin', () => {
     }, 30 * 1000)
 
     afterEach(async () => {
-        await broker?.stop()
+        await broker.stop()
     })
 
     async function waitForHeartbeatMessage(operatorContractAddress: EthereumAddress): Promise<void> {
         const client = createClient(fastPrivateKey())
         const sub = await client.subscribe(formCoordinationStreamId(operatorContractAddress))
         await collect(sub, 1)
-        await client?.destroy()
+        await client.destroy()
     }
 
     it('accepts proxy connections', async () => {
@@ -108,7 +109,7 @@ describe('OperatorPlugin', () => {
         }).rejects.toThrow('Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections')
     })
     
-    it('accepts OperatorDiscoveryRequests', async () => {
+    it('operator discovery', async () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(client, module)
 
@@ -124,15 +125,18 @@ describe('OperatorPlugin', () => {
             extraPlugins: {
                 operator: {
                     operatorContractAddress,
+                    heartbeatUpdateIntervalInMs: 100,
+                    fleetState: {
+                        warmupPeriodInMs: 0
+                    }
                 }
             }
         })
         await until(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
-        // Ensure that heartbeat has been sent (setting heartbeatUpdateIntervalInMs lower did not help)
         await waitForHeartbeatMessage(toEthereumAddress(operatorContractAddress))
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
-        const operators = await client.getNode().discoverOperators(brokerDescriptor, StreamPartIDUtils.parse(`${stream.id}#0`))
+        const operators = await client.getNode().discoverOperators(brokerDescriptor, toStreamPartID(stream.id, DEFAULT_STREAM_PARTITION))
         expect(operators[0].nodeId).toEqual(brokerDescriptor.nodeId)
-    }, 60 * 1000)
+    })
 
 })

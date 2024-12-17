@@ -63,7 +63,7 @@ export class OrderMessages {
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
         this.chains = createLazyMap({
-            valueFactory: async (publisherId: UserID, msgChainId: string) => {
+            valueFactory: async ([publisherId, msgChainId]) => {
                 const chain = createMessageChain(
                     {
                         streamPartId, 
@@ -99,10 +99,10 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get([msg.getPublisherId(), msg.getMsgChainId()])
                 chain.addMessage(msg)
             }
-            await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
+            await Promise.all([...this.chains.values()].map((chain) => chain.waitUntilIdle()))
             this.outBuffer.endWrite()
         } catch (err) {
             this.outBuffer.endWrite(err)

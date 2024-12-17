@@ -5,9 +5,9 @@ import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identif
 import {
     ClosestPeersRequest,
     ClosestRingPeersRequest,
+    PeerDescriptor,
     PingRequest
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'

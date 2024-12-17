@@ -80,8 +80,6 @@ export {
     StreamMessageType
 } from './protocol/StreamMessage'
 
-export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
-
 // These are exported for the internal Operator class
 export {
     Operator,
@@ -134,4 +132,4 @@ export { _operatorContractUtils }
 export type { SetupTestOperatorContractOpts, SetupTestOperatorContractReturnType, DeployTestOperatorContractOpts, DeployTestSponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
-export type { Signer, Eip1193Provider, Overrides } from 'ethers'
+export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

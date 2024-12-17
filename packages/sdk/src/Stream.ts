@@ -15,8 +15,7 @@ import {
     PermissionAssignment,
     PublicPermissionQuery,
     UserPermissionQuery,
-    toInternalPermissionAssignment,
-    toInternalPermissionQuery
+    toInternalPermissionAssignment
 } from './permission'
 
 /**
@@ -52,10 +51,10 @@ export class Stream {
      * @category Important
      */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
-        return this.client.hasPermission(toInternalPermissionQuery({
+        return this.client.hasPermission({
             streamId: this.id,
             ...query
-        }))
+        })
     }
 
     /**

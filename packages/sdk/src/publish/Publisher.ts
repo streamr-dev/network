@@ -1,7 +1,7 @@
 import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -43,8 +43,8 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
 
-    private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
-    private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly messageFactories: Mapping<StreamID, MessageFactory>
+    private readonly groupKeyQueues: Mapping<StreamID, GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
@@ -69,12 +69,12 @@ export class Publisher {
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
         this.messageFactories = createLazyMap({
-            valueFactory: async (streamId: StreamID) => {
+            valueFactory: async (streamId) => {
                 return this.createMessageFactory(streamId)
             }
         })
         this.groupKeyQueues = createLazyMap({
-            valueFactory: async (streamId: StreamID) => {
+            valueFactory: async (streamId) => {
                 return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
             }
         })
