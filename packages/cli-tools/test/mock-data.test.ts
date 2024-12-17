@@ -16,9 +16,9 @@ describe('mock-data', () => {
         expect(json).toBeObject()
     })
 
-    it('generate-binary', async () => {
+    it('generate binary', async () => {
         const abortController = new AbortController()
-        const outputIterable = startCommand('mock-data generate-binary --min-length 32 --max-length 64', {
+        const outputIterable = startCommand('mock-data generate --binary --min-length 32 --max-length 64', {
             abortSignal: abortController.signal,
             devEnvironment: false
         })
