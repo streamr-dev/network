@@ -74,7 +74,7 @@ describe('utils', () => {
 
         it('invalid host', async () => {
             const iterator = fetchLengthPrefixedFrameHttpBinaryStream('http://mock.test')[Symbol.asyncIterator]()
-            await expect(() => nextValue(iterator)).rejects.toThrow(isRunningInElectron() ? /Failed to fetch/ : /getaddrinfo ENOTFOUND/)
+            await expect(() => nextValue(iterator)).rejects.toThrow(isRunningInElectron() ? /failed to fetch/i : /fetch failed/i)
         })
     })
 })
