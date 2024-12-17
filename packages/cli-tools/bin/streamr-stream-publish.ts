@@ -3,12 +3,16 @@ import '../src/logLevel'
 
 import { Writable } from 'stream'
 import { StreamrClient } from '@streamr/sdk'
-import { wait } from '@streamr/utils'
+import { hexToBinary, wait } from '@streamr/utils'
 import es from 'event-stream'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 
 interface Options extends BaseOptions {
     partitionKeyField?: string
+}
+
+const isHexadecimal = (str: string): boolean => {
+    return /^[0-9a-fA-F]+$/.test(str)
 }
 
 const publishStream = (
@@ -19,21 +23,26 @@ const publishStream = (
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
-            let json = null
+            let message = null
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
                 done()
                 return
             }
-            try {
-                json = JSON.parse(data)
-            } catch (e) {
-                console.error(data.toString())
-                done(e)
-                return
+            const trimmedData = String(data).trim()
+            if (isHexadecimal(trimmedData)) {
+                message = hexToBinary(trimmedData)
+            } else {
+                try {
+                    message = JSON.parse(trimmedData)
+                } catch (e) {
+                    console.error(data.toString())
+                    done(e)
+                    return
+                }
             }
-            const partitionKey = (partitionKeyField !== undefined) ? json[partitionKeyField] : undefined
-            client.publish(stream, json, { partitionKey }).then(
+            const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
+            client.publish(stream, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -63,6 +72,6 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     })
 })
     .arguments('<streamId>')
-    .description('publish to a stream by reading JSON messages from stdin line-by-line')
+    .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition')
     .parseAsync()
