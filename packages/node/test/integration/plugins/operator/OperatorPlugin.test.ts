@@ -114,10 +114,10 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(client, module)
 
         const sponsorer = await createTestWallet()
-        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
+        const sponsorship = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        await sponsor(sponsorer, await sponsorship.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), SPONSOR_AMOUNT)
-        await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
+        await stake(operatorContract, await sponsorship.getAddress(), SPONSOR_AMOUNT)
 
         const operatorContractAddress = await operatorContract.getAddress()
         broker = await startBroker({
