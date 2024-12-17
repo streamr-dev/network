@@ -39,7 +39,7 @@ export const until = async (
     const timeoutAbortSignal: AbortSignal = AbortSignal.timeout(timeout)
     const composedSignal = composeAbortSignals(timeoutAbortSignal, abortSignal)
     try {
-        for (;;) {
+        while (true) {
             const result = await asAbortable(Promise.resolve(conditionFn()), composedSignal)
             if (result) {
                 return

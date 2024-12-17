@@ -14,7 +14,7 @@ async function pull(
     const abortController = new AbortController()
 
     try {
-        for (;;) {
+        while (true) {
             const { value, done } = await reader.read()
 
             if (done) {
