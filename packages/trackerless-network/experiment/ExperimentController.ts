@@ -185,7 +185,7 @@ export class ExperimentController {
         logger.info('Starting join stream part commands')
         this.instructionsCompleted = 0
         const nodes = shuffle(Array.from(this.clients.values()))
-        await this.runBatchedOperation(nodes, 8, async (node) => {
+        await this.runBatchedOperation(nodes, 12, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'joinStreamPart',
@@ -197,7 +197,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }, (current) => current === this.instructionsCompleted)
-        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 90000, 1000)
+        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 5 * 60 * 1000, 1000)
     }
 
     async publishMessage(streamPartId: StreamPartID): Promise<void> {
