@@ -11,7 +11,7 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
  * but never cleaned.
  */
 export function composeAbortSignals(
-    ...signals: (AbortSignal | undefined | null)[]
+    ...signals: (AbortSignal | undefined)[]
 ): ComposedAbortSignal {
     const abortController = new AbortController()
 
