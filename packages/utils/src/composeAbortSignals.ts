@@ -13,7 +13,7 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
 export function composeAbortSignals(
     ...signals: (AbortSignal | undefined | null)[]
 ): ComposedAbortSignal {
-    const controller = new AbortController()
+    const abortController = new AbortController()
 
     function destroy() {
         for (const signal of signals) {
@@ -30,7 +30,7 @@ export function composeAbortSignals(
 
         aborted = true
 
-        controller.abort()
+        abortController.abort()
 
         destroy()
     }
@@ -49,5 +49,5 @@ export function composeAbortSignals(
         signal.addEventListener('abort', onAbort, { once: true })
     }
 
-    return Object.assign(controller.signal, { destroy })
+    return Object.assign(abortController.signal, { destroy })
 }
