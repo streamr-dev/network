@@ -28,6 +28,7 @@ import { Stream } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamrClientError } from './StreamrClientError'
+import { ChainEventPoller } from './contracts/ChainEventPoller'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
@@ -48,11 +49,11 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
+import { map } from './utils/GeneratorUtils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
-import { map } from './utils/GeneratorUtils'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -96,6 +97,7 @@ export class StreamrClient {
     private readonly operatorRegistry: OperatorRegistry
     private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly chainEventPoller: ChainEventPoller
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -132,6 +134,7 @@ export class StreamrClient {
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
+        this.chainEventPoller = container.resolve<ChainEventPoller>(ChainEventPoller)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
@@ -774,12 +777,12 @@ export class StreamrClient {
             operatorContractAddress,
             this.contractFactory,
             this.rpcProviderSource,
+            this.chainEventPoller,
             this.theGraphClient,
             this.authentication,
             this.destroySignal,
             this.loggerFactory,
-            () => this.getEthersOverrides(),
-            this.config.contracts.pollInterval
+            () => this.getEthersOverrides()
         )
     }
 
