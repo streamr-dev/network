@@ -221,36 +221,39 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
 ): AsyncGenerator<Uint8Array, void, undefined> {
     logger.debug('Send HTTP request', { url })
     const abortController = new AbortController()
-    const fetchAbortSignal = composeAbortSignals(abortController.signal, abortSignal)
-    const response: Response = await fetch(url, {
-        signal: fetchAbortSignal
-    })
-    logger.debug('Received HTTP response', {
-        url,
-        status: response.status,
-    })
-    if (!response.ok) {
-        throw new FetchHttpStreamResponseError(response)
-    }
-    if (!response.body) {
-        throw new Error('No Response Body')
-    }
 
-    let stream: Readable | undefined
+    const fetchAbortSignal = composeAbortSignals(abortController.signal, abortSignal)
     try {
-        // in the browser, response.body will be a web stream. Convert this into a node stream.
-        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
-        stream = source.pipe(new LengthPrefixedFrameDecoder())
-        source.on('error', (err: Error) => stream!.destroy(err))
-        stream.once('close', () => {
-            abortController.abort()
+        const response: Response = await fetch(url, {
+            signal: fetchAbortSignal
         })
-        yield* stream
-    } catch (err) {
-        abortController.abort()
-        throw err
+        logger.debug('Received HTTP response', {
+            url,
+            status: response.status,
+        })
+        if (!response.ok) {
+            throw new FetchHttpStreamResponseError(response)
+        }
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+        let stream: Readable | undefined
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body)
+            stream = source.pipe(new LengthPrefixedFrameDecoder())
+            source.on('error', (err: Error) => stream!.destroy(err))
+            stream.once('close', () => {
+                abortController.abort()
+            })
+            yield* stream
+        } catch (err) {
+            abortController.abort()
+            throw err
+        } finally {
+            stream?.destroy()
+        }
     } finally {
-        stream?.destroy()
         fetchAbortSignal.destroy()
     }
 }
