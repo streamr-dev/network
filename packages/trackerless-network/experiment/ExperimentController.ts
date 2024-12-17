@@ -197,7 +197,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }, (current) => current === this.instructionsCompleted)
-        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 60000, 1000)
+        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 90000, 1000)
     }
 
     async publishMessage(streamPartId: StreamPartID): Promise<void> {
