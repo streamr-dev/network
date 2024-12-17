@@ -44,14 +44,30 @@ const run = async (): Promise<void> => {
             processedResults.get(nodeCountDirectory)!.set(result, parsed)
         }
     }
-    writeResultsRow(processedFilePath, `nodes, run, propagationTime, hops, messagesReceived`)
-    processedResults.forEach((value, key) => {
-        const nodeCount = key.split('-')[2]
-        value.forEach((innerValue: any, innerKey) => {
-            const run = innerKey.split('.')[0]
-            writeResultsRow(processedFilePath, `${nodeCount}, ${run}, ${innerValue.propagationTime}, ${innerValue.hops}, ${innerValue.messagesReceived}`)
+    if (experiment === 'propagation') {
+        writeResultsRow(processedFilePath, `nodes, run, propagationTime, hops, messagesReceived, maxHops, maxPropagationTime`)
+        processedResults.forEach((value, key) => {
+            const nodeCount = key.split('-')[2]
+            value.forEach((innerValue: any, innerKey) => {
+                const run = innerKey.split('.')[0]
+                writeResultsRow(processedFilePath, `${nodeCount}, ${run}, ${innerValue.propagationTime}, ${innerValue.hops}, ${innerValue.messagesReceived}, ${innerValue.maxHops}, ${innerValue.maxPropagationTime}`)
+            })
         })
-    })
+    } else if (experiment === 'join') {
+
+    } else if (experiment === 'routing') {
+        writeResultsRow(processedFilePath, `nodes, run, avgRtt, avgTimeToReceiver, avgTimeToRequestor, avgHop`)
+        processedResults.forEach((value, key) => {
+            const nodeCount = key.split('-')[2]
+            value.forEach((innerValue: any, innerKey) => {
+                const run = innerKey.split('.')[0]
+                writeResultsRow(processedFilePath, `${nodeCount}, ${run}, ${innerValue.rtt}, ${innerValue.timeToReceiver}, ${innerValue.timeToRequestor}, ${innerValue.hop}`)
+            })
+        })
+    } else if (experiment === 'timetodata') {
+
+    }
+
 
 }
 
