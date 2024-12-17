@@ -48,8 +48,7 @@ describe('Resends', () => {
         }).rejects.toThrowStreamrClientError({
             message: isRunningInElectron()
                 ? 'Failed to fetch'
-                // eslint-disable-next-line max-len
-                : 'request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test',
+                : 'fetch failed (code=STORAGE_NODE_ERROR)',
             code: 'STORAGE_NODE_ERROR'
         })
     })
