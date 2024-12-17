@@ -110,6 +110,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+Add support for subscribing to binary data with `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
+
 #### Changed
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
