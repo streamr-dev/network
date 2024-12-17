@@ -38,7 +38,7 @@ const REGIONS = [
     'ap-northeast-3',
     'ap-southeast-1',
     'ap-southeast-2',
-    'ap-south-1',
+    // 'ap-south-1',
     'sa-east-1',
     'ca-central-1',
     'af-south-1',

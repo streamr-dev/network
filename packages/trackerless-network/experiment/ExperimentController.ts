@@ -271,7 +271,7 @@ export class ExperimentController {
     async runPropagationExperiment(streamPartId: string): Promise<void> {
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         await this.joinStreamPart(streamPart)
-        const secondsToWait = 60
+        const secondsToWait = 30
         logger.info('all nodes joined stream part waiting ' + secondsToWait + ' seconds for network to stabilize')
         await wait(secondsToWait * 1000)
         logger.info('Getting network topology')
