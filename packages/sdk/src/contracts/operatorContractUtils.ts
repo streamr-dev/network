@@ -10,8 +10,8 @@ import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sp
 import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
 import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
-import type { TestToken as TestTokenContract } from '../ethereumArtifacts/TestToken'
-import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
+import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
+import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 import { SignerWithProvider } from '../Authentication'
 import crypto from 'crypto'
 
@@ -184,8 +184,8 @@ export function getProvider(): Provider {
     })
 }
 
-export function getTestTokenContract(): TestTokenContract {
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
+export function getTestTokenContract(): DATATokenContract {
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenArtifact) as unknown as DATATokenContract
 }
 
 export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
@@ -202,7 +202,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const newWallet = new Wallet(privateKey)
     const adminWallet = getTestAdminWallet()
     const token = (opts?.chainConfig !== undefined)
-        ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
+        ? new Contract(opts.chainConfig.contracts.DATA, DATATokenArtifact, adminWallet) as unknown as DATATokenContract
         : getTestTokenContract().connect(adminWallet)
     await retry(
         async () => {
@@ -222,7 +222,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
-export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
+export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: DATATokenContract): Promise<void> => {
     logger.debug('Delegate', { amount })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
@@ -244,14 +244,14 @@ export const unstake = async (operatorContract: OperatorContract, sponsorshipCon
     await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
-export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
+export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: DATATokenContract): Promise<void> => {
     logger.debug('Sponsor', { amount })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
     await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, token)
 }
 
-export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestTokenContract): Promise<void> => {
+export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: DATATokenContract): Promise<void> => {
     const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
     await tx.wait()
 }
