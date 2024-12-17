@@ -51,5 +51,7 @@ export const until = async (
             throwError(userAborted, conditionFn, onTimeoutContext)
         }
         throw e
+    } finally {
+        composedSignal.destroy()
     }
 }
