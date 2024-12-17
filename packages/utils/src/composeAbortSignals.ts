@@ -1,4 +1,4 @@
-export type ComposedAbortSignal = AbortSignal & { destroy: () => void } 
+export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
 
 /**
  * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
@@ -10,24 +10,36 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
  * aforementioned instance of AbortSignal will have more and more listeners added
  * but never cleaned.
  */
-export function composeAbortSignals(...signals: (AbortSignal | undefined | null)[]): ComposedAbortSignal {
-    const actualSignals = signals.filter(Boolean) as AbortSignal[]
-
+export function composeAbortSignals(
+    ...signals: (AbortSignal | undefined | null)[]
+): ComposedAbortSignal {
     const controller = new AbortController()
 
     function destroy() {
-        for (const signal of actualSignals) {
-            signal.removeEventListener('abort', onAbort)
+        for (const signal of signals) {
+            signal?.removeEventListener('abort', onAbort)
         }
     }
 
+    let aborted = false
+
     function onAbort() {
+        if (aborted) {
+            return
+        }
+
+        aborted = true
+
         controller.abort()
 
         destroy()
     }
 
-    for (const signal of actualSignals) {
+    for (const signal of signals) {
+        if (!signal) {
+            continue
+        }
+
         if (signal.aborted) {
             onAbort()
 
