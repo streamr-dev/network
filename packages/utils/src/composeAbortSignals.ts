@@ -15,6 +15,14 @@ export function composeAbortSignals(
 ): ComposedAbortSignal {
     const abortController = new AbortController()
 
+    for (const signal of signals) {
+        if (signal?.aborted) {
+            abortController.abort()
+
+            return Object.assign(abortController.signal, { destroy: () => {} })
+        }
+    }
+
     function destroy() {
         for (const signal of signals) {
             signal?.removeEventListener('abort', onAbort)
