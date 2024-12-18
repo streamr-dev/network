@@ -324,7 +324,7 @@ export class ExperimentController {
                 oneofKind: 'publishOnInterval',
                 publishOnInterval: {
                     streamPartId,
-                    interval: 500
+                    interval: 200
                 }
             }
         })
