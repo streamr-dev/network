@@ -1,6 +1,7 @@
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
+import { parseEther } from 'ethers'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { createClient, createTestStream } from '../../../utils'
 
@@ -15,7 +16,7 @@ const {
 
 const logger = new Logger(module)
 
-const STAKE_AMOUNT = 10000
+const STAKE_AMOUNT = parseEther('10000')
 const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorValue', () => {
@@ -43,15 +44,15 @@ describe('maintainOperatorValue', () => {
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecondInWei: parseEther('100'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('25000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
-        const { maxAllowedEarningsDataWei } = await operator.getEarnings(1, 20)
+        const { maxAllowedEarningsDataWei } = await operator.getEarnings(1n, 20)
         const triggerWithdrawLimitDataWei = multiplyWeiAmount(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await until(async () => {
-            const { sumDataWei } = await operator.getEarnings(1, 20)
+            const { sumDataWei } = await operator.getEarnings(1n, 20)
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)

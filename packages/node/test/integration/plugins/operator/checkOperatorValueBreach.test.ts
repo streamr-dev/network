@@ -4,7 +4,7 @@ import {
     _operatorContractUtils,
 } from '@streamr/sdk'
 import { Logger, toEthereumAddress, until } from '@streamr/utils'
-import { Contract } from 'ethers'
+import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 
@@ -49,13 +49,13 @@ describe('checkOperatorValueBreach', () => {
         const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecondInWei: parseEther('100'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
+        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecondInWei: parseEther('200'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship2.getAddress(), parseEther('25000'))
+        await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
