@@ -44,17 +44,7 @@ export function composeAbortSignals(
     }
 
     for (const signal of signals) {
-        if (!signal) {
-            continue
-        }
-
-        if (signal.aborted) {
-            onAbort()
-
-            break
-        }
-
-        signal.addEventListener('abort', onAbort, { once: true })
+        signal?.addEventListener('abort', onAbort, { once: true })
     }
 
     return Object.assign(abortController.signal, { destroy })
