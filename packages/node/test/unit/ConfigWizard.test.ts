@@ -52,17 +52,6 @@ const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(
     () => '{"data":{"operator":{"nodes":[]}}}'
 )
 
-jest.mock('node-fetch', () => {
-    return () => {
-        const result = fakeFetchResponseBody()
-        if (typeof result === 'string') {
-            return Promise.resolve(new Response(result))
-        } else {
-            return Promise.reject(result)
-        }
-    }
-})
-
 interface AnswerMock {
     prompt: jest.MockedFunction<any>
     question: RegExp
@@ -119,6 +108,14 @@ describe('Config wizard', () => {
         )
 
         fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
+
+        jest.spyOn(global, 'fetch').mockImplementation(() => {
+            const result = fakeFetchResponseBody()
+
+            return typeof result === 'string'
+                ? Promise.resolve(new Response(result))
+                : Promise.reject(result)
+        })
     })
 
     afterAll(() => {

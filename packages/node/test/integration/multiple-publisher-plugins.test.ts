@@ -1,6 +1,5 @@
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import WebSocket from 'ws'
-import fetch from 'node-fetch'
 import { StreamPermission } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, Queue, fastPrivateKey } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'

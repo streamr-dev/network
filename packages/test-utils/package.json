@@ -29,12 +29,10 @@
     "express": "^4.21.2",
     "jest": "^29.7.0",
     "jest-matcher-utils": "^29.7.0",
-    "lodash": "^4.17.21",
-    "node-fetch": "^2.7.0"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node-fetch": "^2.6.4"
+    "@types/express": "^4.17.21"
   }
 }
