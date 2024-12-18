@@ -54,7 +54,14 @@ const run = async (): Promise<void> => {
             })
         })
     } else if (experiment === 'join') {
-
+        writeResultsRow(processedFilePath, 'nodeCount, time')
+        processedResults.forEach((value, _key) => {
+            value.forEach((innerValue: any, _innerKey) => {
+                innerValue.forEach((line: any) => {
+                    writeResultsRow(processedFilePath, `${line.nodeCount}, ${line.time}`)
+                })
+            })
+        })
     } else if (experiment === 'routing') {
         writeResultsRow(processedFilePath, `nodes, run, avgRtt, avgTimeToReceiver, avgTimeToRequestor, avgHop`)
         processedResults.forEach((value, key) => {

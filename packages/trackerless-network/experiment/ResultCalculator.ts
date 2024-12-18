@@ -10,14 +10,17 @@ export const joinResults = async (filePath: string): Promise<unknown> => {
     })   
     let sum = 0
     let numOfLines = 0
+    let joinTimes: { time: number, nodeCount: number }[] = []
     file.on('line', (line: string) => {
         const results = JSON.parse(line)
-        sum += parseInt(results.results)
+        const time = parseInt(results.results)
+        sum += time
         numOfLines += 1
+        joinTimes.push({ time, nodeCount: numOfLines })
     })
     await waitForEvent(file, 'close')
     console.log('avg:', sum / numOfLines)
-    return { avg: sum / numOfLines }
+    return joinTimes
 }
 
 export const routingResults = async (filePath: string): Promise<unknown> => {
@@ -124,7 +127,7 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     console.log('mean messages received:', avgMessagesReceived)
     console.log('max hops:', maxHops)
     console.log('max propagation time:', maxPropagationTime)
-    
+
     return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived, maxHops, maxPropagationTime }
     
 } 

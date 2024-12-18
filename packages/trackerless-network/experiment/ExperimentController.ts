@@ -4,7 +4,7 @@ import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
-import { chunk, sample, sampleSize, shuffle } from 'lodash'
+import { chunk, last, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
 import { memoryUsage } from 'process'
 
@@ -224,23 +224,31 @@ export class ExperimentController {
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
         const suffled = shuffle(subsribers)
         let expectedSubscribers = 0
+        const lastFour: string[] = []
         for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
-            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
+            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastFour.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
+            console.log('picked entry points', pickedEntryPoint)
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
                     measureTimeToData: {
                         streamPartId,
                         entryPoints: [
-                            ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!),
-                            this.clients.get(entryPoint)!.peerDescriptor!
+                            this.clients.get(entryPoint)!.peerDescriptor!,
+                            ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
                         ]
                     }
                 }
             })
             this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
             await wait(2500)
+            if (lastFour.length < 4) { 
+                lastFour.push(subscriber)
+            } else {
+                lastFour.shift()
+                lastFour.push(subscriber)
+            }
             expectedSubscribers += 1
         }
         await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 1 * 60 * 1000, 1000)
