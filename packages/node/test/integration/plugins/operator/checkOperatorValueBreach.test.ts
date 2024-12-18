@@ -39,7 +39,7 @@ describe('checkOperatorValueBreach', () => {
         await client.destroy()
         deployConfig = {
             operatorConfig: {
-                operatorsCutPercent: 10
+                operatorsCutPercentage: 10
             }
         }
     }, 60 * 1000)

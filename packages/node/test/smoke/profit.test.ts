@@ -103,7 +103,7 @@ describe('profit', () => {
         } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                operatorsCutPercent: OPERATORS_CUT_PERCENTAGE
+                operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             }
         }))
         sponsorshipContract = await deploySponsorshipContract({

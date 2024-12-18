@@ -34,7 +34,7 @@ export interface SetupOperatorContractOpts {
         }
     }
     operatorConfig?: {
-        operatorsCutPercent?: number
+        operatorsCutPercentage?: number
         metadata?: string
     }
 }
@@ -60,7 +60,7 @@ export async function setupOperatorContract(
     const operatorContract = await deployOperatorContract({
         chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
-        operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
+        operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
         metadata: opts?.operatorConfig?.metadata
     })
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
@@ -81,7 +81,7 @@ export async function setupOperatorContract(
  */
 export interface DeployOperatorContractOpts {
     deployer: Wallet
-    operatorsCutPercent?: number
+    operatorsCutPercentage?: number
     metadata?: string
     operatorTokenName?: string
     chainConfig?: {
@@ -108,7 +108,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        multiplyWeiAmount(FRACTION_MAX, ((opts.operatorsCutPercent ?? 0) / 100)),
+        multiplyWeiAmount(FRACTION_MAX, ((opts.operatorsCutPercentage ?? 0) / 100)),
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [

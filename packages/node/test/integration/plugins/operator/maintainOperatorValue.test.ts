@@ -40,7 +40,7 @@ describe('maintainOperatorValue', () => {
         const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                operatorsCutPercent: 10
+                operatorsCutPercentage: 10
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
