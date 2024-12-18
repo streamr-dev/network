@@ -401,10 +401,9 @@ export class Operator {
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
     async getEarnings(
-        minSponsorshipEarningsInWithdraw: number,
+        minSponsorshipEarningsInWithdrawWei: bigint,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,

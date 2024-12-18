@@ -5,13 +5,13 @@ const logger = new Logger(module)
 
 export const maintainOperatorValue = async (
     withdrawLimitSafetyFraction: number,
-    minSponsorshipEarningsInWithdraw: number,
+    minSponsorshipEarningsInWithdrawWei: bigint,
     maxSponsorshipsInWithdraw: number,
     myOperator: Operator
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
     const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await myOperator.getEarnings(
-        minSponsorshipEarningsInWithdraw,
+        minSponsorshipEarningsInWithdrawWei,
         maxSponsorshipsInWithdraw
     )
     const triggerWithdrawLimitDataWei = multiplyWeiAmount(maxAllowedEarningsDataWei, 1 - withdrawLimitSafetyFraction)

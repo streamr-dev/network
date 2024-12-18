@@ -8,7 +8,7 @@ export const checkOperatorValueBreach = async (
     myOperator: Operator,
     client: StreamrClient,
     getStakedOperators: () => Promise<EthereumAddress[]>,
-    minSponsorshipEarningsInWithdraw: number,
+    minSponsorshipEarningsInWithdrawWei: bigint,
     maxSponsorshipsInWithdraw: number
 ): Promise<void> => {
     const targetOperatorAddress = sample(without(await getStakedOperators(), await myOperator.getContractAddress()))
@@ -18,7 +18,7 @@ export const checkOperatorValueBreach = async (
     }
     logger.info('Check other operator\'s earnings for breach', { targetOperatorAddress })
     const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await client.getOperator(targetOperatorAddress).getEarnings(
-        minSponsorshipEarningsInWithdraw,
+        minSponsorshipEarningsInWithdrawWei,
         maxSponsorshipsInWithdraw
     )
     logger.trace(` -> is ${sumDataWei} > ${maxAllowedEarningsDataWei}?`)

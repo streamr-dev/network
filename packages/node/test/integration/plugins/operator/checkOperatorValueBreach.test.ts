@@ -67,7 +67,7 @@ describe('checkOperatorValueBreach', () => {
         await until(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorValueBreach(operator, client, async () => {
             return [toEthereumAddress(await operatorContract.getAddress())]
-        }, 1, 20)
+        }, 1n, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

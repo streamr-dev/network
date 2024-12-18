@@ -60,7 +60,7 @@ describe('maintainOperatorValue', () => {
 
         await maintainOperatorValue(
             SAFETY_FRACTION,
-            1,
+            1n,
             20,
             operator
         )
