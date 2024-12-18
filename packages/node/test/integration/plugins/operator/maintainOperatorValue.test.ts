@@ -1,7 +1,6 @@
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
-import { multiply } from '../../../../src/helpers/multiply'
+import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { createClient, createTestStream } from '../../../utils'
 
@@ -50,7 +49,7 @@ describe('maintainOperatorValue', () => {
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
         const { maxAllowedEarningsDataWei } = await operator.getEarnings(1, 20)
-        const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
+        const triggerWithdrawLimitDataWei = multiplyWeiAmount(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await until(async () => {
             const { sumDataWei } = await operator.getEarnings(1, 20)
             const earnings = sumDataWei

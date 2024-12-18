@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, retry } from '@streamr/utils'
+import { Logger, multiplyWeiAmount, retry } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
 import { range } from 'lodash'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
@@ -16,6 +16,7 @@ import { SignerWithProvider } from '../Authentication'
 import crypto from 'crypto'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
+const FRACTION_MAX = parseEther('1')
 
 /**
  * @deprecated
@@ -107,7 +108,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        parseEther('1') * BigInt(opts.operatorsCutPercent ?? 0) / 100n,
+        multiplyWeiAmount(FRACTION_MAX, ((opts.operatorsCutPercent ?? 0) / 100)),
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [

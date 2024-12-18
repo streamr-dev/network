@@ -1,6 +1,5 @@
 import { Operator } from '@streamr/sdk'
-import { Logger } from '@streamr/utils'
-import { multiply } from '../../helpers/multiply'
+import { Logger, multiplyWeiAmount } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -15,7 +14,7 @@ export const maintainOperatorValue = async (
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )
-    const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - withdrawLimitSafetyFraction)
+    const triggerWithdrawLimitDataWei = multiplyWeiAmount(maxAllowedEarningsDataWei, 1 - withdrawLimitSafetyFraction)
     logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
     if (sumDataWei > triggerWithdrawLimitDataWei) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
