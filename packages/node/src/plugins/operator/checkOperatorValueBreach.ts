@@ -1,5 +1,6 @@
 import { StreamrClient, Operator } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { formatUnits } from 'ethers'
 import { sample, without } from 'lodash'
 
 const logger = new Logger(module)
@@ -24,7 +25,12 @@ export const checkOperatorValueBreach = async (
     logger.trace(` -> is ${sumDataWei} > ${maxAllowedEarningsDataWei}?`)
     if (sumDataWei > maxAllowedEarningsDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
-            { targetOperatorAddress, sponsorshipAddresses, sumDataWei, maxAllowedEarningsDataWei })
+            {
+                targetOperatorAddress,
+                sponsorshipAddresses,
+                sumDataWei: formatUnits(sumDataWei, 'wei'),
+                maxAllowedEarningsDataWei: formatUnits(maxAllowedEarningsDataWei, 'wei')
+            })
         await myOperator.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

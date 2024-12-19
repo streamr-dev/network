@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Logger, multiplyWeiAmount, retry } from '@streamr/utils'
-import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
+import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, formatUnits, parseEther } from 'ethers'
 import { range } from 'lodash'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
@@ -224,7 +224,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
 }
 
 export const delegate = async (delegator: Wallet, operatorContractAddress: string, amountWei: bigint, token?: DATATokenContract): Promise<void> => {
-    logger.debug('Delegate', { amountWei })
+    logger.debug('Delegate', { amountWei: formatUnits(amountWei, 'wei') })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
@@ -236,7 +236,7 @@ export const undelegate = async (delegator: Wallet, operatorContract: OperatorCo
 }
 
 export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amountWei: bigint): Promise<void> => {
-    logger.debug('Stake', { amountWei })
+    logger.debug('Stake', { amountWei: formatUnits(amountWei, 'wei') })
     await (await operatorContract.stake(sponsorshipContractAddress, amountWei)).wait()
 }
 
@@ -246,7 +246,7 @@ export const unstake = async (operatorContract: OperatorContract, sponsorshipCon
 }
 
 export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amountWei: bigint, token?: DATATokenContract): Promise<void> => {
-    logger.debug('Sponsor', { amountWei })
+    logger.debug('Sponsor', { amountWei: formatUnits(amountWei, 'wei') })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
     await transferTokens(sponsorer, sponsorshipContractAddress, amountWei, undefined, token)
