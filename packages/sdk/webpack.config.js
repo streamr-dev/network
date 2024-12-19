@@ -52,7 +52,7 @@ module.exports = (env, argv) => {
             ]
         },
         resolve: {
-            modules: ['node_modules', ...require.resolve.paths(''), path.resolve('./vendor')],
+            modules: ['node_modules', ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [

@@ -26,7 +26,6 @@ runs:
         key: cache-build-${{ github.sha }}
         path: |
           packages/*/dist
-          packages/sdk/vendor
           packages/sdk/src/generated
           packages/autocertifier-client/generated
           packages/proto-rpc/generated
