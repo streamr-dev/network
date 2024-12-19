@@ -26,6 +26,12 @@ runs:
         key: cache-build-${{ github.sha }}
         path: |
           packages/*/dist
+          packages/sdk/vendor
+          packages/sdk/src/generated
+          packages/autocertifier-client/generated
+          packages/proto-rpc/generated
+          packages/dht/generated
+          packages/trackerless-network/generated
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run:
