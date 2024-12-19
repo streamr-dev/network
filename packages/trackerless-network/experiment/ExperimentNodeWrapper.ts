@@ -120,7 +120,13 @@ export class ExperimentNodeWrapper {
             peerDescriptor: configPeerDescriptor,
             webrtcAllowPrivateAddresses: true,
             storeRoutingPaths,
-            networkConnectivityTimeout: 30000
+            networkConnectivityTimeout: 30000,
+            iceServers: [
+                {
+                    url: "stun:stun.streamr.network",
+                    port: 5349
+                }
+            ]
         }
         const stack = new NetworkStack({
             layer0: layer0config,
