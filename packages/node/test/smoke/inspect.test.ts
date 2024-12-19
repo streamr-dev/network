@@ -221,7 +221,7 @@ describe('inspect', () => {
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecondInWei: 0n, streamId, deployer: sponsorer })
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {

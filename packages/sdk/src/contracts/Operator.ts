@@ -2,6 +2,7 @@ import {
     EthereumAddress,
     Logger,
     ObservableEventEmitter, StreamID, TheGraphClient,
+    WeiAmount,
     collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { Overrides } from 'ethers'
@@ -25,8 +26,8 @@ interface RawResult {
 
 interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
-    sumDataWei: bigint
-    maxAllowedEarningsDataWei: bigint
+    sum: WeiAmount
+    maxAllowedEarnings: WeiAmount
 }
 
 /**
@@ -401,7 +402,7 @@ export class Operator {
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
     async getEarnings(
-        minSponsorshipEarningsInWithdrawWei: bigint,
+        minSponsorshipEarningsInWithdraw: WeiAmount,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
         const {
@@ -410,20 +411,20 @@ export class Operator {
             maxAllowedEarnings,
         } = await this.contractReadonly.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
             addresses: string[]
-            earnings: bigint[]
-            maxAllowedEarnings: bigint
+            earnings: WeiAmount[]
+            maxAllowedEarnings: WeiAmount
         }
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
-            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
+            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdraw)
             .sort((a, b) => compareBigInts(a.earnings, b.earnings)) // TODO: after Node 20, use .toSorted() instead
             .slice(0, maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
-            sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
-            maxAllowedEarningsDataWei: maxAllowedEarnings
+            sum: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
+            maxAllowedEarnings: maxAllowedEarnings
         }
     }
 

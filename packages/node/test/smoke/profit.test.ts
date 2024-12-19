@@ -3,7 +3,7 @@ import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { multiplyWeiAmount, until } from '@streamr/utils'
+import { multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, Wallet, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
 
@@ -75,11 +75,11 @@ describe('profit', () => {
     let sponsorshipContract: Sponsorship
 
     const getBalances = async (): Promise<{
-        operator: bigint
-        delegator: bigint
-        sponsor: bigint
-        admin: bigint
-        operatorContract: bigint
+        operator: WeiAmount
+        delegator: WeiAmount
+        sponsor: WeiAmount
+        admin: WeiAmount
+        operatorContract: WeiAmount
     }> => {
         const dataToken = getTestTokenContract().connect(getProvider())
         const adminWallet = getTestAdminWallet()
@@ -107,7 +107,7 @@ describe('profit', () => {
             }
         }))
         sponsorshipContract = await deploySponsorshipContract({
-            earningsPerSecondInWei: EARNINGS_PER_SECOND,
+            earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas
         })
