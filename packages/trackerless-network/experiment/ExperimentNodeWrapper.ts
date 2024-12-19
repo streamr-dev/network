@@ -307,6 +307,7 @@ export class ExperimentNodeWrapper {
             messageReceivedTimestamp: measurements.messageReceivedTimestamp ?? Date.now(),
             layer1JoinTime: measurements.layer1JoinTime ?? 60000,
             entryPointsFetch: measurements.entryPointsFetch ?? 60000,
+            firstNeighbor: measurements.firstNeighborConnectedTimestamp ?? 60000,
             startTime
         } 
         const results = ExperimentClientMessage.create({

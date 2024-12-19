@@ -72,7 +72,14 @@ const run = async (): Promise<void> => {
             })
         })
     } else if (experiment === 'timetodata') {
-
+        writeResultsRow(processedFilePath, `nodeCount, timeToData, layer1Join, fetch, firstNeighbor`)
+        processedResults.forEach((value, _key) => {
+            value.forEach((innerValue: any, _innerKey) => {
+                innerValue.forEach((line: any) => {
+                    writeResultsRow(processedFilePath, `${line.nodeCount}, ${line.data}, ${line.layer1join}, ${line.fetch}, ${line.firstNeighbor}`)
+                })
+            })
+        })
     }
 
 

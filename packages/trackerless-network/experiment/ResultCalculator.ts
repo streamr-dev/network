@@ -70,23 +70,29 @@ export const timeToDataResults = async (filePath: string): Promise<unknown> => {
     let sumTimeToData = 0
     let sumLayer1Join = 0
     let sumEntryPointFetch = 0
+    let sumFirstNeighbor = 0
     let numOfLines = 0
+    const times: { data: number, layer1join: number, fetch: number, nodeCount: number, firstNeighbor: number }[] = []
     file.on('line', (line: string) => {
         const parsedLine = JSON.parse(line)
         const parsedResult = JSON.parse(parsedLine.results)
         sumTimeToData += parsedResult.messageReceivedTimestamp - parsedResult.startTime
         sumLayer1Join += parsedResult.layer1JoinTime
         sumEntryPointFetch += parsedResult.entryPointsFetch
+        sumFirstNeighbor += parsedResult.firstNeighbor - parsedResult.startTime
         numOfLines += 1
+        times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighborTime })
     })
     await waitForEvent(file, 'close')
     const avgTimeToData = sumTimeToData / numOfLines
     const avgLayer1Join = sumLayer1Join / numOfLines
     const avgEntryPointFetch = sumEntryPointFetch / numOfLines
+    const avgFirstNeighbor = sumFirstNeighbor / numOfLines
     console.log('time to data avg:', avgTimeToData)
     console.log('layer1 join avg:', avgLayer1Join)
     console.log('entry point fetch avg:', avgEntryPointFetch)
-    return { timeToData: avgTimeToData, layer1Join: avgLayer1Join, entryPointFetch: avgEntryPointFetch }
+    console.log('first neighbor avg:', avgFirstNeighbor)
+    return times
 }
 
 export const propagationResults = async (filePath: string): Promise<unknown> => {

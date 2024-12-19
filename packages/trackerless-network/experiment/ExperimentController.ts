@@ -224,11 +224,10 @@ export class ExperimentController {
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
         const suffled = shuffle(subsribers)
         let expectedSubscribers = 0
-        const lastFour: string[] = []
+        const lastNodes: string[] = []
         for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
-            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastFour.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
-            console.log('picked entry points', pickedEntryPoint)
+            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastNodes.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 3)!
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
@@ -243,11 +242,11 @@ export class ExperimentController {
             })
             this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
             await wait(2500)
-            if (lastFour.length < 4) { 
-                lastFour.push(subscriber)
+            if (lastNodes.length < 20) { 
+                lastNodes.push(subscriber)
             } else {
-                lastFour.shift()
-                lastFour.push(subscriber)
+                lastNodes.shift()
+                lastNodes.push(subscriber)
             }
             expectedSubscribers += 1
         }

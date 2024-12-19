@@ -41,6 +41,7 @@ type TimeToData = {
     messageReceivedTimestamp?: number
     entryPointsFetch?: number
     layer1JoinTime?: number
+    firstNeighborConnectedTimestamp?: number
 }
 
 export type StreamPartDelivery = {
@@ -203,6 +204,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
         node.once('message', () => {
             timeToData.messageReceivedTimestamp = Date.now()
+        })
+        node.once('neighborConnected', () => {
+            timeToData.firstNeighborConnectedTimestamp = Date.now()
         })
         const handleEntryPointLeave = async () => {
             if (this.destroyed || peerDescriptorStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
