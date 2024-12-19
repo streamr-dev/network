@@ -6,7 +6,7 @@ import {
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
-import { Wallet } from 'ethers'
+import { parseEther, Wallet } from 'ethers'
 import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
@@ -56,9 +56,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 10000)
-        await delegate(operatorWallet, await operatorContract.getAddress(), 10000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
+        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
+        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
 
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
@@ -114,9 +114,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship.getAddress(), 10000)
-        await delegate(operatorWallet, await operatorContract.getAddress(), 10000)
-        await stake(operatorContract, await sponsorship.getAddress(), 10000)
+        await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
+        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
+        await stake(operatorContract, await sponsorship.getAddress(), parseEther('10000'))
 
         const operatorContractAddress = await operatorContract.getAddress()
         broker = await startBroker({

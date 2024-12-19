@@ -164,7 +164,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         try {
                             await maintainOperatorValue(
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
-                                this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                                BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
                                 this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
                                 operator
                             )
@@ -215,7 +215,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     operator,
                     streamrClient,
                     () => stakedOperatorsCache.get(),
-                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
