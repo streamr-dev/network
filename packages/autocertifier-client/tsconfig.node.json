@@ -9,7 +9,6 @@
         "generated/**/*"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" }
+        { "path": "../utils/tsconfig.node.json" }
     ]
 }
