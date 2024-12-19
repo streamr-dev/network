@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node bin/generate-config-validator.js",
+    "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
     "postbuild": "bash copy-package.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
