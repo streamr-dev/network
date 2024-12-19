@@ -14,7 +14,7 @@ describe('scheduleAtFixedRate', () => {
     })
 
     afterEach(() => {
-        abortController?.abort()
+        abortController.abort()
     })
 
     it('repeats task every `interval`', async () => {

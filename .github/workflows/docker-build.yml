@@ -45,7 +45,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       - name: Cache Docker layers
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -57,7 +57,7 @@ jobs:
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.6.1
+        uses: docker/setup-buildx-action@v3.8.0
         with:
           driver-opts: |
             network=host

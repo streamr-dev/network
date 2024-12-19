@@ -40,8 +40,8 @@ describe('NodeMetrics', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            generatorClient?.destroy(),
-            subscriberClient?.destroy()
+            generatorClient.destroy(),
+            subscriberClient.destroy()
         ])
     })
 

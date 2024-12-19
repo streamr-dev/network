@@ -1,8 +1,9 @@
 import { DestroySignal } from '../DestroySignal'
-import { createDecryptError, EncryptionUtil } from '../encryption/EncryptionUtil'
+import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
+import { StreamrClientError } from '../StreamrClientError'
 
 // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise
 // and not to return the original encrypted message?
@@ -26,7 +27,7 @@ export const decrypt = async (
         if (destroySignal.isDestroyed()) {
             return streamMessage
         }
-        throw createDecryptError(`Could not get encryption key ${streamMessage.groupKeyId}`, streamMessage)
+        throw new StreamrClientError(`Could not get encryption key ${streamMessage.groupKeyId}`, 'DECRYPT_ERROR', streamMessage)
     }
     if (destroySignal.isDestroyed()) {
         return streamMessage
