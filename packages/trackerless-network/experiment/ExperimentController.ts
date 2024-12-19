@@ -235,7 +235,7 @@ export class ExperimentController {
                         streamPartId,
                         entryPoints: [
                             this.clients.get(entryPoint)!.peerDescriptor!,
-                            ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
+                            // ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
                         ]
                     }
                 }

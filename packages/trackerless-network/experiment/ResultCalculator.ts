@@ -81,7 +81,7 @@ export const timeToDataResults = async (filePath: string): Promise<unknown> => {
         sumEntryPointFetch += parsedResult.entryPointsFetch
         sumFirstNeighbor += parsedResult.firstNeighbor - parsedResult.startTime
         numOfLines += 1
-        times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighborTime })
+        times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighbor - parsedResult.startTime })
     })
     await waitForEvent(file, 'close')
     const avgTimeToData = sumTimeToData / numOfLines
