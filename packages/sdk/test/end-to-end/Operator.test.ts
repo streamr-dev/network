@@ -2,7 +2,6 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
-import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
@@ -33,7 +32,7 @@ const createClient = (privateKey?: string): StreamrClient => {
 const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
         serverUrl: CHAIN_CONFIG.dev2.theGraphUrl,
-        fetch,
+        fetch: (...params: Parameters<typeof fetch>) => fetch(...params),
         logger: new Logger(module)
     })
 }
