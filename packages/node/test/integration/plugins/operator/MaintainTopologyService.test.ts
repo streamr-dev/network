@@ -1,21 +1,20 @@
 import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
 import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'
+import { parseEther } from 'ethers'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream } from '../../../utils'
-import { parseEther } from 'ethers'
 
 const {
     delegate,
     deployOperatorContract,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
     stake
 } = _operatorContractUtils
 

@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -61,7 +61,7 @@ describe('Operator', () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1 })
+            setupOperatorContract({ nodeCount: 1, generateWalletWithGasAndTokens })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
@@ -135,7 +135,9 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract()
+        const target = await setupOperatorContract({
+            generateWalletWithGasAndTokens
+        })
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))
 

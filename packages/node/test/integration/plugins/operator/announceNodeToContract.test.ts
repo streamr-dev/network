@@ -2,6 +2,7 @@ import { Operator, _operatorContractUtils } from '@streamr/sdk'
 import { toEthereumAddress, until } from '@streamr/utils'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 import { createClient } from '../../../utils'
+import { generateWalletWithGasAndTokens } from '@streamr/test-utils'
 
 const TIMEOUT = 30 * 1000
 
@@ -11,7 +12,8 @@ describe('announceNodeToContract', () => {
 
     beforeEach(async () => {
         const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
-            nodeCount: 1
+            nodeCount: 1,
+            generateWalletWithGasAndTokens
         })
         operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
     }, TIMEOUT)

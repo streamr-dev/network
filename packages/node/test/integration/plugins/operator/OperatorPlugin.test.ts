@@ -4,9 +4,9 @@ import {
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
-import { parseEther, Wallet } from 'ethers'
+import { Wallet, parseEther } from 'ethers'
 import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
@@ -15,7 +15,6 @@ import { createClient, createTestStream, formConfig, startBroker } from '../../.
 const {
     delegate,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
     setupOperatorContract,
     sponsor,
     stake
@@ -32,7 +31,8 @@ describe('OperatorPlugin', () => {
 
     beforeAll(async () => {
         const deployment = (await setupOperatorContract({
-            nodeCount: 1
+            nodeCount: 1,
+            generateWalletWithGasAndTokens
         }))
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet

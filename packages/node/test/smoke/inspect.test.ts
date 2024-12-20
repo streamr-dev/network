@@ -1,8 +1,8 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, StreamID, TheGraphClient, wait, until, multiplyWeiAmount } from '@streamr/utils'
+import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
 import { createClient, createTestStream, formConfig } from '../utils'
@@ -38,7 +38,6 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
 const {
     setupOperatorContract,
     getProvider,
-    generateWalletWithGasAndTokens,
     deploySponsorshipContract,
     delegate,
     stake,
@@ -95,7 +94,8 @@ const createOperator = async (
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
-        }
+        },
+        generateWalletWithGasAndTokens
     })
     await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_AMOUNT)
     await stake(operator.operatorContract, sponsorshipAddress, STAKE_AMOUNT)
