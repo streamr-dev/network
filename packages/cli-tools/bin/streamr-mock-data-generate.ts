@@ -19,25 +19,21 @@ function genArray<T>(size: number, elementFn: () => T): T[] {
     return arr
 }
 
-export const generateJson = (rate: number): void => {
-    setInterval(() => {
-        console.info(JSON.stringify({
-            someText: randomString(64),
-            aNumber: Math.random() * 10000,
-            bNumber: Math.random(),
-            yesOrNo: Math.random() > 0.5,
-            arrayOfStrings: genArray(Math.floor(Math.random() * 20), () => randomString(8)),
-            arrayOfIntegers: genArray(Math.floor(Math.random() * 10), () => Math.floor(Math.random() * 100))
-        }))
-    }, rate)
+export const generateJson = (): string => {
+    return JSON.stringify({
+        someText: randomString(64),
+        aNumber: Math.random() * 10000,
+        bNumber: Math.random(),
+        yesOrNo: Math.random() > 0.5,
+        arrayOfStrings: genArray(Math.floor(Math.random() * 20), () => randomString(8)),
+        arrayOfIntegers: genArray(Math.floor(Math.random() * 10), () => Math.floor(Math.random() * 100))
+    })
 }
 
-export const generateBinary = (rate: number, minLength: number, maxLength: number): void => {
-    setInterval(() => {
-        const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength
-        const buffer = crypto.randomBytes(length)
-        console.info(buffer.toString('hex'))
-    }, rate)
+export const generateBinary = ({ minLength, maxLength }: Options): string => {
+    const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength
+    const buffer = crypto.randomBytes(length)
+    return buffer.toString('hex')
 }
 
 createCommand()
@@ -47,10 +43,9 @@ createCommand()
     .option('--min-length <n>', 'minimum message length in bytes', createFnParseInt('--min-length'), 32)
     .option('--max-length <n>', 'maximum message length in bytes', createFnParseInt('--max-length'), 64)
     .action((options: Options) => {
-        if (options.binary) {
-            generateBinary(options.rate, options.minLength, options.maxLength)
-        } else {
-            generateJson(options.rate)
-        }
+        const generate = options.binary ? generateBinary : generateJson
+        setInterval(() => {
+            console.info(generate(options))
+        }, options.rate)
     })
     .parse()
