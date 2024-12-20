@@ -260,31 +260,6 @@ export class KeyServer {
     }
 }
 
-export async function fetchPrivateKeyWithGas(): Promise<string> {
-    let response
-    try {
-        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            signal: AbortSignal.timeout(5000)
-        })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } catch (_e2) {
-            // no-op
-        } finally {
-            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-                signal: AbortSignal.timeout(5000)
-            })
-        }
-    }
-
-    if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
-    }
-
-    return response.text()
-}
-
 export class Queue<T> {
 
     private readonly items: T[] = []
@@ -380,7 +355,8 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
     return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
 }
 
-export const generateWalletWithGasAndTokens = async (): Promise<Wallet & AbstractSigner<Provider>> => {
+// TODO refactor method e.g. to createTestWallet({ gas: boolean, token: boolean })
+export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
@@ -388,7 +364,9 @@ export const generateWalletWithGasAndTokens = async (): Promise<Wallet & Abstrac
     const token = getTestTokenContract(adminWallet)
     await retry(
         async () => {
-            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            if (tokens) {
+                await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            }
             await (await adminWallet.sendTransaction({
                 to: newWallet.address,
                 value: parseEther('1')
@@ -402,4 +380,9 @@ export const generateWalletWithGasAndTokens = async (): Promise<Wallet & Abstrac
         100
     )
     return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
+}
+
+export const fetchPrivateKeyWithGas = async (): Promise<string> => {
+    const wallet = await generateWalletWithGasAndTokens(false)
+    return wallet.privateKey
 }
