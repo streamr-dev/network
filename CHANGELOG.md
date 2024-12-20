@@ -110,6 +110,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add binary content support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
+
 #### Changed
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
