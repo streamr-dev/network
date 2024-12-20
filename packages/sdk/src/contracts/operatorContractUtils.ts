@@ -24,15 +24,6 @@ const FRACTION_MAX = parseEther('1')
  */
 export interface SetupOperatorContractOpts {
     nodeCount?: number
-    chainConfig?: {
-        contracts: {
-            DATA: string
-            OperatorFactory: string
-            OperatorDefaultDelegationPolicy: string
-            OperatorDefaultExchangeRatePolicy: string
-            OperatorDefaultUndelegationPolicy: string
-        }
-    }
     operatorConfig?: {
         operatorsCutPercentage?: number
         metadata?: string
@@ -54,11 +45,8 @@ const logger = new Logger(module)
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
-    const operatorWallet = await generateWalletWithGasAndTokens({
-        chainConfig: opts?.chainConfig
-    })
+    const operatorWallet = await generateWalletWithGasAndTokens()
     const operatorContract = await deployOperatorContract({
-        chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
         operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
         metadata: opts?.operatorConfig?.metadata
@@ -66,9 +54,7 @@ export async function setupOperatorContract(
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
-            nodeWallets.push(await generateWalletWithGasAndTokens({
-                chainConfig: opts?.chainConfig
-            }))
+            nodeWallets.push(await generateWalletWithGasAndTokens())
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
@@ -84,14 +70,6 @@ export interface DeployOperatorContractOpts {
     operatorsCutPercentage?: number
     metadata?: string
     operatorTokenName?: string
-    chainConfig?: {
-        contracts: {
-            OperatorFactory: string
-            OperatorDefaultDelegationPolicy: string
-            OperatorDefaultExchangeRatePolicy: string
-            OperatorDefaultUndelegationPolicy: string
-        }
-    }
 }
 
 /**
@@ -101,8 +79,7 @@ export interface DeployOperatorContractOpts {
 export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
     const abi = OperatorFactoryArtifact
-    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
-    const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
+    const operatorFactory = new Contract(TEST_CHAIN_CONFIG.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
@@ -112,9 +89,9 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
-            chainConfig.contracts.OperatorDefaultDelegationPolicy,
-            chainConfig.contracts.OperatorDefaultExchangeRatePolicy,
-            chainConfig.contracts.OperatorDefaultUndelegationPolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultExchangeRatePolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             0,
@@ -138,21 +115,12 @@ export interface DeploySponsorshipContractOpts {
     metadata?: string
     minOperatorCount?: number
     earningsPerSecond?: WeiAmount
-    chainConfig?: {
-        contracts: {
-            SponsorshipFactory: string
-            SponsorshipStakeWeightedAllocationPolicy: string
-            SponsorshipDefaultLeavePolicy: string
-            SponsorshipVoteKickPolicy: string
-        }
-    }
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
-    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
-        chainConfig.contracts.SponsorshipFactory,
+        TEST_CHAIN_CONFIG.contracts.SponsorshipFactory,
         SponsorshipFactoryArtifact,
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
@@ -161,9 +129,9 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         opts.streamId,
         opts.metadata ?? '{}',
         [
-            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            chainConfig.contracts.SponsorshipVoteKickPolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipStakeWeightedAllocationPolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipDefaultLeavePolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipVoteKickPolicy,
         ], [
             opts.earningsPerSecond ?? parseEther('1'),
             '0',
@@ -193,18 +161,12 @@ export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wall
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
-interface GenerateWalletWithGasAndTokensOpts {
-    chainConfig?: { contracts: { DATA: string } }
-}
-
-export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet & SignerWithProvider> {
+export async function generateWalletWithGasAndTokens(): Promise<Wallet & SignerWithProvider> {
     const provider = getProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
     const adminWallet = getTestAdminWallet()
-    const token = (opts?.chainConfig !== undefined)
-        ? new Contract(opts.chainConfig.contracts.DATA, DATATokenArtifact, adminWallet) as unknown as DATATokenContract
-        : getTestTokenContract().connect(adminWallet)
+    const token = getTestTokenContract().connect(adminWallet)
     await retry(
         async () => {
             await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
