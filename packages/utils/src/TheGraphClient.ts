@@ -8,11 +8,6 @@ export interface GraphQLQuery {
     variables?: Record<string, any>
 }
 
-// compatible with fetch and node-fetch (alternatively we could use Response from node-fetch if add that as a dependency)
-export interface FetchResponse {
-    text: () => Promise<string>
-}
-
 /**
  * Query one entity with queryEntity method, and a list of entitities with queryEntities method.
  * The queryEntities method does pagination automatically.
@@ -27,13 +22,13 @@ export class TheGraphClient {
     private requiredBlockNumber = 0
     private readonly indexingState: IndexingState
     private readonly serverUrl: string
-    private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
+    private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
     private readonly logger: Logger
 
     constructor(
         opts: {
             serverUrl: string
-            fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
+            fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
             logger?: Logger
             indexTimeout?: number
             indexPollInterval?: number

@@ -36,7 +36,7 @@ import { addManagedEventListener } from './addManagedEventListener'
 import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
-import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
+import { TheGraphClient, GraphQLQuery } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
@@ -90,7 +90,6 @@ export {
     Gate,
     TheGraphClient,
     GraphQLQuery,
-    FetchResponse,
     Heap,
     executeSafePromise,
     binaryToHex,

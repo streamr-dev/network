@@ -5,8 +5,6 @@ import {
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
-import compact from 'lodash/compact'
-import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
@@ -174,7 +172,20 @@ export const createTheGraphClient = (
         fetch: (url: string, init?: Record<string, unknown>) => {
             // eslint-disable-next-line no-underscore-dangle
             const timeout = config._timeouts.theGraph.fetchTimeout
-            return fetch(url, merge({ timeout }, init))
+
+            const signals = [AbortSignal.timeout(timeout)]
+
+            if (init?.signal instanceof AbortSignal) {
+                signals.push(init.signal)
+            }
+
+            const signal = composeAbortSignals(...signals)
+
+            try {
+                return fetch(url, merge(init, { signal }))
+            } finally {
+                signal.destroy()
+            }
         },
         // eslint-disable-next-line no-underscore-dangle
         indexTimeout: config._timeouts.theGraph.indexTimeout,
@@ -210,36 +221,39 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
 ): AsyncGenerator<Uint8Array, void, undefined> {
     logger.debug('Send HTTP request', { url })
     const abortController = new AbortController()
-    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
-    const response: Response = await fetch(url, {
-        signal: fetchAbortSignal
-    })
-    logger.debug('Received HTTP response', {
-        url,
-        status: response.status,
-    })
-    if (!response.ok) {
-        throw new FetchHttpStreamResponseError(response)
-    }
-    if (!response.body) {
-        throw new Error('No Response Body')
-    }
 
-    let stream: Readable | undefined
+    const fetchAbortSignal = composeAbortSignals(abortController.signal, abortSignal)
     try {
-        // in the browser, response.body will be a web stream. Convert this into a node stream.
-        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
-        stream = source.pipe(new LengthPrefixedFrameDecoder())
-        source.on('error', (err: Error) => stream!.destroy(err))
-        stream.once('close', () => {
-            abortController.abort()
+        const response: Response = await fetch(url, {
+            signal: fetchAbortSignal
         })
-        yield* stream
-    } catch (err) {
-        abortController.abort()
-        throw err
+        logger.debug('Received HTTP response', {
+            url,
+            status: response.status,
+        })
+        if (!response.ok) {
+            throw new FetchHttpStreamResponseError(response)
+        }
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+        let stream: Readable | undefined
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body)
+            stream = source.pipe(new LengthPrefixedFrameDecoder())
+            source.on('error', (err: Error) => stream!.destroy(err))
+            stream.once('close', () => {
+                abortController.abort()
+            })
+            yield* stream
+        } catch (err) {
+            abortController.abort()
+            throw err
+        } finally {
+            stream?.destroy()
+        }
     } finally {
-        stream?.destroy()
         fetchAbortSignal.destroy()
     }
 }
