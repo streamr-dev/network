@@ -110,6 +110,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add binary data support to `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
 - Add binary data support to `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
 - Add binary data support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
 
