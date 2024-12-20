@@ -89,14 +89,14 @@ export class Handshaker {
             }   
         }
         // Add the closest left and then right contacts from the ring if possible.
-        const left = this.options.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-        const right = this.options.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-        if (left) {
-            neighbors.set(toNodeId(left.getPeerDescriptor()), left)
-        }
-        if (right) {
-            neighbors.set(toNodeId(right.getPeerDescriptor()), right)
-        }
+        // const left = this.options.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        // const right = this.options.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        // if (left) {
+        //     neighbors.set(toNodeId(left.getPeerDescriptor()), left)
+        // }
+        // if (right) {
+        //     neighbors.set(toNodeId(right.getPeerDescriptor()), right)
+        // }
         // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
             const first = this.options.nearbyNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
@@ -140,9 +140,10 @@ export class Handshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         const exclude = excludedIds.concat(this.options.neighbors.getIds())
-        const neighbor = this.options.leftNodeView.getFirst(exclude) 
-            ?? this.options.rightNodeView.getFirst(exclude)
-            ?? this.options.nearbyNodeView.getFirst(exclude)
+        const neighbor = 
+            // this.options.leftNodeView.getFirst(exclude) 
+            // ?? this.options.rightNodeView.getFirst(exclude)
+            this.options.nearbyNodeView.getFirst(exclude)
             ?? this.options.randomNodeView.getRandom(exclude)
         if (neighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(neighbor.getPeerDescriptor()))
