@@ -7,8 +7,8 @@ import crypto from 'crypto'
 interface Options extends BaseOptions {
     rate: number
     binary: boolean
-    minLength?: number
-    maxLength?: number
+    minLength: number
+    maxLength: number
 }
 
 function genArray<T>(size: number, elementFn: () => T): T[] {
@@ -48,7 +48,7 @@ createCommand()
     .option('--max-length <n>', 'maximum message length in bytes', createFnParseInt('--max-length'), 64)
     .action((options: Options) => {
         if (options.binary) {
-            generateBinary(options.rate, options.minLength!, options.maxLength!)
+            generateBinary(options.rate, options.minLength, options.maxLength)
         } else {
             generateJson(options.rate)
         }
