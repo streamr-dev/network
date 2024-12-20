@@ -3,7 +3,6 @@ const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
 const bytes = require('bytes')
-const fetch = require('node-fetch')
 const { KeyServer } = require('@streamr/test-utils')
 
 // eslint-disable-next-line import/no-unresolved
