@@ -652,6 +652,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getNode(): NetworkNodeFacade {
         return this.node
@@ -748,6 +749,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getConfig(): StrictStreamrClientConfig {
         return this.config

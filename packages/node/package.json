@@ -47,12 +47,11 @@
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
-    "node-fetch": "^2.7.0",
     "p-limit": "^3.1.0",
     "qs": "^6.13.1",
     "uuid": "^11.0.3",
     "ws": "^8.18.0",
-    "zod": "^3.22.4"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.38",
@@ -63,7 +62,6 @@
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.13",
     "@types/merge2": "^1.4.4",
-    "@types/node-fetch": "^2.6.4",
     "@types/qs": "^6.9.17",
     "@types/stream-to-array": "^2.3.3",
     "@types/supertest": "^6.0.2",

@@ -3,8 +3,8 @@ import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { until } from '@streamr/utils'
-import { Contract, Wallet, formatEther, parseEther } from 'ethers'
+import { multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
+import { Contract, Wallet, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
 
 /*
@@ -46,16 +46,16 @@ const {
     getTestAdminWallet
 } = _operatorContractUtils
 
-const SPONSOR_AMOUNT = 6000
-const OPERATOR_DELEGATED_AMOUNT = 5000
-const EXTERNAL_DELEGATED_AMOUNT = 5260
-const EARNINGS_PER_SECOND = 1000
+const SPONSOR_AMOUNT = parseEther('6000')
+const OPERATOR_DELEGATED_AMOUNT = parseEther('5000')
+const EXTERNAL_DELEGATED_AMOUNT = parseEther('5260')
+const EARNINGS_PER_SECOND = parseEther('1000')
 const OPERATORS_CUT_PERCENTAGE = 10
 const PROTOCOL_FEE_PERCENTAGE = 5
-const PROTOCOL_FEE = SPONSOR_AMOUNT * (PROTOCOL_FEE_PERCENTAGE / 100)
+const PROTOCOL_FEE = multiplyWeiAmount(SPONSOR_AMOUNT, PROTOCOL_FEE_PERCENTAGE / 100)
 const TOTAL_PROFIT = SPONSOR_AMOUNT - PROTOCOL_FEE
 const TOTAL_DELEGATED = OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
-const OPERATORS_CUT = TOTAL_PROFIT * (OPERATORS_CUT_PERCENTAGE / 100)
+const OPERATORS_CUT = multiplyWeiAmount(TOTAL_PROFIT, OPERATORS_CUT_PERCENTAGE / 100)
 const OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * OPERATOR_DELEGATED_AMOUNT / TOTAL_DELEGATED + OPERATORS_CUT
 const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * EXTERNAL_DELEGATED_AMOUNT / TOTAL_DELEGATED
 // If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between 
@@ -63,7 +63,7 @@ const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * EX
 // the operator gets a larger share of the profit. This happens because the operator's delegated amount
 // grows by both their profit share and their cut of the total profit, while the external delegator's amount
 // only grows by their profit share.
-const PROFIT_INACCURACY = 50
+const PROFIT_INACCURACY = parseEther('50')
 
 describe('profit', () => {
 
@@ -75,20 +75,20 @@ describe('profit', () => {
     let sponsorshipContract: Sponsorship
 
     const getBalances = async (): Promise<{
-        operator: number
-        delegator: number
-        sponsor: number
-        admin: number
-        operatorContract: number
+        operator: WeiAmount
+        delegator: WeiAmount
+        sponsor: WeiAmount
+        admin: WeiAmount
+        operatorContract: WeiAmount
     }> => {
         const dataToken = getTestTokenContract().connect(getProvider())
         const adminWallet = getTestAdminWallet()
         return {
-            operator: Number(formatEther(await dataToken.balanceOf(operatorWallet.address))),
-            delegator: Number(formatEther(await dataToken.balanceOf(delegatorWallet.address))),
-            sponsor: Number(formatEther(await dataToken.balanceOf(sponsorWallet.address))),
-            admin: Number(formatEther(await dataToken.balanceOf(adminWallet.address))),
-            operatorContract: Number(formatEther(await dataToken.balanceOf(await operatorContract.getAddress()))),
+            operator: await dataToken.balanceOf(operatorWallet.address),
+            delegator: await dataToken.balanceOf(delegatorWallet.address),
+            sponsor: await dataToken.balanceOf(sponsorWallet.address),
+            admin: await dataToken.balanceOf(adminWallet.address),
+            operatorContract: await dataToken.balanceOf(await operatorContract.getAddress()),
         }
     }
 
@@ -103,7 +103,7 @@ describe('profit', () => {
         } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                operatorsCutPercent: OPERATORS_CUT_PERCENTAGE
+                operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             }
         }))
         sponsorshipContract = await deploySponsorshipContract({
@@ -164,7 +164,7 @@ describe('profit', () => {
             OPERATOR_DELEGATED_AMOUNT + OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS + PROFIT_INACCURACY
         )
         const afterBalances = await getBalances()
-        expect(afterBalances.operatorContract).toEqual(0)
+        expect(afterBalances.operatorContract).toEqual(0n)
         const diff = {
             operator: afterBalances.operator - beforeBalances.operator,
             delegator: afterBalances.delegator - beforeBalances.delegator,

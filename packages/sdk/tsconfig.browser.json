@@ -12,10 +12,7 @@
         "paths": {
             "stream": ["readable-stream"],
             "util": ["util"],
-            "http": ["./src/shim/http-https.js"],
-            "https": ["./src/shim/http-https.js"],
             "buffer": ["buffer/"],
-            "node-fetch": ["./src/shim/node-fetch.ts"],
             "@streamr/protocol/*": ["@streamr/protocol/src/*"],
             "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
             "@streamr/dht/src/connection/webrtc/NodeWebrtcConnection.ts": [
@@ -26,7 +23,6 @@
         "package.json",
         "src/**/*",
         "src/**/*.json",
-        "vendor/**/*",
         "src/config.schema.json"
     ],
     "exclude": ["src/exports-esm.mjs"],

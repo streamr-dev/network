@@ -3,7 +3,6 @@ import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import { AddressInfo } from 'net'
-import fetch, { RequestInit } from 'node-fetch'
 
 export interface ProxyHttpServerRequest {
     body?: any

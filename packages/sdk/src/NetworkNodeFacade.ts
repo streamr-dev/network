@@ -28,8 +28,6 @@ import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, peerDescriptorTranslator } from './utils/utils'
 
-// TODO should we make getNode() an internal method, and provide these all these services as client methods?
-/** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
@@ -45,11 +43,8 @@ export interface NetworkNodeStub {
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
-    /** @internal */
     start: (doJoin?: boolean) => Promise<void>
-    /** @internal */
     stop: () => Promise<void>
-    /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
@@ -71,7 +66,6 @@ export interface NetworkNodeStub {
         name: string,
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void
-
 }
 
 export interface Events {
@@ -210,7 +204,7 @@ export class NetworkNodeFacade {
 
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    getNode(): Promise<NetworkNodeStub> {
+    getNode(): Promise<Omit<NetworkNodeStub, 'start' | 'stop'>> {
         this.destroySignal.assertNotDestroyed()
         return this.startNodeTask()
     }
