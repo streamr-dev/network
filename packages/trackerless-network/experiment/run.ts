@@ -13,10 +13,10 @@ const env = process.argv[3]
 const numOfRepeats = parseInt(process.argv[4])
 
 const nodeCounts = [
-    1,
-    2,
-    4,
-    8,
+    // 1,
+    // 2,
+    // 4,
+    // 8,
     16,
     // 32,
     // 64,

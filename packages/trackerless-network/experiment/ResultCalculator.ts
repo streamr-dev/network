@@ -81,7 +81,7 @@ export const timeToDataResults = async (filePath: string): Promise<unknown> => {
         sumEntryPointFetch += parsedResult.entryPointsFetch
         sumFirstNeighbor += parsedResult.firstNeighbor - parsedResult.startTime
         numOfLines += 1
-        times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighbor - parsedResult.startTime })
+        times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighbor - parsedResult.startTime,  })
     })
     await waitForEvent(file, 'close')
     const avgTimeToData = sumTimeToData / numOfLines
@@ -107,6 +107,7 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     let maxPropagationTime = 0
     let numOfLines = 0
     let sumMessagesReceived = 0
+    const times: number[] = []
     file.on('line', (line: string) => {
         const parsedLine = JSON.parse(line)
         for (const resultLine of parsedLine.results) {
@@ -115,6 +116,7 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
             sumPropagationTime += results.time
             sumHops += results.hops
             sumMessagesReceived += results.numOfMessages
+            results.times.forEach((t: number) => times.push(t))
             if (results.hops > maxHops) {
                 maxHops = results.hops
             }
@@ -134,6 +136,6 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
     console.log('max hops:', maxHops)
     console.log('max propagation time:', maxPropagationTime)
 
-    return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived, maxHops, maxPropagationTime }
+    return { propagationTime: avgPropagationTime, hops: avgHops, messagesReceived: avgMessagesReceived, maxHops, maxPropagationTime, times }
     
 } 

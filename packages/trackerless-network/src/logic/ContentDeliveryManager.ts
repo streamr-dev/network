@@ -434,6 +434,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         let sumHops = 0
         let maxHops = 0
         let numOfLines = 0
+        let propagationTimes: number[] = []
         file.on('line', (line: string) => {
             const results = JSON.parse(line)
             numOfLines += 1
@@ -441,6 +442,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             sumHops += results.hops
             maxPropagationTime = Math.max(maxPropagationTime, results.time)
             maxHops = Math.max(maxHops, results.hops)
+            propagationTimes.push(results.time)
         })
         await waitForEvent(file, 'close')
         return [JSON.stringify({
@@ -449,7 +451,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             numOfMessages: numOfLines,
             maxTime: maxPropagationTime,
             maxHops: maxHops,
-            id: this.options.experimentId
+            id: this.options.experimentId,
+            times: propagationTimes
         })]
     }
 

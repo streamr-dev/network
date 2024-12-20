@@ -51,6 +51,9 @@ const run = async (): Promise<void> => {
             value.forEach((innerValue: any, innerKey) => {
                 const run = innerKey.split('.')[0]
                 writeResultsRow(processedFilePath, `${nodeCount}, ${run}, ${innerValue.propagationTime}, ${innerValue.hops}, ${innerValue.messagesReceived}, ${innerValue.maxHops}, ${innerValue.maxPropagationTime}`)
+                innerValue.times.forEach((t: number) => {
+                    writeResultsRow(path.join(rootDirectory, 'times.csv'), `${t}`)
+                })
             })
         })
     } else if (experiment === 'join') {
@@ -76,7 +79,7 @@ const run = async (): Promise<void> => {
         processedResults.forEach((value, _key) => {
             value.forEach((innerValue: any, _innerKey) => {
                 innerValue.forEach((line: any) => {
-                    writeResultsRow(processedFilePath, `${line.nodeCount}, ${line.data}, ${line.layer1join}, ${line.fetch}, ${line.firstNeighbor}`)
+                    writeResultsRow(processedFilePath, `${line.nodeCount}, ${line.data}, ${line.layer1join}, ${line.fetch}, ${line.firstNeighbor}`)                    
                 })
             })
         })
