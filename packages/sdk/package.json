@@ -76,7 +76,7 @@
     "weak-napi": "^2.0.2",
     "webpack": "^5.97.1",
     "webpack-bundle-analyzer": "^4.10.1",
-    "webpack-cli": "^5.1.4",
+    "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
@@ -103,18 +103,18 @@
     "p-limit": "^3.1.0",
     "p-memoize": "4.0.4",
     "p-throttle": "4.1.1",
-    "readable-stream": "^4.5.2",
+    "readable-stream": "^4.6.0",
     "reflect-metadata": "^0.2.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "ts-essentials": "^10.0.3",
+    "ts-essentials": "^10.0.4",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
     "uuid": "^11.0.3",
     "zod": "^3.24.1"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8",
+    "bufferutil": "^4.0.9",
     "utf-8-validate": "^6.0.5"
   }
 }
