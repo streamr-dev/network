@@ -401,9 +401,13 @@ export interface HandshakeRequest {
      */
     targetPeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string version = 3;
+     * @generated from protobuf field: string protocolVersion = 3;
      */
-    version: string;
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: string applicationVersion = 4;
+     */
+    applicationVersion: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
@@ -418,9 +422,13 @@ export interface HandshakeResponse {
      */
     error?: HandshakeError;
     /**
-     * @generated from protobuf field: string version = 3;
+     * @generated from protobuf field: string protocolVersion = 3;
      */
-    version: string;
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: string applicationVersion = 4;
+     */
+    applicationVersion: string;
 }
 // Wraps all messages
 
@@ -1011,7 +1019,8 @@ class HandshakeRequest$Type extends MessageType<HandshakeRequest> {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "applicationVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1025,7 +1034,8 @@ class HandshakeResponse$Type extends MessageType<HandshakeResponse> {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] },
-            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "applicationVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

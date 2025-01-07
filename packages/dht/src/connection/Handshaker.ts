@@ -6,6 +6,7 @@ import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
+import { version } from '../../package.json'
 
 const logger = new Logger(module)
 
@@ -112,7 +113,8 @@ export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remo
     const outgoingHandshake: HandshakeRequest = {
         sourcePeerDescriptor: localPeerDescriptor,
         targetPeerDescriptor: remotePeerDescriptor,
-        version: LOCAL_PROTOCOL_VERSION
+        protocolVersion: LOCAL_PROTOCOL_VERSION,
+        applicationVersion: version
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -128,7 +130,8 @@ export const createHandshakeResponse = (localPeerDescriptor: PeerDescriptor, err
     const outgoingHandshakeResponse: HandshakeResponse = {
         sourcePeerDescriptor: localPeerDescriptor,
         error,
-        version: LOCAL_PROTOCOL_VERSION
+        protocolVersion: LOCAL_PROTOCOL_VERSION,
+        applicationVersion: version
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -166,14 +169,14 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 this.emit(
                     'handshakeRequest',
                     handshake.sourcePeerDescriptor!, 
-                    handshake.version,
+                    handshake.protocolVersion,
                     handshake.targetPeerDescriptor
                 )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const error = !isMaybeSupportedVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
+                const error = !isMaybeSupportedVersion(handshake.protocolVersion) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {

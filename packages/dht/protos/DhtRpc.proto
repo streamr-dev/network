@@ -223,13 +223,15 @@ message ConnectivityResponse {
 message HandshakeRequest {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional PeerDescriptor targetPeerDescriptor = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 message HandshakeResponse {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional HandshakeError error = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 enum HandshakeError {
