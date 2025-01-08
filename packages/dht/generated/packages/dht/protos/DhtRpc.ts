@@ -376,9 +376,9 @@ export interface ConnectivityResponse {
      */
     ipAddress: number;
     /**
-     * @generated from protobuf field: string version = 5;
+     * @generated from protobuf field: string protocolVersion = 5;
      */
-    version: string;
+    protocolVersion: string;
     /**
      * @generated from protobuf field: optional double latitude = 6;
      */
@@ -701,9 +701,9 @@ export enum HandshakeError {
      */
     INVALID_TARGET_PEER_DESCRIPTOR = 1,
     /**
-     * @generated from protobuf enum value: UNSUPPORTED_VERSION = 2;
+     * @generated from protobuf enum value: UNSUPPORTED_PROTOCOL_VERSION = 2;
      */
-    UNSUPPORTED_VERSION = 2
+    UNSUPPORTED_PROTOCOL_VERSION = 2
 }
 /**
  * @generated from protobuf enum dht.DisconnectMode
@@ -1003,7 +1003,7 @@ class ConnectivityResponse$Type extends MessageType<ConnectivityResponse> {
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "ipAddress", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "latitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ },
             { no: 7, name: "longitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ }
         ]);

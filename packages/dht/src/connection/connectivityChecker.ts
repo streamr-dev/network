@@ -79,14 +79,14 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
-                        const remoteVersion = connectivityResponseMessage.version
+                        const remoteProtocolVersion = connectivityResponseMessage.protocolVersion
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        if (isMaybeSupportedProtocolVersion(remoteVersion)) {
+                        if (isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
                             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                            reject(`Unsupported version: ${remoteVersion}`)
+                            reject(`Unsupported version: ${remoteProtocolVersion}`)
                         }
                     }
                 } catch (err) {
