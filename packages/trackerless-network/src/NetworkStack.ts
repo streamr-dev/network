@@ -171,7 +171,7 @@ export class NetworkStack {
                 neighbors: this.getControlLayerNode().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
-            version: applicationVersion
+            applicationVersion
         }
     }
 
