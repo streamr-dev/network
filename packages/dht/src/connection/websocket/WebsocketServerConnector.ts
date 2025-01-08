@@ -114,7 +114,11 @@ export class WebsocketServerConnector {
     private attachHandshaker(connection: IConnection) {
         // TODO: use createIncomingHandshaker here?
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
-        handshaker.once('handshakeRequest', (localPeerDescriptor: PeerDescriptor, remoteProtocolVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
+        handshaker.once('handshakeRequest', (
+            localPeerDescriptor: PeerDescriptor,
+            remoteProtocolVersion: string,
+            remotePeerDescriptor?: PeerDescriptor
+        ) => {
             this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, remoteProtocolVersion, remotePeerDescriptor)
         })
     }
