@@ -1,15 +1,18 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
 import cors from 'cors'
 import crypto, { randomBytes } from 'crypto'
-import { Wallet } from 'ethers'
+import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express from 'express'
 import http from 'http'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
 import { Readable } from 'stream'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export type Event = string
+
+const logger = new Logger(module)
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a
@@ -341,3 +344,62 @@ export type Methods<T> = Pick<T, MethodNames<T>>
 
 import * as customMatchers from './customMatchers'
 export { customMatchers }
+
+const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
+
+const getTestProvider = (): Provider => {
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
+        batchStallTime: 0,       // Don't batch requests, send them immediately
+        cacheTimeout: -1         // Do not employ result caching
+    })
+}
+
+const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
+    const ABI = [{
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'to',
+                type: 'address'
+            },
+            {
+                internalType: 'uint256',
+                name: 'amount',
+                type: 'uint256'
+            }
+        ],
+        name: 'mint',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    }]
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as { mint: () => Promise<TransactionResponse> }
+}
+
+const getTestAdminWallet = (provider: Provider): Wallet => {
+    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
+}
+
+export const generateWalletWithGasAndTokens = async (): Promise<Wallet & AbstractSigner<Provider>> => {
+    const provider = getTestProvider()
+    const privateKey = crypto.randomBytes(32).toString('hex')
+    const newWallet = new Wallet(privateKey)
+    const adminWallet = getTestAdminWallet(provider)
+    const token = getTestTokenContract(adminWallet)
+    await retry(
+        async () => {
+            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            await (await adminWallet.sendTransaction({
+                to: newWallet.address,
+                value: parseEther('1')
+            })).wait()
+        },
+        (message: string, err: any) => {
+            logger.debug(message, { err })
+        },
+        'Token minting',
+        10,
+        100
+    )
+    return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
+}

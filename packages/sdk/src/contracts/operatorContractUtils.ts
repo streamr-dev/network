@@ -1,7 +1,10 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, multiplyWeiAmount, retry, WeiAmount } from '@streamr/utils'
-import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
+import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
+import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import { range } from 'lodash'
+import { SignerWithProvider } from '../Authentication'
+import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
+import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../ethereumArtifacts/OperatorFactory'
@@ -10,10 +13,6 @@ import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sp
 import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
 import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
-import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
-import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
-import { SignerWithProvider } from '../Authentication'
-import crypto from 'crypto'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
@@ -28,6 +27,7 @@ export interface SetupOperatorContractOpts {
         operatorsCutPercentage?: number
         metadata?: string
     }
+    generateWalletWithGasAndTokens: () => Promise<Wallet & SignerWithProvider>
 }
 
 /**
@@ -43,9 +43,9 @@ export interface SetupOperatorContractReturnType {
 const logger = new Logger(module)
 
 export async function setupOperatorContract(
-    opts?: SetupOperatorContractOpts
+    opts: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
-    const operatorWallet = await generateWalletWithGasAndTokens()
+    const operatorWallet = await opts.generateWalletWithGasAndTokens()
     const operatorContract = await deployOperatorContract({
         deployer: operatorWallet,
         operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
@@ -54,7 +54,7 @@ export async function setupOperatorContract(
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
-            nodeWallets.push(await generateWalletWithGasAndTokens())
+            nodeWallets.push(await opts.generateWalletWithGasAndTokens())
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
@@ -159,30 +159,6 @@ export function getTestTokenContract(): DATATokenContract {
 
 export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
-}
-
-export async function generateWalletWithGasAndTokens(): Promise<Wallet & SignerWithProvider> {
-    const provider = getProvider()
-    const privateKey = crypto.randomBytes(32).toString('hex')
-    const newWallet = new Wallet(privateKey)
-    const adminWallet = getTestAdminWallet()
-    const token = getTestTokenContract().connect(adminWallet)
-    await retry(
-        async () => {
-            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
-            await (await adminWallet.sendTransaction({
-                to: newWallet.address,
-                value: parseEther('1')
-            })).wait()
-        },
-        (message: string, err: any) => {
-            logger.debug(message, { err })
-        },
-        'Token minting',
-        10,
-        100
-    )
-    return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
 export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: WeiAmount, token?: DATATokenContract): Promise<void> => {
