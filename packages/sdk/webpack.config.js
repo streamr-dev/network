@@ -174,14 +174,15 @@ module.exports = (env, argv) => {
                             ecma: 2018,
                             output: {
                                 comments: false,
-                            },
-                        },
-                    }),
-                ],
+                                ascii_only: true
+                            }
+                        }
+                    })
+                ]
             },
             output: {
                 filename: '[name].web.min.js',
-            },
+            }
         })
     }
 }
