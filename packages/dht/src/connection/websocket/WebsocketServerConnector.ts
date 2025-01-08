@@ -12,7 +12,7 @@ import { attachConnectivityRequestHandler, DISABLE_CONNECTIVITY_PROBE } from '..
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionType, IConnection } from '../IConnection'
 import queryString from 'querystring'
-import { isMaybeSupportedVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/version'
+import { isMaybeSupportedProtocolVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/version'
 import { shuffle } from 'lodash'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { acceptHandshake, Handshaker, rejectHandshake } from '../Handshaker'
@@ -129,7 +129,7 @@ export class WebsocketServerConnector {
         const nodeId = toNodeId(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
-            if (!isMaybeSupportedVersion(remoteVersion)) {
+            if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
@@ -141,7 +141,7 @@ export class WebsocketServerConnector {
         } else {
             const pendingConnection = new PendingConnection(sourcePeerDescriptor)
             
-            if (!isMaybeSupportedVersion(remoteVersion)) {
+            if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  

@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../../generated/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
-import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedProtocolVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
 import { version as applicationVersion } from '../../package.json'
@@ -176,7 +176,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const error = !isMaybeSupportedVersion(handshake.protocolVersion) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
+                const error = !isMaybeSupportedProtocolVersion(handshake.protocolVersion) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {

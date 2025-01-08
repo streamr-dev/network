@@ -8,7 +8,7 @@ import {
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
-import { isMaybeSupportedVersion } from '../helpers/version'
+import { isMaybeSupportedProtocolVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
@@ -82,7 +82,7 @@ export const sendConnectivityRequest = async (
                         const remoteVersion = connectivityResponseMessage.version
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        if (isMaybeSupportedVersion(remoteVersion)) {
+                        if (isMaybeSupportedProtocolVersion(remoteVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
                             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
