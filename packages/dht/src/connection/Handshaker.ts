@@ -6,7 +6,7 @@ import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
-import { version } from '../../package.json'
+import { version as applicationVersion } from '../../package.json'
 
 const logger = new Logger(module)
 
@@ -114,7 +114,7 @@ export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remo
         sourcePeerDescriptor: localPeerDescriptor,
         targetPeerDescriptor: remotePeerDescriptor,
         protocolVersion: LOCAL_PROTOCOL_VERSION,
-        applicationVersion: version
+        applicationVersion
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -131,7 +131,7 @@ export const createHandshakeResponse = (localPeerDescriptor: PeerDescriptor, err
         sourcePeerDescriptor: localPeerDescriptor,
         error,
         protocolVersion: LOCAL_PROTOCOL_VERSION,
-        applicationVersion: version
+        applicationVersion
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
