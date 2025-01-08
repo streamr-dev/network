@@ -43,6 +43,7 @@ export default [
             }
         },
         rules: {
+            indent: 'off',
             'class-methods-use-this': 'error',
             'default-case': 'error',
             'eol-last': 'error',
