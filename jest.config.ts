@@ -1,6 +1,7 @@
 import type { Config } from '@jest/types'
 
 const config = {
+    preset: 'ts-jest',
     transform: {
         '^.+.ts$': ['ts-jest', {}],
     },
