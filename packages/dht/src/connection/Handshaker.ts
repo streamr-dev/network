@@ -11,7 +11,7 @@ import { version as applicationVersion } from '../../package.json'
 const logger = new Logger(module)
 
 interface HandshakerEvents {
-    handshakeRequest: (source: PeerDescriptor, protocolVersion: string, target?: PeerDescriptor) => void
+    handshakeRequest: (remote: PeerDescriptor, protocolVersion: string, target?: PeerDescriptor) => void
     handshakeCompleted: (remote: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
 }

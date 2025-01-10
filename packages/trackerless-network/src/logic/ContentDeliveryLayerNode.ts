@@ -88,7 +88,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             rpcCommunicator: this.options.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
-            onLeaveNotice: (remoteNodeId: DhtAddress, sourceIsStreamEntryPoint: boolean) => {
+            onLeaveNotice: (remoteNodeId: DhtAddress, remoteIsStreamEntryPoint: boolean) => {
                 if (this.abortController.signal.aborted) {
                     return
                 }
@@ -107,7 +107,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.options.neighborFinder.start([remoteNodeId])
                     this.options.proxyConnectionRpcLocal?.removeConnection(remoteNodeId)
                 }
-                if (sourceIsStreamEntryPoint) {
+                if (remoteIsStreamEntryPoint) {
                     this.emit('entryPointLeaveDetected')
                 }
             },

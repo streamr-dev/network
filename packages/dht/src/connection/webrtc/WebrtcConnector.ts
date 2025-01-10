@@ -168,7 +168,7 @@ export class WebrtcConnector {
             connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
-            handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
+            handshaker.on('handshakeRequest', (_remoteDescriptor: PeerDescriptor, remoteVersion: string) => {
                 if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
                     rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
                 } else {
