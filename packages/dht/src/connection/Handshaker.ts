@@ -3,14 +3,15 @@ import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../../generated/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
-import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedProtocolVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
+import { version as applicationVersion } from '../../package.json'
 
 const logger = new Logger(module)
 
 interface HandshakerEvents {
-    handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
+    handshakeRequest: (source: PeerDescriptor, protocolVersion: string, target?: PeerDescriptor) => void
     handshakeCompleted: (remote: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
 }
@@ -35,7 +36,7 @@ export const createOutgoingHandshaker = (
         pendingConnection.off('disconnected', managedConnectionDisconnectedListener)
     }
     const handshakeFailedListener = (error?: HandshakeError) => {
-        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
+        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_PROTOCOL_VERSION) {
             pendingConnection.close(false)
             stopHandshaker()
         } else {
@@ -48,7 +49,7 @@ export const createOutgoingHandshaker = (
         stopHandshaker()
     }
     const connectedListener = () => handshaker.sendHandshakeRequest(targetPeerDescriptor)
-    const disconnectedListener = (graceful: boolean) => { 
+    const disconnectedListener = (graceful: boolean) => {
         pendingConnection.close(graceful)
         stopHandshaker()
     }
@@ -112,7 +113,8 @@ export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remo
     const outgoingHandshake: HandshakeRequest = {
         sourcePeerDescriptor: localPeerDescriptor,
         targetPeerDescriptor: remotePeerDescriptor,
-        version: LOCAL_PROTOCOL_VERSION
+        protocolVersion: LOCAL_PROTOCOL_VERSION,
+        applicationVersion
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -122,13 +124,14 @@ export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remo
             handshakeRequest: outgoingHandshake
         }
     }
-} 
+}
 
 export const createHandshakeResponse = (localPeerDescriptor: PeerDescriptor, error?: HandshakeError): Message => {
     const outgoingHandshakeResponse: HandshakeResponse = {
         sourcePeerDescriptor: localPeerDescriptor,
         error,
-        version: LOCAL_PROTOCOL_VERSION
+        protocolVersion: LOCAL_PROTOCOL_VERSION,
+        applicationVersion
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -165,15 +168,16 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 const handshake = message.body.handshakeRequest
                 this.emit(
                     'handshakeRequest',
-                    handshake.sourcePeerDescriptor!, 
-                    handshake.version,
+                    handshake.sourcePeerDescriptor!,
+                    handshake.protocolVersion,
                     handshake.targetPeerDescriptor
                 )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const error = !isMaybeSupportedVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
+                const error = !isMaybeSupportedProtocolVersion(handshake.protocolVersion) 
+                    ? HandshakeError.UNSUPPORTED_PROTOCOL_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
@@ -183,7 +187,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         } catch (err) {
             logger.debug('error while parsing handshake message', err)
         }
-        
+
     }
 
     public sendHandshakeRequest(remotePeerDescriptor?: PeerDescriptor): void {

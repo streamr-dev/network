@@ -48,6 +48,6 @@ describe('ConnectivityChecking', () => {
             allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
-        expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)
+        expect(response.protocolVersion).toEqual(LOCAL_PROTOCOL_VERSION)
     })
 })

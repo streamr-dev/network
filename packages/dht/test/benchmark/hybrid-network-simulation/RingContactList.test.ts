@@ -26,7 +26,7 @@ class MockNode {
             host: 'localhost',
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: '0.0.0'
+            protocolVersion: '0.0.0'
 
         }
         this.peerDescriptor = createPeerDescriptor(connectivityResponse, getRandomRegion())

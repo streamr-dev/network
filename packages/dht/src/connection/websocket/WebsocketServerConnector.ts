@@ -12,7 +12,7 @@ import { attachConnectivityRequestHandler, DISABLE_CONNECTIVITY_PROBE } from '..
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionType, IConnection } from '../IConnection'
 import queryString from 'querystring'
-import { isMaybeSupportedVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/version'
+import { isMaybeSupportedProtocolVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/version'
 import { shuffle } from 'lodash'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { acceptHandshake, Handshaker, rejectHandshake } from '../Handshaker'
@@ -114,23 +114,27 @@ export class WebsocketServerConnector {
     private attachHandshaker(connection: IConnection) {
         // TODO: use createIncomingHandshaker here?
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
-        handshaker.once('handshakeRequest', (localPeerDescriptor: PeerDescriptor, sourceVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
-            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, sourceVersion, remotePeerDescriptor)
+        handshaker.once('handshakeRequest', (
+            localPeerDescriptor: PeerDescriptor,
+            remoteProtocolVersion: string,
+            remotePeerDescriptor?: PeerDescriptor
+        ) => {
+            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, remoteProtocolVersion, remotePeerDescriptor)
         })
     }
 
     private onServerSocketHandshakeRequest(
-        sourcePeerDescriptor: PeerDescriptor,
+        remotePeerDescriptor: PeerDescriptor,
         websocketServerConnection: IConnection,
         handshaker: Handshaker,
-        remoteVersion: string,
+        remoteProtocolVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
-        const nodeId = toNodeId(sourcePeerDescriptor)
+        const nodeId = toNodeId(remotePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
-            if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+            if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
                 delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
@@ -139,10 +143,10 @@ export class WebsocketServerConnector {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             }
         } else {
-            const pendingConnection = new PendingConnection(sourcePeerDescriptor)
+            const pendingConnection = new PendingConnection(remotePeerDescriptor)
             
-            if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
+            if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.options.onNewConnection(pendingConnection)) {
@@ -160,7 +164,7 @@ export class WebsocketServerConnector {
                 host: '127.0.0.1',
                 natType: NatType.UNKNOWN,
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: LOCAL_PROTOCOL_VERSION
+                protocolVersion: LOCAL_PROTOCOL_VERSION
             }
         }
         if (!this.options.entrypoints || this.options.entrypoints.length === 0) {
@@ -175,7 +179,7 @@ export class WebsocketServerConnector {
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: LOCAL_PROTOCOL_VERSION
+                protocolVersion: LOCAL_PROTOCOL_VERSION
             }
         }
         const shuffledEntrypoints = shuffle(this.options.entrypoints)

@@ -101,7 +101,7 @@ describe('NetworkStack NodeInfoRpc', () => {
                     }]
                 }
             ],
-            version: expect.any(String)
+            applicationVersion: expect.any(String)
         })
         expect(result.streamPartitions.length).toEqual(2)
     })
