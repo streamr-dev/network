@@ -1,10 +1,8 @@
 import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
-import cors from 'cors'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express from 'express'
-import http from 'http'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
 import { Readable } from 'stream'
@@ -184,107 +182,6 @@ export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void
     }
 }
 
-/**
- * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
- * balances in streamr-docker-dev environment.
- */
-export class KeyServer {
-    public static readonly KEY_SERVER_PORT = 45454
-    private static singleton: KeyServer | undefined
-    private readonly ready: Promise<unknown>
-    private server?: http.Server
-
-    public static async startIfNotRunning(): Promise<void> {
-        if (KeyServer.singleton === undefined) {
-            KeyServer.singleton = new KeyServer()
-            await KeyServer.singleton.ready
-        }
-    }
-
-    public static async stopIfRunning(): Promise<void> {
-        if (KeyServer.singleton !== undefined) {
-            const temp = KeyServer.singleton
-            KeyServer.singleton = undefined
-            await temp.destroy()
-        }
-    }
-
-    private constructor() {
-        const app = express()
-        app.use(cors())
-        let c = 1
-        app.get('/key', (_req, res) => {
-            const hexString = c.toString(16)
-            const privateKey = '0x' + hexString.padStart(64, '0')
-            res.send(privateKey)
-            c += 1
-            if (c > 1000) {
-                c = 1
-            } else if (c === 10) {
-                /*
-                    NET-666: There is something weird about the 10th key '0x0000000000....a'
-                    that causes StreamRegistryContract to read a weird value to msg.sender
-                    that does NOT correspond to the public address. Until that is investigated
-                    and solved, skipping this key.
-                 */
-                c = 11
-            }
-        })
-        console.info(`starting up keyserver on port ${KeyServer.KEY_SERVER_PORT}...`)
-        this.ready = new Promise((resolve, reject) => {
-            this.server = app.listen(KeyServer.KEY_SERVER_PORT)
-                .once('listening', () => {
-                    console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
-                    resolve(true)
-                })
-                .once('error', (err) => {
-                    reject(err)
-                })
-        })
-    }
-
-    private destroy(): Promise<unknown> {
-        if (this.server === undefined) {
-            return Promise.resolve(true)
-        }
-        return new Promise((resolve, reject) => {
-            this.server!.close((err) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    console.info(`closed keyserver on port ${KeyServer.KEY_SERVER_PORT}`)
-                    resolve(true)
-                }
-            })
-        })
-    }
-}
-
-export async function fetchPrivateKeyWithGas(): Promise<string> {
-    let response
-    try {
-        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            signal: AbortSignal.timeout(5000)
-        })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } catch (_e2) {
-            // no-op
-        } finally {
-            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-                signal: AbortSignal.timeout(5000)
-            })
-        }
-    }
-
-    if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
-    }
-
-    return response.text()
-}
-
 export class Queue<T> {
 
     private readonly items: T[] = []
@@ -380,7 +277,8 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
     return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
 }
 
-export const generateWalletWithGasAndTokens = async (): Promise<Wallet & AbstractSigner<Provider>> => {
+// TODO refactor method e.g. to createTestWallet({ gas: boolean, token: boolean })
+export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
@@ -388,7 +286,9 @@ export const generateWalletWithGasAndTokens = async (): Promise<Wallet & Abstrac
     const token = getTestTokenContract(adminWallet)
     await retry(
         async () => {
-            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            if (tokens) {
+                await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            }
             await (await adminWallet.sendTransaction({
                 to: newWallet.address,
                 value: parseEther('1')
@@ -402,4 +302,9 @@ export const generateWalletWithGasAndTokens = async (): Promise<Wallet & Abstrac
         100
     )
     return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
+}
+
+export const fetchPrivateKeyWithGas = async (): Promise<string> => {
+    const wallet = await generateWalletWithGasAndTokens(false)
+    return wallet.privateKey
 }
