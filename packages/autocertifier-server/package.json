@@ -25,7 +25,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.721.0",
+    "@aws-sdk/client-route-53": "^3.726.1",
     "@streamr/autocertifier-client": "102.0.0-beta.0",
     "@streamr/dht": "102.0.0-beta.0",
     "@streamr/proto-rpc": "102.0.0-beta.0",
@@ -38,7 +38,7 @@
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "uuid": "^11.0.4"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/dns2": "^2.0.9",
