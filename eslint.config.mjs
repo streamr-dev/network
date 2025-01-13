@@ -7,15 +7,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(__filename)
 
 export default [
     {
-        ignores: [
-            '**/generated/**',
-            '**/dist/**',
-            '**/node_modules/**'
-        ]
+        ignores: ['**/generated/**', '**/dist/**', '**/node_modules/**']
     },
     ...streamr,
     importPlugin.flatConfigs.recommended,
@@ -34,92 +30,129 @@ export default [
             'import/resolver': {
                 typescript: {
                     alwaysTryTypes: true,
-                    project: [
-                        'packages/*/tsconfig.jest.json',
-                        'packages/browser-test-runner/tsconfig.node.json'
-                    ]
+                    project: ['packages/*/tsconfig.jest.json', 'packages/browser-test-runner/tsconfig.node.json']
                 },
                 node: true
             }
         },
         rules: {
-            indent: 'off',
             'class-methods-use-this': 'error',
             'default-case': 'error',
             'eol-last': 'error',
-            'no-console': ['error', {
-                allow: ['warn', 'error', 'info']
-            }],
+            'no-console': [
+                'error',
+                {
+                    allow: ['warn', 'error', 'info']
+                }
+            ],
             'no-lonely-if': 'error',
-            'no-multi-spaces': ['error', {
-                ignoreEOLComments: true
-            }],
-            'no-restricted-imports': ['error', {
-                patterns: ['*/dist']
-            }],
+            'no-multi-spaces': [
+                'error',
+                {
+                    ignoreEOLComments: true
+                }
+            ],
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: ['*/dist']
+                }
+            ],
             'no-unneeded-ternary': 'error',
             'no-useless-return': 'error',
             'prefer-arrow-callback': 'error',
-            'quotes': ['error', 'single', {
-                allowTemplateLiterals: true
-            }],
+            quotes: [
+                'error',
+                'single',
+                {
+                    allowTemplateLiterals: true
+                }
+            ],
             '@typescript-eslint/default-param-last': 'error',
-            '@typescript-eslint/no-confusing-void-expression': ['error', {
-                ignoreArrowShorthand: true
-            }],
+            '@typescript-eslint/no-confusing-void-expression': [
+                'error',
+                {
+                    ignoreArrowShorthand: true
+                }
+            ],
             '@typescript-eslint/no-extraneous-class': 'error',
             '@typescript-eslint/no-inferrable-types': 'off',
             '@typescript-eslint/no-invalid-this': 'error',
             '@typescript-eslint/no-invalid-void-type': 'error',
-            '@typescript-eslint/no-misused-promises': ['error', {
-                checksVoidReturn: false
-            }],
+            '@typescript-eslint/no-misused-promises': [
+                'error',
+                {
+                    checksVoidReturn: false
+                }
+            ],
             '@typescript-eslint/no-unused-expressions': 'error',
-            '@typescript-eslint/no-unused-vars': ['error', {
-                vars: 'all',
-                args: 'all',
-                argsIgnorePattern: '^_',
-                varsIgnorePattern: '^_',
-                caughtErrorsIgnorePattern: '^_'
-            }],
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    vars: 'all',
+                    args: 'all',
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_'
+                }
+            ],
             '@typescript-eslint/no-useless-constructor': 'error',
             '@typescript-eslint/no-useless-empty-export': 'error',
             '@typescript-eslint/parameter-properties': 'error',
             '@typescript-eslint/prefer-literal-enum-member': 'error',
-            '@typescript-eslint/restrict-template-expressions': ['error', {
-                allowAny: false,
-                allowBoolean: true,
-                allowNullish: true,
-                allowNumber: true,
-                allowRegExp: true,
-                allowNever: true,
-                allow: [{ from: 'lib', name: 'Error' }]
-            }],
-            '@stylistic/brace-style': ['error', '1tbs', {
-                allowSingleLine: true
-            }],
+            '@typescript-eslint/restrict-template-expressions': [
+                'error',
+                {
+                    allowAny: false,
+                    allowBoolean: true,
+                    allowNullish: true,
+                    allowNumber: true,
+                    allowRegExp: true,
+                    allowNever: true,
+                    allow: [{ from: 'lib', name: 'Error' }]
+                }
+            ],
+            '@stylistic/brace-style': [
+                'error',
+                '1tbs',
+                {
+                    allowSingleLine: true
+                }
+            ],
             '@stylistic/comma-spacing': 'error',
             '@stylistic/func-call-spacing': 'error',
             '@stylistic/keyword-spacing': 'error',
-            '@stylistic/member-delimiter-style': ['error', {
-                singleline: { delimiter: 'comma' },
-                multiline: { delimiter: 'none' }
-            }],
+            '@stylistic/member-delimiter-style': [
+                'error',
+                {
+                    singleline: { delimiter: 'comma' },
+                    multiline: { delimiter: 'none' }
+                }
+            ],
             '@stylistic/object-curly-spacing': ['error', 'always'],
             '@stylistic/space-before-blocks': 'error',
-            '@stylistic/space-before-function-paren': ['error', {
-                anonymous: 'never',
-                named: 'never',
-                asyncArrow: 'always'
-            }],
+            '@stylistic/space-before-function-paren': [
+                'error',
+                {
+                    anonymous: 'never',
+                    named: 'never',
+                    asyncArrow: 'always'
+                }
+            ],
             '@stylistic/space-infix-ops': 'error',
-            'import/no-extraneous-dependencies': ['error', {
-                devDependencies: [ 'test/**/*.ts', 'test/**/*.js'],
-                packageDir: ['.', '../..']
-            }],
-            'promise/always-return': ['error', {
-                ignoreLastCallback: true
-            }],
+            'import/no-extraneous-dependencies': [
+                'error',
+                {
+                    devDependencies: ['test/**/*.ts', 'test/**/*.js'],
+                    packageDir: ['.', '../..']
+                }
+            ],
+            'promise/always-return': [
+                'error',
+                {
+                    ignoreLastCallback: true
+                }
+            ],
             'promise/no-promise-in-callback': 'error',
 
             // TODO in follow up PRs, select which rules we should enable and fix the code. When all recommended rules

@@ -6,7 +6,6 @@ const NUM_OF_NODES = 16
 const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
-
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 43228, tls: false }
     })
@@ -36,7 +35,7 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 1; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ 
+            const node = new DhtNode({
                 entryPoints: [epPeerDescriptor],
                 numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })

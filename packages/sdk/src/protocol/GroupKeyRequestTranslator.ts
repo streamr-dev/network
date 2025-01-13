@@ -4,7 +4,6 @@ import { GroupKeyRequest as OldGroupKeyRequest } from './GroupKeyRequest'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyRequestTranslator {
-
     static toProtobuf(msg: OldGroupKeyRequest): NewGroupKeyRequest {
         const translated: NewGroupKeyRequest = {
             recipientId: toUserIdRaw(msg.recipient),
@@ -24,5 +23,4 @@ export class GroupKeyRequestTranslator {
         })
         return translated
     }
-
 }

@@ -1,9 +1,4 @@
-import {
-    DataEntry,
-    DhtAddress,
-    PeerDescriptor,
-    areEqualPeerDescriptors
-} from '@streamr/dht'
+import { DataEntry, DhtAddress, PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { Any } from '../../generated/google/protobuf/any'
 
@@ -29,7 +24,6 @@ interface PeerDescriptorStoreManagerOptions {
  * the peer descriptor of the local node is stored to the DHT.
  */
 export class PeerDescriptorStoreManager {
-
     private readonly abortController: AbortController
     private readonly options: PeerDescriptorStoreManagerOptions
     private isLocalNodeStored_ = false
@@ -70,18 +64,25 @@ export class PeerDescriptorStoreManager {
     }
 
     private async keepLocalNode(): Promise<void> {
-        await scheduleAtInterval(async () => {
-            logger.trace('Attempting to keep local node', { key: this.options.key })
-            try {
-                const discovered = await this.fetchNodes()
-                if (discovered.length < MAX_NODE_COUNT
-                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor))) {
-                    await this.storeLocalNode()
+        await scheduleAtInterval(
+            async () => {
+                logger.trace('Attempting to keep local node', { key: this.options.key })
+                try {
+                    const discovered = await this.fetchNodes()
+                    if (
+                        discovered.length < MAX_NODE_COUNT ||
+                        discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor))
+                    ) {
+                        await this.storeLocalNode()
+                    }
+                } catch {
+                    logger.debug('Failed to keep local node', { key: this.options.key })
                 }
-            } catch {
-                logger.debug('Failed to keep local node', { key: this.options.key })
-            }
-        }, this.options.storeInterval ?? 60000, false, this.abortController.signal)
+            },
+            this.options.storeInterval ?? 60000,
+            false,
+            this.abortController.signal
+        )
     }
 
     public isLocalNodeStored(): boolean {

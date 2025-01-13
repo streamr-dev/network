@@ -1,11 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    randomDhtAddress,
-    toDhtAddress,
-    toNodeId,
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor, randomDhtAddress, toDhtAddress, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { expect } from 'expect'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -18,7 +11,6 @@ import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '..
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 
 describe('NodeList', () => {
-
     const ids = [
         new Uint8Array([1, 1, 1]),
         new Uint8Array([1, 1, 2]),
@@ -31,12 +23,7 @@ describe('NodeList', () => {
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(streamPartId), new MockTransport())
-        return new ContentDeliveryRpcRemote(
-            createMockPeerDescriptor(),
-            peerDescriptor,
-            mockCommunicator,
-            ContentDeliveryRpcClient
-        )
+        return new ContentDeliveryRpcRemote(createMockPeerDescriptor(), peerDescriptor, mockCommunicator, ContentDeliveryRpcClient)
     }
 
     beforeEach(() => {
@@ -77,14 +64,12 @@ describe('NodeList', () => {
 
     it('getFirst', () => {
         const closest = nodeList.getFirst([])
-        expect(toNodeId(closest!.getPeerDescriptor()))
-            .toEqual(toDhtAddress(new Uint8Array([1, 1, 1])))
+        expect(toNodeId(closest!.getPeerDescriptor())).toEqual(toDhtAddress(new Uint8Array([1, 1, 1])))
     })
 
     it('getFirst with exclude', () => {
         const closest = nodeList.getFirst([toDhtAddress(new Uint8Array([1, 1, 1]))])
-        expect(toNodeId(closest!.getPeerDescriptor()))
-            .toEqual(toDhtAddress(new Uint8Array([1, 1, 2])))
+        expect(toNodeId(closest!.getPeerDescriptor())).toEqual(toDhtAddress(new Uint8Array([1, 1, 2])))
     })
 
     it('getFirst wsOnly', () => {
@@ -95,14 +80,12 @@ describe('NodeList', () => {
 
     it('getLast', () => {
         const closest = nodeList.getLast([])
-        expect(toNodeId(closest!.getPeerDescriptor()))
-            .toEqual(toDhtAddress(new Uint8Array([1, 1, 5])))
+        expect(toNodeId(closest!.getPeerDescriptor())).toEqual(toDhtAddress(new Uint8Array([1, 1, 5])))
     })
 
     it('getLast with exclude', () => {
         const closest = nodeList.getLast([toDhtAddress(new Uint8Array([1, 1, 5]))])
-        expect(toNodeId(closest!.getPeerDescriptor()))
-            .toEqual(toDhtAddress(new Uint8Array([1, 1, 4])))
+        expect(toNodeId(closest!.getPeerDescriptor())).toEqual(toDhtAddress(new Uint8Array([1, 1, 4])))
     })
 
     it('getFirstAndLast', () => {
@@ -131,10 +114,7 @@ describe('NodeList', () => {
     })
 
     it('getFirstAndLast with exclude', () => {
-        const results = nodeList.getFirstAndLast([
-            toDhtAddress(new Uint8Array([1, 1, 1])),
-            toDhtAddress(new Uint8Array([1, 1, 5]))
-        ])
+        const results = nodeList.getFirstAndLast([toDhtAddress(new Uint8Array([1, 1, 1])), toDhtAddress(new Uint8Array([1, 1, 5]))])
         expect(results).toEqual([
             nodeList.getFirst([toDhtAddress(new Uint8Array([1, 1, 1]))]),
             nodeList.getLast([toDhtAddress(new Uint8Array([1, 1, 5]))])

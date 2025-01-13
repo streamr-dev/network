@@ -2,11 +2,8 @@ import { ITransport, PeerDescriptor, TransportEvents } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
 
 export class MockTransport extends EventEmitter<TransportEvents> implements ITransport {
-
     // eslint-disable-next-line class-methods-use-this
-    async send(): Promise<void> {
-
-    }
+    async send(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     getLocalPeerDescriptor(): PeerDescriptor {
@@ -14,8 +11,7 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop(): void {
-    }
+    stop(): void {}
 
     // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
@@ -23,8 +19,5 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     }
 
     // eslint-disable-next-line class-methods-use-this
-    enablePrivateClientMode(): void {
-
-    }
-
+    enablePrivateClientMode(): void {}
 }

@@ -1,9 +1,4 @@
-import {
-    Logger,
-    StreamPartID,
-    StreamPartIDUtils,
-    UserID
-} from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -39,7 +34,6 @@ const logger = new Logger(module)
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
-
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly signatureValidator: SignatureValidator
@@ -92,7 +86,8 @@ export class PublisherKeyExchange {
                     const authenticatedUser = await this.authentication.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
-                        undefined) as GroupKey[]
+                        undefined
+                    ) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
                             keys,
@@ -141,29 +136,34 @@ export class PublisherKeyExchange {
         recipientId: UserID,
         requestId: string
     ): Promise<StreamMessage> {
-        const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
-            return new EncryptedGroupKey(key.id, encryptedGroupKey)
-        }))
+        const encryptedGroupKeys = await Promise.all(
+            keys.map((key) => {
+                const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+                return new EncryptedGroupKey(key.id, encryptedGroupKey)
+            })
+        )
         const responseContent = new OldGroupKeyResponse({
             recipient: recipientId,
             requestId,
             encryptedGroupKeys
         })
-        const response = this.messageSigner.createSignedMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(streamPartId),
-                StreamPartIDUtils.getStreamPartition(streamPartId),
-                Date.now(),
-                0,
-                publisherId,
-                createRandomMsgChainId()
-            ),
-            content: convertGroupKeyResponseToBytes(responseContent),
-            contentType: ContentType.BINARY,
-            messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: EncryptionType.NONE,
-        }, responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
+        const response = this.messageSigner.createSignedMessage(
+            {
+                messageId: new MessageID(
+                    StreamPartIDUtils.getStreamID(streamPartId),
+                    StreamPartIDUtils.getStreamPartition(streamPartId),
+                    Date.now(),
+                    0,
+                    publisherId,
+                    createRandomMsgChainId()
+                ),
+                content: convertGroupKeyResponseToBytes(responseContent),
+                contentType: ContentType.BINARY,
+                messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+                encryptionType: EncryptionType.NONE
+            },
+            responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271
+        )
         return response
     }
 }

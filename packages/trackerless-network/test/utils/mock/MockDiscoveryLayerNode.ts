@@ -4,17 +4,15 @@ import { DiscoveryLayerNode, DiscoveryLayerNodeEvents } from '../../../src/logic
 import { createMockPeerDescriptor } from '../utils'
 
 export class MockDiscoveryLayerNode extends EventEmitter<DiscoveryLayerNodeEvents> implements DiscoveryLayerNode {
-
     private readonly kbucketPeers: PeerDescriptor[] = []
     private closestContacts: PeerDescriptor[] = []
     private randomContacts: PeerDescriptor[] = []
 
     // eslint-disable-next-line class-methods-use-this
-    removeContact(): void {
-    }
+    removeContact(): void {}
 
     getClosestContacts(): PeerDescriptor[] {
-        return this.closestContacts 
+        return this.closestContacts
     }
 
     setClosestContacts(contacts: PeerDescriptor[]): void {
@@ -22,13 +20,13 @@ export class MockDiscoveryLayerNode extends EventEmitter<DiscoveryLayerNodeEvent
     }
 
     getRandomContacts(): PeerDescriptor[] {
-        return this.randomContacts 
+        return this.randomContacts
     }
 
     setRandomContacts(contacts: PeerDescriptor[]): void {
         this.randomContacts = contacts
     }
-    
+
     // eslint-disable-next-line class-methods-use-this
     getRingContacts(): RingContacts {
         return { left: [], right: [] }
@@ -56,5 +54,5 @@ export class MockDiscoveryLayerNode extends EventEmitter<DiscoveryLayerNodeEvent
     async start(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {}    
+    async stop(): Promise<void> {}
 }

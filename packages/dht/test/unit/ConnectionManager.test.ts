@@ -7,7 +7,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { getOfferer } from '../../src/helpers/offering'
 
 describe('ConnetionManager', () => {
-
     let connectionManager: ConnectionManager
     let fakeConnectorFacade: FakeConnectorFacade
     const localPeerDescriptor = createMockPeerDescriptor()
@@ -16,7 +15,7 @@ describe('ConnetionManager', () => {
         connectionManager = new ConnectionManager({
             metricsContext: new MetricsContext(),
             allowIncomingPrivateConnections: false,
-            createConnectorFacade: () => { 
+            createConnectorFacade: () => {
                 fakeConnectorFacade = new FakeConnectorFacade(localPeerDescriptor)
                 return fakeConnectorFacade
             }
@@ -60,6 +59,4 @@ describe('ConnetionManager', () => {
         pendingConnection1.close(true)
         pendingConnection2.close(true)
     })
-
 })
-

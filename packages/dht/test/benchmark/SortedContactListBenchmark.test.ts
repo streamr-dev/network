@@ -24,14 +24,13 @@ const createRandomItem = (index: number): Item => {
 
 function shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[array[i], array[j]] = [array[j], array[i]]
     }
     return array
 }
 
 describe('SortedContactListBenchmark', () => {
-
     it('adds ' + NUM_ADDS + ' random nodeIds', async () => {
         const randomIds = []
         for (let i = 0; i < NUM_ADDS; i++) {
@@ -103,6 +102,5 @@ describe('SortedContactListBenchmark', () => {
             bucket2.closest(toDhtAddressRaw(randomDhtAddress()), 20)
         }
         console.timeEnd('kbucket add and closest')
-
     })
 })

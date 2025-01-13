@@ -22,24 +22,13 @@ container.constructor.prototype.resolveParams = function resolveParams(context, 
             if (isTokenDescriptor(param)) {
                 if (isTransformDescriptor(param)) {
                     return param.multiple
-                        ? this.resolve(param.transform).transform(
-                            this.resolveAll(param.token),
-                            ...param.transformArgs
-                        )
-                        : this.resolve(param.transform).transform(
-                            this.resolve(param.token, context),
-                            ...param.transformArgs
-                        )
+                        ? this.resolve(param.transform).transform(this.resolveAll(param.token), ...param.transformArgs)
+                        : this.resolve(param.transform).transform(this.resolve(param.token, context), ...param.transformArgs)
                 } else {
-                    return param.multiple
-                        ? this.resolveAll(param.token)
-                        : this.resolve(param.token, context)
+                    return param.multiple ? this.resolveAll(param.token) : this.resolve(param.token, context)
                 }
             } else if (isTransformDescriptor(param)) {
-                return this.resolve(param.transform, context).transform(
-                    this.resolve(param.token, context),
-                    ...param.transformArgs
-                )
+                return this.resolve(param.transform, context).transform(this.resolve(param.token, context), ...param.transformArgs)
             }
             return this.resolve(param, context)
         } catch (e) {

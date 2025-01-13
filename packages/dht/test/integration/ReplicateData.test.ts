@@ -20,7 +20,6 @@ const getDataEntries = (node: DhtNode): DataEntry[] => {
 }
 
 describe('Replicate data from node to node in DHT', () => {
-
     let nodes: DhtNode[]
     let entryPointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
@@ -32,12 +31,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes = []
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(
-                simulator,
-                randomDhtAddress(),
-                K,
-                MAX_CONNECTIONS
-            )
+            const node = await createMockConnectionDhtNode(simulator, randomDhtAddress(), K, MAX_CONNECTIONS)
             nodes.push(node)
         }
     }, 60000)
@@ -52,9 +46,9 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
-        const sortedList = new SortedContactList<DhtNode>({ 
+        const sortedList = new SortedContactList<DhtNode>({
             referenceId: toDhtAddress(DATA.key),
-            maxSize: 10000, 
+            maxSize: 10000,
             allowToContainReferenceId: true
         })
         nodes.forEach((node) => sortedList.addContact(node))
@@ -90,11 +84,13 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         const storerDescriptors = await nodes[randomIndex].storeDataToDht(toDhtAddress(DATA.key), DATA.data!)
         const stoppedNodeIds: DhtAddress[] = []
-        await Promise.all(storerDescriptors.map(async (storerDescriptor) => {
-            const storer = nodes.find((n) => n.getNodeId() === toNodeId(storerDescriptor))!
-            await storer.stop()
-            stoppedNodeIds.push(storer.getNodeId())
-        }))
+        await Promise.all(
+            storerDescriptors.map(async (storerDescriptor) => {
+                const storer = nodes.find((n) => n.getNodeId() === toNodeId(storerDescriptor))!
+                await storer.stop()
+                stoppedNodeIds.push(storer.getNodeId())
+            })
+        )
 
         const randomNonStoppedNode = sample(nodes.filter((n) => !stoppedNodeIds.includes(n.getNodeId())))!
         const data = await randomNonStoppedNode.fetchDataFromDht(toDhtAddress(DATA.key))

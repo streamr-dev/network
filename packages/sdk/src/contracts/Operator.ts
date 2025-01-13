@@ -1,9 +1,14 @@
 import {
     EthereumAddress,
     Logger,
-    ObservableEventEmitter, StreamID, TheGraphClient,
+    ObservableEventEmitter,
+    StreamID,
+    TheGraphClient,
     WeiAmount,
-    collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
+    collect,
+    ensureValidStreamPartitionIndex,
+    toEthereumAddress,
+    toStreamID
 } from '@streamr/utils'
 import { Overrides } from 'ethers'
 import { z } from 'zod'
@@ -136,7 +141,6 @@ export interface Flag {
  * @hidden
  */
 export class Operator {
-
     private readonly contractAddress: EthereumAddress
     private contract?: ObservableContract<OperatorContract>
     private readonly contractReadonly: ObservableContract<OperatorContract> // TODO: implement lazy loading because all methods don't use this
@@ -176,14 +180,13 @@ export class Operator {
         })
     }
 
-    private initEventGateways(
-        contractAddress: EthereumAddress,
-        loggerFactory: LoggerFactory,
-        eventPollInterval: number
-    ): void {
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
-        }), eventPollInterval)
+    private initEventGateways(contractAddress: EthereumAddress, loggerFactory: LoggerFactory, eventPollInterval: number): void {
+        const chainEventPoller = new ChainEventPoller(
+            this.rpcProviderSource.getSubProviders().map((p) => {
+                return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
+            }),
+            eventPollInterval
+        )
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
@@ -378,7 +381,7 @@ export class Operator {
                     `
             }
         }
-        const parseItems = (response: { sponsorship?: { stakes: Stake[] } } ): Stake[] => {
+        const parseItems = (response: { sponsorship?: { stakes: Stake[] } }): Stake[] => {
             return response.sponsorship?.stakes ?? []
         }
         const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
@@ -401,15 +404,13 @@ export class Operator {
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
-    async getEarnings(
-        minSponsorshipEarningsInWithdraw: WeiAmount,
-        maxSponsorshipsInWithdraw: number
-    ): Promise<EarningsData> {
+    async getEarnings(minSponsorshipEarningsInWithdraw: WeiAmount, maxSponsorshipsInWithdraw: number): Promise<EarningsData> {
         const {
             addresses: allSponsorshipAddresses,
             earnings,
-            maxAllowedEarnings,
-        } = await this.contractReadonly.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
+            maxAllowedEarnings
+        } = (await this.contractReadonly.getSponsorshipsAndEarnings()) as {
+            // TODO why casting is needed?
             addresses: string[]
             earnings: WeiAmount[]
             maxAllowedEarnings: WeiAmount
@@ -423,26 +424,21 @@ export class Operator {
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
-            sum: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
+            sum: sponsorships.reduce((sum, sponsorship) => (sum += sponsorship.earnings), 0n),
             maxAllowedEarnings: maxAllowedEarnings
         }
     }
 
     async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
-        await (await this.contract!.withdrawEarningsFromSponsorships(
-            sponsorshipAddresses,
-            await this.getEthersOverrides()
-        )).wait()
+        await (await this.contract!.withdrawEarningsFromSponsorships(sponsorshipAddresses, await this.getEthersOverrides())).wait()
     }
 
     async triggerAnotherOperatorWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
-        await (await this.contract!.triggerAnotherOperatorWithdraw(
-            targetOperatorAddress,
-            sponsorshipAddresses,
-            await this.getEthersOverrides()
-        )).wait()
+        await (
+            await this.contract!.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses, await this.getEthersOverrides())
+        ).wait()
     }
 
     // TODO could move this method as this is functionality is not specific to one Operator contract instance
@@ -466,9 +462,9 @@ export class Operator {
         return operatorAddresses
     }
 
-    async* pullStakedStreams(
+    async *pullStakedStreams(
         requiredBlockNumber: number
-    ): AsyncGenerator<{ sponsorship: EthereumAddress, streamId: StreamID }, undefined, undefined> {
+    ): AsyncGenerator<{ sponsorship: EthereumAddress; streamId: StreamID }, undefined, undefined> {
         const contractAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -505,7 +501,7 @@ export class Operator {
             id: string
             sponsorship: {
                 id: string
-                stream: { 
+                stream: {
                     id: string
                 }
             }
@@ -567,18 +563,15 @@ export class Operator {
         const gasLimit = 1300000n
 
         // estimateGas throws if transaction would fail, so doing the gas estimation will avoid sending failing transactions
-        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData) as bigint
+        const gasEstimate = (await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData)) as bigint
         if (gasEstimate > gasLimit) {
             throw new Error(`Gas estimate (${gasEstimate}) exceeds limit (${gasLimit})`)
         }
 
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
-        await (await this.contract!.voteOnFlag(
-            sponsorshipAddress,
-            targetOperator,
-            voteData,
-            { ...(await this.getEthersOverrides()), gasLimit }
-        )).wait()
+        await (
+            await this.contract!.voteOnFlag(sponsorshipAddress, targetOperator, voteData, { ...(await this.getEthersOverrides()), gasLimit })
+        ).wait()
     }
 
     async closeFlag(sponsorshipAddress: EthereumAddress, targetOperatorAddress: EthereumAddress): Promise<void> {
@@ -589,9 +582,7 @@ export class Operator {
 
     async fetchRedundancyFactor(): Promise<number | undefined> {
         const MetadataSchema = z.object({
-            redundancyFactor: z.number()
-                .int()
-                .gte(1)
+            redundancyFactor: z.number().int().gte(1)
         })
         const metadataAsString = await this.contractReadonly.metadata()
         if (metadataAsString.length === 0) {
@@ -623,22 +614,17 @@ export class Operator {
     }
 
     on<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
-        this.eventEmitter.on(eventName, listener as any)  // TODO why casting?
+        this.eventEmitter.on(eventName, listener as any) // TODO why casting?
     }
 
     off<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
-        this.eventEmitter.off(eventName, listener as any)  // TODO why casting?
+        this.eventEmitter.off(eventName, listener as any) // TODO why casting?
     }
 
     private async connectToContract(): Promise<void> {
         if (this.contract === undefined) {
             const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-            this.contract = this.contractFactory.createWriteContract<OperatorContract>(
-                this.contractAddress,
-                OperatorArtifact,
-                signer,
-                'operator'
-            )
+            this.contract = this.contractFactory.createWriteContract<OperatorContract>(this.contractAddress, OperatorArtifact, signer, 'operator')
         }
     }
 }

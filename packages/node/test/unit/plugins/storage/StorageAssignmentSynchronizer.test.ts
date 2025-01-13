@@ -1,9 +1,5 @@
 import { StreamPartID, StreamPartIDUtils } from '@streamr/utils'
-import {
-    Diff,
-    EMPTY_DIFF,
-    SetMembershipSynchronizer
-} from '../../../../src/plugins/storage/SetMembershipSynchronizer'
+import { Diff, EMPTY_DIFF, SetMembershipSynchronizer } from '../../../../src/plugins/storage/SetMembershipSynchronizer'
 const { parse } = StreamPartIDUtils
 
 const SP1 = parse('s1#0')
@@ -188,7 +184,7 @@ describe(SetMembershipSynchronizer, () => {
             synchronizer.ingestPatch(toSet(SP1), 'removed', 9),
             synchronizer.ingestPatch(toSet(SP9), 'removed', 10),
             synchronizer.ingestPatch(toSet(SP5), 'added', 10),
-            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP8, SP9), 10),
+            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP8, SP9), 10)
         ]
 
         expect(diffHistory).toEqual([
@@ -200,7 +196,7 @@ describe(SetMembershipSynchronizer, () => {
             { added: [], removed: [] },
             { added: [], removed: [] },
             { added: [], removed: [] },
-            { added: [], removed: [SP2] },
+            { added: [], removed: [SP2] }
         ])
         expect(synchronizer.getState()).toEqual(toSet(SP1, SP8, SP9))
         expect(synchronizer.getState()).toEqual(replay(diffHistory))
@@ -213,7 +209,7 @@ describe(SetMembershipSynchronizer, () => {
             synchronizer.ingestPatch(toSet(SP1, SP4, SP7), 'added', 13),
             synchronizer.ingestPatch(toSet(SP2), 'added', 18),
             synchronizer.ingestPatch(toSet(SP3), 'removed', 20),
-            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP5, SP6, SP9), 17),
+            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP5, SP6, SP9), 17)
         ]
 
         expect(diffHistory2).toEqual([
@@ -223,7 +219,7 @@ describe(SetMembershipSynchronizer, () => {
             { added: [], removed: [] },
             { added: [SP2], removed: [] },
             { added: [], removed: [] },
-            { added: [SP5], removed: [SP4] },
+            { added: [SP5], removed: [SP4] }
         ])
         expect(synchronizer.getState()).toEqual(toSet(SP1, SP2, SP5, SP6, SP9))
         expect(synchronizer.getState()).toEqual(replay([...diffHistory, ...diffHistory2]))

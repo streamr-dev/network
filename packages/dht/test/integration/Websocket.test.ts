@@ -6,7 +6,6 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 describe('Websocket', () => {
-
     const websocketServer = new WebsocketServer({
         portRange: { min: 9977, max: 9977 },
         enableTls: false
@@ -18,38 +17,37 @@ describe('Websocket', () => {
     })
 
     it('Happy path', (done) => {
-            
         websocketServer.on('connected', (serverConnection: IConnection) => {
             const time = Date.now()
             logger.info('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
-        
+
             const time2 = Date.now()
             logger.info('server side setting listeners at ' + time2)
-            
+
             serverConnection.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 logger.info('server side receiving message at ' + time)
 
                 logger.info('server received:' + JSON.stringify(bytes))
-               
+
                 expect(bytes.toString()).toBe('1,2,3,4')
                 logger.info('calling done()')
                 done()
             })
         })
-        
+
         clientWebsocket.on('connected', () => {
             const time = Date.now()
             logger.info('client side setting listeners at ' + time)
-            
+
             clientWebsocket.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 logger.info('client side receiving message at ' + time)
 
                 logger.info('client received: ' + JSON.stringify(bytes))
                 expect(bytes.toString()).toBe('1,2,3,4')
-                
+
                 const time2 = Date.now()
                 logger.info('client side sendind msg at ' + time2)
                 clientWebsocket.send(Uint8Array.from([1, 2, 3, 4]))

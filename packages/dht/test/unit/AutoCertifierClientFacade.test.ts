@@ -14,7 +14,6 @@ class MockAutoCertifierClient extends EventEmitter {
 }
 
 describe('AutoCertifierClientFacade', () => {
-
     let client: AutoCertifierClientFacade
     let mockClient: IAutoCertifierClient
     let setHost: jest.Mock
@@ -34,7 +33,7 @@ describe('AutoCertifierClientFacade', () => {
             updateCertificate,
             createClientFactory: mockClientFactory
         })
-    }) 
+    })
 
     afterEach(() => {
         client.stop()
@@ -49,10 +48,9 @@ describe('AutoCertifierClientFacade', () => {
     it('updated events are processed', async () => {
         await client.start()
         expect(setHost).toHaveBeenCalledTimes(1)
-        expect(updateCertificate).toHaveBeenCalledTimes(1);
-        (mockClient as MockAutoCertifierClient).emitUpdateSubdomain()
+        expect(updateCertificate).toHaveBeenCalledTimes(1)
+        ;(mockClient as MockAutoCertifierClient).emitUpdateSubdomain()
         expect(setHost).toHaveBeenCalledTimes(2)
         expect(updateCertificate).toHaveBeenCalledTimes(2)
     })
-
 })

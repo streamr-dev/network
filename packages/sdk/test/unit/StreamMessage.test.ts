@@ -3,17 +3,11 @@ import { StreamPartIDUtils, hexToBinary, toStreamID, utf8ToBinary } from '@strea
 import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
 import { MessageRef } from '../../src/protocol/MessageRef'
-import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType
-} from '../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../../src/protocol/StreamMessage'
 import { ValidationError } from '../../src/protocol/ValidationError'
 
 const content = {
-    hello: 'world',
+    hello: 'world'
 }
 
 const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
@@ -131,58 +125,70 @@ describe('StreamMessage', () => {
         })
 
         it('should not throw when encrypted content', () => {
-            expect(() => msg({
-                // @ts-expect-error TODO
-                content: utf8ToBinary('encrypted content'),
-                encryptionType: EncryptionType.AES,
-                groupKeyId: 'mock-id'
-            })).not.toThrow()
+            expect(() =>
+                msg({
+                    // @ts-expect-error TODO
+                    content: utf8ToBinary('encrypted content'),
+                    encryptionType: EncryptionType.AES,
+                    groupKeyId: 'mock-id'
+                })
+            ).not.toThrow()
         })
 
         it('Throws with an no group key for AES encrypted message', () => {
-            expect(() => msg({
-                encryptionType: EncryptionType.AES
-            } as any)).toThrow(ValidationError)
+            expect(() =>
+                msg({
+                    encryptionType: EncryptionType.AES
+                } as any)
+            ).toThrow(ValidationError)
         })
 
         describe('prevMsgRef validation', () => {
             it('Throws with identical id + prevMsgRef', () => {
                 const ts = Date.now()
-                expect(() => msg({
-                    timestamp: ts,
-                    sequenceNumber: 0,
-                    // @ts-expect-error TODO
-                    prevMsgRef: new MessageRef(ts, 0)
-                })).toThrow()
+                expect(() =>
+                    msg({
+                        timestamp: ts,
+                        sequenceNumber: 0,
+                        // @ts-expect-error TODO
+                        prevMsgRef: new MessageRef(ts, 0)
+                    })
+                ).toThrow()
             })
             it('Throws with an invalid ts', () => {
                 const ts = Date.now()
-                expect(() => msg({
-                    timestamp: ts,
-                    sequenceNumber: 0,
-                    // @ts-expect-error TODO
-                    prevMsgRef: new MessageRef(ts + 1, 0)
-                })).toThrow()
+                expect(() =>
+                    msg({
+                        timestamp: ts,
+                        sequenceNumber: 0,
+                        // @ts-expect-error TODO
+                        prevMsgRef: new MessageRef(ts + 1, 0)
+                    })
+                ).toThrow()
             })
 
             it('Throws with an invalid sequence', () => {
                 const ts = Date.now()
-                expect(() => msg({
-                    timestamp: ts,
-                    sequenceNumber: 0,
-                    // @ts-expect-error TODO
-                    prevMsgRef: new MessageRef(ts, 1)
-                })).toThrow()
+                expect(() =>
+                    msg({
+                        timestamp: ts,
+                        sequenceNumber: 0,
+                        // @ts-expect-error TODO
+                        prevMsgRef: new MessageRef(ts, 1)
+                    })
+                ).toThrow()
             })
 
             it('Throws with an invalid ts + seq', () => {
                 const ts = Date.now()
-                expect(() => msg({
-                    timestamp: ts,
-                    sequenceNumber: 0,
-                    // @ts-expect-error TODO
-                    prevMsgRef: new MessageRef(ts + 1, 1)
-                })).toThrow()
+                expect(() =>
+                    msg({
+                        timestamp: ts,
+                        sequenceNumber: 0,
+                        // @ts-expect-error TODO
+                        prevMsgRef: new MessageRef(ts + 1, 1)
+                    })
+                ).toThrow()
             })
 
             it('works with valid seq', () => {
@@ -227,14 +233,14 @@ describe('StreamMessage', () => {
                     signature,
                     groupKeyId: 'foo',
                     newGroupKey: new EncryptedGroupKey('bar', new Uint8Array([1, 2, 3])),
-                    prevMsgRef: new MessageRef(1564046332168, 5),
+                    prevMsgRef: new MessageRef(1564046332168, 5)
                 })
                 const copyWithFieldsNullified = new StreamMessage({
                     ...message,
                     encryptionType: EncryptionType.NONE,
                     groupKeyId: undefined,
                     newGroupKey: undefined,
-                    prevMsgRef: undefined,
+                    prevMsgRef: undefined
                 })
                 expect(copyWithFieldsNullified.messageId).toEqual(message.messageId)
                 expect(copyWithFieldsNullified.encryptionType).toEqual(EncryptionType.NONE)

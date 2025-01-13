@@ -1,12 +1,12 @@
 {
-    "client": {
-        "auth": {
-            "privateKey": "NODE_PRIVATE_KEY"
-        }
-    },
-    "plugins": {
-        "operator": {
-            "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
-        }
+  "client": {
+    "auth": {
+      "privateKey": "NODE_PRIVATE_KEY"
     }
+  },
+  "plugins": {
+    "operator": {
+      "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
+    }
+  }
 }

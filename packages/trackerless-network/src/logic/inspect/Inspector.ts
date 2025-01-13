@@ -19,7 +19,6 @@ const logger = new Logger(module)
 const DEFAULT_TIMEOUT = 60 * 1000
 
 export class Inspector {
-
     private readonly sessions: Map<DhtAddress, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID
     private readonly localPeerDescriptor: PeerDescriptor
@@ -96,5 +95,4 @@ export class Inspector {
         })
         this.sessions.clear()
     }
-
 }

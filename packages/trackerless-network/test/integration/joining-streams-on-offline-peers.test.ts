@@ -9,7 +9,6 @@ import { randomUserId } from '@streamr/test-utils'
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('Joining stream parts on offline nodes', () => {
-
     const entryPointPeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
     const node1PeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
     const node2PeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
@@ -71,12 +70,13 @@ describe('Joining stream parts on offline nodes', () => {
         // store offline peer descriptors to DHT
         await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
-        
+
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
-        node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
+        node1.getContentDeliveryManager().on('newMessage', () => {
+            messageReceived = true
+        })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         node2.getContentDeliveryManager().broadcast(msg)
         await until(() => messageReceived, 40000)
     }, 60000)
-
 })

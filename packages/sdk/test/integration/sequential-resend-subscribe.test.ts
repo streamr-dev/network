@@ -13,7 +13,6 @@ const MAX_MESSAGES = 5
 const ITERATIONS = 4
 
 describe('sequential resend subscribe', () => {
-
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
@@ -44,7 +43,7 @@ describe('sequential resend subscribe', () => {
         // them to land in storage
         published = await publishTestMessages(MAX_MESSAGES, {
             waitForLast: true,
-            timestamp: 111111,
+            timestamp: 111111
         })
     })
 
@@ -68,7 +67,7 @@ describe('sequential resend subscribe', () => {
             const sub = await subscriber.subscribe({
                 streamId: stream.id,
                 resend: {
-                    last: published.length,
+                    last: published.length
                 }
             })
 
@@ -78,7 +77,8 @@ describe('sequential resend subscribe', () => {
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
             const receivedMsgsPromise = collect(sub, expectedMessageCount)
             await until(() => onResent.mock.calls.length > 0)
-            const streamMessage = await publisher.publish(stream.id, Msg(), { // should be realtime
+            const streamMessage = await publisher.publish(stream.id, Msg(), {
+                // should be realtime
                 timestamp: id
             })
             // keep track of published messages so we can check they are resent in next test(s)

@@ -3,11 +3,11 @@ import {
     GroupKeyResponse as NewGroupKeyResponse,
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import { GroupKeyRequest as OldGroupKeyRequest, } from './GroupKeyRequest'
+import { GroupKeyRequest as OldGroupKeyRequest } from './GroupKeyRequest'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponse as OldGroupKeyResponse } from './GroupKeyResponse'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
-import { StreamMessage as OldStreamMessage, } from './StreamMessage'
+import { StreamMessage as OldStreamMessage } from './StreamMessage'
 import { StreamMessageTranslator } from './StreamMessageTranslator'
 
 export function convertStreamMessageToBytes(oldStreamMessage: OldStreamMessage): Uint8Array {

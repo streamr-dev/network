@@ -23,7 +23,7 @@ const getVersion = (config: any): number | undefined => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const needsMigration = (config: any): boolean => {
-    return (getVersion(config) !== undefined) && (getVersion(config) !== CURRENT_CONFIGURATION_VERSION)
+    return getVersion(config) !== undefined && getVersion(config) !== CURRENT_CONFIGURATION_VERSION
 }
 
 const convertV1ToV2 = (source: any): ConfigFile => {
@@ -31,13 +31,13 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     const target = cloneDeep(source)
     target.$schema = formSchemaUrl(TARGET_VERSION)
     const consoleAndPM2IntervalInSeconds = source.plugins.metrics?.consoleAndPM2IntervalInSeconds
-    if ((consoleAndPM2IntervalInSeconds !== undefined) && (consoleAndPM2IntervalInSeconds !== 0)) {
+    if (consoleAndPM2IntervalInSeconds !== undefined && consoleAndPM2IntervalInSeconds !== 0) {
         target.plugins.consoleMetrics = {
             interval: consoleAndPM2IntervalInSeconds
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
-    const isMetricsPluginEnabled = (source.plugins.metrics !== undefined) && (source.plugins.metrics.nodeMetrics !== null)
+    const isMetricsPluginEnabled = source.plugins.metrics !== undefined && source.plugins.metrics.nodeMetrics !== null
     if (isMetricsPluginEnabled) {
         const streamIdPrefix: string | undefined = source.plugins.metrics.nodeMetrics?.streamIdPrefix
         if (streamIdPrefix !== undefined) {
@@ -63,7 +63,7 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     }
     delete target.plugins.metrics
     if (target.client?.network?.name !== undefined) {
-        delete target.client.network.name 
+        delete target.client.network.name
     }
     if (source.plugins.publishHttp !== undefined) {
         target.plugins.http = source.plugins.publishHttp
@@ -72,7 +72,7 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     const deleteNullProperties = (obj: any, excludeKeys: string[] = []) => {
         const keys = Object.keys(obj)
         for (const key of keys) {
-            if ((obj[key] === null) && (!excludeKeys.includes(key))) {
+            if (obj[key] === null && !excludeKeys.includes(key)) {
                 delete obj[key]
             }
         }
@@ -93,7 +93,7 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     if (target.plugins.websocket !== undefined) {
         deleteNullProperties(target.plugins.websocket)
     }
-    if ((target.httpServer?.certFileName !== undefined) || (target.httpServer?.privateKeyFileName !== undefined)) {
+    if (target.httpServer?.certFileName !== undefined || target.httpServer?.privateKeyFileName !== undefined) {
         target.httpServer.sslCertificate = {
             certFileName: target.httpServer.certFileName,
             privateKeyFileName: target.httpServer.privateKeyFileName
@@ -127,7 +127,7 @@ export const createMigratedConfig = (source: any): ConfigFile | never => {
     return config
 }
 
-/* 
+/*
  * Creates a backup file name, derived from the given name. Ensures that no file exist with that name.
  * - foobar.ext.backup
  * - or foobar.ext.backup-123
@@ -165,8 +165,8 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
         if (fileName === legacyTargetFile) {
             /*
              * User has not specified the config file location in the command line and we found
-             * the file from the legacy default location. We'll write the migrated file to current 
-             * default location instead of the legacy default location. There is no need to backup 
+             * the file from the legacy default location. We'll write the migrated file to current
+             * default location instead of the legacy default location. There is no need to backup
              * the file as we won't overwrite anything.
              */
             explicitTargetFile = defaultTargetFile

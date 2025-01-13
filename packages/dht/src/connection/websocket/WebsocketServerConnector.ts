@@ -49,7 +49,6 @@ interface OngoingConnectionRequest {
 
 // TODO: Move server starting logic including autocertification and connectivity checking to WebsocketServer.ts?
 export class WebsocketServerConnector {
-
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
     private readonly ongoingConnectRequests: Map<DhtAddress, OngoingConnectionRequest> = new Map()
@@ -62,12 +61,14 @@ export class WebsocketServerConnector {
 
     constructor(options: WebsocketServerConnectorOptions) {
         this.options = options
-        this.websocketServer = options.portRange ? new WebsocketServer({
-            portRange: options.portRange,
-            tlsCertificate: options.tlsCertificate,
-            maxMessageSize: options.maxMessageSize,
-            enableTls: options.serverEnableTls
-        }) : undefined
+        this.websocketServer = options.portRange
+            ? new WebsocketServer({
+                  portRange: options.portRange,
+                  tlsCertificate: options.tlsCertificate,
+                  maxMessageSize: options.maxMessageSize,
+                  enableTls: options.serverEnableTls
+              })
+            : undefined
         this.host = options.host
     }
 
@@ -75,8 +76,8 @@ export class WebsocketServerConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as WebsocketServerConnection
-                const query = queryString.parse(serverSocket.resourceURL.query as string ?? '')
-                const action = query.action as (Action | undefined)
+                const query = queryString.parse((serverSocket.resourceURL.query as string) ?? '')
+                const action = query.action as Action | undefined
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteIpAddress() })
                 if (action === 'connectivityRequest') {
                     attachConnectivityRequestHandler(serverSocket, this.geoIpLocator)
@@ -95,7 +96,7 @@ export class WebsocketServerConnector {
                     }
                 }
             })
-            
+
             if (this.options.geoIpDatabaseFolder) {
                 const geoIpLocator = new GeoIpLocator(this.options.geoIpDatabaseFolder)
                 try {
@@ -114,13 +115,12 @@ export class WebsocketServerConnector {
     private attachHandshaker(connection: IConnection) {
         // TODO: use createIncomingHandshaker here?
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
-        handshaker.once('handshakeRequest', (
-            localPeerDescriptor: PeerDescriptor,
-            remoteProtocolVersion: string,
-            remotePeerDescriptor?: PeerDescriptor
-        ) => {
-            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, remoteProtocolVersion, remotePeerDescriptor)
-        })
+        handshaker.once(
+            'handshakeRequest',
+            (localPeerDescriptor: PeerDescriptor, remoteProtocolVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
+                this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, remoteProtocolVersion, remotePeerDescriptor)
+            }
+        )
     }
 
     private onServerSocketHandshakeRequest(
@@ -138,17 +138,17 @@ export class WebsocketServerConnector {
                 delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
-                delFunc()  
+                delFunc()
             } else {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             }
         } else {
             const pendingConnection = new PendingConnection(remotePeerDescriptor)
-            
+
             if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
             } else if (this.options.onNewConnection(pendingConnection)) {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {
@@ -177,7 +177,7 @@ export class WebsocketServerConnector {
                     port: this.selectedPort!,
                     tls: this.options.tlsCertificate !== undefined
                 },
-                // TODO: Resolve the given host name or or use as is if IP was given. 
+                // TODO: Resolve the given host name or or use as is if IP was given.
                 ipAddress: ipv4ToNumber('127.0.0.1'),
                 protocolVersion: LOCAL_PROTOCOL_VERSION
             }
@@ -199,16 +199,17 @@ export class WebsocketServerConnector {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
             } catch (err) {
-                const error = `Failed to connect to entrypoint with id ${toNodeId(entryPoint)} `
-                    + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
+                const error =
+                    `Failed to connect to entrypoint with id ${toNodeId(entryPoint)} ` +
+                    `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                 logger.error(error, { err })
                 shuffledEntrypoints.shift()
                 await wait(2000, this.abortController.signal)
             }
         }
         throw new WebsocketServerStartError(
-            `Failed to connect to the entrypoints after ${this.options.entrypoints.length} attempts\n`
-            + `Attempted hosts: ${this.options.entrypoints.map((entry) => `${entry.websocket!.host}:${entry.websocket!.port}`).join(', ')}`
+            `Failed to connect to the entrypoints after ${this.options.entrypoints.length} attempts\n` +
+                `Attempted hosts: ${this.options.entrypoints.map((entry) => `${entry.websocket!.host}:${entry.websocket!.port}`).join(', ')}`
         )
     }
 
@@ -246,13 +247,17 @@ export class WebsocketServerConnector {
                 this.options.rpcCommunicator,
                 WebsocketClientConnectorRpcClient
             )
-            remoteConnector.requestConnection().then(() => {
-                logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
-            }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', {
-                    error: err, targetPeerDescriptor
-                })
-            })
+            remoteConnector.requestConnection().then(
+                () => {
+                    logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
+                },
+                (err) => {
+                    logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', {
+                        error: err,
+                        targetPeerDescriptor
+                    })
+                }
+            )
         })
         const pendingConnection = new PendingConnection(targetPeerDescriptor)
         const nodeId = toNodeId(targetPeerDescriptor)
@@ -270,7 +275,7 @@ export class WebsocketServerConnector {
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
         const connectionType = expectedConnectionType(this.localPeerDescriptor!, targetPeerDescriptor)
-        return (connectionType === ConnectionType.WEBSOCKET_SERVER)
+        return connectionType === ConnectionType.WEBSOCKET_SERVER
     }
 
     public setLocalPeerDescriptor(localPeerDescriptor: PeerDescriptor): void {
@@ -286,5 +291,4 @@ export class WebsocketServerConnector {
         await this.websocketServer?.stop()
         this.geoIpLocator?.stop()
     }
-
 }

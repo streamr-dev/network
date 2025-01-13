@@ -59,12 +59,11 @@ describe('Pipeline', () => {
             expect(typeof v).toEqual('string')
         }
 
-        const p4 = new Pipeline(generate())
-            .pipe(async function* Step1(s) {
-                for await (const msg of s) {
-                    yield String(msg) // change output type
-                }
-            })
+        const p4 = new Pipeline(generate()).pipe(async function* Step1(s) {
+            for await (const msg of s) {
+                yield String(msg) // change output type
+            }
+        })
 
         for await (const msg of p4) {
             const v: string = msg
@@ -119,12 +118,13 @@ describe('Pipeline', () => {
         }
         const expectedResult: string[] = expected
             .filter((_v, index) => index % 2) // remove every other item
-            .map((v) => (
-                String( // 3. then convert to string
-                    (v * 2) // 1. muliplication first
-                    - 1 // 2. then -1
+            .map((v) =>
+                String(
+                    // 3. then convert to string
+                    v * 2 - // 1. muliplication first
+                        1 // 2. then -1
                 )
-            ))
+            )
 
         expect(received).toEqual(expectedResult)
     })
@@ -148,10 +148,9 @@ describe('Pipeline', () => {
         describe('Pipeline', () => {
             describe('baseline', () => {
                 IteratorTest('single step with onFinally', () => {
-                    const p = new Pipeline(generate())
-                        .pipe(async function* Step(src) {
-                            yield* src
-                        })
+                    const p = new Pipeline(generate()).pipe(async function* Step(src) {
+                        yield* src
+                    })
                     p.onFinally.listen(onFinally)
                     return p
                 })
@@ -340,10 +339,12 @@ describe('Pipeline', () => {
             it('handles errors in source', async () => {
                 const err = new Error('expected')
 
-                const p = new Pipeline((async function* generateError() {
-                    yield* generate()
-                    throw err
-                }()))
+                const p = new Pipeline(
+                    (async function* generateError() {
+                        yield* generate()
+                        throw err
+                    })()
+                )
                     .pipe(async function* Step1(s) {
                         yield* s
                     })
@@ -367,9 +368,11 @@ describe('Pipeline', () => {
                 const err = new Error('expected')
 
                 // eslint-disable-next-line require-yield
-                const p = new Pipeline((async function* generateError() {
-                    throw err
-                }()))
+                const p = new Pipeline(
+                    (async function* generateError() {
+                        throw err
+                    })()
+                )
                     .pipe(async function* Step1(s) {
                         yield* s
                     })
@@ -524,13 +527,12 @@ describe('Pipeline', () => {
                 await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
-                        const subPipeline = new Pipeline(src)
-                            .pipe(async function* Step1(s) {
-                                for await (const msg of s) {
-                                    receivedStep1.push(msg)
-                                    yield msg
-                                }
-                            })
+                        const subPipeline = new Pipeline(src).pipe(async function* Step1(s) {
+                            for await (const msg of s) {
+                                receivedStep1.push(msg)
+                                yield msg
+                            }
+                        })
                         subPipeline.onFinally.listen(onFinallyInner)
                         yield* subPipeline
                     })
@@ -570,16 +572,15 @@ describe('Pipeline', () => {
                 await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
-                        const subPipeline = new Pipeline(src)
-                            .pipe(async function* Step1(s) {
-                                for await (const msg of s) {
-                                    receivedStep1.push(msg)
-                                    yield msg
-                                    if (receivedStep1.length === MAX_ITEMS) {
-                                        throw err
-                                    }
+                        const subPipeline = new Pipeline(src).pipe(async function* Step1(s) {
+                            for await (const msg of s) {
+                                receivedStep1.push(msg)
+                                yield msg
+                                if (receivedStep1.length === MAX_ITEMS) {
+                                    throw err
                                 }
-                            })
+                            }
+                        })
                         subPipeline.onFinally.listen(onFinallyInner)
                         yield* subPipeline
                     })
@@ -611,25 +612,23 @@ describe('Pipeline', () => {
                 describe('filter', () => {
                     it('works', async () => {
                         let count = 0
-                        const p = new Pipeline(generate())
-                            .filter((value, index) => {
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value % 2
-                            })
+                        const p = new Pipeline(generate()).filter((value, index) => {
+                            expect(index).toEqual(count)
+                            count += 1
+                            return value % 2
+                        })
                         p.onFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
 
                     it('works async', async () => {
                         let count = 0
-                        const p = new Pipeline(generate())
-                            .filter(async (value, index) => {
-                                await wait(Math.random() * WAIT)
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value % 2
-                            })
+                        const p = new Pipeline(generate()).filter(async (value, index) => {
+                            await wait(Math.random() * WAIT)
+                            expect(index).toEqual(count)
+                            count += 1
+                            return value % 2
+                        })
                         p.onFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
@@ -653,10 +652,13 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-                pull((async function* generateError() {
-                    yield* generate()
-                    throw err
-                }()), pipeline)
+                pull(
+                    (async function* generateError() {
+                        yield* generate()
+                        throw err
+                    })(),
+                    pipeline
+                )
                 const received: number[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {
@@ -674,9 +676,12 @@ describe('Pipeline', () => {
                 })
                 pipeline.onFinally.listen(onFinally)
                 // eslint-disable-next-line require-yield
-                pull((async function* generateError() {
-                    throw err
-                }()), pipeline)
+                pull(
+                    (async function* generateError() {
+                        throw err
+                    })(),
+                    pipeline
+                )
                 const received: any[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {

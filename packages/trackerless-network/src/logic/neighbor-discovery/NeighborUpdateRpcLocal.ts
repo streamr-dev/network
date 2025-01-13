@@ -20,7 +20,6 @@ interface NeighborUpdateRpcLocalOptions {
 }
 
 export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
-
     private readonly options: NeighborUpdateRpcLocalOptions
 
     constructor(options: NeighborUpdateRpcLocalOptions) {
@@ -33,13 +32,10 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             const nodeId = toNodeId(peerDescriptor)
             return nodeId !== ownNodeId && !this.options.neighbors.getIds().includes(nodeId)
         })
-        newPeerDescriptors.forEach((peerDescriptor) => this.options.nearbyNodeView.add(
-            new ContentDeliveryRpcRemote(
-                this.options.localPeerDescriptor,
-                peerDescriptor,
-                this.options.rpcCommunicator,
-                ContentDeliveryRpcClient
-            ))
+        newPeerDescriptors.forEach((peerDescriptor) =>
+            this.options.nearbyNodeView.add(
+                new ContentDeliveryRpcRemote(this.options.localPeerDescriptor, peerDescriptor, this.options.rpcCommunicator, ContentDeliveryRpcClient)
+            )
         )
     }
 
@@ -59,11 +55,12 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         if (!this.options.neighbors.has(remoteNodeId) && !this.options.ongoingHandshakes.has(remoteNodeId)) {
             return this.createResponse(true)
         } else {
-            const isOverNeighborCount = this.options.neighbors.size() > this.options.neighborTargetCount
+            const isOverNeighborCount =
+                this.options.neighbors.size() > this.options.neighborTargetCount &&
                 // Motivation: We don't know the remote's neighborTargetCount setting here. We only ask to cut connections
                 // if the remote has a "sufficient" number of neighbors, where "sufficient" means our neighborTargetCount
                 // setting.
-                && message.neighborDescriptors.length > this.options.neighborTargetCount
+                message.neighborDescriptors.length > this.options.neighborTargetCount
             if (!isOverNeighborCount) {
                 this.options.neighborFinder.start()
             } else {

@@ -20,20 +20,20 @@ module.exports = (env, argv) => {
 
     const commonConfig = {
         cache: {
-            type: 'filesystem',
+            type: 'filesystem'
         },
         name: 'streamr-sdk',
         mode: isProduction ? 'production' : 'development',
         entry: {
-            'streamr-sdk': path.join(__dirname, 'src', 'exports-browser.ts'),
+            'streamr-sdk': path.join(__dirname, 'src', 'exports-browser.ts')
         },
         devtool: 'source-map',
         output: {
-            umdNamedDefine: true,
+            umdNamedDefine: true
         },
         optimization: {
             minimize: false,
-            moduleIds: 'named',
+            moduleIds: 'named'
         },
         module: {
             rules: [
@@ -45,7 +45,7 @@ module.exports = (env, argv) => {
                         options: {
                             configFile: path.resolve(__dirname, '.babel.browser.config.js'),
                             babelrc: false,
-                            cacheDirectory: true,
+                            cacheDirectory: true
                         }
                     }
                 }
@@ -53,7 +53,7 @@ module.exports = (env, argv) => {
         },
         resolve: {
             modules: ['node_modules', ...require.resolve.paths('')],
-            extensions: ['.json', '.js', '.ts'],
+            extensions: ['.json', '.js', '.ts']
         },
         plugins: [
             gitRevisionPlugin,
@@ -62,15 +62,15 @@ module.exports = (env, argv) => {
                 version: pkg.version,
                 GIT_VERSION: gitRevisionPlugin.version(),
                 GIT_COMMITHASH: gitRevisionPlugin.commithash(),
-                GIT_BRANCH: gitRevisionPlugin.branch(),
+                GIT_BRANCH: gitRevisionPlugin.branch()
             }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 1
             })
         ],
         performance: {
-            hints: 'warning',
-        },
+            hints: 'warning'
+        }
     }
 
     const clientConfig = merge({}, commonConfig, {
@@ -92,7 +92,7 @@ module.exports = (env, argv) => {
             // which is wrong for browser builds.
             // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
             // libraryExport: 'StreamrClient', // This fixes the above.
-            globalObject: 'globalThis',
+            globalObject: 'globalThis'
         },
         resolve: {
             alias: {
@@ -105,16 +105,20 @@ module.exports = (env, argv) => {
                 '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
                 '@streamr/dht': path.resolve('../dht/src/exports.ts'),
                 '@streamr/autocertifier-client': false,
-                [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
-                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
+                [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]: path.resolve(
+                    __dirname,
+                    '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'
+                ),
+                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]: path.resolve(
+                    __dirname,
+                    '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'
+                ),
+                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]: path.resolve(
+                    __dirname,
+                    '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'
+                ),
                 // swap out ServerPersistence for BrowserPersistence
-                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
-                    path.resolve('./src/utils/persistence/BrowserPersistence.ts')
-                )
+                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: path.resolve('./src/utils/persistence/BrowserPersistence.ts')
             },
             fallback: {
                 module: false,
@@ -125,24 +129,26 @@ module.exports = (env, argv) => {
                 express: false,
                 ws: false,
                 'jest-leak-detector': false,
-                'v8': false,
+                v8: false,
                 '@web3modal/standalone': false
             }
         },
         plugins: [
             new NodePolyfillPlugin({
-                excludeAliases: ['console'],
+                excludeAliases: ['console']
             }),
-            ...(analyze ? [
-                new BundleAnalyzerPlugin({
-                    analyzerMode: 'static',
-                    openAnalyzer: false,
-                    generateStatsFile: true,
-                })
-            ] : []),
+            ...(analyze
+                ? [
+                      new BundleAnalyzerPlugin({
+                          analyzerMode: 'static',
+                          openAnalyzer: false,
+                          generateStatsFile: true
+                      })
+                  ]
+                : []),
             new webpack.ProvidePlugin({
                 process: 'process/browser',
-                Buffer: ['buffer', 'Buffer'],
+                Buffer: ['buffer', 'Buffer']
             }),
             new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
                 const library = resource.request.replace(/^node:/, '')
@@ -154,7 +160,7 @@ module.exports = (env, argv) => {
             })
         ],
         externals: {
-            'express': 'Express',
+            express: 'Express',
             'node:stream/web': 'stream/web',
             'node:timers/promises': 'timers/promises'
         }
@@ -181,7 +187,7 @@ module.exports = (env, argv) => {
                 ]
             },
             output: {
-                filename: '[name].web.min.js',
+                filename: '[name].web.min.js'
             }
         })
     }

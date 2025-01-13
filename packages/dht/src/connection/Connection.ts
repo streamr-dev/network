@@ -7,7 +7,7 @@ export class Connection extends EventEmitter<ConnectionEvents> {
     public connectionId: ConnectionID
     public connectionType: ConnectionType
     private peerDescriptor?: PeerDescriptor
-    
+
     constructor(connectionType: ConnectionType) {
         super()
         this.connectionId = createRandomConnectionId()
@@ -17,7 +17,7 @@ export class Connection extends EventEmitter<ConnectionEvents> {
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.peerDescriptor = peerDescriptor
     }
-    
+
     getPeerDescriptor(): PeerDescriptor | undefined {
         return this.peerDescriptor
     }

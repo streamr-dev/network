@@ -9,7 +9,6 @@ import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { RoutingTablesCache } from '../../src/dht/routing/RoutingTablesCache'
 
 describe('RoutingSession', () => {
-
     let session: RoutingSession
     let connections: Map<DhtAddress, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
@@ -75,5 +74,4 @@ describe('RoutingSession', () => {
         routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
     })
-
 })

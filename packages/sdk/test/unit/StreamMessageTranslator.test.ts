@@ -2,16 +2,9 @@ import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage,
+    StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import {
-    StreamPartID,
-    StreamPartIDUtils,
-    UserID,
-    hexToBinary,
-    toUserIdRaw,
-    utf8ToBinary
-} from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
     ContentType as OldContentType,
@@ -38,7 +31,7 @@ const createStreamMessage = (
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
         publisherId: hexToBinary(publisherId),
-        messageChainId: 'messageChain0',
+        messageChainId: 'messageChain0'
     }
     const msg = {
         messageId,
@@ -57,21 +50,16 @@ const createStreamMessage = (
 }
 
 describe('StreamMessageTranslator', () => {
-
     const publisherId = randomUserId()
     const signature = hexToBinary('0x1234')
-    const protobufMsg = createStreamMessage(
-        JSON.stringify({ hello: 'WORLD' }),
-        STREAM_PART_ID,
-        publisherId
-    )
+    const protobufMsg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, publisherId)
     const messageId = new OldMessageID(
         StreamPartIDUtils.getStreamID(STREAM_PART_ID),
         StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         Date.now(),
         0,
         publisherId,
-        'test',
+        'test'
     )
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
@@ -80,7 +68,7 @@ describe('StreamMessageTranslator', () => {
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: OldEncryptionType.NONE,
         signatureType: OldSignatureType.SECP256K1,
-        signature,
+        signature
     })
 
     it('translates old protocol to protobuf', () => {

@@ -9,7 +9,7 @@ export function iceServerAsString({ url, port, username, password, tcp }: IceSer
         return `${protocol}:${hostname}:${port}`
     }
     if (username !== undefined && password !== undefined) {
-        return `${protocol}:${username}:${password}@${hostname}:${port}${(tcp !== undefined) ? '?transport=tcp' : ''}`
+        return `${protocol}:${username}:${password}@${hostname}:${port}${tcp !== undefined ? '?transport=tcp' : ''}`
     }
     throw new Error(`username (${username}) and password (${password}) must be supplied together`)
 }

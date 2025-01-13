@@ -22,12 +22,4 @@ export { ConnectionType } from './connection/IConnection'
 export { ServiceID } from './types/ServiceID'
 export { RingContacts } from './dht/contact/RingContactList'
 export { createOutgoingHandshaker } from './connection/Handshaker'
-export { 
-    DhtAddress,
-    DhtAddressRaw,
-    toDhtAddress,
-    toDhtAddressRaw,
-    randomDhtAddress,
-    areEqualPeerDescriptors,
-    toNodeId
-} from './identifiers'
+export { DhtAddress, DhtAddressRaw, toDhtAddress, toDhtAddressRaw, randomDhtAddress, areEqualPeerDescriptors, toNodeId } from './identifiers'

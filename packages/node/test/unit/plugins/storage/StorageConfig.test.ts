@@ -19,7 +19,8 @@ function makeStubStream(streamId: string): Stream {
     const partitions = PARTITION_COUNT_LOOKUP[streamId]
     const stub: Partial<Stream> = {
         id: toStreamID(streamId),
-        async getStreamParts(): Promise<StreamPartID[]> { // TODO: duplicated code from client
+        async getStreamParts(): Promise<StreamPartID[]> {
+            // TODO: duplicated code from client
             return range(0, partitions).map((p) => toStreamPartID(toStreamID(streamId), p))
         }
     }
@@ -27,9 +28,9 @@ function makeStubStream(streamId: string): Stream {
 }
 
 describe(StorageConfig, () => {
-    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
-    let storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => void)>
-    let stubClient: Pick<StreamrClient, 'getStream' | 'getStoredStreams' | 'on' | 'off' >
+    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[]; blockNumber: number }>, [nodeAddress: EthereumAddress]>
+    let storageEventListeners: Map<keyof StreamrClientEvents, (event: StorageNodeAssignmentEvent) => void>
+    let stubClient: Pick<StreamrClient, 'getStream' | 'getStoredStreams' | 'on' | 'off'>
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
     let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>
     let storageConfig: StorageConfig
@@ -40,7 +41,7 @@ describe(StorageConfig, () => {
         stubClient = {
             getStoredStreams,
             async getStream(streamIdOrPath: string) {
-                return makeStubStream(streamIdOrPath, )
+                return makeStubStream(streamIdOrPath)
             },
             on(eventName: keyof StreamrClientEvents, listener: any) {
                 storageEventListeners.set(eventName, listener)
@@ -69,10 +70,7 @@ describe(StorageConfig, () => {
     describe('on polled results', () => {
         beforeEach(async () => {
             getStoredStreams.mockResolvedValue({
-                streams: [
-                    makeStubStream('stream-1'),
-                    makeStubStream('stream-2')
-                ],
+                streams: [makeStubStream('stream-1'), makeStubStream('stream-2')],
                 blockNumber: 10
             })
             await storageConfig.start()
@@ -88,7 +86,7 @@ describe(StorageConfig, () => {
                 [parse('stream-2#0')],
                 [parse('stream-2#1')],
                 [parse('stream-2#2')],
-                [parse('stream-2#3')],
+                [parse('stream-2#3')]
             ])
         })
 
@@ -105,19 +103,19 @@ describe(StorageConfig, () => {
             addToStorageNodeListener({
                 streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
-                blockNumber: 10,
+                blockNumber: 10
             })
             await wait(0)
             addToStorageNodeListener({
                 streamId: toStreamID('stream-3'),
                 nodeAddress: CLUSTER_ID,
-                blockNumber: 15,
+                blockNumber: 15
             })
             await wait(0)
             removeFromStorageNodeListener({
                 streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
-                blockNumber: 13,
+                blockNumber: 13
             })
             await wait(0)
         })
@@ -125,15 +123,8 @@ describe(StorageConfig, () => {
         it('stream part listeners invoked', () => {
             expect(onStreamPartAdded).toHaveBeenCalledTimes(2 + 1)
             expect(onStreamPartRemoved).toHaveBeenCalledTimes(2)
-            expect(onStreamPartAdded.mock.calls).toEqual([
-                [parse('stream-1#0')],
-                [parse('stream-1#1')],
-                [parse('stream-3#0')],
-            ])
-            expect(onStreamPartRemoved.mock.calls).toEqual([
-                [parse('stream-1#0')],
-                [parse('stream-1#1')],
-            ])
+            expect(onStreamPartAdded.mock.calls).toEqual([[parse('stream-1#0')], [parse('stream-1#1')], [parse('stream-3#0')]])
+            expect(onStreamPartRemoved.mock.calls).toEqual([[parse('stream-1#0')], [parse('stream-1#1')]])
         })
 
         it('state is updated', () => {
@@ -143,10 +134,7 @@ describe(StorageConfig, () => {
 
     it('updates do not occur if start has not been invoked', async () => {
         getStoredStreams.mockResolvedValue({
-            streams: [
-                makeStubStream('stream-1'),
-                makeStubStream('stream-2')
-            ],
+            streams: [makeStubStream('stream-1'), makeStubStream('stream-2')],
             blockNumber: 10
         })
         await wait(POLL_TIME * 2)
@@ -164,10 +152,7 @@ describe(StorageConfig, () => {
 
         getStoredStreams.mockClear()
         getStoredStreams.mockResolvedValue({
-            streams: [
-                makeStubStream('stream-1'),
-                makeStubStream('stream-2')
-            ],
+            streams: [makeStubStream('stream-1'), makeStubStream('stream-2')],
             blockNumber: 10
         })
         expect(storageEventListeners.size).toBe(0)

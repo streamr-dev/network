@@ -4,7 +4,6 @@ import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../src/transport/ITransport'
 
 export class FakeConnectorFacade {
-
     private readonly localPeerDescriptor: PeerDescriptor
     private onNewConnection?: (connection: PendingConnection) => boolean
 
@@ -15,8 +14,8 @@ export class FakeConnectorFacade {
     // eslint-disable-next-line class-methods-use-this
     createConnection(peerDescriptor: PeerDescriptor): PendingConnection {
         return new PendingConnection(peerDescriptor)
-    } 
-    
+    }
+
     getLocalPeerDescriptor(): PeerDescriptor | undefined {
         return this.localPeerDescriptor
     }
@@ -34,8 +33,5 @@ export class FakeConnectorFacade {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {
-        
-    }
+    async stop(): Promise<void> {}
 }
-

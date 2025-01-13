@@ -11,7 +11,6 @@ interface IndexState {
 }
 
 class EmulatedTheGraphIndex {
-
     private states: IndexState[]
     private timer: NodeJS.Timeout | undefined
 
@@ -37,38 +36,43 @@ class EmulatedTheGraphIndex {
 }
 
 describe('TheGraphClient', () => {
-
     let theGraphIndex: EmulatedTheGraphIndex
     let client: TheGraphClient
     let fetchBlockNumbers: number[]
 
     beforeEach(() => {
-        theGraphIndex = new EmulatedTheGraphIndex([{
-            blockNumber: 0,
-            queryResult: {
-                foo: 'result-0'
+        theGraphIndex = new EmulatedTheGraphIndex([
+            {
+                blockNumber: 0,
+                queryResult: {
+                    foo: 'result-0'
+                }
+            },
+            {
+                blockNumber: 2,
+                queryResult: {
+                    foo: 'result-2'
+                }
+            },
+            {
+                blockNumber: 4,
+                queryResult: {
+                    foo: 'result-4'
+                }
+            },
+            {
+                blockNumber: 7,
+                queryResult: {
+                    foo: 'result-7'
+                }
+            },
+            {
+                blockNumber: 8,
+                queryResult: {
+                    foo: 'result-8'
+                }
             }
-        }, {
-            blockNumber: 2,
-            queryResult: {
-                foo: 'result-2'
-            }
-        }, {
-            blockNumber: 4,
-            queryResult: {
-                foo: 'result-4'
-            }
-        }, {
-            blockNumber: 7,
-            queryResult: {
-                foo: 'result-7'
-            }
-        }, {
-            blockNumber: 8,
-            queryResult: {
-                foo: 'result-8'
-            }
-        }])
+        ])
         fetchBlockNumbers = []
         const fetch = async (_url: string, init: Record<string, unknown>) => {
             return {
@@ -76,15 +80,16 @@ describe('TheGraphClient', () => {
                     const state = theGraphIndex.getState()
                     fetchBlockNumbers.push(state.blockNumber)
                     const query = JSON.parse(init.body! as string).query
-                    const data = (query === 'mock-query') 
-                        ? state.queryResult
-                        : {
-                            _meta: {
-                                block: {
-                                    number: state.blockNumber
-                                }
-                            }
-                        }
+                    const data =
+                        query === 'mock-query'
+                            ? state.queryResult
+                            : {
+                                  _meta: {
+                                      block: {
+                                          number: state.blockNumber
+                                      }
+                                  }
+                              }
                     return JSON.stringify({
                         data
                     })
@@ -133,10 +138,7 @@ describe('TheGraphClient', () => {
 
     it('multiple queries for same block', async () => {
         client.updateRequiredBlockNumber(7)
-        const responsePromise = Promise.all([
-            client.queryEntity(MOCK_QUERY),
-            client.queryEntity(MOCK_QUERY)
-        ])
+        const responsePromise = Promise.all([client.queryEntity(MOCK_QUERY), client.queryEntity(MOCK_QUERY)])
         theGraphIndex.start()
         const responses = await responsePromise
         expect(responses).toHaveLength(2)

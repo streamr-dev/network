@@ -1,30 +1,17 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import {
-    StreamID,
-    StreamPartID,
-    StreamPartIDUtils,
-    toStreamPartID,
-    toUserId,
-    UserID,
-    until
-} from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID, toUserId, UserID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { convertBytesToGroupKeyRequest } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import {
-    createMockMessage,
-    createRelativeTestStreamId,
-    getLocalGroupKeyStore
-} from '../test-utils/utils'
+import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 describe('SubscriberKeyExchange', () => {
-
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let subscriber: StreamrClient
@@ -46,11 +33,13 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = async (streamPartId: StreamPartID, key: GroupKey, publisher: StreamrClient): Promise<void> => {
         const publisherNode = publisher.getNode()
-        await publisherNode.broadcast(await createMockMessage({
-            streamPartId,
-            publisher: publisherWallet,
-            encryptionKey: key
-        }))
+        await publisherNode.broadcast(
+            await createMockMessage({
+                streamPartId,
+                publisher: publisherWallet,
+                encryptionKey: key
+            })
+        )
     }
 
     const assertGroupKeyRequest = async (
@@ -63,7 +52,7 @@ describe('SubscriberKeyExchange', () => {
         expect(message).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(expectedStreamPartId),
-                streamPartition:  StreamPartIDUtils.getStreamPartition(expectedStreamPartId),
+                streamPartition: StreamPartIDUtils.getStreamPartition(expectedStreamPartId),
                 publisherId: expectedPublisherId
             },
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
@@ -95,12 +84,11 @@ describe('SubscriberKeyExchange', () => {
     })
 
     describe('requests a group key', () => {
-
         /*
          * A subscriber node requests a group key
          * - tests that a correct kind of request message is sent to a publisher node
          * - tests that we store the received key
-        */
+         */
         it('happy path', async () => {
             const streamId = await createStream(toUserId(subscriberWallet.address))
             const streamPartId = toStreamPartID(streamId, 0)
@@ -119,13 +107,7 @@ describe('SubscriberKeyExchange', () => {
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
-            await assertGroupKeyRequest(
-                request,
-                streamPartId,
-                [groupKey.id],
-                toUserId(subscriberWallet.address),
-                SignatureType.SECP256K1
-            )
+            await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(subscriberWallet.address), SignatureType.SECP256K1)
             const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
             await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
@@ -144,11 +126,14 @@ describe('SubscriberKeyExchange', () => {
             })
             await publisher.addEncryptionKey(groupKey, publisherWallet.address)
 
-            await subscriber.subscribe({
-                id: StreamPartIDUtils.getStreamID(streamPartId),
-                partition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                erc1271Contract
-            }, () => {})
+            await subscriber.subscribe(
+                {
+                    id: StreamPartIDUtils.getStreamID(streamPartId),
+                    partition: StreamPartIDUtils.getStreamPartition(streamPartId),
+                    erc1271Contract
+                },
+                () => {}
+            )
 
             await triggerGroupKeyRequest(streamPartId, groupKey, publisher)
 

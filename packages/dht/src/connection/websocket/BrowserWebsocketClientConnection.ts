@@ -7,8 +7,7 @@ const logger = new Logger(module)
 const BINARY_TYPE = 'arraybuffer'
 
 export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
-
-    protected socket?: Websocket 
+    protected socket?: Websocket
 
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
@@ -34,11 +33,10 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
 
     protected stopListening(): void {
         if (this.socket) {
-            this.socket.onopen = undefined as unknown as (() => void)
-            this.socket.onclose = undefined as unknown as (() => void)
-            this.socket.onerror = undefined as unknown as (() => void)
-            this.socket.onmessage = undefined as unknown as (() => void)
+            this.socket.onopen = undefined as unknown as () => void
+            this.socket.onclose = undefined as unknown as () => void
+            this.socket.onerror = undefined as unknown as () => void
+            this.socket.onmessage = undefined as unknown as () => void
         }
     }
-
 }

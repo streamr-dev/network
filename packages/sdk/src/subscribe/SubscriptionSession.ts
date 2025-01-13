@@ -13,7 +13,6 @@ import { Subscription } from './Subscription'
  */
 
 export class SubscriptionSession {
-
     public readonly streamPartId: StreamPartID
     public readonly onRetired = Signal.once()
     private isRetired: boolean = false
@@ -23,11 +22,7 @@ export class SubscriptionSession {
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
 
-    constructor(
-        streamPartId: StreamPartID,
-        messagePipelineFactory: MessagePipelineFactory,
-        node: NetworkNodeFacade
-    ) {
+    constructor(streamPartId: StreamPartID, messagePipelineFactory: MessagePipelineFactory, node: NetworkNodeFacade) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
@@ -36,13 +31,11 @@ export class SubscriptionSession {
             streamPartId
         })
         this.pipeline.onError.listen(this.onError)
-        this.pipeline
-            .pipe(this.distributeMessage)
-            .onBeforeFinally.listen(async () => {
-                if (!this.isStopped) {
-                    await this.stop()
-                }
-            })
+        this.pipeline.pipe(this.distributeMessage).onBeforeFinally.listen(async () => {
+            if (!this.isStopped) {
+                await this.stop()
+            }
+        })
         this.pipeline.flow()
     }
 
@@ -57,16 +50,20 @@ export class SubscriptionSession {
 
     private async onError(error: Error): Promise<void> {
         // eslint-disable-next-line promise/no-promise-in-callback
-        await Promise.allSettled([...this.subscriptions].map(async (sub) => {
-            await sub.handleError(error)
-        }))
+        await Promise.allSettled(
+            [...this.subscriptions].map(async (sub) => {
+                await sub.handleError(error)
+            })
+        )
     }
 
-    async* distributeMessage(src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, unknown> {
+    async *distributeMessage(src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, unknown> {
         for await (const msg of src) {
-            await Promise.all([...this.subscriptions].map(async (sub) => {
-                await sub.push(msg)
-            }))
+            await Promise.all(
+                [...this.subscriptions].map(async (sub) => {
+                    await sub.push(msg)
+                })
+            )
             yield msg
         }
     }
@@ -101,7 +98,7 @@ export class SubscriptionSession {
 
     private async subscribe(): Promise<void> {
         this.node.addMessageListener(this.onMessageInput)
-        if (!await this.node.isProxiedStreamPart(this.streamPartId)) {
+        if (!(await this.node.isProxiedStreamPart(this.streamPartId))) {
             await this.node.join(this.streamPartId)
         }
     }
@@ -115,15 +112,18 @@ export class SubscriptionSession {
     }
 
     updateNodeSubscriptions = (() => {
-        return Scaffold([
-            async () => {
-                await this.subscribe()
-                return async () => {
-                    await this.unsubscribe()
-                    await this.stop()
+        return Scaffold(
+            [
+                async () => {
+                    await this.subscribe()
+                    return async () => {
+                        await this.unsubscribe()
+                        await this.stop()
+                    }
                 }
-            },
-        ], () => this.shouldBeSubscribed())
+            ],
+            () => this.shouldBeSubscribed()
+        )
     })()
 
     async updateSubscriptions(): Promise<void> {
@@ -153,7 +153,9 @@ export class SubscriptionSession {
      */
 
     async add(sub: Subscription): Promise<void> {
-        if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
+        if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) {
+            return
+        } // already has
 
         const activeErc1271ContractAddress = this.getERC1271ContractAddress()
         if (this.subscriptions.size > 0 && activeErc1271ContractAddress !== sub.erc1271ContractAddress) {

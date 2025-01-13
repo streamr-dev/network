@@ -12,7 +12,6 @@ import { createGroupKeyManager, createRandomAuthentication } from '../test-utils
 const streamId = toStreamID('mock-stream')
 
 describe('GroupKeyQueue', () => {
-
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
     let authentication: Authentication
     let queue: GroupKeyQueue
@@ -88,5 +87,4 @@ describe('GroupKeyQueue', () => {
         expect(rotatedKey).toBeTruthy()
         expect(await queue.useGroupKey()).toEqual({ current: rekey, next: rotatedKey })
     })
-
 })

@@ -19,16 +19,11 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
-
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    
-    constructor(
-        chain: FakeChain,
-        streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication
-    ) {
+
+    constructor(chain: FakeChain, streamIdBuilder: StreamIDBuilder, @inject(AuthenticationInjectionToken) authentication: Authentication) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
@@ -129,11 +124,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     async updatePermissions(
         streamIdOrPath: string,
         assignments: InternalPermissionAssignment[],
-        modifyRegistryItem: (
-            registryItem: StreamRegistryItem,
-            target: UserID | PublicPermissionTarget,
-            permissions: StreamPermission[]
-        ) => void
+        modifyRegistryItem: (registryItem: StreamRegistryItem, target: UserID | PublicPermissionTarget, permissions: StreamPermission[]) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const registryItem = this.chain.getStream(streamId)
@@ -141,22 +132,24 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             throw new Error('Stream not found')
         } else {
             for (const assignment of assignments) {
-                const target = isPublicPermissionAssignment(assignment)
-                    ? PUBLIC_PERMISSION_TARGET
-                    : assignment.userId
+                const target = isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_TARGET : assignment.userId
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }
     }
 
-    async setPermissions(...streams: {
-        streamId: string
-        assignments: InternalPermissionAssignment[]
-    }[]): Promise<void> {
-        await Promise.all(streams.map(async (stream) => {
-            await this.revokePermissions(stream.streamId, ...await this.getPermissions(stream.streamId))
-            await this.grantPermissions(stream.streamId, ...stream.assignments)
-        }))
+    async setPermissions(
+        ...streams: {
+            streamId: string
+            assignments: InternalPermissionAssignment[]
+        }[]
+    ): Promise<void> {
+        await Promise.all(
+            streams.map(async (stream) => {
+                await this.revokePermissions(stream.streamId, ...(await this.getPermissions(stream.streamId)))
+                await this.grantPermissions(stream.streamId, ...stream.assignments)
+            })
+        )
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
@@ -186,7 +179,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getOrCreateStream(_props: { id: string, partitions?: number }): Promise<Stream> {
+    getOrCreateStream(_props: { id: string; partitions?: number }): Promise<Stream> {
         throw new Error('not implemented')
     }
 

@@ -6,9 +6,7 @@ import { MessageType } from '@protobuf-ts/runtime'
 */
 
 describe('ProtobufMessage', () => {
-
     it('can parse and print a Message', async () => {
-        
         /*
         const message: Message = {
             messageId: v4(),

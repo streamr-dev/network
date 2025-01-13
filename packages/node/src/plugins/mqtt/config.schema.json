@@ -1,26 +1,26 @@
 {
-    "$id": "config.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "description": "MQTT plugin configuration",
-    "additionalProperties": false,
-    "properties": {
-        "port": {
-            "type": "integer",
-            "description": "Port to start plugin on",
-            "default": 1883
-        },
-        "streamIdDomain": {
-            "type": "string",
-            "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic"
-        },
-        "payloadMetadata": {
-            "type": "boolean",
-            "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
-            "default": false
-        },
-        "apiAuthentication": {
-            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
-        }
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "MQTT plugin configuration",
+  "additionalProperties": false,
+  "properties": {
+    "port": {
+      "type": "integer",
+      "description": "Port to start plugin on",
+      "default": 1883
+    },
+    "streamIdDomain": {
+      "type": "string",
+      "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic"
+    },
+    "payloadMetadata": {
+      "type": "boolean",
+      "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
+      "default": false
+    },
+    "apiAuthentication": {
+      "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
     }
+  }
 }

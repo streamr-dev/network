@@ -1,17 +1,14 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "noImplicitOverride": false
-    },
-    "include": [
-        "src/**/*",
-        "bin/**/*",
-    ],
-    "references": [
-        { "path": "../utils/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../dht/tsconfig.node.json"}
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitOverride": false
+  },
+  "include": ["src/**/*", "bin/**/*"],
+  "references": [
+    { "path": "../utils/tsconfig.node.json" },
+    { "path": "../test-utils/tsconfig.node.json" },
+    { "path": "../proto-rpc/tsconfig.node.json" },
+    { "path": "../dht/tsconfig.node.json" }
+  ]
 }

@@ -10,7 +10,7 @@ const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>
-    const storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => any)> = new Map()
+    const storageEventListeners: Map<keyof StreamrClientEvents, (event: StorageNodeAssignmentEvent) => any> = new Map()
     let onEvent: jest.Mock<Promise<void>, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
@@ -57,11 +57,7 @@ describe(StorageEventListener, () => {
         addToStorageNode(clusterId)
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
-        expect(onEvent).toHaveBeenCalledWith(
-            MOCK_STREAM,
-            'added',
-            1234
-        )
+        expect(onEvent).toHaveBeenCalledWith(MOCK_STREAM, 'added', 1234)
     })
 
     it('storage node assignment events meant for another recipient are ignored', async () => {

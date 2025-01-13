@@ -29,13 +29,13 @@ describe('RestServer', () => {
                     return certifiedSubdomain
                 },
                 async createNewCertificateForSubdomain(): Promise<CertifiedSubdomain> {
-
                     return certifiedSubdomain
                 },
                 async updateSubdomainIp() {
                     // do nothing
                 }
-            })
+            }
+        )
         await server.start()
     })
 

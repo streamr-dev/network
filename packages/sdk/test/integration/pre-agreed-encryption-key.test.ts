@@ -8,7 +8,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 
 describe('pre-agreed encryption key', () => {
-
     let environment: FakeEnvironment
 
     beforeAll(() => {

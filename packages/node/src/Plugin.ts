@@ -12,7 +12,6 @@ export interface ApiPluginConfig {
 export type HttpServerEndpoint = Omit<Endpoint, 'apiAuthentication'>
 
 export abstract class Plugin<T extends object> {
-
     readonly name: string
     readonly pluginConfig: T
     readonly brokerConfig: StrictConfig
@@ -30,7 +29,7 @@ export abstract class Plugin<T extends object> {
 
     getApiAuthentication(): ApiAuthentication | undefined {
         if ('apiAuthentication' in this.pluginConfig) {
-            return (this.pluginConfig.apiAuthentication as (ApiAuthentication | null)) ?? undefined
+            return (this.pluginConfig.apiAuthentication as ApiAuthentication | null) ?? undefined
         } else {
             return this.brokerConfig.apiAuthentication
         }
@@ -61,7 +60,7 @@ export abstract class Plugin<T extends object> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getClientConfig(): { path: string, value: any }[] {
+    getClientConfig(): { path: string; value: any }[] {
         return []
     }
 }

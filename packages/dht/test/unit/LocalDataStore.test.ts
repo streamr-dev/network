@@ -5,7 +5,6 @@ import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 
 describe('LocalDataStore', () => {
-
     let localDataStore: LocalDataStore
 
     beforeEach(() => {
@@ -70,17 +69,13 @@ describe('LocalDataStore', () => {
     })
 
     describe('mark data as deleted', () => {
-
         it('happy path', () => {
             const creator1 = randomDhtAddress()
             const storedEntry = createMockDataEntry({ creator: creator1 })
             localDataStore.storeEntry(storedEntry)
             const notDeletedData = Array.from(localDataStore.values(toDhtAddress(storedEntry.key)))
             expect(notDeletedData[0].deleted).toBeFalse()
-            const returnValue = localDataStore.markAsDeleted(
-                toDhtAddress(storedEntry.key),
-                creator1
-            )
+            const returnValue = localDataStore.markAsDeleted(toDhtAddress(storedEntry.key), creator1)
             expect(returnValue).toBe(true)
             const deletedData = Array.from(localDataStore.values(toDhtAddress(storedEntry.key)))
             expect(deletedData[0].deleted).toBeTrue()
@@ -88,20 +83,14 @@ describe('LocalDataStore', () => {
 
         it('data not stored', () => {
             const key = randomDhtAddress()
-            const returnValue = localDataStore.markAsDeleted(
-                key,
-                toNodeId(createMockPeerDescriptor())
-            )
+            const returnValue = localDataStore.markAsDeleted(key, toNodeId(createMockPeerDescriptor()))
             expect(returnValue).toBe(false)
         })
 
         it('data not stored by the given creator', () => {
             const storedEntry = createMockDataEntry()
             localDataStore.storeEntry(storedEntry)
-            const returnValue = localDataStore.markAsDeleted(
-                toDhtAddress(storedEntry.key),
-                toNodeId(createMockPeerDescriptor())
-            )
+            const returnValue = localDataStore.markAsDeleted(toDhtAddress(storedEntry.key), toNodeId(createMockPeerDescriptor()))
             expect(returnValue).toBe(false)
         })
     })

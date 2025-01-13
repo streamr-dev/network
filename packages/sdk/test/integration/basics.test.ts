@@ -9,7 +9,6 @@ import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { createTestStream } from './../test-utils/utils'
 
 describe('Basics', () => {
-
     const MAX_MESSAGES = 10
     let client: StreamrClient
     let stream: Stream
@@ -29,7 +28,7 @@ describe('Basics', () => {
     describe('Pub/Sub', () => {
         it('can successfully pub/sub 1 message', async () => {
             const sub = await client.subscribe({
-                streamId: stream.id,
+                streamId: stream.id
             })
             const testMsg = Msg()
             await client.publish(stream.id, testMsg)
@@ -45,7 +44,7 @@ describe('Basics', () => {
 
         it('can successfully pub/sub multiple messages', async () => {
             const sub = await client.subscribe({
-                streamId: stream.id,
+                streamId: stream.id
             })
             const publish = publishTestMessagesGenerator(client, stream, MAX_MESSAGES, { timestamp: 1111111 })
             const published = await collect(publish, MAX_MESSAGES)
@@ -64,7 +63,7 @@ describe('Basics', () => {
         it('can successfully pub/sub multiple streams', async () => {
             async function testPubSub(testStream: Stream) {
                 const sub = await client.subscribe({
-                    streamId: testStream.id,
+                    streamId: testStream.id
                 })
                 const publish = publishTestMessagesGenerator(client, testStream, MAX_MESSAGES, { timestamp: 1111111 })
                 const published = await collect(publish, MAX_MESSAGES)
@@ -81,10 +80,7 @@ describe('Basics', () => {
             const stream2 = await createTestStream(client, module)
             await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
-            const tasks = [
-                testPubSub(stream),
-                testPubSub(stream2),
-            ]
+            const tasks = [testPubSub(stream), testPubSub(stream2)]
             await Promise.allSettled(tasks)
             await Promise.all(tasks)
         })

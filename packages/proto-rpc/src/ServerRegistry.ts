@@ -8,8 +8,12 @@ import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
 import { Any } from '../generated/google/protobuf/any'
 
-export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
-export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
+export interface Parser<Target> {
+    fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target
+}
+export interface Serializer<Target> {
+    toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array
+}
 
 const DEFAULT_TIMEOUT = 1000
 
@@ -69,7 +73,6 @@ export class ServerRegistry {
     }
 
     public async handleRequest(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<Any> {
-
         logger.trace(`Server processing RPC call ${rpcMessage.requestId}`)
 
         const implementation = this.getImplementation(rpcMessage, this.methods)
@@ -78,7 +81,6 @@ export class ServerRegistry {
     }
 
     public async handleNotification(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
-
         logger.trace(`Server processing RPC notification ${rpcMessage.requestId}`)
 
         const implementation = this.getImplementation(rpcMessage, this.notifications)
@@ -86,10 +88,12 @@ export class ServerRegistry {
         await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
-    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+    public registerRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
         ReturnClass extends IMessageType<ReturnType>,
         RequestType extends object,
-        ReturnType extends object>(
+        ReturnType extends object
+    >(
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
@@ -108,8 +112,7 @@ export class ServerRegistry {
         this.methods.set(name, method)
     }
 
-    public registerRpcNotification<RequestClass extends IMessageType<RequestType>, 
-        RequestType extends object>(
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>, RequestType extends object>(
         requestClass: RequestClass,
         name: string,
         fn: (rq: RequestType, _context: ProtoCallContext) => Promise<Empty>,
@@ -126,4 +129,3 @@ export class ServerRegistry {
         this.notifications.set(name, notification)
     }
 }
-

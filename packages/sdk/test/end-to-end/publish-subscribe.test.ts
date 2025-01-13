@@ -39,10 +39,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
     }
 }
 
-async function createStreamWithPermissions(
-    privateKey: string,
-    ...assignments: PermissionAssignment[]
-): Promise<Stream> {
+async function createStreamWithPermissions(privateKey: string, ...assignments: PermissionAssignment[]): Promise<Stream> {
     const creatorClient = new StreamrClient({
         environment: 'dev2',
         auth: {
@@ -75,10 +72,7 @@ describe('publish-subscribe', () => {
     }, TIMEOUT)
 
     afterEach(async () => {
-        await Promise.allSettled([
-            publisherClient.destroy(),
-            subscriberClient.destroy(),
-        ])
+        await Promise.allSettled([publisherClient.destroy(), subscriberClient.destroy()])
     }, TIMEOUT)
 
     describe('private stream', () => {
@@ -91,22 +85,30 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT * 2)
 
-        it('messages are published encrypted', async () => {
-            await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
-            expect(messages).toHaveLength(1)
-            expect(messages[0]).toBeInstanceOf(Uint8Array)
-        }, TIMEOUT)
+        it(
+            'messages are published encrypted',
+            async () => {
+                await publisherClient.publish(stream.id, PAYLOAD)
+                const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
+                expect(messages).toHaveLength(1)
+                expect(messages[0]).toBeInstanceOf(Uint8Array)
+            },
+            TIMEOUT
+        )
 
-        it('subscriber is able to receive and decrypt messages', async () => {
-            const messages: any[] = []
-            await publisherClient.publish(stream.id, PAYLOAD)
-            await subscriberClient.subscribe(stream.id, (msg: any) => {
-                messages.push(msg)
-            })
-            await until(() => messages.length > 0, TIMEOUT)
-            expect(messages).toEqual([PAYLOAD])
-        }, TIMEOUT)
+        it(
+            'subscriber is able to receive and decrypt messages',
+            async () => {
+                const messages: any[] = []
+                await publisherClient.publish(stream.id, PAYLOAD)
+                await subscriberClient.subscribe(stream.id, (msg: any) => {
+                    messages.push(msg)
+                })
+                await until(() => messages.length > 0, TIMEOUT)
+                expect(messages).toEqual([PAYLOAD])
+            },
+            TIMEOUT
+        )
     })
 
     describe('public stream', () => {
@@ -119,20 +121,28 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT)
 
-        it('messages are published unencrypted', async () => {
-            await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
-            expect(messages).toEqual([PAYLOAD])
-        }, TIMEOUT)
+        it(
+            'messages are published unencrypted',
+            async () => {
+                await publisherClient.publish(stream.id, PAYLOAD)
+                const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
+                expect(messages).toEqual([PAYLOAD])
+            },
+            TIMEOUT
+        )
 
-        it('subscriber is able to receive messages', async () => {
-            const messages: unknown[] = []
-            await subscriberClient.subscribe(stream.id, (msg: any) => {
-                messages.push(msg)
-            })
-            await publisherClient.publish(stream.id, PAYLOAD)
-            await until(() => messages.length > 0, TIMEOUT)
-            expect(messages).toEqual([PAYLOAD])
-        }, TIMEOUT)
+        it(
+            'subscriber is able to receive messages',
+            async () => {
+                const messages: unknown[] = []
+                await subscriberClient.subscribe(stream.id, (msg: any) => {
+                    messages.push(msg)
+                })
+                await publisherClient.publish(stream.id, PAYLOAD)
+                await until(() => messages.length > 0, TIMEOUT)
+                expect(messages).toEqual([PAYLOAD])
+            },
+            TIMEOUT
+        )
     })
 })

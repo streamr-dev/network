@@ -15,7 +15,7 @@ export interface PropagationTask {
  * - Allows fetching propagation tasks by StreamPartID
  * - Upper bound on number of tasks stored, replacement policy if FIFO
  * - Items have a TTL, after which they are considered stale and not returned when querying
-**/
+ **/
 export class PropagationTaskStore {
     private readonly tasks: FifoMapWithTTL<MessageRef, PropagationTask>
 

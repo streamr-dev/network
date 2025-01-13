@@ -15,19 +15,21 @@ import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessag
 const PUBLISHER_ID = randomUserId()
 
 describe('PushPipeline', () => {
-
     const streamId = toStreamID('streamId')
     let leaksDetector: LeaksDetector
     let messageSigner: MessageSigner
 
     const createMockMessage = async () => {
-        return await messageSigner.createSignedMessage({
-            messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: utf8ToBinary(JSON.stringify(Msg())),
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1)
+        return await messageSigner.createSignedMessage(
+            {
+                messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: utf8ToBinary(JSON.stringify(Msg())),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
     }
 
     beforeEach(async () => {
@@ -39,7 +41,8 @@ describe('PushPipeline', () => {
         await leaksDetector.checkNoLeaks()
     })
 
-    testOnlyInNodeJs('works', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('works', async () => {
+        // LeakDetector not supported by electron
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const testMessage = Msg()
@@ -57,7 +60,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('handles errors', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('handles errors', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         const err = new Error(counterId('expected error'))
         leaksDetector.add('err', err)
@@ -67,10 +71,13 @@ describe('PushPipeline', () => {
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const received: StreamMessage[] = []
-        pull((async function* g() {
-            yield streamMessage
-            throw err
-        }()), s)
+        pull(
+            (async function* g() {
+                yield streamMessage
+                throw err
+            })(),
+            s
+        )
 
         await expect(async () => {
             for await (const msg of s) {
@@ -82,18 +89,22 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('handles immediate errors in pull', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('handles immediate errors in pull', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         const err = new Error(counterId('expected error'))
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
-        const streamMessage = await messageSigner.createSignedMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: utf8ToBinary(JSON.stringify(testMessage)),
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        const streamMessage = await messageSigner.createSignedMessage(
+            {
+                messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: utf8ToBinary(JSON.stringify(testMessage)),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
@@ -102,9 +113,12 @@ describe('PushPipeline', () => {
             throw error
         })
         // eslint-disable-next-line require-yield
-        pull((async function* g() {
-            throw err
-        }()), s)
+        pull(
+            (async function* g() {
+                throw err
+            })(),
+            s
+        )
 
         await expect(async () => {
             for await (const msg of s) {
@@ -116,7 +130,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([])
     })
 
-    testOnlyInNodeJs('handles error during iteration', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('handles error during iteration', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
         const s = new PushPipeline<StreamMessage>()
@@ -137,7 +152,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('emits errors', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('emits errors', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
         const s = new PushPipeline<StreamMessage>()
@@ -161,7 +177,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
         let s: PushPipeline<StreamMessage> | undefined = new PushPipeline<StreamMessage>()
@@ -188,7 +205,8 @@ describe('PushPipeline', () => {
         received = []
     })
 
-    testOnlyInNodeJs('can collect', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('can collect', async () => {
+        // LeakDetector not supported by electron
         const s = new PushPipeline<StreamMessage>()
 
         const streamMessage = await createMockMessage()
@@ -198,7 +216,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('can cancel collect with return', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('can cancel collect with return', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add('testMessage', testMessage)
@@ -215,7 +234,8 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('can cancel collect with throw', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('can cancel collect with throw', async () => {
+        // LeakDetector not supported by electron
         const testMessage = Msg()
         const s = new PushPipeline<StreamMessage>()
         const err = new Error(counterId('expected error'))

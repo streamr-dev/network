@@ -5,7 +5,6 @@ import { ExternalApiRpcClient } from '../../generated/packages/dht/protos/DhtRpc
 import { RpcRemote } from './contact/RpcRemote'
 
 export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
-
     async externalFetchData(key: DhtAddress): Promise<DataEntry[]> {
         const request: ExternalFetchDataRequest = {
             key: toDhtAddressRaw(key)

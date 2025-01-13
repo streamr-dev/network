@@ -9,7 +9,6 @@ import { createRandomConnectionId } from '../Connection'
 const logger = new Logger(module)
 
 export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> implements IConnection {
-
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
@@ -34,7 +33,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
 
         this.socket = socket
     }
-    
+
     // use a getter to make it possible to mock the value in tests
     public getRemoteIpAddress(): string {
         return this.remoteIpAddress
@@ -68,7 +67,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         this.stopped = true
         this.stopListening()
         this.socket = undefined
-        const gracefulLeave = (reasonCode === GOING_AWAY) || (reasonCode === CUSTOM_GOING_AWAY)
+        const gracefulLeave = reasonCode === GOING_AWAY || reasonCode === CUSTOM_GOING_AWAY
         this.emit('disconnected', gracefulLeave, reasonCode, description)
     }
 
@@ -79,7 +78,6 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         } else {
             logger.debug('Tried to call send() on a stopped socket')
         }
-
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {

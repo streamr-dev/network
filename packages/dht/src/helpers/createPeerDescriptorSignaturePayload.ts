@@ -25,4 +25,3 @@ export const createPeerDescriptorSignaturePayload = (peerDescriptor: PeerDescrip
     ]
     return Buffer.concat(buffers)
 }
-

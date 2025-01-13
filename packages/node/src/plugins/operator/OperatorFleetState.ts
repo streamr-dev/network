@@ -44,16 +44,17 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         warmupPeriodInMs: number,
         timeProvider = Date.now
     ): CreateOperatorFleetStateFn {
-        return (coordinationStreamId) => new OperatorFleetState(
-            streamrClient,
-            coordinationStreamId,
-            heartbeatIntervalInMs,
-            pruneAgeInMs,
-            pruneIntervalInMs,
-            latencyExtraInMs,
-            warmupPeriodInMs,
-            timeProvider
-        )
+        return (coordinationStreamId) =>
+            new OperatorFleetState(
+                streamrClient,
+                coordinationStreamId,
+                heartbeatIntervalInMs,
+                pruneAgeInMs,
+                pruneIntervalInMs,
+                latencyExtraInMs,
+                warmupPeriodInMs,
+                timeProvider
+            )
     }
 
     private constructor(
@@ -85,7 +86,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
             // Ignore messages during warmup period. This is needed because network nodes may propagate old stream messages
             // from cache.
-            if ((this.timeProvider() - startTime) < this.warmupPeriodInMs) { // TODO: write test
+            if (this.timeProvider() - startTime < this.warmupPeriodInMs) {
+                // TODO: write test
                 return
             }
 
@@ -139,9 +141,13 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     private launchOpenReadyGateTimer = once(() => {
-        setAbortableTimeout(() => {
-            this.ready.open()
-        }, this.heartbeatIntervalInMs + this.latencyExtraInMs, this.abortController.signal)
+        setAbortableTimeout(
+            () => {
+                this.ready.open()
+            },
+            this.heartbeatIntervalInMs + this.latencyExtraInMs,
+            this.abortController.signal
+        )
     })
 
     private pruneOfflineNodes(): void {

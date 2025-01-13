@@ -19,10 +19,7 @@ const formErrorMessage = (field: keyof PeerDescriptor, expected: string | number
     return `PeerDescriptor ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
-const toEqualPeerDescriptor = (
-    actual: PeerDescriptor,
-    expected: PeerDescriptor
-): jest.CustomMatcherResult => {
+const toEqualPeerDescriptor = (actual: PeerDescriptor, expected: PeerDescriptor): jest.CustomMatcherResult => {
     const messages: string[] = []
     if (!areEqualBinaries(expected.nodeId, actual.nodeId)) {
         messages.push(formErrorMessage('nodeId', toDhtAddress(expected.nodeId), toDhtAddress(actual.nodeId)))
@@ -36,7 +33,7 @@ const toEqualPeerDescriptor = (
     expectEqualConnectivityMethod('websocket', expected.websocket, actual.websocket, messages)
     if (expected.region !== actual.region) {
         messages.push(formErrorMessage('region', expected?.region, actual?.region))
-    } 
+    }
     if (messages.length > 0) {
         return {
             pass: false,
@@ -57,9 +54,7 @@ const expectEqualConnectivityMethod = (
     messages: string[]
 ) => {
     const toOutput = (method?: ConnectivityMethod) => {
-        return (method !== undefined)
-            ? `{port: ${method.port}, host: '${method.host}', tls: ${method.tls}}`
-            : undefined
+        return method !== undefined ? `{port: ${method.port}, host: '${method.host}', tls: ${method.tls}}` : undefined
     }
     if (!isEqual(method1, method2)) {
         messages.push(formErrorMessage(field, toOutput(method1), toOutput(method2)))

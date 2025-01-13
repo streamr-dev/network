@@ -40,9 +40,7 @@ describe('MQTT Bridge', () => {
     })
 
     afterAll(async () => {
-        await Promise.allSettled([
-            broker.stop()
-        ])
+        await Promise.allSettled([broker.stop()])
     })
 
     beforeEach(async () => {
@@ -65,10 +63,7 @@ describe('MQTT Bridge', () => {
 
         expect(await messageQueue.pop()).toEqual(expected)
 
-        await Promise.allSettled([
-            subscriber.end(true),
-            publisher.end(true)
-        ])
+        await Promise.allSettled([subscriber.end(true), publisher.end(true)])
     })
 
     test('message published by a StreamrClient is delivered', async () => {
@@ -97,10 +92,7 @@ describe('MQTT Bridge', () => {
         expect(await messageQueue1.pop()).toEqual(expected)
         expect(await messageQueue2.pop()).toEqual(expected)
 
-        await Promise.allSettled([
-            subscriber1.end(true),
-            subscriber2.end(true)
-        ])
+        await Promise.allSettled([subscriber1.end(true), subscriber2.end(true)])
     })
 
     it('subscription should not be unsubscribed if it was not subscribed by that client', async () => {
@@ -115,10 +107,7 @@ describe('MQTT Bridge', () => {
 
         expect(await messageQueue.pop()).toEqual(expected)
 
-        await Promise.allSettled([
-            subscriber1.end(true),
-            subscriber2.end(true)
-        ])
+        await Promise.allSettled([subscriber1.end(true), subscriber2.end(true)])
     })
 
     test('message should be delivered to remaining subscribers if one subscriber unsubscribes', async () => {
@@ -133,12 +122,9 @@ describe('MQTT Bridge', () => {
         await streamrClient.publish(stream.id, expected)
 
         expect(await messageQueue1.pop()).toEqual(expected)
-        await wait(100)  // wait for a while so that the message would have been delivered also to messageQueue2
+        await wait(100) // wait for a while so that the message would have been delivered also to messageQueue2
         expect(messageQueue2.values()).toEqual([])
 
-        await Promise.allSettled([
-            subscriber1.end(true),
-            subscriber2.end(true)
-        ])
+        await Promise.allSettled([subscriber1.end(true), subscriber2.end(true)])
     })
 })

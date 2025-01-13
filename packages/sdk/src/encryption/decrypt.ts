@@ -11,18 +11,14 @@ import { StreamrClientError } from '../StreamrClientError'
 export const decrypt = async (
     streamMessage: StreamMessageAESEncrypted,
     groupKeyManager: GroupKeyManager,
-    destroySignal: DestroySignal,
+    destroySignal: DestroySignal
 ): Promise<StreamMessage> => {
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
     let groupKey: GroupKey | undefined
     try {
-        groupKey = await groupKeyManager.fetchKey(
-            streamMessage.getStreamPartID(),
-            streamMessage.groupKeyId,
-            streamMessage.getPublisherId()
-        )
+        groupKey = await groupKeyManager.fetchKey(streamMessage.getStreamPartID(), streamMessage.groupKeyId, streamMessage.getPublisherId())
     } catch {
         if (destroySignal.isDestroyed()) {
             return streamMessage

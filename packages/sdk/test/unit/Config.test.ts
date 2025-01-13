@@ -6,7 +6,6 @@ import { generateEthereumAccount } from '../../src/ethereumUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
-
     describe('validate', () => {
         it('additional property', () => {
             expect(() => {
@@ -107,15 +106,17 @@ describe('Config', () => {
         })
 
         it('can override entryPoints', () => {
-            const entryPoints = [{
-                nodeId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                type: NetworkNodeType.NODEJS,
-                websocket: {
-                    host: 'brubeck3.streamr.network',
-                    port: 30401,
-                    tls: false
+            const entryPoints = [
+                {
+                    nodeId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                    type: NetworkNodeType.NODEJS,
+                    websocket: {
+                        host: 'brubeck3.streamr.network',
+                        port: 30401,
+                        tls: false
+                    }
                 }
-            }]
+            ]
             const clientOverrides = createStrictConfig({
                 network: {
                     controlLayer: {
@@ -140,9 +141,8 @@ describe('Config', () => {
     })
 
     describe('environment defaults', () => {
-
         it('happy path', () => {
-            const environmentId = 'polygonAmoy'  // some environment id
+            const environmentId = 'polygonAmoy' // some environment id
             const config: any = {
                 environment: environmentId
             }
@@ -166,7 +166,7 @@ describe('Config', () => {
         })
 
         it('override', () => {
-            const environmentId = 'polygonAmoy'  // some environment id
+            const environmentId = 'polygonAmoy' // some environment id
             const config: any = {
                 environment: environmentId,
                 contracts: {
@@ -197,7 +197,6 @@ describe('Config', () => {
         })
 
         describe('highGasPrice', () => {
-
             it('without ethereum network config', () => {
                 const config: any = {
                     environment: 'polygon'

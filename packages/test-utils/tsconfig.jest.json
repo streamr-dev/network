@@ -1,10 +1,5 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "include": [
-        "src/**/*",
-        "test/**/*"
-    ],
-    "references": [
-        { "path": "../utils/tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "include": ["src/**/*", "test/**/*"],
+  "references": [{ "path": "../utils/tsconfig.node.json" }]
 }

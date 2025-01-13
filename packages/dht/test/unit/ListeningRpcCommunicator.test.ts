@@ -6,12 +6,11 @@ import { RpcMessage } from '@streamr/proto-rpc'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 
 const createDeferredPromises = () => {
-
     const defHeader = new Deferred<RpcMetadata>()
     const defMessage = new Deferred<any>()
     const defStatus = new Deferred<RpcStatus>()
     const defTrailer = new Deferred<RpcMetadata>()
-    
+
     const deferredParser = () => {}
     return {
         message: defMessage,
@@ -39,14 +38,11 @@ describe('ListeningRpcCommunicator', () => {
 
     it('rejects requests on disconnect event to the target', async () => {
         const peerDescriptor = createMockPeerDescriptor()
-        rpcCommunicator.getRpcClientTransport().emit(
-            'rpcRequest',
-            RpcMessage.create(),
-            { targetDescriptor: peerDescriptor }, createDeferredPromises()
-        )
+        rpcCommunicator
+            .getRpcClientTransport()
+            .emit('rpcRequest', RpcMessage.create(), { targetDescriptor: peerDescriptor }, createDeferredPromises())
         await until(() => rpcCommunicator.getRequestIds(() => true).length > 0)
         transport.emit('disconnected', peerDescriptor, false)
         await until(() => rpcCommunicator.getRequestIds(() => true).length === 0)
     }, 10000)
-
 })

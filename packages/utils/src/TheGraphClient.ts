@@ -18,22 +18,19 @@ export interface GraphQLQuery {
  * with a TimeoutError.
  */
 export class TheGraphClient {
-
     private requiredBlockNumber = 0
     private readonly indexingState: IndexingState
     private readonly serverUrl: string
     private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
     private readonly logger: Logger
 
-    constructor(
-        opts: {
-            serverUrl: string
-            fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
-            logger?: Logger
-            indexTimeout?: number
-            indexPollInterval?: number
-        }
-    ) {
+    constructor(opts: {
+        serverUrl: string
+        fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
+        logger?: Logger
+        indexTimeout?: number
+        indexPollInterval?: number
+    }) {
         this.serverUrl = opts.serverUrl
         this.fetch = opts.fetch
         this.logger = opts.logger ?? new Logger(module)
@@ -50,7 +47,7 @@ export class TheGraphClient {
         return this.sendQuery(query)
     }
 
-    async* queryEntities<T extends { id: string }>(
+    async *queryEntities<T extends { id: string }>(
         createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
         /*
          * For simple queries there is one root level property, e.g. "streams" or "permissions"
@@ -58,7 +55,7 @@ export class TheGraphClient {
          * or we want to return non-root elements as items, the caller must pass a custom
          * function to parse the items.
          */
-        parseItems: ((response: any) => T[]) = (response: any) => {
+        parseItems: (response: any) => T[] = (response: any) => {
             const rootKey = Object.keys(response)[0]
             return response[rootKey]
         },
@@ -67,7 +64,7 @@ export class TheGraphClient {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         let lastResultSet: T[] | undefined
         do {
-            const lastId = (lastResultSet !== undefined) ? lastResultSet[lastResultSet.length - 1].id : ''
+            const lastId = lastResultSet !== undefined ? lastResultSet[lastResultSet.length - 1].id : ''
             const query = createQuery(lastId, pageSize)
             const response = await this.sendQuery(query)
             const items: T[] = parseItems(response)
@@ -86,7 +83,7 @@ export class TheGraphClient {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                accept: '*/*',
+                accept: '*/*'
             },
             body: JSON.stringify(query)
         })
@@ -109,7 +106,7 @@ export class TheGraphClient {
     }
 
     private async getIndexBlockNumber(): Promise<number> {
-        const response: any = await this.sendQuery({ query: '{ _meta { block { number } } }' } )
+        const response: any = await this.sendQuery({ query: '{ _meta { block { number } } }' })
         // eslint-disable-next-line no-underscore-dangle
         return response._meta.block.number
     }
@@ -124,7 +121,6 @@ export class TheGraphClient {
 }
 
 class BlockNumberGate extends Gate {
-
     blockNumber: number
 
     constructor(blockNumber: number) {
@@ -134,7 +130,6 @@ class BlockNumberGate extends Gate {
 }
 
 class IndexingState {
-
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
     private readonly getCurrentBlockNumber: () => Promise<number | undefined>
@@ -142,12 +137,7 @@ class IndexingState {
     private readonly pollInterval: number
     private readonly logger: Logger
 
-    constructor(
-        getCurrentBlockNumber: () => Promise<number>,
-        timeout: number,
-        pollInterval: number,
-        logger: Logger
-    ) {
+    constructor(getCurrentBlockNumber: () => Promise<number>, timeout: number, pollInterval: number, logger: Logger) {
         this.getCurrentBlockNumber = async () => {
             try {
                 return await getCurrentBlockNumber()
@@ -165,11 +155,7 @@ class IndexingState {
         this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
         const gate = this.getOrCreateGate(blockNumber)
         try {
-            await withTimeout(
-                gate.waitUntilOpen(),
-                this.timeout,
-                `The Graph did not synchronize to block ${blockNumber}`
-            )
+            await withTimeout(gate.waitUntilOpen(), this.timeout, `The Graph did not synchronize to block ${blockNumber}`)
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this.gates.delete(gate)

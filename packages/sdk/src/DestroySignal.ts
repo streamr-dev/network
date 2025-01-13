@@ -12,7 +12,6 @@ import { Signal } from './utils/Signal'
  */
 @scoped(Lifecycle.ContainerScoped)
 export class DestroySignal {
-
     public readonly onDestroy = Signal.once()
     public readonly trigger = this.destroy
     public readonly abortSignal: AbortSignal

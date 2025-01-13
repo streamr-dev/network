@@ -27,12 +27,7 @@ export async function waitForEvent(
         }
         emitter.on(eventName, listener)
     })
-    return withTimeout(
-        task,
-        timeout,
-        'waitForEvent',
-        abortSignal
-    ).finally(() => {
+    return withTimeout(task, timeout, 'waitForEvent', abortSignal).finally(() => {
         emitter.off(eventName, listener)
     })
 }

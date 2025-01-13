@@ -10,7 +10,6 @@ export type ExternalRpcClient = ServiceInfo & ClassType
 export type ExternalRpcClientClass<T extends ExternalRpcClient> = { new (clientTransport: ClientTransport): T }
 
 export class ExternalNetworkRpc {
-
     private readonly rpcCommunicator: ListeningRpcCommunicator
 
     constructor(transport: ITransport) {
@@ -25,7 +24,7 @@ export class ExternalNetworkRpc {
     >(
         request: RequestClass,
         response: ResponseClass,
-        name: string, 
+        name: string,
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void {
         this.rpcCommunicator.registerRpcMethod(request, response, name, fn)
@@ -38,5 +37,4 @@ export class ExternalNetworkRpc {
     destroy(): void {
         this.rpcCommunicator.destroy()
     }
-
 }

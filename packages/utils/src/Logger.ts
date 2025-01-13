@@ -40,17 +40,19 @@ const rootLogger = pino({
             return { level: label } // log level as string instead of number
         }
     },
-    transport: isPrettyPrintDisabled() ? undefined : {
-        target: 'pino-pretty',
-        options: {
-            colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
-            singleLine: true,
-            translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
-            ignore: 'pid,hostname',
-            levelFirst: true,
-            sync: isJestRunning(),
-        },
-    },
+    transport: isPrettyPrintDisabled()
+        ? undefined
+        : {
+              target: 'pino-pretty',
+              options: {
+                  colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+                  singleLine: true,
+                  translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+                  ignore: 'pid,hostname',
+                  levelFirst: true,
+                  sync: isJestRunning()
+              }
+          },
     browser: {
         asObject: true
     }
@@ -60,9 +62,7 @@ const rootLogger = pino({
  * This whole monstrosity exists only because pino in browser environment will not print a log message
  * when invoking `logger.info(undefined, 'msg') instead you need to call `logger.info(msg)`.
  */
-function wrappedMethodCall(
-    wrappedPinoMethod: pino.LogFn,
-): (msg: string, metadata?: Record<string, unknown>) => void {
+function wrappedMethodCall(wrappedPinoMethod: pino.LogFn): (msg: string, metadata?: Record<string, unknown>) => void {
     return (msg, metadata) => {
         if (metadata !== undefined) {
             wrappedPinoMethod(metadata, msg)
@@ -89,12 +89,15 @@ export class Logger {
         defaultLogLevel: LogLevel = 'info',
         parentLogger: pino.Logger = rootLogger
     ) {
-        this.logger = parentLogger.child({
-            name: Logger.createName(module),
-            ...contextBindings
-        }, {
-            level: process.env.LOG_LEVEL ?? defaultLogLevel
-        })
+        this.logger = parentLogger.child(
+            {
+                name: Logger.createName(module),
+                ...contextBindings
+            },
+            {
+                level: process.env.LOG_LEVEL ?? defaultLogLevel
+            }
+        )
         this.fatal = wrappedMethodCall(this.logger.fatal.bind(this.logger))
         this.error = wrappedMethodCall(this.logger.error.bind(this.logger))
         this.warn = wrappedMethodCall(this.logger.warn.bind(this.logger))
@@ -112,7 +115,6 @@ export class Logger {
             fileId = parts[parts.length - 1]
         }
         const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
-        return isPrettyPrintDisabled() ?
-            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
+        return isPrettyPrintDisabled() ? longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 }

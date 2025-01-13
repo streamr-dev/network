@@ -16,17 +16,17 @@ const SERVICE_ID = 'test'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
-        createConnectorFacade: () => new DefaultConnectorFacade({
-            transport,
-            createLocalPeerDescriptor: async () => localPeerDescriptor
-        }),
+        createConnectorFacade: () =>
+            new DefaultConnectorFacade({
+                transport,
+                createLocalPeerDescriptor: async () => localPeerDescriptor
+            }),
         metricsContext: new MetricsContext(),
         allowIncomingPrivateConnections: false
     })
 }
 
 describe('RPC connections over WebRTC', () => {
-
     let manager1: ConnectionManager
     let manager2: ConnectionManager
     let rpcCommunicator1: ListeningRpcCommunicator
@@ -39,7 +39,6 @@ describe('RPC connections over WebRTC', () => {
     let connectorTransport2: SimulatorTransport
 
     beforeEach(async () => {
-
         simulator = new Simulator(LatencyType.FIXED, 50)
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await connectorTransport1.start()
@@ -54,7 +53,6 @@ describe('RPC connections over WebRTC', () => {
 
         await manager1.start()
         await manager2.start()
-
     })
 
     afterEach(async () => {
@@ -66,8 +64,7 @@ describe('RPC connections over WebRTC', () => {
     })
 
     it('Can make a RPC call over WebRTC', async () => {
-        const ping = async (request: PingRequest):
-            Promise<PingResponse> => {
+        const ping = async (request: PingRequest): Promise<PingResponse> => {
             const response: PingResponse = {
                 requestId: request.requestId
             }
@@ -90,7 +87,6 @@ describe('RPC connections over WebRTC', () => {
     })
 
     it('Throws an exception if RPC method is not defined', async () => {
-
         const request: PingRequest = {
             requestId: v4()
         }
@@ -99,12 +95,10 @@ describe('RPC connections over WebRTC', () => {
             targetDescriptor: peerDescriptor2
         }
 
-        await expect(client1.ping(request, options))
-            .rejects.toThrow('Server does not implement method ping')
+        await expect(client1.ping(request, options)).rejects.toThrow('Server does not implement method ping')
     })
 
     it('Throws a client-side exception if WebRTC connection fails', async () => {
-
         const request: PingRequest = {
             requestId: v4()
         }
@@ -114,10 +108,7 @@ describe('RPC connections over WebRTC', () => {
             timeout: 10000
         }
         await manager2.stop()
-        
-        await expect(client1.ping(request, options))
-            .rejects.toThrow('Peer disconnected')
 
+        await expect(client1.ping(request, options)).rejects.toThrow('Peer disconnected')
     }, 10000)
-
 })

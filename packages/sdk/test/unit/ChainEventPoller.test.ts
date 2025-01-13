@@ -6,21 +6,22 @@ import range from 'lodash/range'
 const POLL_INTERVAL = 100
 
 describe('ChainEventPoller', () => {
-
     it('happy path', async () => {
         const INITIAL_BLOCK_NUMBER = 123
         const EVENT_NAME = 'foo'
-        const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
+        const EVENT_ARGS = ['mock-arg1', 'mock-arg2']
         let blockNumber = INITIAL_BLOCK_NUMBER
         const contract = {
             queryFilter: jest.fn().mockImplementation(() => {
-                const result = [{
-                    fragment: {
-                        name: EVENT_NAME
-                    },
-                    args: EVENT_ARGS,
-                    blockNumber
-                }]
+                const result = [
+                    {
+                        fragment: {
+                            name: EVENT_NAME
+                        },
+                        args: EVENT_ARGS,
+                        blockNumber
+                    }
+                ]
                 blockNumber++
                 return result
             }),
@@ -50,7 +51,7 @@ describe('ChainEventPoller', () => {
         expect(listener1).toHaveBeenNthCalledWith(2, ...EVENT_ARGS, INITIAL_BLOCK_NUMBER + 1)
 
         poller.off(EVENT_NAME, listener1)
-        
+
         // poller stops
         await wait(1.5 * POLL_INTERVAL)
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(1)
@@ -68,7 +69,7 @@ describe('ChainEventPoller', () => {
         expect(listener2).toHaveBeenCalledWith(...EVENT_ARGS, INITIAL_BLOCK_NUMBER + 2)
 
         poller.off(EVENT_NAME, listener2)
-        
+
         // poller stops
         await wait(1.5 * POLL_INTERVAL)
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(2)
@@ -81,25 +82,29 @@ describe('ChainEventPoller', () => {
         const EVENT_NAME_2 = 'event-name-2'
         const contract = {
             queryFilter: jest.fn().mockImplementation(() => {
-                const result = [{
-                    fragment: {
-                        name: EVENT_NAME_1
+                const result = [
+                    {
+                        fragment: {
+                            name: EVENT_NAME_1
+                        },
+                        args: ['arg-foo1'],
+                        blockNumber: 150
                     },
-                    args: ['arg-foo1'],
-                    blockNumber: 150
-                }, {
-                    fragment: {
-                        name: EVENT_NAME_1
+                    {
+                        fragment: {
+                            name: EVENT_NAME_1
+                        },
+                        args: ['arg-foo2'],
+                        blockNumber: 155
                     },
-                    args: ['arg-foo2'],
-                    blockNumber: 155
-                }, {
-                    fragment: {
-                        name: EVENT_NAME_2
-                    },
-                    args: ['arg-bar'],
-                    blockNumber: 152
-                }]
+                    {
+                        fragment: {
+                            name: EVENT_NAME_2
+                        },
+                        args: ['arg-bar'],
+                        blockNumber: 152
+                    }
+                ]
                 return result
             }),
             runner: {
@@ -117,11 +122,9 @@ describe('ChainEventPoller', () => {
         poller.on(EVENT_NAME_2, listener2)
         poller.on(EVENT_NAME_2, listener3)
 
-        await until(
-            () => {
-                return (listener1.mock.calls.length > 0) && (listener2.mock.calls.length > 0) && (listener3.mock.calls.length > 0)
-            }
-        )
+        await until(() => {
+            return listener1.mock.calls.length > 0 && listener2.mock.calls.length > 0 && listener3.mock.calls.length > 0
+        })
         expect(contract.queryFilter).toHaveBeenNthCalledWith(1, [[EVENT_NAME_1, EVENT_NAME_2]], 123)
         expect(listener1).toHaveBeenCalledTimes(2)
         expect(listener1).toHaveBeenCalledWith('arg-foo1', 150)
@@ -187,7 +190,7 @@ describe('ChainEventPoller', () => {
                 'getBlockNumber',
                 'queryFilter(event, 12)',
                 ...range(POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD).map(() => 'queryFilter(event, 13)'),
-                'getBlockNumber',
+                'getBlockNumber'
             ])
             poller.off('event', eventCb)
         })

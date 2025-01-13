@@ -27,13 +27,15 @@ export interface MessagePipelineOptions {
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+    config: Pick<
+        StrictStreamrClientConfig,
+        'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'
+    >
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }
 
 export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipeline<StreamMessage, StreamMessage> => {
-
     const logger = opts.loggerFactory.createLogger(module)
 
     const onError = (error: Error | StreamrClientError, streamMessage?: StreamMessage) => {
@@ -48,7 +50,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         throw error
     }
 
-    const messageStream = new PushPipeline<StreamMessage, StreamMessage>
+    const messageStream = new PushPipeline<StreamMessage, StreamMessage>()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
         let decrypted
@@ -65,7 +67,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         } else {
             decrypted = msg
         }
-        decrypted.getParsedContent()  // throws if content is not parsable (e.g. not valid JSON)
+        decrypted.getParsedContent() // throws if content is not parsable (e.g. not valid JSON)
         return decrypted
     }, messageStream.onError)
 

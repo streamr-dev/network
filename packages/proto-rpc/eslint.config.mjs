@@ -2,10 +2,7 @@ import baseConfig from '../../eslint.config.mjs'
 
 export default [
     {
-        ignores: [
-            'test/proto/**',
-            'examples/**'
-        ]
+        ignores: ['test/proto/**', 'examples/**']
     },
     ...baseConfig
 ]

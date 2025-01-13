@@ -10,21 +10,24 @@ const isStored = async (streamId: StreamID): Promise<boolean> => {
 }
 
 describe('storage node', () => {
-
-    it('add and remove stream', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
-        const client = createTestClient(privateKey)
-        const stream = await client.createStream(`/${Date.now()}`)
-        await client.destroy()
-        await runCommand(`storage-node add-stream ${DOCKER_DEV_STORAGE_NODE} ${stream.id}`, {
-            privateKey
-        })
-        await until(async () => await isStored(stream.id) === true, 15 * 1000, 1000)
-        await runCommand(`storage-node remove-stream ${DOCKER_DEV_STORAGE_NODE} ${stream.id}`, {
-            privateKey
-        })
-        await until(async () => await isStored(stream.id) === false, 15 * 1000, 1000)
-    }, 80 * 1000)
+    it(
+        'add and remove stream',
+        async () => {
+            const privateKey = await fetchPrivateKeyWithGas()
+            const client = createTestClient(privateKey)
+            const stream = await client.createStream(`/${Date.now()}`)
+            await client.destroy()
+            await runCommand(`storage-node add-stream ${DOCKER_DEV_STORAGE_NODE} ${stream.id}`, {
+                privateKey
+            })
+            await until(async () => (await isStored(stream.id)) === true, 15 * 1000, 1000)
+            await runCommand(`storage-node remove-stream ${DOCKER_DEV_STORAGE_NODE} ${stream.id}`, {
+                privateKey
+            })
+            await until(async () => (await isStored(stream.id)) === false, 15 * 1000, 1000)
+        },
+        80 * 1000
+    )
 
     it('list nodes', async () => {
         const outputLines = await runCommand('storage-node list')

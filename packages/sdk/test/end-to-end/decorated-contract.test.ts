@@ -14,7 +14,6 @@ const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const getProvider = () => new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
 
 describe('decorated contract', () => {
-
     it('read', async () => {
         const contract = createDecoratedContract<StreamRegistryContract>(
             new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryArtifact, getProvider()),

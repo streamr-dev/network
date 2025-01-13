@@ -32,7 +32,7 @@
 import { Defer } from '@streamr/utils'
 
 // This is similar to the Gate class of @streamr/utils, but implements also locking featute
-// TODO remove this class if the lock() feature is no longer needed and use the class 
+// TODO remove this class if the lock() feature is no longer needed and use the class
 // from @streamr/utils instead
 
 export class Gate {
@@ -116,7 +116,9 @@ export class Gate {
 
     private clearPending(err?: Error): void {
         const { pending } = this
-        if (!pending) { return }
+        if (!pending) {
+            return
+        }
         this.pending = undefined
 
         if (err) {

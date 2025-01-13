@@ -10,14 +10,13 @@ const logger = new Logger(module)
 
 // TODO: use a non-deprecated HTTP client that support async/await instead of request
 export class RestClient {
-
     private readonly baseUrl: string
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl
     }
 
-    // TODO: can be removed. 
+    // TODO: can be removed.
     // If the client creates the session we don't need to explicitly create a sessionId on the server side.
     // The server can run challanges based on a sessionId generated in each request.
     public async createSession(): Promise<string> {
@@ -53,8 +52,16 @@ export class RestClient {
     }
 
     public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
-        logger.debug('updateSubdomainIp() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
-            + ', sessionId: ' + sessionId + ', token: ' + token)
+        logger.debug(
+            'updateSubdomainIp() subdomain: ' +
+                subdomain +
+                ', streamrWebSocketPort:  ' +
+                streamrWebSocketPort +
+                ', sessionId: ' +
+                sessionId +
+                ', token: ' +
+                token
+        )
         const url = this.baseUrl + '/certificates/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
             token,

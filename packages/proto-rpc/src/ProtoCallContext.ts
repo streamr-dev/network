@@ -1,14 +1,10 @@
 import * as Err from './errors'
-import {
-    RpcOptions,
-    RpcMetadata,
-    ServerCallContext
-} from '@protobuf-ts/runtime-rpc'
+import { RpcOptions, RpcMetadata, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 // The interface and the class defined in this file
 // provide an unified way for handling of context information
 // both on the client and server side of an RPC connection.
-// Users can further extend ProtoCallContext to add context information 
+// Users can further extend ProtoCallContext to add context information
 // they need. See examples/routed-hello for an example of handling context
 // information in proto-rpc.
 

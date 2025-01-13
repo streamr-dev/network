@@ -20,9 +20,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
-        const cms: SimulatorTransport[] = range(otherNodeCount).map((i) =>
-            new SimulatorTransport(peerDescriptors[i], simulator)
-        )
+        const cms: SimulatorTransport[] = range(otherNodeCount).map((i) => new SimulatorTransport(peerDescriptors[i], simulator))
         await entrypointCm.start()
         await Promise.all(cms.map((cm) => cm.start()))
 
@@ -32,20 +30,25 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
-        otherDiscoveryLayerNodes = range(otherNodeCount).map((i) => new DhtNode({
-            transport: cms[i],
-            connectionsView: cms[i],
-            peerDescriptor: peerDescriptors[i],
-            serviceId: streamPartId
-        }))
-        otherContentDeliveryLayerNodes = range(otherNodeCount).map((i) => createContentDeliveryLayerNode({
-            streamPartId,
-            discoveryLayerNode: otherDiscoveryLayerNodes[i],
-            transport: cms[i],
-            connectionLocker: cms[i],
-            localPeerDescriptor: peerDescriptors[i],
-            isLocalNodeEntryPoint: () => false
-        }))
+        otherDiscoveryLayerNodes = range(otherNodeCount).map(
+            (i) =>
+                new DhtNode({
+                    transport: cms[i],
+                    connectionsView: cms[i],
+                    peerDescriptor: peerDescriptors[i],
+                    serviceId: streamPartId
+                })
+        )
+        otherContentDeliveryLayerNodes = range(otherNodeCount).map((i) =>
+            createContentDeliveryLayerNode({
+                streamPartId,
+                discoveryLayerNode: otherDiscoveryLayerNodes[i],
+                transport: cms[i],
+                connectionLocker: cms[i],
+                localPeerDescriptor: peerDescriptors[i],
+                isLocalNodeEntryPoint: () => false
+            })
+        )
         entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
             streamPartId,
             discoveryLayerNode: entryPointDiscoveryLayerNode,
@@ -81,9 +84,11 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
 
     it('happy path 5 nodes', async () => {
         range(4).forEach((i) => otherContentDeliveryLayerNodes[i].start())
-        await Promise.all(range(4).map(async (i) => {
-            await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
-        }))
+        await Promise.all(
+            range(4).map(async (i) => {
+                await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
+            })
+        )
         await until(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
             expect(otherContentDeliveryLayerNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
@@ -94,46 +99,51 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         allNodes.push(entryPointContentDeliveryLayerNode)
         range(5).forEach((i) => {
             const ownNodeId = allNodes[i].getOwnNodeId()
-            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
-                const neighbor = allNodes.find((node) => {
-                    return node.getOwnNodeId() === ownNodeId
+            allNodes[i]
+                .getNearbyNodeView()
+                .getIds()
+                .forEach((nodeId) => {
+                    const neighbor = allNodes.find((node) => {
+                        return node.getOwnNodeId() === ownNodeId
+                    })
+                    const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                    expect(neighborNodeIds).toContain(nodeId)
                 })
-                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
-                expect(neighborNodeIds).toContain(nodeId)
-            })
         })
     }, 60000)
 
     it('happy path 64 nodes', async () => {
         await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
-        await Promise.all(range(otherNodeCount).map((i) => {
-            otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
-        }))
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            until(() => node.getNeighbors().length >= 4, 10000)
-        ))
-
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            until(() => node.getOutgoingHandshakeCount() === 0)
-        ))
-
-        await until(() => {
-            let mismatchCounter = 0
-            otherContentDeliveryLayerNodes.forEach((node) => {
-                const nodeId = node.getOwnNodeId()
-                node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = toNodeId(neighbor)
-                    if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
-                        const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
-                        if (!neighborNodeIds.includes(nodeId)) {
-                            mismatchCounter += 1
-                        }
-                    }
-                })
+        await Promise.all(
+            range(otherNodeCount).map((i) => {
+                otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
             })
-            // NET-1074 Investigate why sometimes unidirectional connections remain.
-            return mismatchCounter <= 2
-        }, 20000, 1000)
+        )
+        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getNeighbors().length >= 4, 10000)))
+
+        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getOutgoingHandshakeCount() === 0)))
+
+        await until(
+            () => {
+                let mismatchCounter = 0
+                otherContentDeliveryLayerNodes.forEach((node) => {
+                    const nodeId = node.getOwnNodeId()
+                    node.getNeighbors().forEach((neighbor) => {
+                        const neighborId = toNodeId(neighbor)
+                        if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
+                            const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
+                            const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                            if (!neighborNodeIds.includes(nodeId)) {
+                                mismatchCounter += 1
+                            }
+                        }
+                    })
+                })
+                // NET-1074 Investigate why sometimes unidirectional connections remain.
+                return mismatchCounter <= 2
+            },
+            20000,
+            1000
+        )
     }, 90000)
 })

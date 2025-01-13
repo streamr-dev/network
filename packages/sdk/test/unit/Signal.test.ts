@@ -334,10 +334,7 @@ describe('Signal', () => {
             })
             const signal = Signal.once()
             signal.listen(onSignal)
-            await Promise.all([
-                signal.trigger(),
-                signal.trigger()
-            ])
+            await Promise.all([signal.trigger(), signal.trigger()])
             await signal.trigger()
             expect(onSignal).toHaveBeenCalledTimes(1)
         })
@@ -355,7 +352,7 @@ describe('Signal', () => {
             await Promise.all([
                 // test parallel
                 signal.trigger(value),
-                signal.trigger(otherValue),
+                signal.trigger(otherValue)
             ])
             // test serial
             await signal.trigger(value)

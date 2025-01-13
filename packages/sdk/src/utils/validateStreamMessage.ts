@@ -32,11 +32,7 @@ export const validateStreamMessage = async (
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const doValidate = async (
-    streamMessage: StreamMessage,
-    streamRegistry: StreamRegistry,
-    signatureValidator: SignatureValidator
-): Promise<void> => {
+const doValidate = async (streamMessage: StreamMessage, streamRegistry: StreamRegistry, signatureValidator: SignatureValidator): Promise<void> => {
     await signatureValidator.assertSignatureIsValid(streamMessage)
     switch (streamMessage.messageType) {
         case StreamMessageType.MESSAGE:
@@ -60,17 +56,14 @@ const doValidate = async (
     }
 }
 
-const validateMessage = async (
-    streamMessage: StreamMessage,
-    streamRegistry: StreamRegistry
-): Promise<void> => {
+const validateMessage = async (streamMessage: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     const streamId = streamMessage.getStreamId()
     const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
     const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamrClientError(
             `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
-            'INVALID_PARTITION', 
+            'INVALID_PARTITION',
             streamMessage
         )
     }

@@ -32,12 +32,7 @@ export class FifoMapWithTTL<K, V> {
     private readonly onItemDropped: (key: K) => void
     private readonly timeProvider: () => number
 
-    constructor({
-        ttlInMs,
-        maxSize,
-        onItemDropped = () => {},
-        timeProvider = Date.now
-    }: FifoMapWithTtlOptions<K>) {
+    constructor({ ttlInMs, maxSize, onItemDropped = () => {}, timeProvider = Date.now }: FifoMapWithTtlOptions<K>) {
         if (ttlInMs < 0) {
             throw new Error(`ttlInMs (${ttlInMs}) cannot be < 0`)
         }

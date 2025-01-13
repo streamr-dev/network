@@ -11,7 +11,6 @@ import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('RecursiveOperationSession', () => {
-
     let environment: FakeEnvironment
     let localPeerDescriptor: PeerDescriptor
 

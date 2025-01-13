@@ -24,7 +24,6 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription extends MessageStream {
-
     readonly streamPartId: StreamPartID
     /** @internal */
     readonly isRaw: boolean

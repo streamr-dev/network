@@ -17,6 +17,5 @@
   },
   "author": "Tim Oxley <secoif@gmail.com>",
   "license": "ISC",
-  "dependencies": {
-  }
+  "dependencies": {}
 }

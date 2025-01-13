@@ -4,7 +4,6 @@ import { ConnectionType } from '../../src/connection/IConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Connectivity helpers', () => {
-
     const tlsServerPeerDescriptor = createMockPeerDescriptor({
         websocket: {
             host: 'mock',
@@ -57,5 +56,4 @@ describe('Connectivity helpers', () => {
     it('no tls server to browser', () => {
         expect(expectedConnectionType(noTlsServerPeerDescriptor, browserPeerDescriptor)).toBe(ConnectionType.WEBRTC)
     })
-
 })

@@ -70,16 +70,20 @@ async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, a
 export const createTestClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
-        auth: (privateKey !== undefined) ? { privateKey } : undefined
+        auth: privateKey !== undefined ? { privateKey } : undefined
     })
 }
 
 export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: StreamrClient): Promise<void> => {
-    await until(async () => {
-        // eslint-disable-next-line no-underscore-dangle
-        for await (const _msg of client.searchStreams(stream.id, undefined)) {
-            return true
-        }
-        return false
-    }, 15 * 1000, 600)
+    await until(
+        async () => {
+            // eslint-disable-next-line no-underscore-dangle
+            for await (const _msg of client.searchStreams(stream.id, undefined)) {
+                return true
+            }
+            return false
+        },
+        15 * 1000,
+        600
+    )
 }

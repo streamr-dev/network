@@ -13,12 +13,7 @@ const HASH_SUFFIX = '.mmdb.sha384'
 
 const logger = new Logger(module)
 
-const downloadNewDb = async (
-    url: string,
-    dbFolder: string,
-    remoteHash: string,
-    abortSignal: AbortSignal
-): Promise<void> => {
+const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string, abortSignal: AbortSignal): Promise<void> => {
     // make a unique name for the temporary download folder
     // in case there are multiple downloads happening at the same time
 
@@ -34,7 +29,7 @@ const downloadNewDb = async (
         logger.debug('Downloading GeoIP database from: ' + url)
         response = await fetch(url, { keepalive: false, signal: abortSignal })
     } catch (e) {
-        // Catching and re-throwing as async exception 
+        // Catching and re-throwing as async exception
         // here is necessary, synch exceptions cannot be caught by the caller
         throw new Error('Fetch error when downloading ' + url + ', error: ' + e)
     }
@@ -95,7 +90,6 @@ const downloadNewDb = async (
     }
 
     logger.debug('Downloaded GeoIP database to: ' + dbFileInDbFolder)
-
 }
 
 const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSignal): Promise<string> => {
@@ -106,7 +100,7 @@ const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSigna
         logger.debug('Downloading GeoIP database hash from: ' + remoteHashUrl)
         response = await fetch(remoteHashUrl, { signal: abortSignal })
     } catch (e) {
-        // Catching and re-throwing as async exception 
+        // Catching and re-throwing as async exception
         // here is necessary, synch exceptions cannot be caught by the caller
         throw new Error('Fetch error when downloading ' + remoteHashUrl + ', error: ' + e)
     }
@@ -182,4 +176,3 @@ export const downloadGeoIpDatabase = async (
         return undefined
     }
 }
-

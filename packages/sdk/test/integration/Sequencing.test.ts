@@ -20,15 +20,11 @@ const Msg = (opts?: any) => {
 function toSeq(requests: Message[], ts = Date.now()) {
     return requests.map((msg) => {
         const { prevMsgRef } = msg.streamMessage
-        return [
-            [msg.timestamp - ts, msg.sequenceNumber],
-            prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null
-        ]
+        return [[msg.timestamp - ts, msg.sequenceNumber], prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null]
     })
 }
 
 describe('Sequencing', () => {
-
     let client: StreamrClient
     let stream: Stream
     let environment: FakeEnvironment
@@ -48,7 +44,9 @@ describe('Sequencing', () => {
         const msgsPublished: any[] = []
         const msgsReceieved: any[] = []
 
-        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
+        await client.subscribe(stream.id, (m) => {
+            msgsReceieved.push(m)
+        })
 
         const nextMsg = () => {
             const msg = Msg()
@@ -62,19 +60,26 @@ describe('Sequencing', () => {
             client.publish(stream, nextMsg(), { timestamp: ts }),
             // next two messages at ts + 1
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
-            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 })
         ])
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
             [[0, 0], null],
-            [[0, 1], [0, 0]],
-            [[1, 0], [0, 1]],
-            [[1, 1], [1, 0]],
+            [
+                [0, 1],
+                [0, 0]
+            ],
+            [
+                [1, 0],
+                [0, 1]
+            ],
+            [
+                [1, 1],
+                [1, 0]
+            ]
         ])
 
-        await until(() => (
-            msgsReceieved.length === msgsPublished.length
-        ), 8000).catch(() => {}) // ignore, tests will fail anyway
+        await until(() => msgsReceieved.length === msgsPublished.length, 8000).catch(() => {}) // ignore, tests will fail anyway
 
         expect(msgsReceieved).toEqual(msgsPublished)
     }, 10000)
@@ -104,26 +109,35 @@ describe('Sequencing', () => {
             return msg
         }
 
-        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
+        await client.subscribe(stream.id, (m) => {
+            msgsReceieved.push(m)
+        })
         const requests = await Promise.all([
             // first 2 messages at ts + 0
             client.publish(stream, nextMsg(), { timestamp: ts }),
             client.publish(stream, nextMsg(), { timestamp: ts }),
             // next two messages at ts + 1
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
-            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 })
         ])
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
             [[0, 0], null],
-            [[0, 1], [0, 0]],
-            [[1, 0], [0, 1]],
-            [[1, 1], [1, 0]],
+            [
+                [0, 1],
+                [0, 0]
+            ],
+            [
+                [1, 0],
+                [0, 1]
+            ],
+            [
+                [1, 1],
+                [1, 0]
+            ]
         ])
 
-        await until(() => (
-            msgsReceieved.length === msgsPublished.length
-        ), 5000).catch(() => {}) // ignore, tests will fail anyway
+        await until(() => msgsReceieved.length === msgsPublished.length, 5000).catch(() => {}) // ignore, tests will fail anyway
 
         expect(msgsReceieved).toEqual(msgsPublished)
     }, 10000)
@@ -134,7 +148,9 @@ describe('Sequencing', () => {
         const msgsPublished: any[] = []
         const msgsReceieved: any[] = []
 
-        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
+        await client.subscribe(stream.id, (m) => {
+            msgsReceieved.push(m)
+        })
 
         const nextMsg = (...args: any[]) => {
             const msg = Msg(...args)
@@ -148,33 +164,32 @@ describe('Sequencing', () => {
             // publish at ts + 1
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             // backdate at ts + 0
-            client.publish(stream, nextMsg({
-                backdated: true,
-            }), { timestamp: ts }),
+            client.publish(
+                stream,
+                nextMsg({
+                    backdated: true
+                }),
+                { timestamp: ts }
+            ),
             // resume at ts + 2
             client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
             client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
-            client.publish(stream, nextMsg(), { timestamp: ts + 3 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 3 })
         ])
 
-        await until(() => (
-            msgsReceieved.length === msgsPublished.length
-        ), 2000).catch(() => {}) // ignore, tests will fail anyway
+        await until(() => msgsReceieved.length === msgsPublished.length, 2000).catch(() => {}) // ignore, tests will fail anyway
 
         const lastRequest = requests[requests.length - 1]
         const waitForStorage = getWaitForStorage(client, {
             stream,
-            timeout: 6000,
+            timeout: 6000
         })
         await waitForStorage(lastRequest)
-        const sub = await client.resend(
-            stream.id,
-            {
-                from: {
-                    timestamp: 0
-                }
+        const sub = await client.resend(stream.id, {
+            from: {
+                timestamp: 0
             }
-        )
+        })
         const msgsResent = (await collect(sub)).map((m) => m.content)
 
         expect(msgsReceieved).toEqual(msgsResent)
@@ -184,11 +199,26 @@ describe('Sequencing', () => {
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
             [[0, 0], null],
-            [[1, 0], [0, 0]],
-            [[0, 0], [1, 0]], // bad message
-            [[2, 0], [1, 0]],
-            [[2, 1], [2, 0]],
-            [[3, 0], [2, 1]],
+            [
+                [1, 0],
+                [0, 0]
+            ],
+            [
+                [0, 0],
+                [1, 0]
+            ], // bad message
+            [
+                [2, 0],
+                [1, 0]
+            ],
+            [
+                [2, 1],
+                [2, 0]
+            ],
+            [
+                [3, 0],
+                [2, 1]
+            ]
         ])
     }, 10000)
 
@@ -214,35 +244,34 @@ describe('Sequencing', () => {
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             // backdate at ts + 0
-            client.publish(stream, nextMsg({
-                backdated: true,
-            }), { timestamp: ts }),
+            client.publish(
+                stream,
+                nextMsg({
+                    backdated: true
+                }),
+                { timestamp: ts }
+            ),
             // resume publishing at ts + 1
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
-            client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 2 })
         ])
 
-        await until(() => (
-            msgsReceieved.length === msgsPublished.length
-        ), 2000).catch(() => {}) // ignore, tests will fail anyway
+        await until(() => msgsReceieved.length === msgsPublished.length, 2000).catch(() => {}) // ignore, tests will fail anyway
 
         const lastRequest = requests[requests.length - 1]
         const waitForStorage = getWaitForStorage(client, {
             stream,
-            timeout: 6000,
+            timeout: 6000
         })
         await waitForStorage(lastRequest)
 
-        const sub = await client.resend(
-            stream.id,
-            {
-                from: {
-                    timestamp: 0
-                }
+        const sub = await client.resend(stream.id, {
+            from: {
+                timestamp: 0
             }
-        )
+        })
         const msgsResent = (await collect(sub)).map((m) => m.content)
 
         expect(msgsReceieved).toEqual(msgsResent)
@@ -252,15 +281,42 @@ describe('Sequencing', () => {
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
             [[0, 0], null],
-            [[0, 1], [0, 0]],
-            [[0, 2], [0, 1]],
-            [[1, 0], [0, 2]],
-            [[1, 1], [1, 0]],
-            [[0, 0], [1, 1]], // bad message
-            [[1, 2], [1, 1]],
-            [[1, 3], [1, 2]],
-            [[2, 0], [1, 3]],
-            [[2, 1], [2, 0]],
+            [
+                [0, 1],
+                [0, 0]
+            ],
+            [
+                [0, 2],
+                [0, 1]
+            ],
+            [
+                [1, 0],
+                [0, 2]
+            ],
+            [
+                [1, 1],
+                [1, 0]
+            ],
+            [
+                [0, 0],
+                [1, 1]
+            ], // bad message
+            [
+                [1, 2],
+                [1, 1]
+            ],
+            [
+                [1, 3],
+                [1, 2]
+            ],
+            [
+                [2, 0],
+                [1, 3]
+            ],
+            [
+                [2, 1],
+                [2, 0]
+            ]
         ])
     }, 10000)
 })

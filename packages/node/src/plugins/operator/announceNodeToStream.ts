@@ -5,10 +5,7 @@ import { formCoordinationStreamId } from './formCoordinationStreamId'
 
 const logger = new Logger(module)
 
-export const announceNodeToStream = async (
-    operatorContractAddress: EthereumAddress,
-    streamrClient: StreamrClient
-): Promise<void> => {
+export const announceNodeToStream = async (operatorContractAddress: EthereumAddress, streamrClient: StreamrClient): Promise<void> => {
     const coordinationStream = formCoordinationStreamId(operatorContractAddress)
     try {
         const peerDescriptor = await streamrClient.getPeerDescriptor()

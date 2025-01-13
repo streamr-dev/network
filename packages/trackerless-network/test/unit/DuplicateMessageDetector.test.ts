@@ -171,10 +171,8 @@ describe('erroneous messages that overlap gaps', () => {
 
 test('checks that number > previousNumber', () => {
     const detector = new DuplicateMessageDetector()
-    expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0)))
-        .toThrow(InvalidNumberingError)
-    expect(() => detector.markAndCheck(new NumberPair(5, 5), new NumberPair(5, 5)))
-        .toThrow(InvalidNumberingError)
+    expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0))).toThrow(InvalidNumberingError)
+    expect(() => detector.markAndCheck(new NumberPair(5, 5), new NumberPair(5, 5))).toThrow(InvalidNumberingError)
 })
 
 test('lowest gaps get dropped when reaching maximum number of gaps', () => {

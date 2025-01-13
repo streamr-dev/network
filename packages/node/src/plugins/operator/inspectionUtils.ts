@@ -23,17 +23,11 @@ function createStreamIDMatcher(streamId: StreamID): (streamPart: StreamPartID) =
     }
 }
 
-function isAnyPartitionOfStreamAssignedToMe(
-    assignments: StreamPartAssignments,
-    streamId: StreamID
-): boolean {
+function isAnyPartitionOfStreamAssignedToMe(assignments: StreamPartAssignments, streamId: StreamID): boolean {
     return assignments.getMyStreamParts().some(createStreamIDMatcher(streamId))
 }
 
-function getPartitionsOfStreamAssignedToMe(
-    assignments: StreamPartAssignments,
-    streamId: StreamID
-): StreamPartID[] {
+function getPartitionsOfStreamAssignedToMe(assignments: StreamPartAssignments, streamId: StreamID): StreamPartID[] {
     return assignments.getMyStreamParts().filter(createStreamIDMatcher(streamId))
 }
 
@@ -47,7 +41,7 @@ export async function findTarget(
     // choose sponsorship
     const sponsorships = await myOperator.getSponsorships()
     const suitableSponsorships = sponsorships
-        .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
+        .filter(({ operatorCount }) => operatorCount >= 2) // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
     if (suitableSponsorships.length === 0) {
         logger.info('Skip inspection (no suitable sponsorship)', { totalSponsorships: sponsorships.length })
@@ -123,7 +117,6 @@ export async function inspectTarget({
     abortSignal: AbortSignal
     logger: Logger
 }): Promise<boolean> {
-
     logger.info('Inspecting nodes of operator', {
         targetOperator: target.operatorAddress,
         targetStreamPart: target.streamPart,

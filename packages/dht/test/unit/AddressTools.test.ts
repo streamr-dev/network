@@ -2,18 +2,19 @@ import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../src/helpers/Add
 
 describe('getAddressFromIceCandidate', () => {
     it('extract IPv4 address from ICE host candidate', () => {
-        expect(getAddressFromIceCandidate('candidate:1 1 udp 2122262783 203.0.113.180 4444 typ host'))
-            .toEqual('203.0.113.180')
+        expect(getAddressFromIceCandidate('candidate:1 1 udp 2122262783 203.0.113.180 4444 typ host')).toEqual('203.0.113.180')
     })
 
     it('extract IPv4 address from ICE server reflexive candidate', () => {
-        expect(getAddressFromIceCandidate('candidate:1 1 udp 2122262783 198.51.100.130 4445 typ srflx raddr 0.0.0.0 rport 0'))
-            .toEqual('198.51.100.130')
+        expect(getAddressFromIceCandidate('candidate:1 1 udp 2122262783 198.51.100.130 4445 typ srflx raddr 0.0.0.0 rport 0')).toEqual(
+            '198.51.100.130'
+        )
     })
 
     it('extract IPv6 address from ICE candidate', () => {
-        expect(getAddressFromIceCandidate('candidate:1 1 udp 3756231458 2001:db8::4125:918c:4402:cc54 6666 typ host'))
-            .toEqual('2001:db8::4125:918c:4402:cc54')
+        expect(getAddressFromIceCandidate('candidate:1 1 udp 3756231458 2001:db8::4125:918c:4402:cc54 6666 typ host')).toEqual(
+            '2001:db8::4125:918c:4402:cc54'
+        )
     })
 
     it('fail on mDNS ICE candidate', () => {

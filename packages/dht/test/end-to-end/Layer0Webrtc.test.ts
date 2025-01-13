@@ -6,7 +6,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { toNodeId } from '../../src/exports'
 
 describe('Layer0 with WebRTC connections', () => {
-
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10029, tls: false }
     })
@@ -17,7 +16,6 @@ describe('Layer0 with WebRTC connections', () => {
     let node4: DhtNode
 
     beforeEach(async () => {
-
         epDhtNode = new DhtNode({
             peerDescriptor: epPeerDescriptor,
             numberOfNodesPerKBucket: 8,
@@ -32,35 +30,19 @@ describe('Layer0 with WebRTC connections', () => {
         node3 = new DhtNode({ entryPoints: [epPeerDescriptor] })
         node4 = new DhtNode({ entryPoints: [epPeerDescriptor] })
 
-        await Promise.all([
-            node1.start(),
-            node2.start(),
-            node3.start(),
-            node4.start()
-        ])
+        await Promise.all([node1.start(), node2.start(), node3.start(), node4.start()])
     })
 
     afterEach(async () => {
-        await Promise.all([
-            node1.stop(),
-            node2.stop(),
-            node3.stop(),
-            node4.stop()
-        ])
+        await Promise.all([node1.stop(), node2.stop(), node3.stop(), node4.stop()])
         await epDhtNode.stop()
     })
 
     it('Happy path two peers', async () => {
-
         await Promise.all([
-            waitForEvent3<any>(
-                node2 as any,
-                'connected',
-                20000,
-                (peerDescriptor: PeerDescriptor) => {
-                    return areEqualBinaries(peerDescriptor.nodeId, node1.getLocalPeerDescriptor().nodeId)
-                }
-            ),
+            waitForEvent3<any>(node2 as any, 'connected', 20000, (peerDescriptor: PeerDescriptor) => {
+                return areEqualBinaries(peerDescriptor.nodeId, node1.getLocalPeerDescriptor().nodeId)
+            }),
             node2.joinDht([epPeerDescriptor]),
             node1.joinDht([epPeerDescriptor])
         ])

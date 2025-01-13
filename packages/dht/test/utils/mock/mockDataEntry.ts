@@ -6,18 +6,16 @@ import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../../src/identifiers'
 import { omit } from 'lodash'
 
-const MockData = new class extends MessageType$<{ foo: string }> {
+const MockData = new (class extends MessageType$<{ foo: string }> {
     constructor() {
-        super('MockData', [
-            { no: 1, name: 'foo', kind: 'scalar', opt: false, T: ScalarType.STRING }
-        ])
+        super('MockData', [{ no: 1, name: 'foo', kind: 'scalar', opt: false, T: ScalarType.STRING }])
     }
-}
+})()
 
 export const createMockDataEntry = (
-    entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DhtAddress, creator: DhtAddress }> = {}
+    entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DhtAddress; creator: DhtAddress }> = {}
 ): DataEntry => {
-    return { 
+    return {
         key: toDhtAddressRaw(entry.key ?? randomDhtAddress()),
         data: Any.pack({ foo: randomString(5) }, MockData),
         creator: toDhtAddressRaw(entry.creator ?? randomDhtAddress()),

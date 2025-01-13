@@ -8,7 +8,7 @@ import { createRandomConnectionId } from '../Connection'
 enum DisconnectedRtcPeerConnectionStateEnum {
     DISCONNECTED = 'disconnected',
     FAILED = 'failed',
-    CLOSED = 'closed',
+    CLOSED = 'closed'
 }
 
 const logger = new Logger(module)
@@ -20,7 +20,6 @@ interface Params {
 }
 
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
-
     public connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     // We need to keep track of connection state ourselves because
@@ -53,7 +52,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
-            if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
+            if (event.candidate !== null && event.candidate.sdpMid !== null) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
         }
@@ -91,8 +90,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || (this.peerConnection === undefined) ||
-            this.peerConnection.signalingState != 'stable')
+        const offerCollision =
+            type.toLowerCase() === RtcDescription.OFFER &&
+            (this.makingOffer || this.peerConnection === undefined || this.peerConnection.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering && offerCollision
         if (ignoreOffer) {
@@ -105,7 +105,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             logger.warn('Failed to set remote description', { err })
         }
 
-        if ((type.toLowerCase() === RtcDescription.OFFER) && (this.peerConnection !== undefined)) {
+        if (type.toLowerCase() === RtcDescription.OFFER && this.peerConnection !== undefined) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
@@ -118,10 +118,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     public addRemoteCandidate(candidate: string, mid: string): void {
-        this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid })
-            .catch((err) => {
-                logger.warn('Failed to add ICE candidate', { err })
-            })
+        this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).catch((err) => {
+            logger.warn('Failed to add ICE candidate', { err })
+        })
     }
 
     public isOpen(): boolean {
@@ -129,11 +128,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     // IConnection implementation
-    
+
     public async close(gracefulLeave: boolean, reason?: string): Promise<void> {
         this.doClose(gracefulLeave, reason)
     }
-    
+
     private doClose(gracefulLeave: boolean, reason?: string): void {
         if (!this.closed) {
             this.closed = true
@@ -142,7 +141,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
             this.stopListening()
             this.emit('disconnected', gracefulLeave, undefined, reason)
-            
+
             this.removeAllListeners()
 
             if (this.dataChannel !== undefined) {
@@ -163,7 +162,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                 }
             }
             this.peerConnection = undefined
-            
         }
     }
 
@@ -228,9 +226,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     private onStateChange(): void {
-        if (this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.CLOSED
-            || this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.DISCONNECTED
-            || this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.FAILED
+        if (
+            this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.CLOSED ||
+            this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.DISCONNECTED ||
+            this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.FAILED
         ) {
             this.doClose(false)
         }

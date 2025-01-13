@@ -5,7 +5,6 @@ import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntr
 import { createMockConnectionDhtNode } from '../utils/utils'
 
 describe('DhtNodeExternalApi', () => {
-
     let simulator: Simulator
     let dhtNode1: DhtNode
     let remote: DhtNode
@@ -18,10 +17,7 @@ describe('DhtNodeExternalApi', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            dhtNode1.stop(),
-            remote.stop()
-        ])
+        await Promise.all([dhtNode1.stop(), remote.stop()])
         simulator.stop()
     })
 
@@ -31,7 +27,7 @@ describe('DhtNodeExternalApi', () => {
         const foundData = await remote.fetchDataFromDhtViaPeer(toDhtAddress(entry.key), dhtNode1.getLocalPeerDescriptor())
         expectEqualData(foundData[0], entry)
     })
-    
+
     it('fetch data returns empty array if no data found', async () => {
         const foundData = await remote.fetchDataFromDhtViaPeer(randomDhtAddress(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
@@ -44,5 +40,4 @@ describe('DhtNodeExternalApi', () => {
         expectEqualData(foundData[0], entry)
         expect(toDhtAddress(foundData[0].creator)).toEqual(toNodeId(remote.getLocalPeerDescriptor()))
     })
-  
 })

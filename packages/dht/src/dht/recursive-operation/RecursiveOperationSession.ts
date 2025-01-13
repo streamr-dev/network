@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { 
+import {
     DataEntry,
     PeerDescriptor,
     RecursiveOperationResponse,
@@ -36,14 +36,13 @@ export interface RecursiveOperationSessionOptions {
 }
 
 export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSessionEvents> {
-
     private readonly id = v4()
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
     private foundData: Map<DhtAddress, DataEntry> = new Map()
     private allKnownHops: Set<DhtAddress> = new Set()
     private reportedHops: Set<DhtAddress> = new Set()
-    private timeoutTask?: NodeJS.Timeout 
+    private timeoutTask?: NodeJS.Timeout
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
     private readonly noCloserNodesReceivedFrom: Set<DhtAddress> = new Set()
@@ -53,8 +52,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         super()
         this.options = options
         this.results = new SortedContactList({
-            referenceId: options.targetId, 
-            maxSize: 10,  // TODO use options option or named constant?
+            referenceId: options.targetId,
+            maxSize: 10, // TODO use options option or named constant?
             allowToContainReferenceId: true
         })
         this.rpcCommunicator = new ListeningRpcCommunicator(this.id, options.transport, {
@@ -75,8 +74,11 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 this.onResponseReceived(remoteNodeId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             }
         })
-        this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
-            (req: RecursiveOperationResponse, context: ServerCallContext) => rpcLocal.sendResponse(req, context))
+        this.rpcCommunicator.registerRpcNotification(
+            RecursiveOperationResponse,
+            'sendResponse',
+            (req: RecursiveOperationResponse, context: ServerCallContext) => rpcLocal.sendResponse(req, context)
+        )
     }
 
     public start(serviceId: ServiceID): void {
@@ -115,8 +117,10 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.options.operation === RecursiveOperation.FETCH_DATA
-                && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.options.waitedRoutingPathCompletions)) {
+            if (
+                this.options.operation === RecursiveOperation.FETCH_DATA &&
+                (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.options.waitedRoutingPathCompletions)
+            ) {
                 return true
             } else if (this.options.operation === RecursiveOperation.FETCH_DATA) {
                 return false
@@ -182,8 +186,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         dataEntries.forEach((entry) => {
             const creatorNodeId = toDhtAddress(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
-            if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
-                || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
+            if (!existingEntry || existingEntry.createdAt! < entry.createdAt! || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
                 this.foundData.set(creatorNodeId, entry)
             }
         })
@@ -205,7 +208,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                     this.emit('completed')
                     this.completionEventEmitted = true
                 }
-            }, 4000)  // TODO use options option or named constant?
+            }, 4000) // TODO use options option or named constant?
         }
     }
 

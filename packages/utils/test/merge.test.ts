@@ -1,7 +1,6 @@
 import { merge } from '../src/merge'
 
 describe('merge', () => {
-
     it('two objects', () => {
         const o1 = {
             foo: 123,
@@ -21,13 +20,13 @@ describe('merge', () => {
 
     it('multiple objects', () => {
         const o1 = {
-            foo: 1,
+            foo: 1
         }
         const o2 = {
-            foo: 2,
+            foo: 2
         }
         const o3 = {
-            foo: 3,
+            foo: 3
         }
         expect(merge(o1, o2, o3)).toEqual({
             foo: 3
@@ -106,10 +105,10 @@ describe('merge', () => {
 
     it('undefineds are skipped', () => {
         const o1 = {
-            foo: 1,
+            foo: 1
         }
         const o2 = {
-            foo: 2,
+            foo: 2
         }
         expect(merge(undefined, o1, undefined, o2, undefined)).toEqual({
             foo: 2

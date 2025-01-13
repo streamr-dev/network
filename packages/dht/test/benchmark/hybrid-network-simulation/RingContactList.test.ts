@@ -9,25 +9,18 @@ import { getRandomRegion } from '../../../src/connection/simulator/pings'
 const logger = new Logger(module)
 
 function ipv4ToString(ip: number): string {
-    return [
-        (ip >>> 24) & 0xFF,
-        (ip >>> 16) & 0xFF,
-        (ip >>> 8) & 0xFF,
-        ip & 0xFF
-    ].join('.')
+    return [(ip >>> 24) & 0xff, (ip >>> 16) & 0xff, (ip >>> 8) & 0xff, ip & 0xff].join('.')
 }
 
 class MockNode {
     private readonly peerDescriptor: PeerDescriptor
 
     constructor(_region: number, ipAddress: string) {
-
         const connectivityResponse: ConnectivityResponse = {
             host: 'localhost',
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
             protocolVersion: '0.0.0'
-
         }
         this.peerDescriptor = createPeerDescriptor(connectivityResponse, getRandomRegion())
         logger.info(ipv4ToString(this.peerDescriptor.ipAddress!))
@@ -60,9 +53,7 @@ const mockData: [number, string][] = [
 
 const mockNodes: MockNode[] = mockData.map(([region, ipAddress]) => new MockNode(region, ipAddress))
 const referenceNode = mockNodes[5]
-const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(
-    getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor())
-)
+const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor()))
 
 mockNodes.forEach((node) => ringContactList.addContact(node))
 

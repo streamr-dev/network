@@ -10,7 +10,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { nextValue } from './../../src/utils/iterators'
 
 describe('publisher key reuse', () => {
-
     let publisherWallet: Wallet
     let environment: FakeEnvironment
     let publisher: StreamrClient
@@ -65,7 +64,7 @@ describe('publisher key reuse', () => {
 
         const sub = await subscriber.subscribe(stream.id)
         const messageIterator = sub[Symbol.asyncIterator]()
-        
+
         await publisher.publish(stream, {
             msg: '1'
         })

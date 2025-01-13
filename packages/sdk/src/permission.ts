@@ -67,9 +67,7 @@ export const toInternalPermissionQuery = async (query: PermissionQuery, streamId
         ...query,
         streamId: await streamIdBuilder.toStreamID(query.streamId)
     }
-    return ('userId' in typedBaseQuery)
-        ? { ...typedBaseQuery, userId: toUserId(typedBaseQuery.userId) }
-        : typedBaseQuery
+    return 'userId' in typedBaseQuery ? { ...typedBaseQuery, userId: toUserId(typedBaseQuery.userId) } : typedBaseQuery
 }
 
 export const isPublicPermissionAssignment = (assignment: InternalPermissionAssignment): assignment is PublicPermissionAssignment => {
@@ -77,9 +75,7 @@ export const isPublicPermissionAssignment = (assignment: InternalPermissionAssig
 }
 
 export const toInternalPermissionAssignment = (assignment: PermissionAssignment): InternalPermissionAssignment => {
-    return ('userId' in assignment) 
-        ? { ...assignment, userId: toUserId(assignment.userId) }
-        : assignment
+    return 'userId' in assignment ? { ...assignment, userId: toUserId(assignment.userId) } : assignment
 }
 
 export const streamPermissionToSolidityType = (permission: StreamPermission): bigint => {

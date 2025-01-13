@@ -21,15 +21,11 @@ const logger = new Logger(module)
 // To ensure that the autocertified subdomain is used for the Streamr Network
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
     nodeId: toDhtAddressRaw(randomDhtAddress()),
-    type: NodeType.NODEJS,
+    type: NodeType.NODEJS
 }
 
 // TODO: use async/await
-export const runStreamrChallenge = (
-    streamrWebSocketIp: string,
-    streamrWebSocketPort: string,
-    sessionId: string
-): Promise<void> => {
+export const runStreamrChallenge = (streamrWebSocketIp: string, streamrWebSocketPort: string, sessionId: string): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
             nodeId: toDhtAddressRaw(randomDhtAddress()),
@@ -41,43 +37,47 @@ export const runStreamrChallenge = (
             }
         }
         const socket = new WebsocketClientConnection()
-        const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
-        remotePeerDescriptor.websocket!.port
+        const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' + remotePeerDescriptor.websocket!.port
 
         const pendingConnection = new PendingConnection(remotePeerDescriptor)
         const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, pendingConnection, socket)
-        pendingConnection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => {   
+        pendingConnection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => {
             const managedConnection = new ManagedConnection(peerDescriptor, connection)
-        
+
             socket.off('disconnected', onDisconnected)
-            const communicator = new RoutingRpcCommunicator(SERVICE_ID,
-                async (msg: Message): Promise<void> => {
-                    logger.info('sending message to peer')
-                    managedConnection.send(Message.toBinary(msg))
-                })
+            const communicator = new RoutingRpcCommunicator(SERVICE_ID, async (msg: Message): Promise<void> => {
+                logger.info('sending message to peer')
+                managedConnection.send(Message.toBinary(msg))
+            })
             managedConnection.on('managedData', (msg: Uint8Array) => {
                 communicator.handleMessageFromPeer(Message.fromBinary(msg))
             })
             const rpcClient = toProtoRpcClient(new AutoCertifierRpcClient(communicator.getRpcClientTransport()))
             // eslint-disable-next-line promise/catch-or-return
-            rpcClient.hasSession({ sessionId }).then(() => {
-                resolve()
-            }).catch((e) => {
-                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                reject(e)
-            }).finally(() => {
-                communicator.stop()
-                // close with leave flag true just in case 
-                // any info of the autocertifer is in the network
-                managedConnection.close(true)
-                pendingConnection.close(true)
-                handshaker.stop()
-
-            })
+            rpcClient
+                .hasSession({ sessionId })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+                    reject(e)
+                })
+                .finally(() => {
+                    communicator.stop()
+                    // close with leave flag true just in case
+                    // any info of the autocertifer is in the network
+                    managedConnection.close(true)
+                    pendingConnection.close(true)
+                    handshaker.stop()
+                })
         })
         const onDisconnected = () => {
-            reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
-                + address + '. Please chack that the IP address is not behind a NAT.'))
+            reject(
+                new FailedToConnectToStreamrWebSocket(
+                    'Autocertifier failed to connect to ' + address + '. Please chack that the IP address is not behind a NAT.'
+                )
+            )
         }
 
         socket.on('disconnected', onDisconnected)

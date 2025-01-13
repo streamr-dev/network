@@ -7,8 +7,8 @@ const logger = new Logger(module)
 const once = <T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
     eventName: keyof T,
-    predicate: (...eventArgs: any[]) => boolean = () => true,
-): { task: Promise<any[]>, cancel: () => void } => {
+    predicate: (...eventArgs: any[]) => boolean = () => true
+): { task: Promise<any[]>; cancel: () => void } => {
     let listener: (eventArgs: any[]) => void
     const task = new Promise<any[]>((resolve) => {
         listener = (...eventArgs: any[]) => {
@@ -42,17 +42,13 @@ export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
     predicate: (...eventArgs: any[]) => boolean = () => true
 ): Promise<unknown> {
     const { task, cancel } = once(emitter, eventName, predicate)
-    return withTimeout(
-        task,
-        timeout,
-        'waitForEvent3'
-    ).finally(() => {
+    return withTimeout(task, timeout, 'waitForEvent3').finally(() => {
         cancel()
     })
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> = { winnerName: keyof T, winnerArgs: any[] }
+export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> = { winnerName: keyof T; winnerArgs: any[] }
 
 /**
  * Wait for an event to be emitted on eventemitter3 within timeout.
@@ -69,7 +65,7 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     eventNames: (keyof T)[],
     timeout: number | null = 5000
 ): Promise<RunAndRaceEventsReturnType<T>> {
-    const promises: { task: Promise<RunAndRaceEventsReturnType<T>>, cancel: () => void }[] = []
+    const promises: { task: Promise<RunAndRaceEventsReturnType<T>>; cancel: () => void }[] = []
     eventNames.forEach((eventName) => {
         const item = once(emitter, eventName)
         const wrappedTask = item.task.then((value: any[]) => {
@@ -86,11 +82,7 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     }
 
     if (timeout !== null) {
-        return withTimeout(
-            Promise.race(promises.map((promise) => promise.task)),
-            timeout,
-            'raceEvents3'
-        ).finally(() => {
+        return withTimeout(Promise.race(promises.map((promise) => promise.task)), timeout, 'raceEvents3').finally(() => {
             cancelAll()
         })
     } else {
@@ -98,7 +90,6 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
             cancelAll()
         })
     }
-
 }
 
 export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
@@ -126,7 +117,9 @@ const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
     promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
     const promise = promiseFn(waitedEvents.map(([emitter, event]) => waitForEvent3(emitter, event, timeout)))
-    operations.forEach((op) => { op() })
+    operations.forEach((op) => {
+        op()
+    })
     return promise
 }
 

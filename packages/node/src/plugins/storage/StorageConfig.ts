@@ -52,9 +52,13 @@ export class StorageConfig {
         this.myIndexInCluster = myIndexInCluster
         this.listener = listener
         this.storagePoller = new StoragePoller(clusterId, pollInterval, streamrClient, async (streams, block) => {
-            const streamParts = (await Promise.all(streams.map(async (stream: Stream) => {
-                return [...await this.createMyStreamParts(stream)]
-            }))).flat()
+            const streamParts = (
+                await Promise.all(
+                    streams.map(async (stream: Stream) => {
+                        return [...(await this.createMyStreamParts(stream))]
+                    })
+                )
+            ).flat()
             this.handleDiff(this.synchronizer.ingestSnapshot(new Set<StreamPartID>(streamParts), block))
         })
         this.storageEventListener = new StorageEventListener(clusterId, streamrClient, async (stream, type, block) => {
@@ -83,10 +87,12 @@ export class StorageConfig {
     }
 
     private async createMyStreamParts(stream: Stream): Promise<Set<StreamPartID>> {
-        return new Set<StreamPartID>((await stream.getStreamParts()).filter((streamPart) => {
-            const hashedIndex = keyToArrayIndex(this.clusterSize, streamPart)
-            return hashedIndex === this.myIndexInCluster
-        }))
+        return new Set<StreamPartID>(
+            (await stream.getStreamParts()).filter((streamPart) => {
+                const hashedIndex = keyToArrayIndex(this.clusterSize, streamPart)
+                return hashedIndex === this.myIndexInCluster
+            })
+        )
     }
 
     private handleDiff({ added, removed }: Diff<StreamPartID>): void {

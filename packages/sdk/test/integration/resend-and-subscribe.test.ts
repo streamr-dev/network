@@ -17,7 +17,6 @@ import { nextValue } from './../../src/utils/iterators'
  * to decrypt a realtime message
  */
 describe('resend and subscribe', () => {
-
     const subscriberWallet = fastWallet()
     const publisherWallet = fastWallet()
     let subscriber: StreamrClient

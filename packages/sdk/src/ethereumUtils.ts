@@ -6,11 +6,11 @@ import { FeeData, Wallet } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
 import { RpcProviderSource } from './RpcProviderSource'
 
-export const generateEthereumAccount = (): { address: string, privateKey: string } => {
+export const generateEthereumAccount = (): { address: string; privateKey: string } => {
     const wallet = Wallet.createRandom()
     return {
         address: wallet.address,
-        privateKey: wallet.privateKey,
+        privateKey: wallet.privateKey
     }
 }
 
@@ -24,11 +24,11 @@ export const getEthersOverrides = async (
 ): Promise<Overrides> => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
-    if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
+    if (chainConfig.highGasPriceStrategy && chainConfig.overrides?.gasPrice === undefined) {
         const feeData = await rpcProviderSource.getProvider().getFeeData()
         const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30
-            return feeData.gasPrice === null ? undefined : feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE) / 100n
+            return feeData.gasPrice === null ? undefined : (feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE)) / 100n
         }
         return {
             ...overrides,

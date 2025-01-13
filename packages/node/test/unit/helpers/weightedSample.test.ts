@@ -15,13 +15,13 @@ describe(weightedSample, () => {
     it('returns items at uniform probability when weights are equal', () => {
         let counter = 0
         const results = range(15).map(() => {
-            return weightedSample(['a', 'b', 'c'], () => 5, () => counter++)
+            return weightedSample(
+                ['a', 'b', 'c'],
+                () => 5,
+                () => counter++
+            )
         })
-        expect(results).toEqual([
-            ...repeat('a', 5),
-            ...repeat('b', 5),
-            ...repeat('c', 5)
-        ])
+        expect(results).toEqual([...repeat('a', 5), ...repeat('b', 5), ...repeat('c', 5)])
     })
 
     it('returns items at proportional probability when weights are unequal', () => {
@@ -33,14 +33,13 @@ describe(weightedSample, () => {
         }
         let counter = 0
         const results = range(15).map(() => {
-            return weightedSample(['a', 'b', 'c', 'd'], (item) => weights[item], () => counter++)
+            return weightedSample(
+                ['a', 'b', 'c', 'd'],
+                (item) => weights[item],
+                () => counter++
+            )
         })
-        expect(results).toEqual([
-            ...repeat('a', weights.a),
-            ...repeat('b', weights.b),
-            ...repeat('c', weights.c),
-            ...repeat('d', weights.d)
-        ])
+        expect(results).toEqual([...repeat('a', weights.a), ...repeat('b', weights.b), ...repeat('c', weights.c), ...repeat('d', weights.d)])
     })
 
     describe('sampleFn callback', () => {

@@ -10,22 +10,27 @@ import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedM
 const createMessageChain = (
     context: OrderedMessageChainContext,
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
-    onUnfillableGap: ((gap: Gap) => void),
+    onUnfillableGap: (gap: Gap) => void,
     resends: Resends,
     config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>,
     abortSignal: AbortSignal
 ) => {
-    const resend = async function*(gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
-        const msgs = await resends.resend(context.streamPartId, {
-            from: {
-                timestamp: gap.from.getMessageRef().timestamp,
-                sequenceNumber: gap.from.getMessageRef().sequenceNumber + 1,
+    const resend = async function* (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
+        const msgs = await resends.resend(
+            context.streamPartId,
+            {
+                from: {
+                    timestamp: gap.from.getMessageRef().timestamp,
+                    sequenceNumber: gap.from.getMessageRef().sequenceNumber + 1
+                },
+                to: gap.to.prevMsgRef!,
+                publisherId: context.publisherId,
+                msgChainId: context.msgChainId,
+                raw: true
             },
-            to: gap.to.prevMsgRef!,
-            publisherId: context.publisherId,
-            msgChainId: context.msgChainId,
-            raw: true
-        }, async () => [storageNodeAddress], abortSignal)
+            async () => [storageNodeAddress],
+            abortSignal
+        )
         yield* msgs
     }
     const chain = new OrderedMessageChain(context, abortSignal)
@@ -37,7 +42,7 @@ const createMessageChain = (
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
-        maxRequestsPerGap: (config.gapFill) ? config.maxGapRequests : 0,
+        maxRequestsPerGap: config.gapFill ? config.maxGapRequests : 0,
         abortSignal
     })
     gapFiller.start()
@@ -50,7 +55,6 @@ const createMessageChain = (
  * (if enabled, and the missing message available in a storage node)
  */
 export class OrderMessages {
-
     private readonly chains: Mapping<[UserID, string], OrderedMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly abortController = new AbortController()
@@ -58,7 +62,7 @@ export class OrderMessages {
     constructor(
         streamPartId: StreamPartID,
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
-        onUnfillableGap: ((gap: Gap) => void),
+        onUnfillableGap: (gap: Gap) => void,
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
@@ -66,8 +70,8 @@ export class OrderMessages {
             valueFactory: async ([publisherId, msgChainId]) => {
                 const chain = createMessageChain(
                     {
-                        streamPartId, 
-                        publisherId, 
+                        streamPartId,
+                        publisherId,
                         msgChainId
                     },
                     getStorageNodes,

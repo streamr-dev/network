@@ -5,7 +5,6 @@ import { utf8ToBinary } from '@streamr/utils'
 import { DhtAddress, randomDhtAddress } from '@streamr/dht'
 
 describe('InspectSession', () => {
-
     let inspectSession: InspectSession
     let inspectedNode: DhtAddress
     let anotherNode: DhtAddress
@@ -77,7 +76,7 @@ describe('InspectSession', () => {
                 inspectSession.markMessage(anotherNode, messageId2)
             ])
         }).rejects.toThrow('waitForEvent3')
-        
+
         expect(inspectSession.getInspectedMessageCount()).toBe(2)
     })
 })

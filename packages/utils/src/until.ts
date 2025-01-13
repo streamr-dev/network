@@ -25,7 +25,7 @@ function throwError(userAborted: boolean, conditionFn: () => any, onTimeoutConte
  * is reached with conditionFn never evaluating to true, rejects.
  */
 export const until = async (
-    conditionFn: () => (boolean | Promise<boolean>),
+    conditionFn: () => boolean | Promise<boolean>,
     timeout = 5000,
     retryInterval = 100,
     abortSignal?: AbortSignal,
@@ -35,7 +35,13 @@ export const until = async (
     if (userAborted) {
         throwError(userAborted, conditionFn, onTimeoutContext)
     }
-    abortSignal?.addEventListener('abort', () => { userAborted = true }, { once: true })
+    abortSignal?.addEventListener(
+        'abort',
+        () => {
+            userAborted = true
+        },
+        { once: true }
+    )
     const timeoutAbortSignal: AbortSignal = AbortSignal.timeout(timeout)
     const composedSignal = composeAbortSignals(timeoutAbortSignal, abortSignal)
     try {

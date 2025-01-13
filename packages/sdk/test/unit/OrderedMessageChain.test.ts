@@ -29,7 +29,6 @@ const createGap = (from: number, to: number): Gap => {
 }
 
 describe('OrderedMessageChain', () => {
-
     let chain: OrderedMessageChain
     let onOrderedMessageAdded: jest.Mock<void, [msg: StreamMessage]>
     let onGapFound: jest.Mock<void, [gap: Gap]>
@@ -81,9 +80,7 @@ describe('OrderedMessageChain', () => {
         chain.addMessage(createMessage(1))
         chain.addMessage(createMessage(3))
         expect(getOrderedTimestamps()).toEqual([1])
-        expectFoundGaps([
-            createGap(1, 3)
-        ], false)
+        expectFoundGaps([createGap(1, 3)], false)
         expect(onGapResolved).not.toHaveBeenCalled()
     })
 
@@ -99,9 +96,7 @@ describe('OrderedMessageChain', () => {
         chain.addMessage(createMessage(8))
         chain.addMessage(createMessage(10))
         expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        expectFoundGaps([
-            createGap(3, 9)
-        ])
+        expectFoundGaps([createGap(3, 9)])
     })
 
     it('fill multiple gaps', () => {
@@ -112,10 +107,7 @@ describe('OrderedMessageChain', () => {
         chain.addMessage(createMessage(4))
         chain.addMessage(createMessage(6))
         expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5, 6])
-        expectFoundGaps([
-            createGap(1, 3),
-            createGap(3, 5)
-        ])
+        expectFoundGaps([createGap(1, 3), createGap(3, 5)])
     })
 
     it('fill nested gap', () => {
@@ -128,9 +120,7 @@ describe('OrderedMessageChain', () => {
         chain.addMessage(createMessage(7))
         chain.addMessage(createMessage(2))
         expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
-        expectFoundGaps([
-            createGap(1, 3)
-        ])
+        expectFoundGaps([createGap(1, 3)])
     })
 
     it('duplicates', () => {
@@ -145,9 +135,7 @@ describe('OrderedMessageChain', () => {
         chain.addMessage(createMessage(3))
         chain.addMessage(createMessage(5))
         expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5])
-        expectFoundGaps([
-            createGap(2, 4)
-        ])
+        expectFoundGaps([createGap(2, 4)])
     })
 
     it('stale message', () => {
@@ -183,7 +171,6 @@ describe('OrderedMessageChain', () => {
     })
 
     describe('manual resolve', () => {
-        
         it('process pending messages when resolving gap', () => {
             chain.addMessage(createMessage(1))
             chain.addMessage(createMessage(5))
@@ -191,13 +178,8 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(6))
             chain.resolveMessages(new MessageRef(5, 0), true)
             expect(getOrderedTimestamps()).toEqual([1, 3, 5, 6])
-            expectFoundGaps([
-                createGap(1, 5)
-            ])
-            expectUnfillableGaps([
-                createGap(1, 3),
-                createGap(3, 5)
-            ])
+            expectFoundGaps([createGap(1, 5)])
+            expectUnfillableGaps([createGap(1, 3), createGap(3, 5)])
         })
 
         it('find pending gap when resolving gap', () => {
@@ -208,13 +190,8 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(7))
             chain.resolveMessages(new MessageRef(4, 0), true)
             expect(getOrderedTimestamps()).toEqual([1, 2, 4, 5])
-            expectFoundGaps([
-                createGap(2, 4),
-                createGap(5, 7)
-            ], false)
-            expectUnfillableGaps([
-                createGap(2, 4)
-            ])
+            expectFoundGaps([createGap(2, 4), createGap(5, 7)], false)
+            expectUnfillableGaps([createGap(2, 4)])
             expect(onGapResolved).toHaveBeenCalledTimes(1)
         })
 
@@ -228,14 +205,8 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(10))
             chain.resolveMessages(undefined, true)
             expect(getOrderedTimestamps()).toEqual([1, 2, 4, 5, 7, 8, 10])
-            expectFoundGaps([
-                createGap(2, 4)
-            ])
-            expectUnfillableGaps([
-                createGap(2, 4),
-                createGap(5, 7),
-                createGap(8, 10)
-            ])
+            expectFoundGaps([createGap(2, 4)])
+            expectUnfillableGaps([createGap(2, 4), createGap(5, 7), createGap(8, 10)])
         })
 
         it('disabled gap finding when resolving all messages', () => {
@@ -246,13 +217,8 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(7))
             chain.resolveMessages(undefined, false)
             expect(getOrderedTimestamps()).toEqual([1, 2, 4, 5, 7])
-            expectFoundGaps([
-                createGap(2, 4)
-            ])
-            expectUnfillableGaps([
-                createGap(2, 4),
-                createGap(5, 7)
-            ])
+            expectFoundGaps([createGap(2, 4)])
+            expectUnfillableGaps([createGap(2, 4), createGap(5, 7)])
         })
     })
 })

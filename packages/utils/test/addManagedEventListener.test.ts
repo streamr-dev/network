@@ -7,17 +7,11 @@ interface Events {
 }
 
 describe('addManagedEventListener', () => {
-
     it('happy path', () => {
         const abortController = new AbortController()
-        const emitter = new EventEmitter<Events>
+        const emitter = new EventEmitter<Events>()
         const listener = jest.fn()
-        addManagedEventListener(
-            emitter,
-            'foo',
-            listener,
-            abortController.signal
-        )
+        addManagedEventListener(emitter, 'foo', listener, abortController.signal)
         emitter.emit('foo', 'abc', 111)
         emitter.emit('foo', 'abc', 222)
         expect(listener).toHaveBeenCalledTimes(2)
@@ -30,15 +24,10 @@ describe('addManagedEventListener', () => {
 
     it('already aborted', () => {
         const abortController = new AbortController()
-        const emitter = new EventEmitter<Events>
+        const emitter = new EventEmitter<Events>()
         const listener = jest.fn()
         abortController.abort()
-        addManagedEventListener(
-            emitter,
-            'foo',
-            listener,
-            abortController.signal
-        )
+        addManagedEventListener(emitter, 'foo', listener, abortController.signal)
         emitter.emit('foo', 'abc', 111)
         expect(listener).not.toHaveBeenCalled()
     })

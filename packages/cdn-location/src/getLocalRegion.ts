@@ -51,10 +51,7 @@ const getRandomRegion: () => number = () => {
 }
 
 export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> = async (maxCacheAge = DEFAULT_MAX_CACHE_AGE) => {
-    if (cachedLocalRegion === undefined 
-        || cachedLocalRegionFetchTime === undefined 
-        || Date.now() - cachedLocalRegionFetchTime > maxCacheAge
-    ) {
+    if (cachedLocalRegion === undefined || cachedLocalRegionFetchTime === undefined || Date.now() - cachedLocalRegionFetchTime > maxCacheAge) {
         const region = await getLocalRegion()
         // eslint-disable-next-line require-atomic-updates
         cachedLocalRegion = region

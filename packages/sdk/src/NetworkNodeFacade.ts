@@ -32,7 +32,7 @@ export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
     removeMessageListener: (listener: (msg: NewStreamMessage) => void) => void
-    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout: number }) => Promise<void>
     leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: NewStreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
@@ -54,7 +54,7 @@ export interface NetworkNodeStub {
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
-    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T>
+    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): ProtoRpcClient<T>
     registerExternalNetworkRpcMethod<
         RequestClass extends IMessageType<RequestType>,
         ResponseClass extends IMessageType<ResponseType>,
@@ -91,7 +91,6 @@ const logger = new Logger(module)
  */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
-
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
@@ -121,16 +120,16 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = await this.getEntryPoints()
-        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ?
-            peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor
+            ? peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor)
+            : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor,
-                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null)
-                    ? this.config.network.controlLayer.websocketPortRange
-                    : undefined
+                websocketPortRange:
+                    this.config.network.controlLayer.websocketPortRange !== null ? this.config.network.controlLayer.websocketPortRange : undefined
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
@@ -194,7 +193,9 @@ export class NetworkNodeFacade {
 
     private async initNode(): Promise<NetworkNodeStub> {
         this.destroySignal.assertNotDestroyed()
-        if (this.cachedNode) { return this.cachedNode }
+        if (this.cachedNode) {
+            return this.cachedNode
+        }
         const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
         if (!this.destroySignal.isDestroyed()) {
             this.cachedNode = node
@@ -214,7 +215,7 @@ export class NetworkNodeFacade {
         return node.getNodeId()
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout: number }): Promise<void> {
         const node = await this.getNode()
         await node.join(streamPartId, neighborRequirement)
     }
@@ -280,23 +281,12 @@ export class NetworkNodeFacade {
         return this.cachedNode!.inspect(peerDescriptor, streamPartId)
     }
 
-    async setProxies(
-        streamPartId: StreamPartID,
-        nodes: NetworkPeerDescriptor[],
-        direction: ProxyDirection,
-        connectionCount?: number
-    ): Promise<void> {
+    async setProxies(streamPartId: StreamPartID, nodes: NetworkPeerDescriptor[], direction: ProxyDirection, connectionCount?: number): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
         const peerDescriptors = nodes.map(peerDescriptorTranslator)
-        await this.cachedNode!.setProxies(
-            streamPartId,
-            peerDescriptors,
-            direction,
-            await this.authentication.getUserId(),
-            connectionCount
-        )
+        await this.cachedNode!.setProxies(streamPartId, peerDescriptors, direction, await this.authentication.getUserId(), connectionCount)
     }
 
     async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: NetworkPeerDescriptor[]): Promise<void> {
@@ -316,16 +306,14 @@ export class NetworkNodeFacade {
         return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))
     }
 
-    private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
+    private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): Promise<ProtoRpcClient<T>> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
         return this.cachedNode!.createExternalRpcClient(clientClass)
     }
 
-    async registerOperator(opts: {
-        getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[]
-    }): Promise<void> {
+    async registerOperator(opts: { getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[] }): Promise<void> {
         const node = await this.getNode()
         node.registerExternalNetworkRpcMethod(
             OperatorDiscoveryRequest,
@@ -349,12 +337,12 @@ export class NetworkNodeFacade {
 
     private async getEntryPoints(): Promise<NetworkPeerDescriptor[]> {
         const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
-        const discoveredEntryPoints = (discoveryConfig?.enabled)
+        const discoveredEntryPoints = discoveryConfig?.enabled
             ? await this.operatorRegistry.findRandomNetworkEntrypoints(
-                discoveryConfig.maxEntryPoints!,
-                discoveryConfig.maxQueryResults!,
-                discoveryConfig.maxHeartbeatAgeHours!,
-            )
+                  discoveryConfig.maxEntryPoints!,
+                  discoveryConfig.maxQueryResults!,
+                  discoveryConfig.maxHeartbeatAgeHours!
+              )
             : []
         return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]
     }

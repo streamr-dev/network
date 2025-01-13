@@ -10,7 +10,6 @@ const MAX_CONNECTIONS = 20
 const K = 4
 
 describe('Storing data in DHT', () => {
-
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -22,14 +21,12 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator,
-            undefined, K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode(simulator, undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator,
-                undefined, K, MAX_CONNECTIONS, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
@@ -43,20 +40,14 @@ describe('Storing data in DHT', () => {
     it('Storing data works', async () => {
         const storingNodeIndex = 34
         const entry = createMockDataEntry()
-        const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(
-            toDhtAddress(entry.key),
-            entry.data!
-        )
+        const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(toDhtAddress(entry.key), entry.data!)
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 30000)
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
-        const successfulStorers = await storingNode.storeDataToDht(
-            toDhtAddress(entry.key),
-            entry.data!
-        )
+        const successfulStorers = await storingNode.storeDataToDht(toDhtAddress(entry.key), entry.data!)
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.fetchDataFromDht(toDhtAddress(entry.key))
@@ -69,11 +60,7 @@ describe('Storing data in DHT', () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
         const requestor = createMockPeerDescriptor()
-        const successfulStorers = await storingNode.storeDataToDht(
-            toDhtAddress(entry.key),
-            entry.data!,
-            toDhtAddress(requestor.nodeId)
-        )
+        const successfulStorers = await storingNode.storeDataToDht(toDhtAddress(entry.key), entry.data!, toDhtAddress(requestor.nodeId))
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.fetchDataFromDht(toDhtAddress(entry.key))

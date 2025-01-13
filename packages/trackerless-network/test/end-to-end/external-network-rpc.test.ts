@@ -5,7 +5,6 @@ import { HandshakeRpcClient } from '../../generated/packages/trackerless-network
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('ExternalNetworkRpc', () => {
-
     let clientNode: NetworkNode
     let serverNode: NetworkNode
 
@@ -39,7 +38,6 @@ describe('ExternalNetworkRpc', () => {
 
         await serverNode.start()
         await clientNode.start()
-
     })
 
     afterEach(() => {
@@ -49,11 +47,8 @@ describe('ExternalNetworkRpc', () => {
 
     it('can make queries', async () => {
         const requestId = 'TEST'
-        serverNode.registerExternalNetworkRpcMethod(
-            StreamPartHandshakeRequest,
-            StreamPartHandshakeResponse,
-            'handshake',
-            async () => StreamPartHandshakeResponse.create({ requestId })
+        serverNode.registerExternalNetworkRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', async () =>
+            StreamPartHandshakeResponse.create({ requestId })
         )
         const client = clientNode.createExternalRpcClient(HandshakeRpcClient)
         const response = await client.handshake(StreamPartHandshakeRequest.create(), {
@@ -61,7 +56,5 @@ describe('ExternalNetworkRpc', () => {
             targetDescriptor: serverPeerDescriptor
         })
         expect(response.requestId).toEqual(requestId)
-
     })
-
 })

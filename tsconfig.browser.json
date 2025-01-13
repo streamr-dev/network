@@ -1,31 +1,20 @@
 {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Browser – Streamr",
-    "compilerOptions": {
-        "target": "ES2015",
-        "module": "commonjs",
-        "allowJs": true,
-        "declaration": true,
-        "lib": [
-            "ES5",
-            "ES2015",
-            "ES2016",
-            "ES2017",
-            "ES2018",
-            "ES2019",
-            "ES2020",
-            "ES2021",
-            "ESNext",
-            "DOM"
-        ],
-        "strict": true,
-        "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "moduleResolution": "node",
-        "types": ["node", "jest"],
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "useUnknownInCatchVariables": false
-    }
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Browser – Streamr",
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "commonjs",
+    "allowJs": true,
+    "declaration": true,
+    "lib": ["ES5", "ES2015", "ES2016", "ES2017", "ES2018", "ES2019", "ES2020", "ES2021", "ESNext", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "useUnknownInCatchVariables": false
+  }
 }

@@ -15,9 +15,9 @@ export interface IWebrtcConnection {
     on(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
     once(event: 'localDescription', listener: (description: string, type: string) => void): this
     once(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
-    off(event: 'localDescription', listener: (description: string, type: string) => void): this 
+    off(event: 'localDescription', listener: (description: string, type: string) => void): this
     off(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
-   
+
     setRemoteDescription(description: string, type: string): Promise<void>
     addRemoteCandidate(candidate: string, mid: string): void
     isOpen(): boolean

@@ -1,7 +1,4 @@
-import {
-    StreamPartIDUtils,
-    until
-} from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
@@ -9,7 +6,6 @@ import { randomUserId } from '@streamr/test-utils'
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('NetworkStack', () => {
-
     let stack1: NetworkStack
     let stack2: NetworkStack
 
@@ -40,10 +36,7 @@ describe('NetworkStack', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            stack1.stop(),
-            stack2.stop()
-        ])
+        await Promise.all([stack1.stop(), stack2.stop()])
     })
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
@@ -52,11 +45,7 @@ describe('NetworkStack', () => {
         stack1.getContentDeliveryManager().on('newMessage', () => {
             receivedMessages += 1
         })
-        const msg = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            STREAM_PART_ID,
-            randomUserId()
-        )
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         stack2.getContentDeliveryManager().broadcast(msg)
         await until(() => receivedMessages === 1)
     })
@@ -64,7 +53,7 @@ describe('NetworkStack', () => {
     it('join and wait for neighbors', async () => {
         await Promise.all([
             stack1.joinStreamPart(STREAM_PART_ID, { minCount: 1, timeout: 5000 }),
-            stack2.joinStreamPart(STREAM_PART_ID, { minCount: 1, timeout: 5000 }),
+            stack2.joinStreamPart(STREAM_PART_ID, { minCount: 1, timeout: 5000 })
         ])
         expect(stack1.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length).toBe(1)
         expect(stack2.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length).toBe(1)

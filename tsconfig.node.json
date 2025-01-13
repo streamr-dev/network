@@ -1,21 +1,19 @@
 {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Node 18 – Streamr",
-    "extends": "@tsconfig/node18/tsconfig.json",
-    "compilerOptions": {
-        "allowJs": true,
-        "composite": true,
-        "declaration": true,
-        "noImplicitOverride": true,
-        "resolveJsonModule": true,
-        "types": ["node"],
-        "incremental": true,
-        "sourceMap": true,
-        "stripInternal": true,
-        "useUnknownInCatchVariables": false,
-        "strictBindCallApply": true
-    }, 
-    "lib": [
-        "DOM"
-    ]
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 18 – Streamr",
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "composite": true,
+    "declaration": true,
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "incremental": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "useUnknownInCatchVariables": false,
+    "strictBindCallApply": true
+  },
+  "lib": ["DOM"]
 }

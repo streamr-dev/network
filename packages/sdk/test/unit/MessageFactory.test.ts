@@ -47,20 +47,23 @@ const createMessageFactory = async (opts?: {
 }
 
 const createMessage = async (
-    opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
+    opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number; explicitPartition?: number },
     messageFactory: MessageFactory,
     content: unknown | Uint8Array = CONTENT
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(content, merge(
-        {
-            timestamp: TIMESTAMP
-        },
-        opts
-    ), opts.explicitPartition)
+    return messageFactory.createMessage(
+        content,
+        merge(
+            {
+                timestamp: TIMESTAMP
+            },
+            opts
+        ),
+        opts.explicitPartition
+    )
 }
 
 describe('MessageFactory', () => {
-
     it('happy path', async () => {
         const messageFactory = await createMessageFactory()
         const msg = await createMessage({}, messageFactory)
@@ -92,9 +95,12 @@ describe('MessageFactory', () => {
         const messageFactory = await createMessageFactory({
             erc1271ContractFacade
         })
-        const msg = await createMessage({
-            erc1271Contract: contractAddress
-        }, messageFactory)
+        const msg = await createMessage(
+            {
+                erc1271Contract: contractAddress
+            },
+            messageFactory
+        )
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
@@ -124,18 +130,24 @@ describe('MessageFactory', () => {
             erc1271ContractFacade
         })
         await expect(() =>
-            createMessage({
-                erc1271Contract: contractAddress
-            }, messageFactory)
+            createMessage(
+                {
+                    erc1271Contract: contractAddress
+                },
+                messageFactory
+            )
         ).rejects.toThrow('Signature validation failed')
     })
 
     it('throws if given non-ethereum address as erc1271Contract', async () => {
         const messageFactory = await createMessageFactory()
         await expect(() =>
-            createMessage({
-                erc1271Contract: 'not-an-ethereum-address'
-            }, messageFactory)
+            createMessage(
+                {
+                    erc1271Contract: 'not-an-ethereum-address'
+                },
+                messageFactory
+            )
         ).rejects.toThrow('not a valid Ethereum address: "not-an-ethereum-address"')
     })
 
@@ -157,10 +169,13 @@ describe('MessageFactory', () => {
         const messageFactory = await createMessageFactory()
         const partitionKey = 'mock-partitionKey'
         const msgChainId = 'mock-msgChainId'
-        const msg = await createMessage({
-            partitionKey,
-            msgChainId
-        }, messageFactory)
+        const msg = await createMessage(
+            {
+                partitionKey,
+                msgChainId
+            },
+            messageFactory
+        )
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId,
@@ -189,9 +204,7 @@ describe('MessageFactory', () => {
                 isStreamPublisher: false
             })
         })
-        return expect(() =>
-            createMessage({}, messageFactory)
-        ).rejects.toThrow(/You don't have permission to publish to this stream/)
+        return expect(() => createMessage({}, messageFactory)).rejects.toThrow(/You don't have permission to publish to this stream/)
     })
 
     it('detects binary content', async () => {
@@ -203,22 +216,17 @@ describe('MessageFactory', () => {
     })
 
     describe('partitions', () => {
-
         it('out of range', async () => {
             const messageFactory = await createMessageFactory()
-            await expect(() =>
-                createMessage({ explicitPartition: -1 }, messageFactory)
-            ).rejects.toThrow(/out of range/)
-            await expect(() =>
-                createMessage({ explicitPartition: PARTITION_COUNT }, messageFactory)
-            ).rejects.toThrow(/out of range/)
+            await expect(() => createMessage({ explicitPartition: -1 }, messageFactory)).rejects.toThrow(/out of range/)
+            await expect(() => createMessage({ explicitPartition: PARTITION_COUNT }, messageFactory)).rejects.toThrow(/out of range/)
         })
 
         it('partition and partitionKey', async () => {
             const messageFactory = await createMessageFactory()
-            return expect(() =>
-                createMessage({ partitionKey: 'mockPartitionKey', explicitPartition: 0 }, messageFactory)
-            ).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
+            return expect(() => createMessage({ partitionKey: 'mockPartitionKey', explicitPartition: 0 }, messageFactory)).rejects.toThrow(
+                'Invalid combination of "partition" and "partitionKey"'
+            )
         })
 
         it('no partition key: uses same partition for all messages', async () => {

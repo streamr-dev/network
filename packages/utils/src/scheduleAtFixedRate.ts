@@ -7,21 +7,21 @@ import { setAbortableTimeout } from './abortableTimers'
  *                            (but no tasks will be executed concurrently: if a previous task is
  *                            still ongoing when the next task should, the new task is silently skipped)
  */
-export const scheduleAtFixedRate = (
-    task: (now: number) => Promise<void>,
-    interval: number,
-    abortSignal: AbortSignal
-): void => {
+export const scheduleAtFixedRate = (task: (now: number) => Promise<void>, interval: number, abortSignal: AbortSignal): void => {
     const initTime = Date.now()
     let invocationTime = initTime - (initTime % interval)
     repeatScheduleTask((doneCb) => {
         const now = Date.now()
         invocationTime += interval
         if (now < invocationTime) {
-            setAbortableTimeout(async () => {
-                await task(invocationTime)
-                doneCb()
-            }, (invocationTime - now), abortSignal)
+            setAbortableTimeout(
+                async () => {
+                    await task(invocationTime)
+                    doneCb()
+                },
+                invocationTime - now,
+                abortSignal
+            )
         } else {
             doneCb()
         }
@@ -29,10 +29,7 @@ export const scheduleAtFixedRate = (
 }
 
 /** @internal */
-export const repeatScheduleTask = (
-    scheduleNextTask: (doneCb: () => void) => void,
-    abortSignal?: AbortSignal
-): void => {
+export const repeatScheduleTask = (scheduleNextTask: (doneCb: () => void) => void, abortSignal?: AbortSignal): void => {
     const scheduleNext = () => {
         if (!abortSignal?.aborted) {
             scheduleNextTask(scheduleNext)

@@ -1,7 +1,6 @@
 export type BucketId = string
 
 export class Bucket {
-
     id: BucketId
     streamId: string
     partition: number

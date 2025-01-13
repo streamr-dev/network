@@ -13,14 +13,14 @@ module.exports = (env, argv) => {
         entry: {
             commonjs: path.join(__dirname, 'tests/commonjs.js'),
             typescript: path.join(__dirname, 'tests/typescript.ts'),
-            esm: path.join(__dirname, 'tests/esm.mjs'),
+            esm: path.join(__dirname, 'tests/esm.mjs')
         },
         devtool: false,
         output: {
-            filename: '[name].webpacked.js',
+            filename: '[name].webpacked.js'
         },
         optimization: {
-            minimize: false,
+            minimize: false
         },
         module: {
             rules: [
@@ -32,15 +32,15 @@ module.exports = (env, argv) => {
                         options: {
                             configFile: path.resolve(__dirname, '../../.babel.browser.config.js'),
                             babelrc: false,
-                            cacheDirectory: true,
+                            cacheDirectory: true
                         }
                     }
-                },
-            ],
+                }
+            ]
         },
         resolve: {
             modules: [path.resolve('./node_modules'), path.resolve('./tests/'), ...require.resolve.paths('')],
-            extensions: ['.json', '.js', '.ts', '.mjs'],
-        },
+            extensions: ['.json', '.js', '.ts', '.mjs']
+        }
     }
 }

@@ -92,7 +92,7 @@ describe('composeAbortSignals', () => {
 
         it('another signal aborting does not cause onabort to be invoked', () => {
             const listener = jest.fn()
-            ;(composedSignal as any).onabort = listener  // type cast needed since @types/node missing onabort
+            ;(composedSignal as any).onabort = listener // type cast needed since @types/node missing onabort
 
             expect(listener).toHaveBeenCalledTimes(0)
             controllers[0].abort()

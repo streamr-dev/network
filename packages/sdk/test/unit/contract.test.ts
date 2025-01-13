@@ -15,7 +15,7 @@ interface MockContract {
 const createContract = (fooFn: () => Promise<number>, maxConcurrentCalls = 999999): ObservableContract<any> => {
     const mockContract: MockContract = {
         foo: fooFn,
-        'interface': {
+        interface: {
             fragments: {
                 filter: () => {
                     return [{ name: 'foo' }]
@@ -27,7 +27,6 @@ const createContract = (fooFn: () => Promise<number>, maxConcurrentCalls = 99999
 }
 
 describe('contracts', () => {
-
     it('happy path', async () => {
         const wrappedContract = createContract(async () => 123)
         expect(await wrappedContract.foo()).toBe(123)

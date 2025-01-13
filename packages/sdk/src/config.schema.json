@@ -1,552 +1,515 @@
 {
-    "$id": "config.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Client configuration format",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "environment": {
-            "type": "string",
-            "enum": [
-                "polygon",
-                "polygonAmoy",
-                "dev2"
-            ],
-            "description": "applies all environment-specific defaults for the given environment"
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Client configuration format",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": ["polygon", "polygonAmoy", "dev2"],
+      "description": "applies all environment-specific defaults for the given environment"
+    },
+    "id": {
+      "type": "string"
+    },
+    "logLevel": {
+      "type": "string",
+      "enum": ["silent", "fatal", "error", "warn", "info", "debug", "trace"],
+      "default": "info"
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "privateKey": {
+          "type": "string",
+          "format": "ethereum-private-key"
+        },
+        "address": {
+          "type": "string",
+          "format": "ethereum-address"
+        },
+        "ethereum": {
+          "type": "object"
+        }
+      }
+    },
+    "orderMessages": {
+      "type": "boolean",
+      "default": true
+    },
+    "gapFill": {
+      "type": "boolean",
+      "default": true
+    },
+    "maxGapRequests": {
+      "type": "number",
+      "default": 5
+    },
+    "retryResendAfter": {
+      "type": "number",
+      "default": 5000
+    },
+    "gapFillTimeout": {
+      "type": "number",
+      "default": 5000
+    },
+    "gapFillStrategy": {
+      "type": "string",
+      "enum": ["light", "full"],
+      "default": "light"
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "controlLayer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entryPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/peerDescriptor"
+              }
+            },
+            "entryPointDiscovery": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "maxEntryPoints": {
+                  "type": "number"
+                },
+                "maxQueryResults": {
+                  "type": "number"
+                },
+                "maxHeartbeatAgeHours": {
+                  "type": "number"
+                }
+              },
+              "default": {
+                "enabled": true,
+                "maxEntryPoints": 5,
+                "maxQueryResults": 50,
+                "maxHeartbeatAgeHours": 24
+              }
+            },
+            "websocketPortRange": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/portRange"
+                }
+              ],
+              "default": {
+                "min": 32200,
+                "max": 32250
+              }
+            },
+            "websocketHost": {
+              "type": "string",
+              "format": "hostname"
+            },
+            "peerDescriptor": {
+              "$ref": "#/definitions/peerDescriptor"
+            },
+            "maxConnections": {
+              "type": "number",
+              "default": 80
+            },
+            "tlsCertificate": {
+              "description": "Files to use for TLS",
+              "type": "object",
+              "required": ["certFileName", "privateKeyFileName"],
+              "additionalProperties": false,
+              "properties": {
+                "certFileName": {
+                  "type": "string",
+                  "description": "Path of certificate file"
+                },
+                "privateKeyFileName": {
+                  "type": "string",
+                  "description": "Path of private key file"
+                }
+              }
+            },
+            "iceServers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["url", "port"],
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "number"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "tcp": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "url": "stun:stun.streamr.network",
+                  "port": 5349
+                },
+                {
+                  "url": "turn:turn.streamr.network",
+                  "port": 5349,
+                  "username": "BrubeckTurn1",
+                  "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                },
+                {
+                  "url": "turn:turn.streamr.network",
+                  "port": 5349,
+                  "username": "BrubeckTurn1",
+                  "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                  "tcp": true
+                }
+              ]
+            },
+            "webrtcAllowPrivateAddresses": {
+              "type": "boolean",
+              "default": false
+            },
+            "webrtcDatachannelBufferThresholdLow": {
+              "type": "number",
+              "default": 32768
+            },
+            "webrtcDatachannelBufferThresholdHigh": {
+              "type": "number",
+              "default": 131072
+            },
+            "maxMessageSize": {
+              "type": "number",
+              "default": 1048576
+            },
+            "externalIp": {
+              "type": "string",
+              "format": "ipv4"
+            },
+            "webrtcPortRange": {
+              "$ref": "#/definitions/portRange",
+              "default": {
+                "min": 50000,
+                "max": 64000
+              }
+            },
+            "networkConnectivityTimeout": {
+              "type": "number",
+              "default": 10000
+            },
+            "websocketServerEnableTls": {
+              "type": "boolean",
+              "default": true
+            },
+            "autoCertifierUrl": {
+              "type": "string",
+              "default": "https://ns1.streamr-nodes.xyz:59833"
+            },
+            "autoCertifierConfigFile": {
+              "type": "string",
+              "default": "~/.streamr/certificate.json"
+            },
+            "geoIpDatabaseFolder": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "node": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "streamPartitionNeighborTargetCount": {
+              "type": "number",
+              "default": 4
+            },
+            "streamPartitionMinPropagationTargets": {
+              "type": "number",
+              "default": 2
+            },
+            "acceptProxyConnections": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "default": {}
+        }
+      },
+      "default": {}
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ethereumNetwork": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "chainId": {
+              "type": "number"
+            },
+            "overrides": {
+              "type": "object"
+            },
+            "highGasPriceStrategy": {
+              "type": "boolean"
+            }
+          },
+          "default": {}
+        },
+        "streamRegistryChainAddress": {
+          "type": "string",
+          "format": "ethereum-address"
+        },
+        "streamStorageRegistryChainAddress": {
+          "type": "string",
+          "format": "ethereum-address"
+        },
+        "storageNodeRegistryChainAddress": {
+          "type": "string",
+          "format": "ethereum-address"
+        },
+        "rpcs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/rpcProviderConfig"
+          },
+          "minItems": 1
+        },
+        "rpcQuorum": {
+          "type": "number",
+          "default": 2
+        },
+        "theGraphUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "maxConcurrentCalls": {
+          "type": "number",
+          "default": 10
+        },
+        "pollInterval": {
+          "type": "number",
+          "default": 4000
+        }
+      },
+      "default": {}
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "litProtocolEnabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "litProtocolLogging": {
+          "type": "boolean",
+          "default": false
+        },
+        "keyRequestTimeout": {
+          "type": "number",
+          "default": 30000
+        },
+        "maxKeyRequestsPerSecond": {
+          "type": "number",
+          "default": 20
+        },
+        "rsaKeyLength": {
+          "type": "number",
+          "default": 4096
+        }
+      },
+      "default": {}
+    },
+    "metrics": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "periods": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["streamId", "duration"],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "maxPublishDelay": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxSize": {
+          "type": "number",
+          "default": 10000
+        },
+        "maxAge": {
+          "type": "number",
+          "default": 86400000
+        }
+      },
+      "default": {}
+    },
+    "_timeouts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theGraph": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "indexTimeout": {
+              "type": "number",
+              "default": 60000
+            },
+            "indexPollInterval": {
+              "type": "number",
+              "default": 1000
+            },
+            "fetchTimeout": {
+              "type": "number",
+              "default": 30000
+            }
+          },
+          "default": {}
+        },
+        "storageNode": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "timeout": {
+              "type": "number",
+              "default": 30000
+            },
+            "retryInterval": {
+              "type": "number",
+              "default": 1000
+            }
+          },
+          "default": {}
+        },
+        "ensStreamCreation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "timeout": {
+              "type": "number",
+              "default": 180000
+            },
+            "retryInterval": {
+              "type": "number",
+              "default": 1000
+            }
+          },
+          "default": {}
+        },
+        "jsonRpcTimeout": {
+          "type": "number",
+          "default": 30000
+        }
+      },
+      "default": {}
+    }
+  },
+  "definitions": {
+    "rpcProviderConfig": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "peerDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "type": "string"
         },
         "id": {
-            "type": "string"
+          "type": "string",
+          "description": "legacy: remove this property and make nodeId required"
         },
-        "logLevel": {
-            "type": "string",
-            "enum": [
-                "silent",
-                "fatal",
-                "error",
-                "warn",
-                "info",
-                "debug",
-                "trace"
-            ],
-            "default": "info"
+        "type": {
+          "$ref": "#/definitions/nodeType"
         },
-        "auth": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "privateKey": {
-                    "type": "string",
-                    "format": "ethereum-private-key"
-                },
-                "address": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "ethereum": {
-                    "type": "object"
-                }
-            }
-        },
-        "orderMessages": {
-            "type": "boolean",
-            "default": true
-        },
-        "gapFill": {
-            "type": "boolean",
-            "default": true
-        },
-        "maxGapRequests": {
-            "type": "number",
-            "default": 5
-        },
-        "retryResendAfter": {
-            "type": "number",
-            "default": 5000
-        },
-        "gapFillTimeout": {
-            "type": "number",
-            "default": 5000
-        },
-        "gapFillStrategy": {
-            "type": "string",
-            "enum": [
-                "light",
-                "full"
-            ],
-            "default": "light"
-        },
-        "network": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [],
-            "properties": {
-                "controlLayer": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "entryPoints": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/peerDescriptor"
-                            }
-                        },
-                        "entryPointDiscovery": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                },
-                                "maxEntryPoints": {
-                                    "type": "number"
-                                },
-                                "maxQueryResults": {
-                                    "type": "number"
-                                },
-                                "maxHeartbeatAgeHours": {
-                                    "type": "number"
-                                }
-                            },
-                            "default": {
-                                "enabled": true,
-                                "maxEntryPoints": 5,
-                                "maxQueryResults": 50,
-                                "maxHeartbeatAgeHours": 24
-                            }
-                        },
-                        "websocketPortRange": {
-                            "anyOf": [
-                                {
-                                    "type": "null"
-                                },
-                                {
-                                    "$ref": "#/definitions/portRange"
-                                }
-                            ],
-                            "default": {
-                                "min": 32200,
-                                "max": 32250
-                            }
-                        },
-                        "websocketHost": {
-                            "type": "string",
-                            "format": "hostname"
-                        },
-                        "peerDescriptor": {
-                            "$ref": "#/definitions/peerDescriptor"
-                        },
-                        "maxConnections": {
-                            "type": "number",
-                            "default": 80
-                        },
-                        "tlsCertificate": {
-                            "description": "Files to use for TLS",
-                            "type": "object",
-                            "required": [
-                                "certFileName",
-                                "privateKeyFileName"
-                            ],
-                            "additionalProperties": false,
-                            "properties": {
-                                "certFileName": {
-                                    "type": "string",
-                                    "description": "Path of certificate file"
-                                },
-                                "privateKeyFileName": {
-                                    "type": "string",
-                                    "description": "Path of private key file"
-                                }
-                            }
-                        },
-                        "iceServers": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "required": [
-                                    "url",
-                                    "port"
-                                ],
-                                "additionalProperties": false,
-                                "properties": {
-                                    "url": {
-                                        "type": "string"
-                                    },
-                                    "port": {
-                                        "type": "number"
-                                    },
-                                    "username": {
-                                        "type": "string"
-                                    },
-                                    "password": {
-                                        "type": "string"
-                                    },
-                                    "tcp": {
-                                        "type": "boolean"
-                                    }
-                                }
-                            },
-                            "default": [
-                                {
-                                    "url": "stun:stun.streamr.network",
-                                    "port": 5349
-                                },
-                                {
-                                    "url": "turn:turn.streamr.network",
-                                    "port": 5349,
-                                    "username": "BrubeckTurn1",
-                                    "password": "MIlbgtMw4nhpmbgqRrht1Q=="
-                                },
-                                {
-                                    "url": "turn:turn.streamr.network",
-                                    "port": 5349,
-                                    "username": "BrubeckTurn1",
-                                    "password": "MIlbgtMw4nhpmbgqRrht1Q==",
-                                    "tcp": true
-                                }
-                            ]
-                        },
-                        "webrtcAllowPrivateAddresses": {
-                            "type": "boolean",
-                            "default": false
-                        },
-                        "webrtcDatachannelBufferThresholdLow": {
-                            "type": "number",
-                            "default": 32768
-                        },
-                        "webrtcDatachannelBufferThresholdHigh": {
-                            "type": "number",
-                            "default": 131072
-                        },
-                        "maxMessageSize": {
-                            "type": "number",
-                            "default": 1048576
-                        },
-                        "externalIp": {
-                            "type": "string",
-                            "format": "ipv4"
-                        },
-                        "webrtcPortRange": {
-                            "$ref": "#/definitions/portRange",
-                            "default": {
-                                "min": 50000,
-                                "max": 64000
-                            }
-                        },
-                        "networkConnectivityTimeout": {
-                            "type": "number",
-                            "default": 10000
-                        },
-                        "websocketServerEnableTls": {
-                            "type": "boolean",
-                            "default": true
-                        },
-                        "autoCertifierUrl": {
-                            "type": "string",
-                            "default": "https://ns1.streamr-nodes.xyz:59833"
-                        },
-                        "autoCertifierConfigFile": {
-                            "type": "string",
-                            "default": "~/.streamr/certificate.json"
-                        },
-                        "geoIpDatabaseFolder": {
-                            "type": "string"
-                        }
-                    },
-                    "default": {}
-                },
-                "node": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "streamPartitionNeighborTargetCount": {
-                            "type": "number",
-                            "default": 4
-                        },
-                        "streamPartitionMinPropagationTargets": {
-                            "type": "number",
-                            "default": 2
-                        },
-                        "acceptProxyConnections": {
-                            "type": "boolean",
-                            "default": false
-                        }
-                    },
-                    "default": {}
-                }
-            },
-            "default": {}
-        },
-        "contracts": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "ethereumNetwork": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "chainId": {
-                            "type": "number"
-                        },
-                        "overrides": {
-                            "type": "object"
-                        },
-                        "highGasPriceStrategy": {
-                            "type": "boolean"
-                        }
-                    },
-                    "default": {}
-                },
-                "streamRegistryChainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "streamStorageRegistryChainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "storageNodeRegistryChainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "rpcs": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/rpcProviderConfig"
-                    },
-                    "minItems": 1
-                },
-                "rpcQuorum": {
-                    "type": "number",
-                    "default": 2
-                },
-                "theGraphUrl": {
-                    "type": "string",
-                    "format": "uri"
-                },
-                "maxConcurrentCalls": {
-                    "type": "number",
-                    "default": 10
-                },
-                "pollInterval": {
-                    "type": "number",
-                    "default": 4000
-                }
-            },
-            "default": {}
-        },
-        "encryption": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "litProtocolEnabled": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "litProtocolLogging": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "keyRequestTimeout": {
-                    "type": "number",
-                    "default": 30000
-                },
-                "maxKeyRequestsPerSecond": {
-                    "type": "number",
-                    "default": 20
-                },
-                "rsaKeyLength": {
-                    "type": "number",
-                    "default": 4096
-                }
-            },
-            "default": {}
-        },
-        "metrics": {
-            "anyOf": [
-                {
-                    "type": "boolean"
-                },
-                {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "periods": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "required": [
-                                    "streamId",
-                                    "duration"
-                                ],
-                                "properties": {
-                                    "id": {
-                                        "type": "string"
-                                    },
-                                    "duration": {
-                                        "type": "number"
-                                    }
-                                }
-                            }
-                        },
-                        "maxPublishDelay": {
-                            "type": "number"
-                        }
-                    }
-                }
-            ]
-        },
-        "cache": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "maxSize": {
-                    "type": "number",
-                    "default": 10000
-                },
-                "maxAge": {
-                    "type": "number",
-                    "default": 86400000
-                }
-            },
-            "default": {}
-        },
-        "_timeouts": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "theGraph": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "indexTimeout": {
-                            "type": "number",
-                            "default": 60000
-                        },
-                        "indexPollInterval": {
-                            "type": "number",
-                            "default": 1000
-                        },
-                        "fetchTimeout": {
-                            "type": "number",
-                            "default": 30000
-                        }
-                    },
-                    "default": {}
-                },
-                "storageNode": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number",
-                            "default": 30000
-                        },
-                        "retryInterval": {
-                            "type": "number",
-                            "default": 1000
-                        }
-                    },
-                    "default": {}
-                },
-                "ensStreamCreation": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number",
-                            "default": 180000
-                        },
-                        "retryInterval": {
-                            "type": "number",
-                            "default": 1000
-                        }
-                    },
-                    "default": {}
-                },
-                "jsonRpcTimeout": {
-                    "type": "number",
-                    "default": 30000
-                }
-            },
-            "default": {}
+        "websocket": {
+          "$ref": "#/definitions/connectivityMethod"
         }
+      }
     },
-    "definitions": {
-        "rpcProviderConfig": {
-            "type": "object",
-            "required": [
-                "url"
-            ],
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "format": "uri"
-                }
-            }
+    "nodeType": {
+      "type": "string",
+      "enum": ["browser", "nodejs"]
+    },
+    "connectivityMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "tls"],
+      "properties": {
+        "host": {
+          "type": "string"
         },
-        "peerDescriptor": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "nodeId": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "description": "legacy: remove this property and make nodeId required"
-                },
-                "type": {
-                    "$ref": "#/definitions/nodeType"
-                },
-                "websocket": {
-                    "$ref": "#/definitions/connectivityMethod"
-                }
-            }
+        "port": {
+          "type": "number"
         },
-        "nodeType": {
-            "type": "string",
-            "enum": [
-                "browser",
-                "nodejs"
-            ]
-        },
-        "connectivityMethod": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "host",
-                "port",
-                "tls"
-            ],
-            "properties": {
-                "host": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "number"
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "portRange": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "min",
-                "max"
-            ],
-            "properties": {
-                "min": {
-                    "type": "number"
-                },
-                "max": {
-                    "type": "number"
-                }
-            }
+        "tls": {
+          "type": "boolean"
         }
-
+      }
+    },
+    "portRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
     }
+  }
 }

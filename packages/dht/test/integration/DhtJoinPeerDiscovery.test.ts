@@ -26,24 +26,32 @@ const runTest = async (latencyType: LatencyType) => {
     })
     expect(entryPoint.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
 
-    await Promise.all([
-        entryPoint.stop(),
-        ...nodes.map((node) => node.stop())
-    ])
+    await Promise.all([entryPoint.stop(), ...nodes.map((node) => node.stop())])
     simulator.stop()
 }
 
 describe('DhtJoinPeerDiscovery', () => {
-    
-    it('latency: none', async () => {
-        await runTest(LatencyType.NONE)
-    }, 60 * 1000)
+    it(
+        'latency: none',
+        async () => {
+            await runTest(LatencyType.NONE)
+        },
+        60 * 1000
+    )
 
-    it('latency: random', async () => {
-        await runTest(LatencyType.RANDOM)
-    }, 60 * 1000)
+    it(
+        'latency: random',
+        async () => {
+            await runTest(LatencyType.RANDOM)
+        },
+        60 * 1000
+    )
 
-    it('latency: real', async () => {
-        await runTest(LatencyType.REAL)
-    }, 60 * 1000)
+    it(
+        'latency: real',
+        async () => {
+            await runTest(LatencyType.REAL)
+        },
+        60 * 1000
+    )
 })

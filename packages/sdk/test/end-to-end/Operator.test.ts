@@ -23,9 +23,12 @@ import { sample } from 'lodash'
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
-        auth: (privateKey !== undefined) ? {
-            privateKey
-        } : undefined
+        auth:
+            privateKey !== undefined
+                ? {
+                      privateKey
+                  }
+                : undefined
     })
 }
 
@@ -75,87 +78,102 @@ describe('Operator', () => {
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })
-
     }, 90 * 1000)
 
-    it('getStakedOperators', async () => {
-        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), parseEther('20000'))
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
-        const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
-        const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
-        expect(randomOperatorAddress).toBeDefined()
+    it(
+        'getStakedOperators',
+        async () => {
+            await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), parseEther('20000'))
+            await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+            const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
+            const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
+            expect(randomOperatorAddress).toBeDefined()
 
-        // check it's a valid operator, deployed by the OperatorFactory
-        const operatorFactory = new Contract(
-            CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            OperatorFactoryArtifact,
-            getTestAdminWallet()
-        ) as unknown as OperatorFactoryContract
-        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
-        expect(isDeployedByFactory).toBeTrue()
-        // check that there is a stake
-        const operatorContract = new Contract(
-            randomOperatorAddress!,
-            OperatorArtifact,
-            deployedOperator.operatorWallet
-        ) as unknown as OperatorContract
-        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
-    }, 30 * 1000)
+            // check it's a valid operator, deployed by the OperatorFactory
+            const operatorFactory = new Contract(
+                CHAIN_CONFIG.dev2.contracts.OperatorFactory,
+                OperatorFactoryArtifact,
+                getTestAdminWallet()
+            ) as unknown as OperatorFactoryContract
+            const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
+            expect(isDeployedByFactory).toBeTrue()
+            // check that there is a stake
+            const operatorContract = new Contract(
+                randomOperatorAddress!,
+                OperatorArtifact,
+                deployedOperator.operatorWallet
+            ) as unknown as OperatorContract
+            expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
+        },
+        30 * 1000
+    )
 
-    it('getSponsorships, getOperatorsInSponsorship', async () => {
-        const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-        await delegate(deployedOperator.operatorWallet, operatorContractAddress, parseEther('20000'))
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
-        await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
+    it(
+        'getSponsorships, getOperatorsInSponsorship',
+        async () => {
+            const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+            await delegate(deployedOperator.operatorWallet, operatorContractAddress, parseEther('20000'))
+            await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+            await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
 
-        const operator = await getOperator(undefined, deployedOperator)
+            const operator = await getOperator(undefined, deployedOperator)
 
-        await until(async (): Promise<boolean> => {
-            const res = await operator.getSponsorships()
-            return res.length === 2
-        }, 10000, 500)
+            await until(
+                async (): Promise<boolean> => {
+                    const res = await operator.getSponsorships()
+                    return res.length === 2
+                },
+                10000,
+                500
+            )
 
-        const sponsorships = await operator.getSponsorships()
-        expect(sponsorships).toIncludeSameMembers([
-            {
-                sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),
-                operatorCount: 1,
-                streamId: streamId1
-            },
-            {
-                sponsorshipAddress: toEthereumAddress(await sponsorship2.getAddress()),
-                operatorCount: 1,
-                streamId: streamId2
-            }
-        ])
+            const sponsorships = await operator.getSponsorships()
+            expect(sponsorships).toIncludeSameMembers([
+                {
+                    sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),
+                    operatorCount: 1,
+                    streamId: streamId1
+                },
+                {
+                    sponsorshipAddress: toEthereumAddress(await sponsorship2.getAddress()),
+                    operatorCount: 1,
+                    streamId: streamId2
+                }
+            ])
 
-        const operators = await operator.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
-        expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
-    }, 30 * 1000)
+            const operators = await operator.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
+            expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
+        },
+        30 * 1000
+    )
 
-    it('flag', async () => {
-        const flagger = deployedOperator
-        const target = await setupOperatorContract({
-            generateWalletWithGasAndTokens
-        })
+    it(
+        'flag',
+        async () => {
+            const flagger = deployedOperator
+            const target = await setupOperatorContract({
+                generateWalletWithGasAndTokens
+            })
 
-        await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))
+            await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))
 
-        await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), parseEther('20000'))
-        await delegate(target.operatorWallet, await target.operatorContract.getAddress(), parseEther('30000'))
-        await stake(flagger.operatorContract, await sponsorship2.getAddress(), parseEther('15000'))
-        await stake(target.operatorContract, await sponsorship2.getAddress(), parseEther('25000'))
+            await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), parseEther('20000'))
+            await delegate(target.operatorWallet, await target.operatorContract.getAddress(), parseEther('30000'))
+            await stake(flagger.operatorContract, await sponsorship2.getAddress(), parseEther('15000'))
+            await stake(target.operatorContract, await sponsorship2.getAddress(), parseEther('25000'))
 
-        const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
-        await contractFacade.flag(
-            toEthereumAddress(await sponsorship2.getAddress()),
-            toEthereumAddress(await target.operatorContract.getAddress()),
-            2
-        )
+            const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
+            await contractFacade.flag(
+                toEthereumAddress(await sponsorship2.getAddress()),
+                toEthereumAddress(await target.operatorContract.getAddress()),
+                2
+            )
 
-        const graphClient = createTheGraphClient()
-        await until(async (): Promise<boolean> => {
-            const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `
+            const graphClient = createTheGraphClient()
+            await until(
+                async (): Promise<boolean> => {
+                    const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({
+                        query: `
                 {
                     operator(id: "${(await flagger.operatorContract.getAddress()).toLowerCase()}") {
                         id
@@ -165,12 +183,17 @@ describe('Operator', () => {
                     }
                 }
                 `
-            })
-            return result.operator.flagsOpened.length === 1
-        }, 10000, 1000)
+                    })
+                    return result.operator.flagsOpened.length === 1
+                },
+                10000,
+                1000
+            )
 
-        await until(async (): Promise<boolean> => {
-            const result = await graphClient.queryEntity<{ operator: { flagsTargeted: any[] } }>({ query: `
+            await until(
+                async (): Promise<boolean> => {
+                    const result = await graphClient.queryEntity<{ operator: { flagsTargeted: any[] } }>({
+                        query: `
                 {
                     operator(id: "${(await target.operatorContract.getAddress()).toLowerCase()}") {
                         id
@@ -180,25 +203,31 @@ describe('Operator', () => {
                     }
                 }
                 `
-            })
-            return result.operator.flagsTargeted.length === 1
-        }, 10000, 1000)
-    }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
+                    })
+                    return result.operator.flagsTargeted.length === 1
+                },
+                10000,
+                1000
+            )
+        },
+        60 * 1000
+    ) // TODO why this is slower, takes ~35 seconds?
 
     it('avoids sending a transaction when trying to close non-existing flags', async () => {
         const wallet = deployedOperator.nodeWallets[0] as Wallet
         const operator = await getOperator(wallet, deployedOperator)
         const nonceBefore = await wallet.getNonce() // nonce = "how many transactions sent so far"
-        await expect(async () => operator.closeFlag(
-            toEthereumAddress(await sponsorship1.getAddress()),
-            toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-        )).rejects.toThrow('action="estimateGas"')
+        await expect(async () =>
+            operator.closeFlag(
+                toEthereumAddress(await sponsorship1.getAddress()),
+                toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+            )
+        ).rejects.toThrow('action="estimateGas"')
         const nonceAfter = await wallet.getNonce()
         expect(nonceAfter).toEqual(nonceBefore)
     })
 
     describe('fetchRedundancyFactor', () => {
-
         let operator: Operator
 
         async function updateMetadata(metadata: string): Promise<void> {
@@ -210,11 +239,12 @@ describe('Operator', () => {
             await (await operator.updateMetadata(metadata)).wait()
         }
 
-        beforeAll(async () => (
-            operator = createClient(deployedOperator.operatorWallet.privateKey).getOperator(
-                toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-            )
-        ))
+        beforeAll(
+            async () =>
+                (operator = createClient(deployedOperator.operatorWallet.privateKey).getOperator(
+                    toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+                ))
+        )
 
         describe('happy paths', () => {
             it('empty metadata', async () => {

@@ -7,29 +7,29 @@ import { sendConnectivityRequest } from '../../src/connection/connectivityChecke
 import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 describe('ConnectivityChecking', () => {
-
     let server: ConnectionManager
     const PORT = 15000
     const HOST = '127.0.0.1'
 
     beforeEach(async () => {
         server = new ConnectionManager({
-            createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: async () => {
-                    return {
-                        ...createMockPeerDescriptor(),
-                        websocket: {
-                            host: HOST,
-                            port: PORT,
-                            tls: false
+            createConnectorFacade: () =>
+                new DefaultConnectorFacade({
+                    createLocalPeerDescriptor: async () => {
+                        return {
+                            ...createMockPeerDescriptor(),
+                            websocket: {
+                                host: HOST,
+                                port: PORT,
+                                tls: false
+                            }
                         }
-                    }
-                },
-                websocketHost: HOST,
-                websocketPortRange: { min: PORT, max: PORT },
-                websocketServerEnableTls: false,
-                transport: new MockTransport()
-            }),
+                    },
+                    websocketHost: HOST,
+                    websocketPortRange: { min: PORT, max: PORT },
+                    websocketServerEnableTls: false,
+                    transport: new MockTransport()
+                }),
             metricsContext: new MetricsContext(),
             allowIncomingPrivateConnections: false
         })

@@ -10,7 +10,7 @@ describe('until', () => {
 
         it('resolves eventually when conditionFn returns true', (done) => {
             let cbReturnValue = false
-            setTimeout(() => cbReturnValue = true, 50)
+            setTimeout(() => (cbReturnValue = true), 50)
             until(() => cbReturnValue, 5000, 10)
                 .then(done)
                 .catch(() => done(new Error('timed out')))
@@ -44,17 +44,14 @@ describe('until', () => {
         })
 
         it('resolves eventually when conditionFn returns (promisified) true', async () => {
-            const fn = jest.fn()
-                .mockResolvedValueOnce(false)
-                .mockResolvedValueOnce(true)
+            const fn = jest.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true)
             await until(fn)
             expect(fn).toHaveBeenCalledTimes(2)
         })
 
         it('rejects if conditionFn keeps returning (promisified) false within timeout', async () => {
             const fn = () => Promise.resolve(false)
-            await expect(until(fn, 50, 10)).rejects
-                .toThrow('until: timed out before "() => Promise.resolve(false)" became true')
+            await expect(until(fn, 50, 10)).rejects.toThrow('until: timed out before "() => Promise.resolve(false)" became true')
         })
 
         it('rejects immediately if conditionFn returns rejected promise from the get-go', async () => {
@@ -64,18 +61,14 @@ describe('until', () => {
 
         it('rejects eventually if conditionFn returns rejected promise and no (promisifed) true was encountered', async () => {
             const error = new Error('mock')
-            const fn = jest.fn()
-                .mockResolvedValueOnce(false)
-                .mockRejectedValueOnce(error)
-            await expect(until(fn))
-                .rejects
-                .toThrow(error)
+            const fn = jest.fn().mockResolvedValueOnce(false).mockRejectedValueOnce(error)
+            await expect(until(fn)).rejects.toThrow(error)
         })
 
         it('rejects if conditionFn returns promise that does not settle within timeout', async () => {
-            await expect(until(() => new Promise(() => {}), 100, 10))
-                .rejects
-                .toThrow('until: timed out before "() => new Promise(() => { })" became true')
+            await expect(until(() => new Promise(() => {}), 100, 10)).rejects.toThrow(
+                'until: timed out before "() => new Promise(() => { })" became true'
+            )
         })
 
         it('rejects if conditionFn does not return true before abort signalled', (done) => {
@@ -102,8 +95,7 @@ describe('until', () => {
     it('can provide contextual information on rejection', (done) => {
         const pollCb = () => false
         until(pollCb, 50, 5, undefined, () => 'a was 5, expected 10').catch((err) => {
-            expect(err.message).toEqual('until: timed out before "() => false" became true' +
-                '\na was 5, expected 10')
+            expect(err.message).toEqual('until: timed out before "() => false" became true' + '\na was 5, expected 10')
             done()
         })
     })

@@ -21,7 +21,6 @@ const createResends = (serverUrl: string) => {
 }
 
 describe('Resends', () => {
-
     it('error response', async () => {
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
             res.status(400).json({
@@ -46,9 +45,7 @@ describe('Resends', () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
         }).rejects.toThrowStreamrClientError({
-            message: isRunningInElectron()
-                ? 'Failed to fetch'
-                : 'fetch failed (code=STORAGE_NODE_ERROR)',
+            message: isRunningInElectron() ? 'Failed to fetch' : 'fetch failed (code=STORAGE_NODE_ERROR)',
             code: 'STORAGE_NODE_ERROR'
         })
     })

@@ -8,7 +8,6 @@ import { SubscriptionSession } from './SubscriptionSession'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
-
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly node: NetworkNodeFacade
     private readonly messagePipelineFactory: MessagePipelineFactory
@@ -17,7 +16,7 @@ export class Subscriber {
     constructor(
         node: NetworkNodeFacade,
         @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
-        loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory
     ) {
         this.node = node
         this.messagePipelineFactory = messagePipelineFactory
@@ -28,11 +27,7 @@ export class Subscriber {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession(streamPartId)!
         }
-        const subSession = new SubscriptionSession(
-            streamPartId,
-            this.messagePipelineFactory,
-            this.node
-        )
+        const subSession = new SubscriptionSession(streamPartId, this.messagePipelineFactory, this.node)
 
         this.subSessions.set(streamPartId, subSession)
         subSession.onRetired.listen(() => {

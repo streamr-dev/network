@@ -29,20 +29,21 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
         body: {
             oneofKind: 'contentMessage',
             contentMessage: {
-                content: utf8ToBinary(JSON.stringify({
-                    hello: 'world'
-                })),
+                content: utf8ToBinary(
+                    JSON.stringify({
+                        hello: 'world'
+                    })
+                ),
                 contentType: ContentType.JSON,
-                encryptionType: EncryptionType.NONE,
+                encryptionType: EncryptionType.NONE
             }
         },
         signatureType: SignatureType.SECP256K1,
-        signature: hexToBinary('0x1234'),
+        signature: hexToBinary('0x1234')
     }
 }
 
 describe('proxy and full node', () => {
-
     const proxyNodeDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 23135, tls: false }
     })
@@ -76,7 +77,7 @@ describe('proxy and full node', () => {
         proxiedNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
-                peerDescriptor: proxiedNodeDescriptor,
+                peerDescriptor: proxiedNodeDescriptor
             }
         })
         await proxiedNode.start(false)
@@ -112,14 +113,30 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
+            waitForEvent3(
+                proxyNode.stack.getContentDeliveryManager() as any,
+                'newMessage',
+                5000,
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)
+            ),
+            waitForEvent3(
+                proxyNode.stack.getContentDeliveryManager() as any,
+                'newMessage',
+                5000,
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)
+            ),
+            waitForEvent3(
+                proxyNode.stack.getContentDeliveryManager() as any,
+                'newMessage',
+                5000,
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)
+            ),
+            waitForEvent3(
+                proxyNode.stack.getContentDeliveryManager() as any,
+                'newMessage',
+                5000,
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)
+            ),
             proxiedNode.broadcast(createMessage(regularStreamPart1)),
             proxiedNode.broadcast(createMessage(regularStreamPart2)),
             proxiedNode.broadcast(createMessage(regularStreamPart3)),
@@ -139,5 +156,4 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart3)!.proxied).toBe(false)
         expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart4)!.proxied).toBe(false)
     })
-
 })

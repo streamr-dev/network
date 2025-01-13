@@ -14,20 +14,11 @@ import { Any } from '../../generated/google/protobuf/any'
 import { DhtAddress, toNodeId, toDhtAddress } from '../identifiers'
 
 interface ExternalApiRpcLocalOptions {
-    executeRecursiveOperation: (
-        targetId: DhtAddress,
-        operation: RecursiveOperation,
-        excludedPeer: DhtAddress
-    ) => Promise<RecursiveOperationResult>
-    storeDataToDht: (
-        key: DhtAddress,
-        data: Any,
-        creator: DhtAddress
-    ) => Promise<PeerDescriptor[]>
+    executeRecursiveOperation: (targetId: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => Promise<RecursiveOperationResult>
+    storeDataToDht: (key: DhtAddress, data: Any, creator: DhtAddress) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
-
     private readonly options: ExternalApiRpcLocalOptions
 
     constructor(options: ExternalApiRpcLocalOptions) {
@@ -46,11 +37,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.options.storeDataToDht(
-            toDhtAddress(request.key),
-            request.data!,
-            toNodeId(senderPeerDescriptor)
-        )
+        const result = await this.options.storeDataToDht(toDhtAddress(request.key), request.data!, toNodeId(senderPeerDescriptor))
         return ExternalStoreDataResponse.create({
             storers: result
         })

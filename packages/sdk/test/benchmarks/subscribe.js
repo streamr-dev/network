@@ -34,17 +34,12 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 
     const stream = await client.createStream({
         id: `/test-stream-subscribe/${process.pid}`,
-        ...streamOpts,
+        ...streamOpts
     })
     return [client, stream]
 }
 
-const BATCH_SIZES = [
-    1,
-    32,
-    512,
-    1024,
-]
+const BATCH_SIZES = [1, 32, 512, 1024]
 
 const log = (...args) => process.stderr.write(format(...args) + '\n')
 
@@ -52,25 +47,28 @@ async function run() {
     const account1 = StreamrClient.generateEthereumAccount()
     const [client1, stream1] = await setupClientAndStream({
         auth: {
-            privateKey: account1.privateKey,
+            privateKey: account1.privateKey
         }
     })
 
     const account2 = StreamrClient.generateEthereumAccount()
     const [client2, stream2] = await setupClientAndStream({
         auth: {
-            privateKey: account2.privateKey,
+            privateKey: account2.privateKey
         }
     })
 
     const account3 = StreamrClient.generateEthereumAccount()
-    const [client3, stream3] = await setupClientAndStream({
-        auth: {
-            privateKey: account3.privateKey,
+    const [client3, stream3] = await setupClientAndStream(
+        {
+            auth: {
+                privateKey: account3.privateKey
+            }
+        },
+        {
+            requiresEncryption: true
         }
-    }, {
-        requiresEncryption: true,
-    })
+    )
 
     const suite = new Benchmark.Suite()
 
@@ -92,7 +90,10 @@ async function run() {
             const sub = await client.subscribe(stream.id, (msg) => {
                 received.push(msg)
                 if (msgs && received.length === msgs.length) {
-                    sub.unsubscribe().then(() => deferred.resolve(), () => deferred.resolve())
+                    sub.unsubscribe().then(
+                        () => deferred.resolve(),
+                        () => deferred.resolve()
+                    )
                 }
             })
             msgs = await publish(stream, batchSize)
@@ -127,8 +128,17 @@ async function run() {
             return result + ' Error'
         }
 
-        result += ' x ' + Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) + ' ops/sec ' + pm
-            + stats.rme.toFixed(2) + '% (' + size + ' run' + (size === 1 ? '' : 's') + ' sampled)'
+        result +=
+            ' x ' +
+            Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) +
+            ' ops/sec ' +
+            pm +
+            stats.rme.toFixed(2) +
+            '% (' +
+            size +
+            ' run' +
+            (size === 1 ? '' : 's') +
+            ' sampled)'
         return result
     }
 
@@ -138,11 +148,7 @@ async function run() {
 
     suite.on('complete', async () => {
         log('Destroying clients')
-        const tasks = [
-            client1.destroy(),
-            client2.destroy(),
-            client3.destroy()
-        ]
+        const tasks = [client1.destroy(), client2.destroy(), client3.destroy()]
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
         log('Clients destroyed')

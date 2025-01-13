@@ -9,7 +9,6 @@ import { describeOnlyInNodeJs } from '@streamr/test-utils'
 
 describeOnlyInNodeJs('WebStreamToNodeStream', () => {
     it('works', async () => {
-
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
             async start(controller: any) {

@@ -7,13 +7,12 @@ import { Any } from '../../generated/google/protobuf/any'
 import { HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('ExternalNetworkRpc', () => {
-
     let rpc: ExternalNetworkRpc
     let fn: jest.Mock
     let transport: MockTransport
 
     beforeEach(() => {
-        transport = new MockTransport
+        transport = new MockTransport()
         rpc = new ExternalNetworkRpc(transport)
         fn = jest.fn()
     })
@@ -24,19 +23,22 @@ describe('ExternalNetworkRpc', () => {
 
     it('registers method', async () => {
         rpc.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', () => fn())
-        transport.emit('message', Message.create({
-            serviceId: SERVICE_ID,
-            body: {
-                oneofKind: 'rpcMessage',
-                rpcMessage: RpcMessage.create({
-                    header: {
-                        request: 'request',
-                        method: 'handshake'
-                    },
-                    body: Any.pack(HandshakeRequest.create(), HandshakeRequest)
-                })
-            }
-        }))
+        transport.emit(
+            'message',
+            Message.create({
+                serviceId: SERVICE_ID,
+                body: {
+                    oneofKind: 'rpcMessage',
+                    rpcMessage: RpcMessage.create({
+                        header: {
+                            request: 'request',
+                            method: 'handshake'
+                        },
+                        body: Any.pack(HandshakeRequest.create(), HandshakeRequest)
+                    })
+                }
+            })
+        )
         expect(fn).toHaveBeenCalledTimes(1)
     })
 
@@ -44,5 +46,4 @@ describe('ExternalNetworkRpc', () => {
         const client = rpc.createRpcClient(HandshakeRpcClient)
         expect(client.methods.length).toEqual(2)
     })
-
 })

@@ -24,7 +24,7 @@ export function iteratorFinally<T>(
         // noop if no onFinally
         return (async function* Noop() {
             yield* iterable
-        }())
+        })()
     }
 
     let started = false
@@ -83,7 +83,7 @@ export function iteratorFinally<T>(
         } finally {
             await onFinallyOnce(error)
         }
-    }())
+    })()
 
     const it = gen[Symbol.asyncIterator].bind(gen)
     let g: MaybeCancelable<AsyncGenerator>
@@ -105,7 +105,8 @@ export function iteratorFinally<T>(
             // if ended before started
             if (ended && !started) {
                 // return a generator that simply runs finally script (once)
-                return (async function* generatorRunFinally() { // eslint-disable-line require-yield
+                return (async function* generatorRunFinally() {
+                    // eslint-disable-line require-yield
                     try {
                         // NOTE: native generators do not throw if gen.throw(err) called before started
                         // so we should do the same here
@@ -115,16 +116,12 @@ export function iteratorFinally<T>(
                     } finally {
                         await onFinallyOnce()
                     }
-                }())
+                })()
             }
 
             return it()
         }
-    }) as (
-        typeof iterable extends Cancelable<typeof iterable>
-            ? Cancelable<AsyncGenerator<T>>
-            : AsyncGenerator<T>
-    )
+    }) as typeof iterable extends Cancelable<typeof iterable> ? Cancelable<AsyncGenerator<T>> : AsyncGenerator<T>
 }
 
 export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefined> => {

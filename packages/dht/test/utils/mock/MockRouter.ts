@@ -3,18 +3,14 @@ import { Router } from '../../../src/dht/routing/Router'
 import { RouteMessageAck } from '../../../generated/packages/dht/protos/DhtRpc'
 
 export class MockRouter implements Methods<Router> {
+    // eslint-disable-next-line class-methods-use-this
+    addRoutingSession(): void {}
 
     // eslint-disable-next-line class-methods-use-this
-    addRoutingSession(): void {
-    }
+    removeRoutingSession(): void {}
 
     // eslint-disable-next-line class-methods-use-this
-    removeRoutingSession(): void {
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    addToDuplicateDetector(): void {
-    }
+    addToDuplicateDetector(): void {}
 
     // eslint-disable-next-line class-methods-use-this
     isMostLikelyDuplicate(): boolean {
@@ -32,9 +28,7 @@ export class MockRouter implements Methods<Router> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop(): void {
-
-    }
+    stop(): void {}
 
     // eslint-disable-next-line class-methods-use-this
     async routeMessage(): Promise<RouteMessageAck> {

@@ -29,4 +29,3 @@ export const isValidUserId = (input: string): boolean => {
 export const isEthereumAddressUserId = (userId: UserID): boolean => {
     return userId.length === PREFIXED_STRING_LENGTH
 }
-

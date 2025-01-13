@@ -1,9 +1,6 @@
 import { RpcCommunicator } from '../../src/RpcCommunicator'
-import {
-    RpcMessage,
-    RpcErrorType
-} from '../../generated/ProtoRpc'
-import { PingRequest, PingResponse } from '../proto/TestProtos' 
+import { RpcMessage, RpcErrorType } from '../../generated/ProtoRpc'
+import { PingRequest, PingResponse } from '../proto/TestProtos'
 import { ResultParts } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import * as Err from '../../src/errors'
@@ -21,7 +18,7 @@ describe('RpcCommunicator', () => {
 
     beforeEach(() => {
         rpcCommunicator = new RpcCommunicator({ rpcRequestTimeout: 1000 })
-        
+
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
             header: new Deferred<RpcMetadata>(),
@@ -34,7 +31,7 @@ describe('RpcCommunicator', () => {
             requestId: 'message',
             header: {
                 method: 'ping',
-                request: 'request',
+                request: 'request'
             },
             body: Any.pack({ requestId: 'requestId' }, PingRequest)
         }
@@ -42,9 +39,9 @@ describe('RpcCommunicator', () => {
             requestId: 'message',
             header: {
                 method: 'ping',
-                response: 'response',
+                response: 'response'
             },
-            body: Any.pack({ requestId: 'requestId' }, PingResponse),
+            body: Any.pack({ requestId: 'requestId' }, PingResponse)
         }
         /*
         response = {
@@ -52,7 +49,7 @@ describe('RpcCommunicator', () => {
             messageId: 'aaaa',
             body: RpcMessage.toBinary(responseRpcMessage),
             messageType: MessageType.RPC
-        } */ 
+        } */
     })
 
     afterEach(() => {
@@ -64,26 +61,24 @@ describe('RpcCommunicator', () => {
     })
 
     it('Resolves Promises', async () => {
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(responseRpcMessage, new ProtoCallContext())
         const pong = await promises.message.promise
         expect(pong).toEqual({ requestId: 'requestId' })
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Timeouts Promises', async () => {
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        await expect(promises.message.promise)
-            .rejects
-            .toEqual(new Err.RpcTimeout('Rpc request timed out'))
-        // @ts-expect-error private 
+        await expect(promises.message.promise).rejects.toEqual(new Err.RpcTimeout('Rpc request timed out'))
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
@@ -94,15 +89,13 @@ describe('RpcCommunicator', () => {
             errorMessage: 'Server error on request'
         }
         //response.body = RpcMessage.toBinary(errorResponse)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
-        await expect(promises.message.promise)
-            .rejects
-            .toEqual(new Err.RpcServerError('Server error on request'))
-        // @ts-expect-error private 
+        await expect(promises.message.promise).rejects.toEqual(new Err.RpcServerError('Server error on request'))
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
@@ -112,15 +105,13 @@ describe('RpcCommunicator', () => {
             errorType: RpcErrorType.SERVER_TIMEOUT
         }
         //response.body = RpcMessage.toBinary(errorResponse)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
-        await expect(promises.message.promise)
-            .rejects
-            .toEqual(new Err.RpcTimeout('Server timed out on request'))
-        // @ts-expect-error private 
+        await expect(promises.message.promise).rejects.toEqual(new Err.RpcTimeout('Server timed out on request'))
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
@@ -130,15 +121,13 @@ describe('RpcCommunicator', () => {
             errorType: RpcErrorType.UNKNOWN_RPC_METHOD
         }
         //response.body = RpcMessage.toBinary(errorResponse)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
-        await expect(promises.message.promise)
-            .rejects
-            .toEqual(new Err.RpcRequest(`Server does not implement method ping`))
-        // @ts-expect-error private 
+        await expect(promises.message.promise).rejects.toEqual(new Err.RpcRequest(`Server does not implement method ping`))
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
@@ -150,7 +139,7 @@ describe('RpcCommunicator', () => {
                 successCounter += 1
             }
         })
-        
+
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => successCounter === 1)
     })
@@ -163,7 +152,7 @@ describe('RpcCommunicator', () => {
                 successCounter += 1
             }
         })
-        
+
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => successCounter === 1)
     })
@@ -176,7 +165,7 @@ describe('RpcCommunicator', () => {
                 errorCounter += 1
             }
         })
-       
+
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
     })
@@ -186,11 +175,11 @@ describe('RpcCommunicator', () => {
 
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.respondPingWithTimeout)
         rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (message.errorType !== undefined && message.errorType === RpcErrorType.SERVER_TIMEOUT as RpcErrorType) {
+            if (message.errorType !== undefined && message.errorType === (RpcErrorType.SERVER_TIMEOUT as RpcErrorType)) {
                 errorCounter += 1
             }
         })
-       
+
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
     })
@@ -203,20 +192,19 @@ describe('RpcCommunicator', () => {
                 errorCounter += 1
             }
         })
-       
+
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
     })
 
     it('getRequestIds', () => {
-        // @ts-expect-error private 
+        // @ts-expect-error private
         rpcCommunicator.onOutgoingMessage(request, { nodeId: 'test' }, promises)
-        // @ts-expect-error private 
+        // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         const matchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'test')
         expect(matchingOngoingRequests.length).toEqual(1)
         const noMatchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'nope')
         expect(noMatchingOngoingRequests.length).toEqual(0)
     })
-
 })

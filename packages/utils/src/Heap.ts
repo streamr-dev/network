@@ -1,12 +1,11 @@
 export class Heap<T> {
-
     private readonly items: T[]
     private readonly compare: (item1: T, item2: T) => number
 
     constructor(compare: (item1: T, item2: T) => number) {
         this.items = []
         this.compare = compare
-    } 
+    }
 
     push(item: T): void {
         const index = this.getItemIndex(item)

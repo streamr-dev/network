@@ -5,10 +5,7 @@ import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import {
-    convertGroupKeyRequestToBytes,
-    convertGroupKeyResponseToBytes
-} from '../../src/protocol/oldStreamMessageBinaryUtils'
+import { convertGroupKeyRequestToBytes, convertGroupKeyResponseToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
@@ -27,18 +24,20 @@ const groupKeyMessageToStreamMessage = async (
     authentication: Authentication
 ): Promise<StreamMessage> => {
     const messageSigner = new MessageSigner(authentication)
-    return messageSigner.createSignedMessage({
-        messageId,
-        prevMsgRef,
-        content: groupKeyMessage instanceof GroupKeyRequest
-            ? convertGroupKeyRequestToBytes(groupKeyMessage)
-            : convertGroupKeyResponseToBytes(groupKeyMessage),
-        messageType: groupKeyMessage instanceof GroupKeyRequest
-            ? StreamMessageType.GROUP_KEY_REQUEST
-            : StreamMessageType.GROUP_KEY_RESPONSE,
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    return messageSigner.createSignedMessage(
+        {
+            messageId,
+            prevMsgRef,
+            content:
+                groupKeyMessage instanceof GroupKeyRequest
+                    ? convertGroupKeyRequestToBytes(groupKeyMessage)
+                    : convertGroupKeyResponseToBytes(groupKeyMessage),
+            messageType: groupKeyMessage instanceof GroupKeyRequest ? StreamMessageType.GROUP_KEY_REQUEST : StreamMessageType.GROUP_KEY_RESPONSE,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
+        },
+        SignatureType.SECP256K1
+    )
 }
 
 const publisherAuthentication = createRandomAuthentication()
@@ -56,11 +55,16 @@ describe('Validator2', () => {
 
     const getValidator = () => {
         return {
-            validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
-                getStreamMetadata,
-                isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
-                isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
-            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
+            validate: (msg: StreamMessage) =>
+                validateStreamMessage(
+                    msg,
+                    {
+                        getStreamMetadata,
+                        isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
+                        isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
+                    } as any,
+                    new SignatureValidator(mock<ERC1271ContractFacade>())
+                )
         }
     }
 
@@ -80,54 +84,73 @@ describe('Validator2', () => {
 
         const publisherSigner = new MessageSigner(publisherAuthentication)
 
-        msg = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: MOCK_CONTENT,
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        msg = await publisherSigner.createSignedMessage(
+            {
+                messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: MOCK_CONTENT,
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
 
-        msgWithNewGroupKey = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: MOCK_CONTENT,
-            newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        msgWithNewGroupKey = await publisherSigner.createSignedMessage(
+            {
+                messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: MOCK_CONTENT,
+                newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
         expect(msg.signature).not.toEqualBinary(msgWithNewGroupKey.signature)
 
-        msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: MOCK_CONTENT,
-            prevMsgRef: new MessageRef(1000, 0),
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1)
+        msgWithPrevMsgRef = await publisherSigner.createSignedMessage(
+            {
+                messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: MOCK_CONTENT,
+                prevMsgRef: new MessageRef(1000, 0),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
         expect(msg.signature).not.toEqualBinary(msgWithPrevMsgRef.signature)
 
-        groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({
-            requestId: 'requestId',
-            recipient: publisher,
-            rsaPublicKey: 'rsaPublicKey',
-            groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
+        groupKeyRequest = await groupKeyMessageToStreamMessage(
+            new GroupKeyRequest({
+                requestId: 'requestId',
+                recipient: publisher,
+                rsaPublicKey: 'rsaPublicKey',
+                groupKeyIds: ['groupKeyId1', 'groupKeyId2']
+            }),
+            new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'),
+            undefined,
+            subscriberAuthentication
+        )
 
-        groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
-            requestId: 'requestId',
-            recipient: subscriber,
-            encryptedGroupKeys: [
-                new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
-                new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
-            ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
+        groupKeyResponse = await groupKeyMessageToStreamMessage(
+            new GroupKeyResponse({
+                requestId: 'requestId',
+                recipient: subscriber,
+                encryptedGroupKeys: [
+                    new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
+                    new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
+                ]
+            }),
+            new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+            undefined,
+            publisherAuthentication
+        )
     })
 
     describe('validate(unknown message type)', () => {
         it('throws on unknown message type', async () => {
-            (msg as any).messageType = 666
+            ;(msg as any).messageType = 666
             await expect(getValidator().validate(msg)).rejects.toThrow(Error)
         })
     })

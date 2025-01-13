@@ -33,7 +33,6 @@ interface ConnectionUrl {
 }
 
 export class WebsocketServer {
-
     private wss?: WebSocket.Server
     private httpServer?: http.Server | https.Server
     private streamrClient: StreamrClient
@@ -47,17 +46,18 @@ export class WebsocketServer {
     }
 
     async start(
-        port: number, 
+        port: number,
         payloadFormat: PayloadFormat,
-        apiAuthentication?: ApiAuthentication, 
+        apiAuthentication?: ApiAuthentication,
         sslCertificateConfig?: WebsocketPluginConfig['sslCertificate']
     ): Promise<void> {
-        this.httpServer = (sslCertificateConfig !== undefined) 
-            ? https.createServer({
-                key: fs.readFileSync(sslCertificateConfig.privateKeyFileName),
-                cert: fs.readFileSync(sslCertificateConfig.certFileName)
-            })
-            : http.createServer()
+        this.httpServer =
+            sslCertificateConfig !== undefined
+                ? https.createServer({
+                      key: fs.readFileSync(sslCertificateConfig.privateKeyFileName),
+                      cert: fs.readFileSync(sslCertificateConfig.certFileName)
+                  })
+                : http.createServer()
         this.wss = new WebSocket.Server({ noServer: true })
 
         this.httpServer.on('upgrade', (request: http.IncomingMessage, socket: Socket, head: Buffer) => {
@@ -81,7 +81,7 @@ export class WebsocketServer {
                     includesApiKey: apiKey !== undefined,
                     reason: 'Invalid authentication'
                 })
-                sendHttpError((apiKey === undefined) ? '401 Unauthorized' : '403 Forbidden', socket)
+                sendHttpError(apiKey === undefined ? '401 Unauthorized' : '403 Forbidden', socket)
                 return
             }
             this.wss!.handleUpgrade(request, socket, head, (ws: WebSocket) => {

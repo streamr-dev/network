@@ -24,7 +24,7 @@ interface MessageOptions {
 const validate = async (messageOptions: MessageOptions) => {
     let msg = await createMockMessage({
         streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
-        publisher: messageOptions.publisher ?? publisherWallet,
+        publisher: messageOptions.publisher ?? publisherWallet
     })
     if (messageOptions.signature !== undefined) {
         msg = new StreamMessage({
@@ -44,30 +44,34 @@ const validate = async (messageOptions: MessageOptions) => {
 }
 
 describe('Validator', () => {
-
     describe('StreamMessage', () => {
-
         it('happy path', async () => {
             await validate({})
         })
 
         it('invalid partition', async () => {
-            await expect(() => validate({
-                partition: PARTITION_COUNT
-            })).rejects.toThrow(`Partition ${PARTITION_COUNT} is out of range`)
+            await expect(() =>
+                validate({
+                    partition: PARTITION_COUNT
+                })
+            ).rejects.toThrow(`Partition ${PARTITION_COUNT} is out of range`)
         })
 
         it('invalid signature', async () => {
-            await expect(() => validate({
-                signature: hexToBinary('0x3333')
-            })).rejects.toThrow('Signature validation failed')
+            await expect(() =>
+                validate({
+                    signature: hexToBinary('0x3333')
+                })
+            ).rejects.toThrow('Signature validation failed')
         })
 
         it('invalid publisher', async () => {
             const otherWallet = fastWallet()
-            await expect(() => validate({
-                publisher: otherWallet
-            })).rejects.toThrow('is not a publisher on stream streamId')
+            await expect(() =>
+                validate({
+                    publisher: otherWallet
+                })
+            ).rejects.toThrow('is not a publisher on stream streamId')
         })
     })
 })

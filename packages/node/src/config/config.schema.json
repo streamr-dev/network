@@ -1,86 +1,81 @@
 {
-    "$id": "config.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Streamr Node configuration format",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "$schema": {
-            "type": "string"
-        },
-        "client": {
-            "type": "object",
-            "description": "Client configuration",
-            "additionalProperties": true,
-            "properties": {
-                "auth": {
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "privateKey": {
-                                    "type": "string",
-                                    "pattern": "^(0x)?[a-fA-F0-9]{64}$"
-                                }
-                            },
-                            "required": ["privateKey"]
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "ethereum": {
-                                    "type": "object"
-                                }
-                            },
-                            "required": ["ethereum"]
-                        }
-                    ]
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Streamr Node configuration format",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "client": {
+      "type": "object",
+      "description": "Client configuration",
+      "additionalProperties": true,
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "privateKey": {
+                  "type": "string",
+                  "pattern": "^(0x)?[a-fA-F0-9]{64}$"
                 }
+              },
+              "required": ["privateKey"]
             },
-            "default": {}
-        },
-        "plugins": {
-            "type": "object",
-            "description": "Plugin configurations",
-            "additionalProperties": true,
-            "default": {}
-        },
-        "httpServer": {
-            "type": [
-                "object"
-            ],
-            "description": "HTTP server configuration",
-            "default": {},
-            "additionalProperties": false,
-            "properties": {
-                "port": {
-                    "$ref": "definitions.schema.json#/definitions/port",
-                    "description": "Port to start HTTP server on",
-                    "default": 7171
-                },
-                "sslCertificate": {
-                    "description": "Files to use for SSL",
-                    "type": "object",
-                    "required": [
-                        "certFileName",
-                        "privateKeyFileName"
-                    ],
-                    "additionalProperties": false,
-                    "properties": {
-                        "certFileName": {
-                            "type": "string",
-                            "description": "Path of certificate file"
-                        },
-                        "privateKeyFileName": {
-                            "type": "string",
-                            "description": "Path of private key file"
-                        }
-                    }
+            {
+              "type": "object",
+              "properties": {
+                "ethereum": {
+                  "type": "object"
                 }
+              },
+              "required": ["ethereum"]
             }
-        },
-        "apiAuthentication": {
-            "$ref": "definitions.schema.json#/definitions/apiAuthentication"
+          ]
         }
+      },
+      "default": {}
+    },
+    "plugins": {
+      "type": "object",
+      "description": "Plugin configurations",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "httpServer": {
+      "type": ["object"],
+      "description": "HTTP server configuration",
+      "default": {},
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "$ref": "definitions.schema.json#/definitions/port",
+          "description": "Port to start HTTP server on",
+          "default": 7171
+        },
+        "sslCertificate": {
+          "description": "Files to use for SSL",
+          "type": "object",
+          "required": ["certFileName", "privateKeyFileName"],
+          "additionalProperties": false,
+          "properties": {
+            "certFileName": {
+              "type": "string",
+              "description": "Path of certificate file"
+            },
+            "privateKeyFileName": {
+              "type": "string",
+              "description": "Path of private key file"
+            }
+          }
+        }
+      }
+    },
+    "apiAuthentication": {
+      "$ref": "definitions.schema.json#/definitions/apiAuthentication"
     }
+  }
 }

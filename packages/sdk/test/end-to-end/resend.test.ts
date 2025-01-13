@@ -28,10 +28,7 @@ describe('resend', () => {
     }, TIMEOUT)
 
     afterEach(async () => {
-        await Promise.allSettled([
-            publisherClient.destroy(),
-            resendClient.destroy(),
-        ])
+        await Promise.allSettled([publisherClient.destroy(), resendClient.destroy()])
     }, TIMEOUT)
 
     describe('non-public stream', () => {
@@ -50,23 +47,31 @@ describe('resend', () => {
             await wait(MESSAGE_STORE_TIMEOUT)
         }, TIMEOUT)
 
-        it('can request resend for all messages', async () => {
-            const messages: unknown[] = []
-            await resendClient.resend({
-                streamId: stream.id,
-                partition: 0
-            }, { last: NUM_OF_MESSAGES }, (msg: any) => {
-                messages.push(msg)
-            })
-            await until(
-                () => messages.length >= NUM_OF_MESSAGES,
-                TIMEOUT - 1000,
-                250,
-                undefined,
-                () => `messages array length was ${messages.length}`
-            )
-            expect(messages).toHaveLength(NUM_OF_MESSAGES)
-            expect(messages).toEqual(payloads)
-        }, TIMEOUT)
+        it(
+            'can request resend for all messages',
+            async () => {
+                const messages: unknown[] = []
+                await resendClient.resend(
+                    {
+                        streamId: stream.id,
+                        partition: 0
+                    },
+                    { last: NUM_OF_MESSAGES },
+                    (msg: any) => {
+                        messages.push(msg)
+                    }
+                )
+                await until(
+                    () => messages.length >= NUM_OF_MESSAGES,
+                    TIMEOUT - 1000,
+                    250,
+                    undefined,
+                    () => `messages array length was ${messages.length}`
+                )
+                expect(messages).toHaveLength(NUM_OF_MESSAGES)
+                expect(messages).toEqual(payloads)
+            },
+            TIMEOUT
+        )
     })
 })

@@ -13,7 +13,7 @@ const STREAM_ID = toStreamID('streamId')
 const target = Object.freeze({
     sponsorshipAddress: SPONSORSHIP_ADDRESS,
     operatorAddress: OTHER_OPERATOR_ADDRESS,
-    streamPart: toStreamPartID(STREAM_ID, 4),
+    streamPart: toStreamPartID(STREAM_ID, 4)
 })
 
 const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
@@ -26,14 +26,14 @@ describe(findTarget, () => {
     let operator: MockProxy<Operator>
     let assignments: MockProxy<StreamPartAssignments>
 
-    function setupEnv(sponsorships: { address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }[]) {
+    function setupEnv(sponsorships: { address: EthereumAddress; operators: EthereumAddress[]; streamId: StreamID }[]) {
         operator.getSponsorships.mockImplementation(async () => {
             return sponsorships
                 .filter(({ operators }) => operators.includes(MY_OPERATOR_ADDRESS))
                 .map(({ address, operators, streamId }) => ({
                     sponsorshipAddress: address,
                     operatorCount: operators.length,
-                    streamId,
+                    streamId
                 }))
         })
         operator.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
@@ -57,39 +57,41 @@ describe(findTarget, () => {
     })
 
     it('returns undefined if only finds sponsorship with my operator as only operator', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
+        setupEnv([
+            {
+                address: SPONSORSHIP_ADDRESS,
+                operators: [MY_OPERATOR_ADDRESS],
+                streamId: STREAM_ID
+            }
+        ])
         const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
     it('returns undefined if no sponsorships found with a partition assigned to me', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
+        setupEnv([
+            {
+                address: SPONSORSHIP_ADDRESS,
+                operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
+                streamId: STREAM_ID
+            }
+        ])
         setStreamPartsAssignedToMe([])
         const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
     it('returns target sponsorship, operator and stream part', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
-        setStreamPartsAssignedToMe([
-            toStreamPartID(STREAM_ID, 0),
-            toStreamPartID(STREAM_ID, 1),
-            toStreamPartID(STREAM_ID, 2),
+        setupEnv([
+            {
+                address: SPONSORSHIP_ADDRESS,
+                operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
+                streamId: STREAM_ID
+            }
         ])
+        setStreamPartsAssignedToMe([toStreamPartID(STREAM_ID, 0), toStreamPartID(STREAM_ID, 1), toStreamPartID(STREAM_ID, 2)])
 
-        const client = { 
+        const client = {
             getOperator: () => ({
                 hasOpenFlag: async () => false
             })

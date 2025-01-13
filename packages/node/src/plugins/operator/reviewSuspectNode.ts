@@ -50,7 +50,7 @@ export const reviewSuspectNode = async ({
         target: {
             sponsorshipAddress: sponsorshipAddress,
             operatorAddress: targetOperator,
-            streamPart: toStreamPartID(streamId, partition),
+            streamPart: toStreamPartID(streamId, partition)
         },
         streamrClient,
         createOperatorFleetState,
@@ -64,21 +64,25 @@ export const reviewSuspectNode = async ({
         traceId: randomString(6)
     })
 
-    const timeUntilVoteInMs = ((votingPeriod.startTime + votingPeriod.endTime) / 2) - Date.now()
+    const timeUntilVoteInMs = (votingPeriod.startTime + votingPeriod.endTime) / 2 - Date.now()
     logger.debug('Schedule voting on flag', { timeUntilVoteInMs })
-    setAbortableTimeout(async () => {
-        const results = await consumeResults()
-        const kick = results.filter((b) => b).length <= results.length / 2
-        logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
-        try {
-            await myOperator.voteOnFlag(sponsorshipAddress, targetOperator, kick)
-        } catch (err) {
-            logger.warn('Encountered error while voting on flag', {
-                sponsorshipAddress,
-                targetOperator,
-                kick,
-                reason: err?.message
-            })
-        }
-    }, timeUntilVoteInMs, abortSignal)
+    setAbortableTimeout(
+        async () => {
+            const results = await consumeResults()
+            const kick = results.filter((b) => b).length <= results.length / 2
+            logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
+            try {
+                await myOperator.voteOnFlag(sponsorshipAddress, targetOperator, kick)
+            } catch (err) {
+                logger.warn('Encountered error while voting on flag', {
+                    sponsorshipAddress,
+                    targetOperator,
+                    kick,
+                    reason: err?.message
+                })
+            }
+        },
+        timeUntilVoteInMs,
+        abortSignal
+    )
 }

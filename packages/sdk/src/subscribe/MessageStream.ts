@@ -17,7 +17,6 @@ export type MessageListener = (content: unknown, metadata: MessageMetadata) => u
  * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of | for await .. of}.
  */
 export class MessageStream implements AsyncIterable<Message> {
-
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     /** @internal */
     onFinally: Signal<[Error | undefined]>
@@ -49,7 +48,7 @@ export class MessageStream implements AsyncIterable<Message> {
         return this
     }
 
-    async* [Symbol.asyncIterator](): AsyncIterator<Message> {
+    async *[Symbol.asyncIterator](): AsyncIterator<Message> {
         for await (const msg of this.pipeline) {
             yield convertStreamMessageToMessage(msg)
         }

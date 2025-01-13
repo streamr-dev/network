@@ -6,7 +6,8 @@ import { LRUCache } from 'lru-cache'
 type RoutingTableID = string
 export type RoutingTable = Pick<
     SortedContactList<RoutingRemoteContact>,
-    'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'>
+    'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'
+>
 
 const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): RoutingTableID => {
     return targetId + (previousId ? previousId : '')
@@ -18,19 +19,18 @@ const DEFAULT_LRU_OPTIONS = {
 }
 
 /**
- * RoutingTablesCache is a cache for routing tables. 
+ * RoutingTablesCache is a cache for routing tables.
  * It is used to store the routing tables for a specific targetId and previousId.
  * Storing the previousId is important as it is used as a minimum distance for the contacts in the table.
  * Calculating a RoutingTable from scratch is an O(n log n) operation (n = number of connections of a node)
  * However,
  * - Adding a contact to a RoutingTable is an O(log n) operation.
  * - Deleting a contact from a RoutingTable is an O(1) operation.
- * Thus, holding the most frequently used routing tables in memory to be updated on 
+ * Thus, holding the most frequently used routing tables in memory to be updated on
  * connections and disconnections is hugely beneficial in terms of performance.
-*/
+ */
 
 export class RoutingTablesCache {
-
     private readonly tables: LRUCache<RoutingTableID, RoutingTable> = new LRUCache(DEFAULT_LRU_OPTIONS)
 
     get(targetId: DhtAddress, previousId?: DhtAddress): RoutingTable | undefined {

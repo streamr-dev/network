@@ -16,7 +16,7 @@ const chain = 'polygon'
 
 const LIT_PROTOCOL_CONNECT_INTERVAL = 60 * 60 * 1000 // 1h
 
-const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
+const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => [
     {
         contractAddress: streamRegistryChainAddress,
         chain,
@@ -50,10 +50,10 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
         returnValueTest: {
             key: 'userHasPermission',
             comparator: '=',
-            value: 'true',
-        },
+            value: 'true'
+        }
     }
-])
+]
 
 const signAuthMessage = async (authentication: Authentication) => {
     const domain = 'dummy.com'
@@ -83,7 +83,6 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
-
     private litNodeClient?: LitCore
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly authentication: Authentication

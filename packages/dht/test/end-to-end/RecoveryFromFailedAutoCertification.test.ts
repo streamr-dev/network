@@ -3,7 +3,6 @@ import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import os from 'os'
 
 describe('Failed autocertification', () => {
-    
     let entryPoint: DhtNode
     let failedAutocertificationNode: DhtNode
     let node: DhtNode
@@ -14,8 +13,8 @@ describe('Failed autocertification', () => {
         await entryPoint.start()
         entryPointPeerDescriptor = entryPoint.getLocalPeerDescriptor()
         await entryPoint.joinDht([entryPointPeerDescriptor])
-        
-        failedAutocertificationNode = new DhtNode({ 
+
+        failedAutocertificationNode = new DhtNode({
             websocketPortRange: { min: 11113, max: 11113 },
             websocketHost: '127.0.0.1',
             entryPoints: [entryPointPeerDescriptor],
@@ -30,7 +29,7 @@ describe('Failed autocertification', () => {
             entryPoints: [entryPointPeerDescriptor],
             websocketServerEnableTls: false
         })
-    
+
         await node.start()
         await node.joinDht([entryPointPeerDescriptor])
     })
@@ -48,5 +47,4 @@ describe('Failed autocertification', () => {
         await failedAutocertificationNode.joinDht([entryPointPeerDescriptor])
         expect(failedAutocertificationNode.getNeighborCount()).toEqual(2)
     })
-
 })

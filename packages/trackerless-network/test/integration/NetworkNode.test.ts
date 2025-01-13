@@ -8,7 +8,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
 describe('NetworkNode', () => {
-
     let transport1: SimulatorTransport
     let transport2: SimulatorTransport
 
@@ -50,10 +49,7 @@ describe('NetworkNode', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            node1.stop(),
-            node2.stop()
-        ])
+        await Promise.all([node1.stop(), node2.stop()])
     })
 
     it('wait for join + broadcast and subscribe', async () => {
@@ -73,15 +69,17 @@ describe('NetworkNode', () => {
             body: {
                 oneofKind: 'contentMessage',
                 contentMessage: {
-                    content: utf8ToBinary(JSON.stringify({
-                        hello: 'world'
-                    })),
+                    content: utf8ToBinary(
+                        JSON.stringify({
+                            hello: 'world'
+                        })
+                    ),
                     contentType: ContentType.JSON,
-                    encryptionType: EncryptionType.NONE,
+                    encryptionType: EncryptionType.NONE
                 }
             },
             signatureType: SignatureType.SECP256K1,
-            signature: hexToBinary('0x1234'),
+            signature: hexToBinary('0x1234')
         }
 
         let msgCount = 0
@@ -111,5 +109,4 @@ describe('NetworkNode', () => {
         expect(result2.controlLayer.neighbors.length).toEqual(1)
         expect(result3.controlLayer.neighbors.length).toEqual(1)
     })
-
 })

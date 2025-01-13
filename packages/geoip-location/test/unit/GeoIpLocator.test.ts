@@ -35,18 +35,18 @@ describe('GeoIpLocator', () => {
 
             // suomi.fi
             const location = locator.lookup('62.241.198.245')
-    
+
             expect(location).toBeDefined()
-    
+
             // Helsinki, Finland
             expect(location!.latitude).toBe(60.1797)
             expect(location!.longitude).toBe(24.9344)
-        
+
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
             fs.rmSync(dbDir, { recursive: true })
         })
-    
+
         it('returns undefined with invalid IP address', async () => {
             dbDir = getDbDir()
             locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
@@ -57,7 +57,7 @@ describe('GeoIpLocator', () => {
             expect(locator.lookup(undefined as unknown as string)).toBeUndefined()
             expect(locator.lookup(null as unknown as string)).toBeUndefined()
             expect(locator.lookup('127.0.0.1')).toBeUndefined()
-        
+
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
             fs.rmSync(dbDir, { recursive: true })
@@ -69,15 +69,15 @@ describe('GeoIpLocator', () => {
             await locator.start()
 
             await wait(7000)
-    
+
             // suomi.fi
             const location = locator.lookup('62.241.198.245')
             expect(location).toBeDefined()
-    
+
             // Helsinki, Finland
             expect(location!.latitude).toBe(60.1797)
             expect(location!.longitude).toBe(24.9344)
-    
+
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
             fs.rmSync(dbDir, { recursive: true })
@@ -89,17 +89,17 @@ describe('GeoIpLocator', () => {
             await locator.start()
 
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-    
+
             await wait(10000)
-    
+
             // suomi.fi
             const location = locator.lookup('62.241.198.245')
             expect(location).toBeDefined()
-    
+
             // Helsinki, Finland
             expect(location!.latitude).toBe(60.1797)
             expect(location!.longitude).toBe(24.9344)
-    
+
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
             fs.rmSync(dbDir, { recursive: true })
@@ -118,7 +118,7 @@ describe('GeoIpLocator', () => {
             const locator = new GeoIpLocator('/nonexistent')
             await expect(locator.start()).rejects.toThrow()
         })
-    
+
         it('start() throws if database path is not writable', async () => {
             const locator = new GeoIpLocator('/etc')
             await expect(locator.start()).rejects.toThrow()

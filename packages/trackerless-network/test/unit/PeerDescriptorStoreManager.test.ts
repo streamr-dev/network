@@ -8,7 +8,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 const KEY = randomDhtAddress()
 
 describe('PeerDescriptorStoreManager', () => {
-
     let withData: PeerDescriptorStoreManager
     let withoutData: PeerDescriptorStoreManager
     let storeCalled: number
@@ -96,8 +95,7 @@ describe('PeerDescriptorStoreManager', () => {
         expect(withData.isLocalNodeStored()).toEqual(true)
         await wait(4500)
         await withData.destroy()
-        // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
+        // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items
         expect(storeCalled).toEqual(3)
     })
-
 })

@@ -6,15 +6,13 @@ import { groupBy, range } from 'lodash'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 
 describe('StreamPartIdDataKeyDistribution', () => {
-
     it('partitions are well distributed', () => {
-
         const streamId = 'stream'
         const dataKeys = range(100).map((i) => {
             const streamPartId = StreamPartIDUtils.parse(streamId + '#' + i)
             return streamPartIdToDataKey(streamPartId)
         })
-        
+
         const byInitials = groupBy(dataKeys, (dataKey: DhtAddress) => dataKey[0])
         expect(Object.keys(byInitials).length).toEqual(16)
         console.log(Object.values(byInitials).map((a) => a.length))
@@ -43,7 +41,7 @@ describe('StreamPartIdDataKeyDistribution', () => {
         const byInitials = groupBy(dataKeys, (dataKey: DhtAddress) => dataKey[0])
         expect(Object.keys(byInitials).length).toEqual(16)
         console.log(Object.values(byInitials).map((a) => a.length))
-    
+
         const byTwoInitials = groupBy(dataKeys, (dataKey: DhtAddress) => dataKey[0] + dataKey[1])
         expect(Object.keys(byTwoInitials).length).toEqual(16 * 16)
         console.log(Object.values(byTwoInitials).map((a) => a.length))
@@ -56,5 +54,4 @@ describe('StreamPartIdDataKeyDistribution', () => {
         expect(Object.keys(byFourInitials).length).toEqual(16 * 16 * 16 * 16)
         console.log(Object.values(byFourInitials).map((a) => a.length))
     })
-
 })

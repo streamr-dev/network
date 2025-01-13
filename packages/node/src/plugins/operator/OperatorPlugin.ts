@@ -1,8 +1,4 @@
-import {
-    ReviewRequestEvent,
-    SignerWithProvider,
-    StreamrClient
-} from '@streamr/sdk'
+import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import {
     addManagedEventListener,
     Cache,
@@ -130,29 +126,30 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
         setImmediate(async () => {
-
-            setAbortableInterval(() => {
-                (async () => {
-                    await announceNodeToStream(
-                        toEthereumAddress(this.pluginConfig.operatorContractAddress),
-                        streamrClient
-                    )
-                })()
-            }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
+            setAbortableInterval(
+                () => {
+                    ;(async () => {
+                        await announceNodeToStream(toEthereumAddress(this.pluginConfig.operatorContractAddress), streamrClient)
+                    })()
+                },
+                this.pluginConfig.heartbeatUpdateIntervalInMs,
+                this.abortController.signal
+            )
 
             await fleetState.waitUntilReady()
             const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
 
             try {
-                await scheduleAtInterval(async () => {
-                    if (isLeader()) {
-                        await announceNodeToContract(
-                            this.pluginConfig.announceNodeToContract.writeIntervalInMs,
-                            operator,
-                            streamrClient
-                        )
-                    }
-                }, this.pluginConfig.announceNodeToContract.pollIntervalInMs, true, this.abortController.signal)
+                await scheduleAtInterval(
+                    async () => {
+                        if (isLeader()) {
+                            await announceNodeToContract(this.pluginConfig.announceNodeToContract.writeIntervalInMs, operator, streamrClient)
+                        }
+                    },
+                    this.pluginConfig.announceNodeToContract.pollIntervalInMs,
+                    true,
+                    this.abortController.signal
+                )
             } catch (err) {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)
@@ -178,48 +175,56 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 this.abortController.signal
             )
 
-            await scheduleAtInterval(async () => {
-                try {
-                    await inspectRandomNode(
-                        operatorContractAddress,
-                        operator,
-                        streamPartAssignments,
-                        streamrClient,
-                        this.pluginConfig.heartbeatTimeoutInMs,
-                        this.pluginConfig.inspectRandomNode.maxInspectionCount,
-                        async (targetOperatorContractAddress) => {
-                            return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
-                        },
-                        createOperatorFleetState,
-                        this.abortController.signal
-                    )
-                } catch (err) {
-                    logger.error('Encountered error while inspecting random node', { err })
-                }
-            }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => {
+                    try {
+                        await inspectRandomNode(
+                            operatorContractAddress,
+                            operator,
+                            streamPartAssignments,
+                            streamrClient,
+                            this.pluginConfig.heartbeatTimeoutInMs,
+                            this.pluginConfig.inspectRandomNode.maxInspectionCount,
+                            async (targetOperatorContractAddress) => {
+                                return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
+                            },
+                            createOperatorFleetState,
+                            this.abortController.signal
+                        )
+                    } catch (err) {
+                        logger.error('Encountered error while inspecting random node', { err })
+                    }
+                },
+                this.pluginConfig.inspectRandomNode.intervalInMs,
+                false,
+                this.abortController.signal
+            )
 
-            await scheduleAtInterval(async () => {
-                try {
-                    await closeExpiredFlags(
-                        this.pluginConfig.closeExpiredFlags.maxAgeInMs,
-                        operator
-                    )
-                } catch (err) {
-                    logger.error('Encountered error while closing expired flags', { err })
-                }
-            }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => {
+                    try {
+                        await closeExpiredFlags(this.pluginConfig.closeExpiredFlags.maxAgeInMs, operator)
+                    } catch (err) {
+                        logger.error('Encountered error while closing expired flags', { err })
+                    }
+                },
+                this.pluginConfig.closeExpiredFlags.intervalInMs,
+                false,
+                this.abortController.signal
+            )
 
             const stakedOperatorsCache = new Cache(() => operator.getStakedOperators(), STAKED_OPERATORS_CACHE_MAX_AGE)
             await scheduleAtInterval(
-                async () => checkOperatorValueBreach(
-                    operator,
-                    streamrClient,
-                    () => stakedOperatorsCache.get(),
-                    BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
-                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
-                ).catch((err) => {
-                    logger.warn('Encountered error', { err })
-                }),
+                async () =>
+                    checkOperatorValueBreach(
+                        operator,
+                        streamrClient,
+                        () => stakedOperatorsCache.get(),
+                        BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
+                        this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+                    ).catch((err) => {
+                        logger.warn('Encountered error', { err })
+                    }),
                 this.pluginConfig.checkOperatorValueBreachIntervalInMs,
                 false,
                 this.abortController.signal
@@ -273,9 +278,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    override getClientConfig(): { path: string, value: any }[] {
-        return [{
-            path: 'network.node.acceptProxyConnections', value: true
-        }]
+    override getClientConfig(): { path: string; value: any }[] {
+        return [
+            {
+                path: 'network.node.acceptProxyConnections',
+                value: true
+            }
+        ]
     }
 }

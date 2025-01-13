@@ -22,9 +22,7 @@ const waitForTheGraphToHaveIndexed = async (streamId: StreamID, client: StreamrC
 }
 
 describe('contract call cache', () => {
-
     describe('metadata', () => {
-
         let client: StreamrClient
         let authenticatedUser: Wallet
         let server: ProxyHttpServer
@@ -32,7 +30,7 @@ describe('contract call cache', () => {
         const METADATA_QUERY_FUNCTION_SELECTOR = formEthereumFunctionSelector('getStreamMetadata(string)')
 
         const getMethodCalls = (): ProxyHttpServerRequest[] => {
-            const methodCalls = server.getRequests().filter(((r) => r.body.method === 'eth_call'))
+            const methodCalls = server.getRequests().filter((r) => r.body.method === 'eth_call')
             return methodCalls.filter((c) => {
                 return parseEthereumFunctionSelectorFromCallData(c.body.params[0].data) === METADATA_QUERY_FUNCTION_SELECTOR
             })
@@ -59,9 +57,11 @@ describe('contract call cache', () => {
                     privateKey: authenticatedUser.privateKey
                 },
                 contracts: {
-                    rpcs: [{
-                        url: `http://localhost:${server.getPort()}`
-                    }]
+                    rpcs: [
+                        {
+                            url: `http://localhost:${server.getPort()}`
+                        }
+                    ]
                 }
             })
         })

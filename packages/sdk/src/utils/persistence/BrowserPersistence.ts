@@ -2,7 +2,6 @@ import { openDB, IDBPDatabase } from 'idb'
 import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
 
 export default class BrowserPersistence implements PersistenceContext {
-    
     private readonly db: IDBPDatabase
 
     static async createInstance(opts: PersistenceContextOptions): Promise<BrowserPersistence> {

@@ -16,7 +16,7 @@ describe('tarHelper', () => {
 
     describe('testsWithNormalServer', () => {
         const serverPort = 3197
-        
+
         beforeEach(async () => {
             testServer = new TestServer()
             await testServer.start(serverPort)
@@ -25,68 +25,66 @@ describe('tarHelper', () => {
         it('happy path', async () => {
             const url = serverUrl + serverPort + '/' + tarFileName
             const result = await fetch(url, { keepalive: false })
-        
+
             await extractFileFromTarStream(dbFileName, result.body!, '/tmp')
-            
         })
 
         it('throws asynchonously if the stream contains garbage', async () => {
             const url = serverUrl + serverPort + '/' + hashFileName
             const result = await fetch(url)
-            
-            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp'))
-                .rejects
-                .toThrow('TAR_BAD_ARCHIVE: Unrecognized archive format')
 
+            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('TAR_BAD_ARCHIVE: Unrecognized archive format')
         })
 
         it('throws asynchonously if the stream does not contain the desired file', async () => {
             const url = serverUrl + serverPort + '/' + tarFileName
             const result = await fetch(url)
 
-            await expect(extractFileFromTarStream('nonexisting-filename', result.body!, '/tmp'))
-                .rejects
-                .toThrow('File not found in tarball: nonexisting-filename')
-
+            await expect(extractFileFromTarStream('nonexisting-filename', result.body!, '/tmp')).rejects.toThrow(
+                'File not found in tarball: nonexisting-filename'
+            )
         })
     })
 
     describe('testsWithThrottledServer', () => {
         const serverPort = 3198
-       
+
         beforeEach(async () => {
             testServer = new TestServer()
             await testServer.start(serverPort, 1)
         })
 
-        it('throws asynchonously if the stream gets aborted', async () => {
-            const abortController = new AbortController()
+        it(
+            'throws asynchonously if the stream gets aborted',
+            async () => {
+                const abortController = new AbortController()
 
-            setTimeout(() => {
-                abortController.abort()
-            }, 5000)
+                setTimeout(() => {
+                    abortController.abort()
+                }, 5000)
 
-            const url = serverUrl + serverPort + '/' + tarFileName
-            const result = await fetch(url, { signal: abortController.signal })
+                const url = serverUrl + serverPort + '/' + tarFileName
+                const result = await fetch(url, { signal: abortController.signal })
 
-            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp'))
-                .rejects
-                .toThrow('AbortError: This operation was aborted')
+                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('AbortError: This operation was aborted')
+            },
+            15 * 1000
+        )
 
-        }, 15 * 1000)
+        it(
+            'throws asynchonously if server gets shut down',
+            async () => {
+                const closedPromise = waitForEvent3<TestServerEvents>(testServer!, 'closed', 10000)
+                setTimeout(async () => {
+                    await testServer!.stop()
+                }, 5000)
 
-        it('throws asynchonously if server gets shut down', async () => {
-            const closedPromise = waitForEvent3<TestServerEvents>(testServer!, 'closed', 10000)
-            setTimeout(async () => {
-                await testServer!.stop()
-            }, 5000)
-
-            const url = serverUrl + serverPort + '/' + tarFileName
-            const result = await fetch(url)
-            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp'))
-                .rejects
-                .toThrow('Error extracting tarball')
-            await closedPromise
-        }, 15 * 1000)
+                const url = serverUrl + serverPort + '/' + tarFileName
+                const result = await fetch(url)
+                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('Error extracting tarball')
+                await closedPromise
+            },
+            15 * 1000
+        )
     })
 })

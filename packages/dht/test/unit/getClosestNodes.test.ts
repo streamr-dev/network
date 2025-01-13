@@ -6,20 +6,20 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { PeerDescriptor } from '../../src/exports'
 
 describe('getClosestNodes', () => {
-
     it('happy path', () => {
         const peerDescriptors = range(10).map(() => createMockPeerDescriptor())
         const referenceId = randomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n)), 2))
-
-        const actual = getClosestNodes(
-            referenceId,
-            peerDescriptors,
-            {
-                maxCount: 5,
-                excludedNodeIds: excluded
-            }
+        const excluded = new Set<DhtAddress>(
+            sampleSize(
+                peerDescriptors.map((n) => toNodeId(n)),
+                2
+            )
         )
+
+        const actual = getClosestNodes(referenceId, peerDescriptors, {
+            maxCount: 5,
+            excludedNodeIds: excluded
+        })
 
         const expected = sortBy(
             peerDescriptors.filter((n) => !excluded.has(toNodeId(n))),

@@ -16,7 +16,6 @@ export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
  * Convenience wrapper for building client-facing functionality. Used by client.
  */
 export class NetworkNode {
-
     readonly stack: NetworkStack
     private stopped = false
     private externalNetworkRpc?: ExternalNetworkRpc
@@ -39,7 +38,7 @@ export class NetworkNode {
         await this.stack.broadcast(msg)
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout: number }): Promise<void> {
         await this.stack.joinStreamPart(streamPartId, neighborRequirement)
     }
 
@@ -129,14 +128,13 @@ export class NetworkNode {
     >(
         request: RequestClass,
         response: ResponseClass,
-        name: string, 
+        name: string,
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void {
         this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
     }
 
-    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T> {
+    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): ProtoRpcClient<T> {
         return this.externalNetworkRpc!.createRpcClient(clientClass)
     }
-
 }

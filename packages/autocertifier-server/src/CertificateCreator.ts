@@ -16,7 +16,6 @@ interface CertificateAndKey {
 }
 
 export class CertificateCreator {
-
     private accountPrivateKey?: Buffer
     private accountPrivateKeyPath: string
     private readonly acmeDirectoryUrl: string
@@ -24,13 +23,7 @@ export class CertificateCreator {
     private readonly hmacKey: string
     private readonly challengeManager: ChallengeManager
 
-    constructor(
-        acmeDirectoryUrl: string,
-        hmacKid: string,
-        hmacKey: string,
-        privateKeyPath: string,
-        challengeManager: ChallengeManager
-    ) {
+    constructor(acmeDirectoryUrl: string, hmacKid: string, hmacKey: string, privateKeyPath: string, challengeManager: ChallengeManager) {
         this.acmeDirectoryUrl = acmeDirectoryUrl
         this.hmacKid = hmacKid
         this.hmacKey = hmacKey
@@ -57,7 +50,7 @@ export class CertificateCreator {
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
         })
-       
+
         logger.debug('Creating certificate')
         let cert: string
         let keyAuth: string
@@ -74,7 +67,7 @@ export class CertificateCreator {
                 },
                 challengeRemoveFn: async (authz: acme.Authorization) => {
                     await this.challengeManager.deleteChallenge(authz.identifier.value, keyAuth)
-                },
+                }
             })
         } catch (e) {
             logger.error('Failed to create certificate: ' + e.message)
@@ -103,5 +96,4 @@ export class CertificateCreator {
         }
         return false
     }
-
 }

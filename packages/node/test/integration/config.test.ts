@@ -5,7 +5,6 @@ import { createBroker } from '../../src/broker'
 const PATH = './configs'
 
 describe('Config', () => {
-
     it('start with minimal config', async () => {
         const broker = await createBroker({
             client: {
@@ -27,14 +26,16 @@ describe('Config', () => {
                 environment: 'dev2',
                 network: {
                     controlLayer: {
-                        entryPoints: [{
-                            id: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                            websocket: {
-                                'host': '10.200.10.1',
-                                'port': 40500,
-                                'tls': false
+                        entryPoints: [
+                            {
+                                id: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                                websocket: {
+                                    host: '10.200.10.1',
+                                    port: 40500,
+                                    tls: false
+                                }
                             }
-                        }],
+                        ],
                         websocketServerEnableTls: false
                     }
                 }
@@ -47,13 +48,11 @@ describe('Config', () => {
     const fileNames = fs.readdirSync(PATH)
 
     describe.each(fileNames.map((fileName) => [fileName]))('validate', (fileName: string) => {
-
         it(fileName, () => {
             const filePath = PATH + path.sep + fileName
             const content = fs.readFileSync(filePath)
             const config = JSON.parse(content.toString())
             return expect(createBroker(config)).resolves.toBeDefined()
         })
-
     })
 })

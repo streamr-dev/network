@@ -22,13 +22,11 @@ describe('StreamPartIDUtils#parse', () => {
     })
 
     it.each(['', 'foo', 'foo/bar', streamId])('throws error on invalid streamPartId string "%s"', (str) => {
-        expect(() => StreamPartIDUtils.parse(str))
-            .toThrow('invalid streamPartId string: ' + str)
+        expect(() => StreamPartIDUtils.parse(str)).toThrow('invalid streamPartId string: ' + str)
     })
 
     it.each(INVALID_PARTITIONS)('throws error on invalid streamPartId string legacyStream#%s', (partition) => {
-        expect(() => StreamPartIDUtils.parse(`legacyStream#${partition}`))
-            .toThrow(`invalid streamPartition value: ${Number(partition)}`)
+        expect(() => StreamPartIDUtils.parse(`legacyStream#${partition}`)).toThrow(`invalid streamPartition value: ${Number(partition)}`)
     })
 })
 
@@ -49,19 +47,19 @@ describe('getter utilities', () => {
 })
 
 describe('parseRawElements', () => {
-    it('empty string', ()=> {
+    it('empty string', () => {
         expect(StreamPartIDUtils.parseRawElements('')).toEqual(['', undefined])
     })
 
-    it('streamId only', ()=> {
+    it('streamId only', () => {
         expect(StreamPartIDUtils.parseRawElements(streamId)).toEqual([streamId, undefined])
     })
 
-    it('streamId + invalid partition', ()=> {
+    it('streamId + invalid partition', () => {
         expect(StreamPartIDUtils.parseRawElements(`${streamId}#abc`)).toEqual([streamId, Number.NaN])
     })
 
-    it('streamId + valid partition', ()=> {
+    it('streamId + valid partition', () => {
         expect(StreamPartIDUtils.parseRawElements(`${streamId}#10`)).toEqual([streamId, 10])
     })
 })

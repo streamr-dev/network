@@ -8,7 +8,7 @@ import {
     confirm as confirmMock,
     input as inputMock,
     password as passwordMock,
-    select as selectMock,
+    select as selectMock
 } from '@inquirer/prompts'
 import chalk from 'chalk'
 import { parseEther, Wallet, JsonRpcProvider } from 'ethers'
@@ -31,7 +31,7 @@ jest.mock('uuid', () => {
 
     return {
         ...uuid,
-        v4: jest.fn(uuid.v4),
+        v4: jest.fn(uuid.v4)
     }
 })
 
@@ -44,13 +44,11 @@ jest.mock('@inquirer/prompts', () => {
         confirm: jest.fn(inquirer.confirm),
         input: jest.fn(inquirer.input),
         password: jest.fn(inquirer.password),
-        select: jest.fn(inquirer.select),
+        select: jest.fn(inquirer.select)
     }
 })
 
-const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(
-    () => '{"data":{"operator":{"nodes":[]}}}'
-)
+const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(() => '{"data":{"operator":{"nodes":[]}}}')
 
 interface AnswerMock {
     prompt: jest.MockedFunction<any>
@@ -59,17 +57,15 @@ interface AnswerMock {
     validate?: (screen: string) => void
 }
 
-const GENERATED_PRIVATE_KEY =
-    '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
+const GENERATED_PRIVATE_KEY = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
 
-const IMPORTED_PRIVATE_KEY =
-    '0xb269c55ff525eac7633e80c01732d499015d5c22ce952e68272023c1d6c7f92f'
+const IMPORTED_PRIVATE_KEY = '0xb269c55ff525eac7633e80c01732d499015d5c22ce952e68272023c1d6c7f92f'
 
 const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
 const extractStoragePath = (summary: string): string | undefined => {
     const match = summary.match(/streamr-node ([^\s]w+)/)
-    return (match !== null) ? match[1] : undefined
+    return match !== null ? match[1] : undefined
 }
 
 const expectPathsEqual = (actual: string | undefined, expected: string): void => {
@@ -96,25 +92,16 @@ describe('Config wizard', () => {
 
         storagePath = path.join(tempDir, 'config.json')
 
-        jest.spyOn(Wallet, 'createRandom').mockImplementation(
-            () => new Wallet(GENERATED_PRIVATE_KEY) as any
-        )
+        jest.spyOn(Wallet, 'createRandom').mockImplementation(() => new Wallet(GENERATED_PRIVATE_KEY) as any)
 
-        jest.spyOn(
-            JsonRpcProvider.prototype,
-            'getBalance'
-        ).mockImplementation(() =>
-            Promise.resolve(parseEther(fakeBalance()))
-        )
+        jest.spyOn(JsonRpcProvider.prototype, 'getBalance').mockImplementation(() => Promise.resolve(parseEther(fakeBalance())))
 
         fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
 
         jest.spyOn(global, 'fetch').mockImplementation(() => {
             const result = fakeFetchResponseBody()
 
-            return typeof result === 'string'
-                ? Promise.resolve(new Response(result))
-                : Promise.reject(result)
+            return typeof result === 'string' ? Promise.resolve(new Response(result)) : Promise.reject(result)
         })
     })
 
@@ -129,26 +116,19 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            false,
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, false, storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         expect(config.plugins).toBeEmptyObject()
@@ -163,9 +143,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -176,10 +154,10 @@ describe('Config wizard', () => {
         const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey({ type: 'Y' }, 'enter', {
-                find: GENERATED_PRIVATE_KEY,
+                find: GENERATED_PRIVATE_KEY
             }),
             Step.network('enter'),
-            Step.rewards('abort'),
+            Step.rewards('abort')
         ])
 
         expect(answers).toEqual(['Generate', true, 'polygon'])
@@ -192,26 +170,19 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Import',
-            IMPORTED_PRIVATE_KEY,
-            'polygon',
-            false,
-            false,
-            storagePath,
-        ])
+        expect(answers).toEqual(['Import', IMPORTED_PRIVATE_KEY, 'polygon', false, false, storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: IMPORTED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: IMPORTED_PRIVATE_KEY
+                }
+            }
         })
 
         expect(config.plugins).toBeEmptyObject()
@@ -226,9 +197,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x58cf5F58A722C544b7c39868c78D571519bB08b0\n`
-        )
+        expect(summary).toInclude(`node address is 0x58cf5F58A722C544b7c39868c78D571519bB08b0\n`)
 
         expect(summary).toInclude(`generated name is Flee Kit Stomach\n`)
 
@@ -248,7 +217,7 @@ describe('Config wizard', () => {
                 { type: IMPORTED_PRIVATE_KEY },
                 'enter'
             ),
-            Step.network('abort'),
+            Step.network('abort')
         ])
 
         expect(answers).toEqual(['Import', IMPORTED_PRIVATE_KEY])
@@ -264,33 +233,25 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            true,
-            OPERATOR_ADDRESS,
-            false,
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', true, OPERATOR_ADDRESS, false, storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { operator, ...otherPlugins } = config.plugins
 
         expect(operator).toMatchObject({
-            operatorContractAddress: OPERATOR_ADDRESS,
+            operatorContractAddress: OPERATOR_ADDRESS
         })
 
         expect(otherPlugins).toBeEmptyObject()
@@ -305,9 +266,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -330,16 +289,10 @@ describe('Config wizard', () => {
                 { type: OPERATOR_ADDRESS },
                 'enter'
             ),
-            Step.pubsub('abort'),
+            Step.pubsub('abort')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            true,
-            OPERATOR_ADDRESS,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', true, OPERATOR_ADDRESS])
 
         expect(existsSync(storagePath)).toBe(false)
     })
@@ -353,28 +306,19 @@ describe('Config wizard', () => {
             Step.pubsub('enter'),
             Step.pubsubPlugins({ keypress: 'space' }, 'enter'),
             Step.pubsubPort('enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket',
-            '7170',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket', '7170', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, ...otherPlugins } = config.plugins
@@ -393,9 +337,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -411,28 +353,19 @@ describe('Config wizard', () => {
             Step.pubsub('enter'),
             Step.pubsubPlugins({ keypress: 'space' }, 'enter'),
             Step.pubsubPort({ type: '2000' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket',
-            '2000',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket', '2000', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, ...otherPlugins } = config.plugins
@@ -451,9 +384,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -467,34 +398,21 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'down' },
-                { keypress: 'space' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'down' }, { keypress: 'space' }, 'enter'),
             Step.pubsubPort('enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'mqtt',
-            '1883',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'mqtt', '1883', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { mqtt, ...otherPlugins } = config.plugins
@@ -513,9 +431,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -529,34 +445,21 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'down' },
-                { keypress: 'space' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'down' }, { keypress: 'space' }, 'enter'),
             Step.pubsubPort({ type: '3000' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'mqtt',
-            '3000',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'mqtt', '3000', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { mqtt, ...otherPlugins } = config.plugins
@@ -575,9 +478,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -591,35 +492,21 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'down' },
-                { keypress: 'down' },
-                { keypress: 'space' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'down' }, { keypress: 'down' }, { keypress: 'space' }, 'enter'),
             Step.pubsubPort('enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'http',
-            '7171',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'http', '7171', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { http, ...otherPlugins } = config.plugins
@@ -638,9 +525,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -654,35 +539,21 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'down' },
-                { keypress: 'down' },
-                { keypress: 'space' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'down' }, { keypress: 'down' }, { keypress: 'space' }, 'enter'),
             Step.pubsubPort({ type: '4000' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'http',
-            '4000',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'http', '4000', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { http, ...otherPlugins } = config.plugins
@@ -699,9 +570,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -726,30 +595,19 @@ describe('Config wizard', () => {
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket,mqtt,http',
-            '7170',
-            '1883',
-            '7171',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt,http', '7170', '1883', '7171', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, mqtt, http, ...otherPlugins } = config.plugins
@@ -772,9 +630,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -799,30 +655,19 @@ describe('Config wizard', () => {
             Step.pubsubPort({ type: '2000' }, 'enter'),
             Step.pubsubPort({ type: '3000' }, 'enter'),
             Step.pubsubPort({ type: '4000' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket,mqtt,http',
-            '2000',
-            '3000',
-            '4000',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt,http', '2000', '3000', '4000', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, mqtt, http, ...otherPlugins } = config.plugins
@@ -843,9 +688,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -870,17 +713,10 @@ describe('Config wizard', () => {
                 'enter',
                 { find: /less than or equal to 49151/i },
                 'abort'
-            ),
+            )
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket',
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket'])
 
         expect(existsSync(storagePath)).toBe(false)
     })
@@ -892,47 +728,31 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'space' },
-                { keypress: 'down' },
-                { keypress: 'space' },
-                { keypress: 'down' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'space' }, { keypress: 'down' }, { keypress: 'space' }, { keypress: 'down' }, 'enter'),
             Step.pubsubPort({ type: '2000' }, 'enter'),
             Step.pubsubPort(
                 { type: '2000' },
                 'enter',
                 {
-                    find: /port 2000 is taken by websocket/i,
+                    find: /port 2000 is taken by websocket/i
                 },
                 { keypress: 'backspace' },
                 { type: '1' },
                 'enter'
             ),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket,mqtt',
-            '2000',
-            '2001',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt', '2000', '2001', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, mqtt, ...otherPlugins } = config.plugins
@@ -953,9 +773,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -969,47 +787,31 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins(
-                { keypress: 'space' },
-                { keypress: 'down' },
-                { keypress: 'space' },
-                { keypress: 'down' },
-                'enter'
-            ),
+            Step.pubsubPlugins({ keypress: 'space' }, { keypress: 'down' }, { keypress: 'space' }, { keypress: 'down' }, 'enter'),
             Step.pubsubPort('enter'),
             Step.pubsubPort(
                 { type: '7170' },
                 'enter',
                 {
-                    find: /port 7170 is taken by websocket/i,
+                    find: /port 7170 is taken by websocket/i
                 },
                 { keypress: 'backspace' },
                 { type: '9' },
                 'enter'
             ),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            true,
-            'websocket,mqtt',
-            '7170',
-            '7179',
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt', '7170', '7179', storagePath])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
         const { websocket, mqtt, ...otherPlugins } = config.plugins
@@ -1030,9 +832,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -1050,17 +850,10 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            false,
-            storagePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, false, storagePath])
 
         expect(existsSync(storagePath)).toBe(true)
 
@@ -1069,9 +862,9 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
     })
 
@@ -1081,7 +874,7 @@ describe('Config wizard', () => {
         let config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
-            FOOBAR: true,
+            FOOBAR: true
         })
 
         const { answers } = await scenario([
@@ -1091,18 +884,10 @@ describe('Config wizard', () => {
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-            Step.overwriteStorage({ type: 'y' }, 'enter'),
+            Step.overwriteStorage({ type: 'y' }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            false,
-            storagePath,
-            true,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, false, storagePath, true])
 
         expect(existsSync(storagePath)).toBe(true)
 
@@ -1111,9 +896,9 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
     })
 
@@ -1123,7 +908,7 @@ describe('Config wizard', () => {
         let config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
-            FOOBAR: true,
+            FOOBAR: true
         })
 
         const otherStoragePath = path.join(tempDir, 'foobar.json')
@@ -1138,24 +923,15 @@ describe('Config wizard', () => {
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
             Step.overwriteStorage('enter'),
-            Step.storage({ type: otherStoragePath }, 'enter'),
+            Step.storage({ type: otherStoragePath }, 'enter')
         ])
 
-        expect(answers).toEqual([
-            'Generate',
-            false,
-            'polygon',
-            false,
-            false,
-            storagePath,
-            false,
-            otherStoragePath,
-        ])
+        expect(answers).toEqual(['Generate', false, 'polygon', false, false, storagePath, false, otherStoragePath])
 
         config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
-            FOOBAR: true,
+            FOOBAR: true
         })
 
         config = JSON.parse(readFileSync(otherStoragePath).toString())
@@ -1163,9 +939,9 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
     })
 
@@ -1188,7 +964,7 @@ describe('Config wizard', () => {
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         expect(answers).toEqual([
@@ -1202,7 +978,7 @@ describe('Config wizard', () => {
             '7170',
             '1883',
             '7171',
-            storagePath,
+            storagePath
         ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
@@ -1210,13 +986,12 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GENERATED_PRIVATE_KEY,
-                },
-            },
+                    privateKey: GENERATED_PRIVATE_KEY
+                }
+            }
         })
 
-        const { websocket, mqtt, http, operator, ...otherPlugins } =
-            config.plugins
+        const { websocket, mqtt, http, operator, ...otherPlugins } = config.plugins
 
         expect(websocket).toBeEmptyObject()
 
@@ -1225,7 +1000,7 @@ describe('Config wizard', () => {
         expect(http).toBeEmptyObject()
 
         expect(operator).toMatchObject({
-            operatorContractAddress: OPERATOR_ADDRESS,
+            operatorContractAddress: OPERATOR_ADDRESS
         })
 
         expect(otherPlugins).toBeEmptyObject()
@@ -1240,9 +1015,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/congratulations/i)
 
-        expect(summary).toInclude(
-            `node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`
-        )
+        expect(summary).toInclude(`node address is 0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc\n`)
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
@@ -1259,7 +1032,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1279,7 +1052,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1290,10 +1063,7 @@ describe('Config wizard', () => {
     })
 
     it('reports balance check failures', async () => {
-        jest.spyOn(
-            JsonRpcProvider.prototype,
-            'getBalance'
-        ).mockRejectedValue(new Error('whatever'))
+        jest.spyOn(JsonRpcProvider.prototype, 'getBalance').mockRejectedValue(new Error('whatever'))
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
@@ -1302,7 +1072,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1315,10 +1085,7 @@ describe('Config wizard', () => {
     })
 
     it('tells the user if their node and the operator are paired', async () => {
-        fakeFetchResponseBody.mockImplementation(
-            () =>
-                '{"data":{"operator":{"nodes":["0x909dc59ff7a3b23126bc6f86ad44dd808fd424dc"]}}}'
-        )
+        fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":["0x909dc59ff7a3b23126bc6f86ad44dd808fd424dc"]}}}')
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
@@ -1327,7 +1094,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1336,17 +1103,13 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/node has been paired with your operator/i)
 
-        expect(summary).not.toMatch(
-            /operator could not be found on the polygon network/i
-        )
+        expect(summary).not.toMatch(/operator could not be found on the polygon network/i)
 
         expect(summary).not.toMatch(/failed to fetch operator nodes/i)
     })
 
     it('tells the user if their node and the operator are NOT paired', async () => {
-        fakeFetchResponseBody.mockImplementation(
-            () => '{"data":{"operator":{"nodes":[]}}}'
-        )
+        fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
@@ -1355,7 +1118,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1364,17 +1127,13 @@ describe('Config wizard', () => {
 
         expect(summary).not.toMatch(/node has been paired with your operator/i)
 
-        expect(summary).not.toMatch(
-            /operator could not be found on the polygon network/i
-        )
+        expect(summary).not.toMatch(/operator could not be found on the polygon network/i)
 
         expect(summary).not.toMatch(/failed to fetch operator nodes/i)
     })
 
     it('tells the user that their operator could not be found in the selected network', async () => {
-        fakeFetchResponseBody.mockImplementation(
-            () => '{"data":{"operator":null}}'
-        )
+        fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":null}}')
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
@@ -1383,7 +1142,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1392,9 +1151,7 @@ describe('Config wizard', () => {
 
         expect(summary).not.toMatch(/node has been paired with your operator/i)
 
-        expect(summary).toMatch(
-            /operator could not be found on the polygon network/i
-        )
+        expect(summary).toMatch(/operator could not be found on the polygon network/i)
 
         expect(summary).not.toMatch(/failed to fetch operator nodes/i)
     })
@@ -1409,7 +1166,7 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
@@ -1418,9 +1175,7 @@ describe('Config wizard', () => {
 
         expect(summary).not.toMatch(/node has been paired with your operator/i)
 
-        expect(summary).not.toMatch(
-            /operator could not be found on the polygon network/i
-        )
+        expect(summary).not.toMatch(/operator could not be found on the polygon network/i)
 
         expect(summary).toMatch(/failed to fetch operator nodes/i)
     })
@@ -1433,14 +1188,12 @@ describe('Config wizard', () => {
             Step.rewards('enter'),
             Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const summary = logs.join('\n')
 
-        expect(summary).toInclude(
-            `https://streamr.network/hub/network/operators/${OPERATOR_ADDRESS.toLowerCase()}`
-        )
+        expect(summary).toInclude(`https://streamr.network/hub/network/operators/${OPERATOR_ADDRESS.toLowerCase()}`)
     })
 
     it('generates an api key', async () => {
@@ -1452,40 +1205,23 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
-            Step.storage({ type: storagePath }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter')
         ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
-        expect(config.apiAuthentication.keys).toEqual([
-            'NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI',
-        ])
+        expect(config.apiAuthentication.keys).toEqual(['NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI'])
     })
 })
 
 describe('getNodeMnemonic', () => {
     it('gives a mnemonic for a private key', () => {
-        expect(
-            getNodeMnemonic(
-                '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
-            )
-        ).toEqual('Mountain Until Gun')
+        expect(getNodeMnemonic('0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d')).toEqual('Mountain Until Gun')
     })
 })
 
-function act(
-    ...actions: (
-        | 'abort'
-        | 'enter'
-        | { type: string }
-        | { keypress: string }
-        | { find: RegExp | string }
-    )[]
-) {
-    return async ({
-        events,
-        getScreen,
-    }: Awaited<ReturnType<typeof render>>) => {
+function act(...actions: ('abort' | 'enter' | { type: string } | { keypress: string } | { find: RegExp | string })[]) {
+    return async ({ events, getScreen }: Awaited<ReturnType<typeof render>>) => {
         for (const action of actions) {
             await (async () => {
                 if (action === 'abort') {
@@ -1505,10 +1241,7 @@ function act(
 
                     const { find } = action
 
-                    const found =
-                        find instanceof RegExp
-                            ? find.test(screen)
-                            : screen.includes(find)
+                    const found = find instanceof RegExp ? find.test(screen) : screen.includes(find)
 
                     if (!found) {
                         // eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -1546,58 +1279,58 @@ const Step: Record<
     privateKeySource: (...actions) => ({
         prompt: select,
         question: /want to generate/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     revealPrivateKey: (...actions) => ({
         prompt: confirm,
         question: /sensitive information on screen/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     providePrivateKey: (...actions) => ({
         prompt: password,
         question: /provide the private key/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     network: (...actions) => ({
         prompt: select,
         question: /which network/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     rewards: (...actions) => ({
         prompt: confirm,
         question: /participate in earning rewards/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     pubsub: (...actions) => ({
         prompt: confirm,
         question: /node for data publishing/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     storage: (...actions) => ({
         prompt: input,
         question: /path to store/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     operator: (...actions) => ({
         prompt: input,
         question: /operator address/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     pubsubPlugins: (...actions) => ({
         prompt: checkbox,
         question: /plugins to enable/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     pubsubPort: (...actions) => ({
         prompt: input,
         question: /provide a port/i,
-        action: act(...actions),
+        action: act(...actions)
     }),
     overwriteStorage: (...actions) => ({
         prompt: confirm,
         question: /do you want to overwrite/i,
-        action: act(...actions),
-    }),
+        action: act(...actions)
+    })
 }
 
 interface Scenario {
@@ -1630,7 +1363,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
     const { answers, logs }: Scenario = {
         answers: [],
-        logs: [],
+        logs: []
     }
 
     jest.spyOn(console, 'info').mockImplementation((...args: unknown[]) => {
@@ -1657,17 +1390,14 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
         jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
     }
 
-    [checkbox, confirm, input, password, select].forEach((prompt) => {
+    ;[checkbox, confirm, input, password, select].forEach((prompt) => {
         prompt.mockImplementation(async (config: any) => {
-            const inq = mocksCopy.find(
-                (inq) =>
-                    inq.prompt === prompt && inq.question.test(config.message)
-            )
+            const inq = mocksCopy.find((inq) => inq.prompt === prompt && inq.question.test(config.message))
 
             if (!inq) {
                 // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw `Missing mock for ${chalk.whiteBright(
-                    `"${config.message}"`  // eslint-disable-line @typescript-eslint/restrict-template-expressions
+                    `"${config.message}"` // eslint-disable-line @typescript-eslint/restrict-template-expressions
                 )}`
             }
 
@@ -1679,7 +1409,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
             const answer = await r.answer
 
-            answers.push(Array.isArray(answer) ? answer.join() : answer as any)  // TODO why casting?
+            answers.push(Array.isArray(answer) ? answer.join() : (answer as any)) // TODO why casting?
 
             return answer
         })
@@ -1695,6 +1425,6 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
     return {
         answers,
-        logs,
+        logs
     }
 }

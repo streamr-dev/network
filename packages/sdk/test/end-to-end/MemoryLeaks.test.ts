@@ -37,7 +37,9 @@ const Dependencies = {
  * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
  */
 function snapshot(): string {
-    if (!process.env.WRITE_SNAPSHOTS) { return '' }
+    if (!process.env.WRITE_SNAPSHOTS) {
+        return ''
+    }
     const value = writeHeapSnapshot()
     return value
 }
@@ -45,7 +47,8 @@ function snapshot(): string {
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
 
-describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in Electron
+describeOnlyInNodeJs('MemoryLeaks', () => {
+    // LeaksDetector is not supported in Electron
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {
@@ -57,7 +60,9 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
 
     afterEach(async () => {
         expect(leaksDetector).toBeTruthy()
-        if (!leaksDetector) { return }
+        if (!leaksDetector) {
+            return
+        }
         const detector = leaksDetector
         await wait(5000)
         snapshot()
@@ -68,7 +73,9 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
     describe('client container', () => {
         let createContainer: (opts?: any) => Promise<any>
         beforeAll(() => {
-            createContainer = async (opts: any = {}): Promise<{
+            createContainer = async (
+                opts: any = {}
+            ): Promise<{
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
             }> => {
@@ -77,7 +84,7 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                         {
                             environment: 'dev2',
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas()
                             }
                         },
                         opts
@@ -86,8 +93,8 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
-                childContainer.register(TheGraphClient, { useValue:
-                    createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                childContainer.register(TheGraphClient, {
+                    useValue: createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
                 })
                 return { config, childContainer }
             }
@@ -125,7 +132,7 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                         {
                             environment: 'dev2',
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas()
                             }
                         },
                         opts
@@ -171,127 +178,149 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 })
             })
 
-            test('publish', async () => {
-                const stream = await client.createStream({
-                    id: `/${counterId('stream')}-${Date.now()}`
-                })
-                const publishTestMessages = getPublishTestStreamMessages(client, stream, {
-                    retainMessages: false,
-                })
+            test(
+                'publish',
+                async () => {
+                    const stream = await client.createStream({
+                        id: `/${counterId('stream')}-${Date.now()}`
+                    })
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
+                        retainMessages: false
+                    })
 
-                await publishTestMessages(5)
-                await client.destroy()
-                leaksDetector.add('stream', stream)
-                await wait(3000)
-            }, TIMEOUT)
+                    await publishTestMessages(5)
+                    await client.destroy()
+                    leaksDetector.add('stream', stream)
+                    await wait(3000)
+                },
+                TIMEOUT
+            )
 
             describe('publish + subscribe', () => {
-                it('does not leak subscription', async () => {
-                    const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`
-                    })
-                    const sub = await client.subscribe(stream)
-                    leaksDetector.addAll(instanceId(sub), sub)
-                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
-                        retainMessages: false,
-                    })
+                it(
+                    'does not leak subscription',
+                    async () => {
+                        const stream = await client.createStream({
+                            id: `/${counterId('stream')}-${Date.now()}`
+                        })
+                        const sub = await client.subscribe(stream)
+                        leaksDetector.addAll(instanceId(sub), sub)
+                        const publishTestMessages = getPublishTestStreamMessages(client, stream, {
+                            retainMessages: false
+                        })
 
-                    await publishTestMessages(MAX_MESSAGES)
-                }, TIMEOUT)
+                        await publishTestMessages(MAX_MESSAGES)
+                    },
+                    TIMEOUT
+                )
 
-                test('subscribe using async iterator', async () => {
-                    const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`
-                    })
-                    const sub = await client.subscribe(stream)
-                    leaksDetector.addAll(instanceId(sub), sub)
-                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
-                        retainMessages: false,
-                    })
+                test(
+                    'subscribe using async iterator',
+                    async () => {
+                        const stream = await client.createStream({
+                            id: `/${counterId('stream')}-${Date.now()}`
+                        })
+                        const sub = await client.subscribe(stream)
+                        leaksDetector.addAll(instanceId(sub), sub)
+                        const publishTestMessages = getPublishTestStreamMessages(client, stream, {
+                            retainMessages: false
+                        })
 
-                    await publishTestMessages(MAX_MESSAGES)
-                    const received = []
-                    for await (const msg of sub) {
-                        received.push(msg)
-                        leaksDetector.add('streamMessage', msg)
-                        if (received.length === MAX_MESSAGES) {
-                            break
+                        await publishTestMessages(MAX_MESSAGES)
+                        const received = []
+                        for await (const msg of sub) {
+                            received.push(msg)
+                            leaksDetector.add('streamMessage', msg)
+                            if (received.length === MAX_MESSAGES) {
+                                break
+                            }
                         }
-                    }
-                }, TIMEOUT)
+                    },
+                    TIMEOUT
+                )
 
-                test('subscribe using onMessage callback', async () => {
-                    const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`
-                    })
+                test(
+                    'subscribe using onMessage callback',
+                    async () => {
+                        const stream = await client.createStream({
+                            id: `/${counterId('stream')}-${Date.now()}`
+                        })
 
-                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
-                        retainMessages: false,
-                    })
-                    const received: MessageMetadata[] = []
-                    const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
-                        received.push(metadata)
-                        leaksDetector.add('content', content)
-                        leaksDetector.add('metadata', metadata)
-                        if (received.length === MAX_MESSAGES) {
-                            sub.unsubscribe()
-                        }
-                    })
+                        const publishTestMessages = getPublishTestStreamMessages(client, stream, {
+                            retainMessages: false
+                        })
+                        const received: MessageMetadata[] = []
+                        const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
+                            received.push(metadata)
+                            leaksDetector.add('content', content)
+                            leaksDetector.add('metadata', metadata)
+                            if (received.length === MAX_MESSAGES) {
+                                sub.unsubscribe()
+                            }
+                        })
 
-                    leaksDetector.add(instanceId(sub), sub)
+                        leaksDetector.add(instanceId(sub), sub)
 
-                    await publishTestMessages(MAX_MESSAGES)
-                    await wait(1000)
-                }, TIMEOUT)
+                        await publishTestMessages(MAX_MESSAGES)
+                        await wait(1000)
+                    },
+                    TIMEOUT
+                )
 
-                test('subscriptions can be collected before all subscriptions removed', async () => {
-                    const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`
-                    })
+                test(
+                    'subscriptions can be collected before all subscriptions removed',
+                    async () => {
+                        const stream = await client.createStream({
+                            id: `/${counterId('stream')}-${Date.now()}`
+                        })
 
-                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
-                        retainMessages: false,
-                    })
-                    const sub1Done = new Defer<undefined>()
-                    const received1: any[] = []
-                    const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
-                    let sub1: Subscription | undefined = await client.subscribe(stream, async (msg: any) => {
-                        received1.push(msg)
-                        if (received1.length === SOME_MESSAGES) {
-                            if (!sub1) { return }
-                            sub1.unsubscribe()
-                            // unsub early
-                            sub1Done.resolve(undefined)
-                        }
-                    })
-                    const sub1LeakId = 'sub1 ' + instanceId(sub1)
-                    leaksDetector.add(sub1LeakId, sub1)
+                        const publishTestMessages = getPublishTestStreamMessages(client, stream, {
+                            retainMessages: false
+                        })
+                        const sub1Done = new Defer<undefined>()
+                        const received1: any[] = []
+                        const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
+                        let sub1: Subscription | undefined = await client.subscribe(stream, async (msg: any) => {
+                            received1.push(msg)
+                            if (received1.length === SOME_MESSAGES) {
+                                if (!sub1) {
+                                    return
+                                }
+                                sub1.unsubscribe()
+                                // unsub early
+                                sub1Done.resolve(undefined)
+                            }
+                        })
+                        const sub1LeakId = 'sub1 ' + instanceId(sub1)
+                        leaksDetector.add(sub1LeakId, sub1)
 
-                    const sub2Done = new Defer<undefined>()
-                    const received2: any[] = []
-                    const sub2 = await client.subscribe(stream, (msg: any) => {
-                        received2.push(msg)
-                        if (received2.length === MAX_MESSAGES) {
-                            // don't unsubscribe yet, this shouldn't affect sub1 from being collected
-                            sub2Done.resolve(undefined)
-                        }
-                    })
-                    leaksDetector.add('sub2 ' + instanceId(sub2), sub2)
+                        const sub2Done = new Defer<undefined>()
+                        const received2: any[] = []
+                        const sub2 = await client.subscribe(stream, (msg: any) => {
+                            received2.push(msg)
+                            if (received2.length === MAX_MESSAGES) {
+                                // don't unsubscribe yet, this shouldn't affect sub1 from being collected
+                                sub2Done.resolve(undefined)
+                            }
+                        })
+                        leaksDetector.add('sub2 ' + instanceId(sub2), sub2)
 
-                    await publishTestMessages(MAX_MESSAGES)
-                    await sub1Done
-                    await sub2Done
-                    // eslint-disable-next-line require-atomic-updates
-                    sub1 = undefined
-                    await wait(1000)
-                    snapshot()
-                    // sub1 should have been collected even though sub2 is still subscribed
-                    await leaksDetector.checkNoLeaksFor(sub1LeakId)
-                    expect(received1).toHaveLength(SOME_MESSAGES)
-                    expect(received2).toHaveLength(MAX_MESSAGES)
-                    await sub2.unsubscribe()
-                    await wait(1000)
-                }, TIMEOUT)
+                        await publishTestMessages(MAX_MESSAGES)
+                        await sub1Done
+                        await sub2Done
+                        // eslint-disable-next-line require-atomic-updates
+                        sub1 = undefined
+                        await wait(1000)
+                        snapshot()
+                        // sub1 should have been collected even though sub2 is still subscribed
+                        await leaksDetector.checkNoLeaksFor(sub1LeakId)
+                        expect(received1).toHaveLength(SOME_MESSAGES)
+                        expect(received2).toHaveLength(MAX_MESSAGES)
+                        await sub2.unsubscribe()
+                        await wait(1000)
+                    },
+                    TIMEOUT
+                )
             })
         })
     })

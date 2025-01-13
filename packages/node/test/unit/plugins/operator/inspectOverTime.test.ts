@@ -4,7 +4,6 @@ import { StreamPartIDUtils } from '@streamr/utils'
 import { inspectOverTime } from '../../../../src/plugins/operator/inspectOverTime'
 
 describe('inspectOverTime', () => {
-
     it('getRedundancyFactor() rejects (NET-1377)', async () => {
         const task = inspectOverTime({
             target: {
@@ -13,12 +12,13 @@ describe('inspectOverTime', () => {
                 streamPart: StreamPartIDUtils.parse('stream#0')
             },
             streamrClient: undefined as any,
-            createOperatorFleetState: () => ({
-                getNodeIds: () => [randomDhtAddress()],
-                start: async () => {},
-                waitUntilReady: () => Promise.resolve(),
-                destroy: async () => {}
-            } as any),
+            createOperatorFleetState: () =>
+                ({
+                    getNodeIds: () => [randomDhtAddress()],
+                    start: async () => {},
+                    waitUntilReady: () => Promise.resolve(),
+                    destroy: async () => {}
+                }) as any,
             getRedundancyFactor: () => Promise.reject(new Error('mock-error')),
             delayBeforeFirstInspectionInMs: 0,
             heartbeatTimeoutInMs: 0,

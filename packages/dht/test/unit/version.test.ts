@@ -1,7 +1,6 @@
 import { isMaybeSupportedProtocolVersion } from '../../src/helpers/version'
 
 describe('version', () => {
-
     it('supported', () => {
         expect(isMaybeSupportedProtocolVersion('1.0')).toBe(true)
         expect(isMaybeSupportedProtocolVersion('1.1')).toBe(true)

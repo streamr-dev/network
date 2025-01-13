@@ -10,7 +10,6 @@ const OTHER_NODE_COUNT = 3
 const SERVICE_ID_LAYER0 = 'layer0'
 
 describe('DhtNode', () => {
-
     let localPeerDescriptor: PeerDescriptor
     let entryPointPeerDescriptor: PeerDescriptor
     let otherPeerDescriptors: PeerDescriptor[]
@@ -22,12 +21,12 @@ describe('DhtNode', () => {
             getNeighbors: () => without(getAllPeerDescriptors(), peerDescriptor),
             getClosestRingContactsTo: undefined as any,
             addContact: () => {},
-            removeContact: undefined as any,
+            removeContact: undefined as any
         })
-        epRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping',
-            (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
-        epRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
-            (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
+        epRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
+        epRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', (req: ClosestPeersRequest, context) =>
+            dhtNodeRpcLocal.getClosestPeers(req, context)
+        )
     }
 
     const getAllPeerDescriptors = () => {
@@ -39,7 +38,7 @@ describe('DhtNode', () => {
         entryPointPeerDescriptor = createMockPeerDescriptor()
         otherPeerDescriptors = range(OTHER_NODE_COUNT).map(() => createMockPeerDescriptor())
     })
-      
+
     it('start node and join DHT', async () => {
         const environment = new FakeEnvironment()
         startRemoteNode(entryPointPeerDescriptor, environment)

@@ -2,9 +2,7 @@ import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 
 describe('GroupKey', () => {
-
     describe('constructor', () => {
-
         it('does not throw with valid values', () => {
             new GroupKey('mockId', Buffer.from('aB123456789012345678901234567890'))
         })

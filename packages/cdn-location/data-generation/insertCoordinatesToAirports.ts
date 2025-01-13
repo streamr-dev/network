@@ -1,4 +1,4 @@
-// use fetch() to download 
+// use fetch() to download
 // https://github.com/ip2location/ip2location-iata-icao/blob/master/iata-icao.csv
 
 import fs from 'fs'
@@ -26,8 +26,8 @@ lines.slice(1).forEach((line) => {
     }
 })
 
-// read metropolitancodes.csv and add the data of the corresponding 
-// actual airport to the airportCodeToCoordinates map with 
+// read metropolitancodes.csv and add the data of the corresponding
+// actual airport to the airportCodeToCoordinates map with
 // the metropolitan code as key
 
 const metropolitanCodes = fs.readFileSync('./data-generation/metropolitanCodes.csv').toString()
@@ -57,7 +57,6 @@ localAirportsLines.forEach((line) => {
     const coords = airportCodeToCoordinates.get(line)
 
     if (coords) {
-
         // write the airport code with coordinates, continent and country
         file.write(`${line} ${coords[0]} ${coords[1]} ${coords[2]} ${coords[3]}\n`)
 

@@ -14,7 +14,6 @@ const logger = new Logger(module)
 const NUM_NODES = 30
 
 describe('Route Message With Mock Connections', () => {
-
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
@@ -48,11 +47,7 @@ describe('Route Message With Mock Connections', () => {
 
     afterEach(async () => {
         await Promise.allSettled(routerNodes.map((node) => node.stop()))
-        await Promise.allSettled([
-            entryPoint.stop(),
-            destinationNode.stop(),
-            sourceNode.stop()
-        ])
+        await Promise.allSettled([entryPoint.stop(), destinationNode.stop(), sourceNode.stop()])
 
         logger.info('calling simulator stop')
         simulator.stop()
@@ -72,18 +67,24 @@ describe('Route Message With Mock Connections', () => {
             targetDescriptor: destinationNode.getLocalPeerDescriptor()
         }
 
-        await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            // @ts-expect-error private
-            sourceNode.router!.doRouteMessage({
-                message,
-                target: destinationNode.getLocalPeerDescriptor().nodeId,
-                requestId: v4(),
-                sourcePeer: sourceNode.getLocalPeerDescriptor(),
-                reachableThrough: [],
-                routingPath: [],
-                parallelRootNodeIds: []
-            })
-        }], [[destinationNode, 'message']], 20000)
+        await runAndWaitForEvents3<DhtNodeEvents>(
+            [
+                () => {
+                    // @ts-expect-error private
+                    sourceNode.router!.doRouteMessage({
+                        message,
+                        target: destinationNode.getLocalPeerDescriptor().nodeId,
+                        requestId: v4(),
+                        sourcePeer: sourceNode.getLocalPeerDescriptor(),
+                        reachableThrough: [],
+                        routingPath: [],
+                        parallelRootNodeIds: []
+                    })
+                }
+            ],
+            [[destinationNode, 'message']],
+            20000
+        )
     }, 30000)
 
     it('Receives multiple messages', async () => {
@@ -130,31 +131,33 @@ describe('Route Message With Mock Connections', () => {
         })
         await Promise.all(
             routerNodes.map(async (node) =>
-                Promise.all(routerNodes.map(async (receiver) => {
-                    if (node.getNodeId() !== receiver.getNodeId()) {
-                        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
-                        const message: Message = {
-                            serviceId: 'nonexisting_service',
-                            messageId: v4(),
-                            body: {
-                                oneofKind: 'rpcMessage',
-                                rpcMessage: rpcWrapper
-                            },
-                            sourceDescriptor: node.getLocalPeerDescriptor(),
-                            targetDescriptor: destinationNode.getLocalPeerDescriptor()
+                Promise.all(
+                    routerNodes.map(async (receiver) => {
+                        if (node.getNodeId() !== receiver.getNodeId()) {
+                            const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
+                            const message: Message = {
+                                serviceId: 'nonexisting_service',
+                                messageId: v4(),
+                                body: {
+                                    oneofKind: 'rpcMessage',
+                                    rpcMessage: rpcWrapper
+                                },
+                                sourceDescriptor: node.getLocalPeerDescriptor(),
+                                targetDescriptor: destinationNode.getLocalPeerDescriptor()
+                            }
+                            // @ts-expect-error private
+                            node.router!.doRouteMessage({
+                                message,
+                                target: receiver.getLocalPeerDescriptor().nodeId,
+                                sourcePeer: node.getLocalPeerDescriptor(),
+                                requestId: v4(),
+                                reachableThrough: [],
+                                routingPath: [],
+                                parallelRootNodeIds: []
+                            })
                         }
-                        // @ts-expect-error private
-                        node.router!.doRouteMessage({
-                            message,
-                            target: receiver.getLocalPeerDescriptor().nodeId,
-                            sourcePeer: node.getLocalPeerDescriptor(),
-                            requestId: v4(),
-                            reachableThrough: [],
-                            routingPath: [],
-                            parallelRootNodeIds: []
-                        })
-                    }
-                }))
+                    })
+                )
             )
         )
         await until(() => receivedMessageCounts[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
@@ -163,7 +166,6 @@ describe('Route Message With Mock Connections', () => {
                 until(() => receivedMessageCounts[key as DhtAddress] >= routerNodes.length - 1, 30000)
             )
         )
-
     }, 90000)
 
     it('Destination receives forwarded message', async () => {
@@ -219,12 +221,14 @@ describe('Route Message With Mock Connections', () => {
             parallelRootNodeIds: []
         }
 
-        await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            // @ts-expect-error private
-            sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
-        }], [[destinationNode, 'message']])
-
+        await runAndWaitForEvents3<DhtNodeEvents>(
+            [
+                () => {
+                    // @ts-expect-error private
+                    sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+                }
+            ],
+            [[destinationNode, 'message']]
+        )
     })
-
 })
-

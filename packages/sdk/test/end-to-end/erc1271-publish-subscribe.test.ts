@@ -30,11 +30,9 @@ describe('ERC-1271: publish', () => {
         })
         await creator.setPermissions({
             streamId: stream.id,
-            assignments: publicSubscribePermission ? [
-                { permissions: [StreamPermission.SUBSCRIBE], public: true }
-            ] : [
-                { permissions: [StreamPermission.SUBSCRIBE], userId: subscriberWallet.address }
-            ]
+            assignments: publicSubscribePermission
+                ? [{ permissions: [StreamPermission.SUBSCRIBE], public: true }]
+                : [{ permissions: [StreamPermission.SUBSCRIBE], userId: subscriberWallet.address }]
         })
         await creator.destroy()
         return stream.id
@@ -56,23 +54,27 @@ describe('ERC-1271: publish', () => {
             await publisher.destroy()
         })
 
-        it('ERC-1271 signed published message is received by subscriber', async () => {
-            const messages: unknown[] = []
-            const metadatas: MessageMetadata[] = []
-            await subscriber.subscribe(streamId, (msg: any, metadata) => {
-                messages.push(msg)
-                metadatas.push(metadata)
-            })
-            await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
-            await until(() => messages.length > 0, TIMEOUT)
-            expect(metadatas[0].signatureType).toEqual('ERC_1271')
-            if (publicOrPrivate === 'public') {
-                expect(metadatas[0].groupKeyId).toEqual(undefined)
-            } else {
-                expect(metadatas[0].groupKeyId).toBeString()
-            }
-            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
-        }, TIMEOUT)
+        it(
+            'ERC-1271 signed published message is received by subscriber',
+            async () => {
+                const messages: unknown[] = []
+                const metadatas: MessageMetadata[] = []
+                await subscriber.subscribe(streamId, (msg: any, metadata) => {
+                    messages.push(msg)
+                    metadatas.push(metadata)
+                })
+                await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
+                await until(() => messages.length > 0, TIMEOUT)
+                expect(metadatas[0].signatureType).toEqual('ERC_1271')
+                if (publicOrPrivate === 'public') {
+                    expect(metadatas[0].groupKeyId).toEqual(undefined)
+                } else {
+                    expect(metadatas[0].groupKeyId).toBeString()
+                }
+                expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
+            },
+            TIMEOUT
+        )
     })
 })
 
@@ -97,7 +99,6 @@ describe('ERC-1271: subscribe', () => {
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
             userId: erc1271ContractAddress
-
         })
         await creator.destroy()
         return stream.id
@@ -118,22 +119,29 @@ describe('ERC-1271: subscribe', () => {
         await publisher.destroy()
     })
 
-    it('subscriber configured with ERC-1271 contract can receive messages', async () => {
-        const messages: unknown[] = []
-        const metadatas: MessageMetadata[] = []
-        await subscriber.subscribe({
-            streamId,
-            erc1271Contract: erc1271ContractAddress
-        }, (msg: any, metadata) => {
-            messages.push(msg)
-            metadatas.push(metadata)
-        })
-        await publisher.publish(streamId, PAYLOAD)
-        await until(() => messages.length > 0, TIMEOUT)
-        expect(metadatas[0].signatureType).toEqual('SECP256K1')
-        expect(metadatas[0].groupKeyId).toBeString()
-        expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
-    }, TIMEOUT)
+    it(
+        'subscriber configured with ERC-1271 contract can receive messages',
+        async () => {
+            const messages: unknown[] = []
+            const metadatas: MessageMetadata[] = []
+            await subscriber.subscribe(
+                {
+                    streamId,
+                    erc1271Contract: erc1271ContractAddress
+                },
+                (msg: any, metadata) => {
+                    messages.push(msg)
+                    metadatas.push(metadata)
+                }
+            )
+            await publisher.publish(streamId, PAYLOAD)
+            await until(() => messages.length > 0, TIMEOUT)
+            expect(metadatas[0].signatureType).toEqual('SECP256K1')
+            expect(metadatas[0].groupKeyId).toBeString()
+            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
+        },
+        TIMEOUT
+    )
 })
 
 describe('ERC-1271: publish and subscribe', () => {
@@ -179,20 +187,27 @@ describe('ERC-1271: publish and subscribe', () => {
         await publisher.destroy()
     })
 
-    it('subscriber configured with ERC-1271 contract can receive ERC-1271 signed messages', async () => {
-        const messages: unknown[] = []
-        const metadatas: MessageMetadata[] = []
-        await subscriber.subscribe({
-            streamId,
-            erc1271Contract: erc1271SubscriberContractAddress
-        }, (msg: any, metadata) => {
-            messages.push(msg)
-            metadatas.push(metadata)
-        })
-        await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271PublisherContractAddress })
-        await until(() => messages.length > 0, TIMEOUT)
-        expect(metadatas[0].signatureType).toEqual('ERC_1271')
-        expect(metadatas[0].groupKeyId).toBeString()
-        expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
-    }, TIMEOUT)
+    it(
+        'subscriber configured with ERC-1271 contract can receive ERC-1271 signed messages',
+        async () => {
+            const messages: unknown[] = []
+            const metadatas: MessageMetadata[] = []
+            await subscriber.subscribe(
+                {
+                    streamId,
+                    erc1271Contract: erc1271SubscriberContractAddress
+                },
+                (msg: any, metadata) => {
+                    messages.push(msg)
+                    metadatas.push(metadata)
+                }
+            )
+            await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271PublisherContractAddress })
+            await until(() => messages.length > 0, TIMEOUT)
+            expect(metadatas[0].signatureType).toEqual('ERC_1271')
+            expect(metadatas[0].groupKeyId).toBeString()
+            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
+        },
+        TIMEOUT
+    )
 })

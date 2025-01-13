@@ -2,11 +2,7 @@ import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { ConnectionType } from '../IConnection'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
-import {
-    ConnectivityMethod,
-    PeerDescriptor,
-    WebsocketConnectionRequest
-} from '../../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityMethod, PeerDescriptor, WebsocketConnectionRequest } from '../../../generated/packages/dht/protos/DhtRpc'
 import { WebsocketServer } from './WebsocketServer'
 import { createOutgoingHandshaker } from '../Handshaker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -19,7 +15,7 @@ import { PendingConnection } from '../PendingConnection'
 export type Action = 'connectivityRequest' | 'connectivityProbe'
 
 export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?: Action): string => {
-    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + ((action !== undefined) ? '?action=' + action : '')
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + (action !== undefined ? '?action=' + action : '')
 }
 
 export interface WebsocketClientConnectorOptions {
@@ -29,7 +25,6 @@ export interface WebsocketClientConnectorOptions {
 }
 
 export class WebsocketClientConnector {
-
     public static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
@@ -41,16 +36,14 @@ export class WebsocketClientConnector {
 
     constructor(options: WebsocketClientConnectorOptions) {
         this.options = options
-        
+
         this.registerLocalRpcMethods()
     }
 
     private registerLocalRpcMethods() {
         const rpcLocal = new WebsocketClientConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            hasConnection: (nodeId: DhtAddress): boolean => (this.connectingConnections.has(nodeId)
-                || this.options.hasConnection(nodeId))
-            ,
+            hasConnection: (nodeId: DhtAddress): boolean => this.connectingConnections.has(nodeId) || this.options.hasConnection(nodeId),
             onNewConnection: (connection: PendingConnection) => this.options.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
@@ -102,7 +95,7 @@ export class WebsocketClientConnector {
 
         return pendingConnection
     }
-    
+
     public setLocalPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.localPeerDescriptor = peerDescriptor
     }

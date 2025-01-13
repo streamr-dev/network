@@ -13,7 +13,7 @@ import { LoggerFactory } from './LoggerFactory'
 export const addStreamToStorageNode = async (
     streamId: StreamID,
     storageNodeAddress: EthereumAddress,
-    opts: { wait: boolean, timeout?: number },
+    opts: { wait: boolean; timeout?: number },
     partitionCount: number,
     subscriber: Subscriber,
     streamRegistry: StreamRegistry,
@@ -32,18 +32,16 @@ export const addStreamToStorageNode = async (
         let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(storageNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(
-                streamPartId,
-                false,
-                undefined,
-                new EventEmitter<SubscriptionEvents>(),
+            assignmentSubscription = new Subscription(streamPartId, false, undefined, new EventEmitter<SubscriptionEvents>(), loggerFactory)
+            await subscriber.add(assignmentSubscription)
+            const propagationPromise = waitForAssignmentsToPropagate(
+                assignmentSubscription,
+                {
+                    id: streamId,
+                    partitions: partitionCount
+                },
                 loggerFactory
             )
-            await subscriber.add(assignmentSubscription)
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
-                id: streamId,
-                partitions: partitionCount
-            }, loggerFactory)
             await streamStorageRegistry.addStreamToStorageNode(streamId, storageNodeAddress)
             await withTimeout(
                 propagationPromise,

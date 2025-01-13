@@ -1,13 +1,6 @@
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionLocker } from '../../connection/ConnectionManager'
-import {
-    DhtAddress,
-    areEqualPeerDescriptors,
-    randomDhtAddress,
-    toDhtAddress,
-    toNodeId,
-    toDhtAddressRaw
-} from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, randomDhtAddress, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -39,10 +32,9 @@ export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
 const logger = new Logger(module)
 
 export class PeerDiscovery {
-
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
     private ongoingRingDiscoverySessions: Map<string, RingDiscoverySession> = new Map()
-    
+
     private rejoinOngoing = false
     private joinCalled = false
     private recoveryIntervalStarted = false
@@ -52,27 +44,19 @@ export class PeerDiscovery {
         this.options = options
     }
 
-    async joinDht(
-        entryPoints: PeerDescriptor[],
-        doAdditionalDistantPeerDiscovery = true,
-        retry = true
-    ): Promise<void> {
+    async joinDht(entryPoints: PeerDescriptor[], doAdditionalDistantPeerDiscovery = true, retry = true): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
-        const distantJoinOptions = doAdditionalDistantPeerDiscovery 
-            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as const
-        await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
-            entryPoint,
-            contactedPeers,
-            distantJoinOptions,
-            retry
-        )))
+        const distantJoinOptions = doAdditionalDistantPeerDiscovery
+            ? { enabled: true, contactedPeers: new Set<DhtAddress>() }
+            : ({ enabled: false } as const)
+        await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(entryPoint, contactedPeers, distantJoinOptions, retry)))
     }
 
     private async joinThroughEntryPoint(
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        additionalDistantJoin: { enabled: true, contactedPeers: Set<DhtAddress> } | { enabled: false },
+        additionalDistantJoin: { enabled: true; contactedPeers: Set<DhtAddress> } | { enabled: false },
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -80,9 +64,9 @@ export class PeerDiscovery {
         }
         this.joinCalled = true
         logger.debug(
-            `Joining ${this.options.serviceId === CONTROL_LAYER_NODE_SERVICE_ID
-                ? 'The Streamr Network' : `Control Layer for ${this.options.serviceId}`}`
-            + ` via entrypoint ${toNodeId(entryPointDescriptor)}`
+            `Joining ${
+                this.options.serviceId === CONTROL_LAYER_NODE_SERVICE_ID ? 'The Streamr Network' : `Control Layer for ${this.options.serviceId}`
+            }` + ` via entrypoint ${toNodeId(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.options.localPeerDescriptor)) {
             return
@@ -96,7 +80,6 @@ export class PeerDiscovery {
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.options.connectionLocker?.unlockConnection(entryPointDescriptor, `${this.options.serviceId}::joinDht`)
-
     }
 
     async joinRing(): Promise<void> {
@@ -227,7 +210,11 @@ export class PeerDiscovery {
     }
 
     private getClosestNeighbors(referenceId: DhtAddress, maxCount: number): PeerDescriptor[] {
-        return getClosestNodes(referenceId, this.options.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()), { maxCount })
+        return getClosestNodes(
+            referenceId,
+            this.options.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()),
+            { maxCount }
+        )
     }
 
     public isJoinOngoing(): boolean {

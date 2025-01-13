@@ -3,20 +3,13 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export const announceNodeToContract = async (
-    writeIntervalInMs: number,
-    operator: Operator,
-    streamrClient: StreamrClient
-): Promise<void> => {
+export const announceNodeToContract = async (writeIntervalInMs: number, operator: Operator, streamrClient: StreamrClient): Promise<void> => {
     if (await isHeartbeatStale(writeIntervalInMs, operator)) {
         await writeHeartbeat(operator, streamrClient)
     }
 }
 
-const isHeartbeatStale = async (
-    writeIntervalInMs: number,
-    operator: Operator
-): Promise<boolean> => {
+const isHeartbeatStale = async (writeIntervalInMs: number, operator: Operator): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
         operatorContractAddress: await operator.getContractAddress()
     })
@@ -32,10 +25,7 @@ const isHeartbeatStale = async (
     return stale
 }
 
-const writeHeartbeat = async (
-    operator: Operator,
-    streamrClient: StreamrClient
-): Promise<void> => {
+const writeHeartbeat = async (operator: Operator, streamrClient: StreamrClient): Promise<void> => {
     logger.info('Write heartbeat')
     try {
         const nodeDescriptor = await streamrClient.getPeerDescriptor()

@@ -15,7 +15,7 @@ const generateGradientColors = (count: number): string[] => {
     const END_COLOR = '88ee20'
     const startRGB = parseInt(START_COLOR, 16)
     const endRGB = parseInt(END_COLOR, 16)
-    const getComponent = (rgb: number, shift: number) => (rgb >> shift) & 0xFF
+    const getComponent = (rgb: number, shift: number) => (rgb >> shift) & 0xff
     const startR = getComponent(startRGB, 16)
     const startG = getComponent(startRGB, 8)
     const startB = getComponent(startRGB, 0)
@@ -24,7 +24,10 @@ const generateGradientColors = (count: number): string[] => {
     const endB = getComponent(endRGB, 0)
     const colors: string[] = []
     for (let step = 0; step < count; step++) {
-        const getOutput = (start: number, end: number) => Math.round(start + ((end - start) * step / count)).toString(16).padStart(2, '0')
+        const getOutput = (start: number, end: number) =>
+            Math.round(start + ((end - start) * step) / count)
+                .toString(16)
+                .padStart(2, '0')
         const stepR = getOutput(startR, endR)
         const stepG = getOutput(startG, endG)
         const stepB = getOutput(startB, endB)
@@ -54,17 +57,15 @@ const createGraph = (topology: Topology) => {
     lines.push('    graph [splines=curved]')
     for (const nodeId of getNodeIds(topology)) {
         const shortNodeId = nodeId.substring(0, SHORT_ID_LENGTH)
-        const explicitLabel = (topology.labels !== undefined) ? topology.labels[nodeId] : undefined
-        const attributes = (explicitLabel !== undefined) 
-            ? `label="${explicitLabel}: ${shortNodeId}", penwidth=3`
-            : `label="${shortNodeId}"`
+        const explicitLabel = topology.labels !== undefined ? topology.labels[nodeId] : undefined
+        const attributes = explicitLabel !== undefined ? `label="${explicitLabel}: ${shortNodeId}", penwidth=3` : `label="${shortNodeId}"`
         lines.push(`    "${nodeId}" [${attributes}]`)
     }
     if (topology.route !== undefined) {
         const colors = generateGradientColors(topology.route.length)
         for (let i = 0; i < topology.route.length; i++) {
             lines.push(`    "${topology.route[i]}" [fillcolor="${colors[i]}"]`)
-        }    
+        }
     }
     for (const nodeId of Object.keys(topology.neighbors)) {
         for (const neighborId of topology.neighbors[nodeId]) {
@@ -113,9 +114,7 @@ createCommand()
     .description(description)
     .arguments('[topologyDefinitionFile]')
     .action(async (topologyDefinitionFile?: string) => {
-        const topologyDefinition = (topologyDefinitionFile !== undefined)
-            ? fs.readFileSync(topologyDefinitionFile, 'utf-8')
-            : await readStdin()
+        const topologyDefinition = topologyDefinitionFile !== undefined ? fs.readFileSync(topologyDefinitionFile, 'utf-8') : await readStdin()
         // TODO could validate the content
         console.info(createGraph(JSON.parse(topologyDefinition) as Topology))
     })

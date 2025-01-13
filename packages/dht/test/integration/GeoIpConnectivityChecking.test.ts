@@ -18,31 +18,31 @@ const testLongitude = 28.2604
 const dbPath = '/tmp/geoipdatabasesintegration'
 
 describe('ConnectivityChecking', () => {
-
     let server: ConnectionManager
     const PORT = 15002
     const HOST = '127.0.0.1'
-    let mock: jest.SpyInstance<string, [], any> 
+    let mock: jest.SpyInstance<string, [], any>
 
     beforeEach(async () => {
         server = new ConnectionManager({
-            createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: async () => {
-                    return {
-                        ...createMockPeerDescriptor(),
-                        websocket: {
-                            host: HOST,
-                            port: PORT,
-                            tls: false
+            createConnectorFacade: () =>
+                new DefaultConnectorFacade({
+                    createLocalPeerDescriptor: async () => {
+                        return {
+                            ...createMockPeerDescriptor(),
+                            websocket: {
+                                host: HOST,
+                                port: PORT,
+                                tls: false
+                            }
                         }
-                    }
-                },
-                websocketHost: HOST,
-                websocketPortRange: { min: PORT, max: PORT },
-                websocketServerEnableTls: false,
-                transport: new MockTransport(),
-                geoIpDatabaseFolder: dbPath
-            }),
+                    },
+                    websocketHost: HOST,
+                    websocketPortRange: { min: PORT, max: PORT },
+                    websocketServerEnableTls: false,
+                    transport: new MockTransport(),
+                    geoIpDatabaseFolder: dbPath
+                }),
             metricsContext: new MetricsContext(),
             allowIncomingPrivateConnections: false
         })

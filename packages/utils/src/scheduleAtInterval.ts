@@ -17,9 +17,13 @@ export const scheduleAtInterval = async (
         await task()
     }
     repeatScheduleTask((doneCb) => {
-        setAbortableTimeout(async () => {
-            await task()
-            doneCb()
-        }, interval, abortSignal)
+        setAbortableTimeout(
+            async () => {
+                await task()
+                doneCb()
+            },
+            interval,
+            abortSignal
+        )
     }, abortSignal)
 }

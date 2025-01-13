@@ -53,8 +53,10 @@ export class InvalidNumberingError extends Error {
 
 export class GapMisMatchError extends Error {
     constructor(state: string, previousNumber: NumberPair, number: NumberPair) {
-        super('pre-condition: gap overlap in given numbers:'
-            + ` previousNumber=${previousNumber.toString()}, number=${number.toString()}, state=${state}`)
+        super(
+            'pre-condition: gap overlap in given numbers:' +
+                ` previousNumber=${previousNumber.toString()}, number=${number.toString()}, state=${state}`
+        )
     }
 }
 

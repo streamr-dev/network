@@ -1,8 +1,5 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import {
-    StoreDataRequest,
-    StoreDataResponse
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { StoreDataRequest, StoreDataResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, mockStoreRpc } from '../utils/utils'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
@@ -12,7 +9,6 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 
 describe('StoreRpcRemote', () => {
-
     let rpcRemote: StoreRpcRemote
     let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
     let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
@@ -46,9 +42,7 @@ describe('StoreRpcRemote', () => {
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.throwStoreDataError)
         await expect(rpcRemote.storeData(request)).rejects.toThrow(
-            'Could not store data to'
-            + ` ${toNodeId(serverPeerDescriptor)} from ${toNodeId(clientPeerDescriptor)}`
-            + ' Error: Mock'
+            'Could not store data to' + ` ${toNodeId(serverPeerDescriptor)} from ${toNodeId(clientPeerDescriptor)}` + ' Error: Mock'
         )
     })
 })

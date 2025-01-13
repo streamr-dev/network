@@ -31,15 +31,18 @@ export interface Events {
 }
 
 export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IProxyConnectionRpc {
-
     private readonly options: ProxyConnectionRpcLocalOptions
     private readonly connections: Map<DhtAddress, ProxyConnection> = new Map()
 
     constructor(options: ProxyConnectionRpcLocalOptions) {
         super()
         this.options = options
-        this.options.rpcCommunicator.registerRpcMethod(ProxyConnectionRequest, ProxyConnectionResponse, 'requestConnection',
-            (msg: ProxyConnectionRequest, context) => this.requestConnection(msg, context))
+        this.options.rpcCommunicator.registerRpcMethod(
+            ProxyConnectionRequest,
+            ProxyConnectionResponse,
+            'requestConnection',
+            (msg: ProxyConnectionRequest, context) => this.requestConnection(msg, context)
+        )
     }
 
     getConnection(nodeId: DhtAddress): ProxyConnection | undefined {

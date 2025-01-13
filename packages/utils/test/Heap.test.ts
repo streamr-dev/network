@@ -9,7 +9,6 @@ const createItem = (value: number) => {
 }
 
 describe('Heap', () => {
-
     let heap: Heap<Item>
 
     beforeEach(() => {

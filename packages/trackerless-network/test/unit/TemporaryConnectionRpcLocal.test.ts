@@ -5,7 +5,6 @@ import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('TemporaryConnectionRpcLocal', () => {
-
     const peerDescriptor = createMockPeerDescriptor()
     let rpcCommunicator: ListeningRpcCommunicator
     let rpcLocal: TemporaryConnectionRpcLocal
@@ -34,5 +33,4 @@ describe('TemporaryConnectionRpcLocal', () => {
         await rpcLocal.closeConnection({}, { incomingSourceDescriptor: caller } as any)
         expect(rpcLocal.getNodes().get(toDhtAddress(caller.nodeId))).toBeUndefined()
     })
-
 })

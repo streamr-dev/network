@@ -15,7 +15,6 @@ const createMessage = (id: number): StreamMessage => {
 }
 
 describe('NetworkNode', () => {
-
     it('message listener', async () => {
         const contentDeliveryManager = new EventEmitter<Events>()
         const stack: Partial<NetworkStack> = {

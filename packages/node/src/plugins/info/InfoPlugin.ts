@@ -5,7 +5,6 @@ import { ApiPluginConfig, HttpServerEndpoint, Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
 export class InfoPlugin extends Plugin<ApiPluginConfig> {
-
     async start(streamrClient: StreamrClient): Promise<void> {
         this.addHttpServerEndpoint(InfoPlugin.createEndpoint(streamrClient))
     }
@@ -14,15 +13,16 @@ export class InfoPlugin extends Plugin<ApiPluginConfig> {
         return {
             path: '/info',
             method: 'get',
-            requestHandlers: [async (_req: Request, res: Response) => {
-                res.json(await streamrClient.getDiagnosticInfo())
-            }]
+            requestHandlers: [
+                async (_req: Request, res: Response) => {
+                    res.json(await streamrClient.getDiagnosticInfo())
+                }
+            ]
         }
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {
-    }
+    async stop(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {

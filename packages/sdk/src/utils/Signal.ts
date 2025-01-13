@@ -1,6 +1,6 @@
 import { pOnce, pLimitFn, pOne } from './promises'
 
-export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
+export type SignalListener<T extends any[]> = (...args: T) => unknown | Promise<unknown>
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
     listener: SignalListener<T>
 }
@@ -9,7 +9,7 @@ export enum TRIGGER_TYPE {
     ONCE = 'ONCE',
     ONE = 'ONE',
     QUEUE = 'QUEUE',
-    PARALLEL = 'PARALLEL',
+    PARALLEL = 'PARALLEL'
 }
 
 /**
@@ -83,9 +83,7 @@ export class Signal<ArgsType extends any[] = []> {
     protected triggerCountValue = 0
     protected triggerType: TRIGGER_TYPE
 
-    constructor(
-        triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
-    ) {
+    constructor(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
         this.triggerType = triggerType
         this.trigger = Function.prototype.bind.call(this.trigger, this)
         switch (triggerType) {
@@ -162,7 +160,9 @@ export class Signal<ArgsType extends any[] = []> {
 
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
-            this.getLastValue().then((args) => cb(...args)).catch(() => {})
+            this.getLastValue()
+                .then((args) => cb(...args))
+                .catch(() => {})
             return this
         }
 
@@ -177,12 +177,15 @@ export class Signal<ArgsType extends any[] = []> {
             return this.listen()
         }
 
-        const wrappedListener: SignalListenerWrap<ArgsType> = Object.assign((...args: ArgsType) => {
-            this.unlisten(cb)
-            return cb(...args)
-        }, {
-            listener: cb
-        })
+        const wrappedListener: SignalListenerWrap<ArgsType> = Object.assign(
+            (...args: ArgsType) => {
+                this.unlisten(cb)
+                return cb(...args)
+            },
+            {
+                listener: cb
+            }
+        )
 
         return this.listen(wrappedListener)
     }
@@ -202,9 +205,7 @@ export class Signal<ArgsType extends any[] = []> {
         return this
     }
 
-    protected async execTrigger(
-        ...args: ArgsType
-    ): Promise<void> {
+    protected async execTrigger(...args: ArgsType): Promise<void> {
         if (this.isEnded) {
             return
         }
@@ -219,7 +220,9 @@ export class Signal<ArgsType extends any[] = []> {
             this.end(...args)
         }
 
-        if (!tasks.length) { return }
+        if (!tasks.length) {
+            return
+        }
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {
@@ -233,9 +236,7 @@ export class Signal<ArgsType extends any[] = []> {
     /**
      * Trigger the signal with optional value, like emitter.emit.
      */
-    async trigger(
-        ...args: ArgsType
-    ): Promise<void> {
+    async trigger(...args: ArgsType): Promise<void> {
         const task = this.execTrigger(...args)
         this.currentTask = task
         try {
@@ -247,7 +248,7 @@ export class Signal<ArgsType extends any[] = []> {
         }
     }
 
-    async* [Symbol.asyncIterator](): AsyncGenerator<Awaited<ArgsType[0]>, void, unknown> {
+    async *[Symbol.asyncIterator](): AsyncGenerator<Awaited<ArgsType[0]>, void, unknown> {
         while (!this.isEnded) {
             yield await this.listen()
         }
@@ -266,9 +267,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
     protected ignoredErrors = new WeakSet<Error>()
     private minListeners = 1
 
-    protected override async execTrigger(
-        ...args: ArgsType
-    ): Promise<void> {
+    protected override async execTrigger(...args: ArgsType): Promise<void> {
         if (this.isEnded) {
             return
         }
@@ -283,7 +282,9 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
             this.end(...args)
         }
 
-        if (!tasks.length) { return }
+        if (!tasks.length) {
+            return
+        }
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {

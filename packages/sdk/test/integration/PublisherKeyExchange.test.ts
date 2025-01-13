@@ -12,7 +12,6 @@ import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } fro
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 describe('PublisherKeyExchange', () => {
-
     let publisherWallet: Wallet
     let publisherClient: StreamrClient
     let subscriberWallet: Wallet
@@ -48,7 +47,7 @@ describe('PublisherKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: expectedPublisherId,
+                publisherId: expectedPublisherId
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.BINARY,
@@ -57,10 +56,12 @@ describe('PublisherKeyExchange', () => {
             signatureType: expectedSignatureType
         })
         const encryptedGroupKeys = convertBytesToGroupKeyResponse(actualResponse.content).encryptedGroupKeys
-        expect(encryptedGroupKeys).toMatchObject([{
-            id: expectedGroupKey.id,
-            data: expect.any(Uint8Array)
-        }])
+        expect(encryptedGroupKeys).toMatchObject([
+            {
+                id: expectedGroupKey.id,
+                data: expect.any(Uint8Array)
+            }
+        ])
     }
 
     beforeEach(async () => {
@@ -82,7 +83,6 @@ describe('PublisherKeyExchange', () => {
     })
 
     describe('responds to a group key request', () => {
-
         /*
          * A publisher node starts a subscription to receive group key requests
          * - tests that a correct kind of response message is sent to a subscriber node

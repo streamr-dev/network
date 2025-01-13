@@ -23,7 +23,6 @@ const createMessageChainKey = (message: MessageMetadata) => {
 }
 
 export class Bridge implements MqttServerListener {
-
     private readonly streamrClient: StreamrClient
     private readonly mqttServer: MqttServer
     private readonly payloadFormat: PayloadFormat
@@ -50,14 +49,18 @@ export class Bridge implements MqttServerListener {
         }
         const { content, metadata } = message
         try {
-            const publishedMessage = await this.streamrClient.publish({
-                id: streamPart.streamId,
-                partition: streamPart.partition
-            }, content, {
-                timestamp: metadata.timestamp,
-                partitionKey: getPartitionKey(content, streamPart),
-                msgChainId: clientId
-            })
+            const publishedMessage = await this.streamrClient.publish(
+                {
+                    id: streamPart.streamId,
+                    partition: streamPart.partition
+                },
+                content,
+                {
+                    timestamp: metadata.timestamp,
+                    partitionKey: getPartitionKey(content, streamPart),
+                    msgChainId: clientId
+                }
+            )
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
             logger.warn('Unable to publish message', { err, topic, clientId })
@@ -137,7 +140,7 @@ export class Bridge implements MqttServerListener {
     }
 
     private getStreamId(topicBase: string): StreamID {
-        return toStreamID((this.streamIdDomain !== undefined) ? `${this.streamIdDomain}/${topicBase}` : topicBase)
+        return toStreamID(this.streamIdDomain !== undefined ? `${this.streamIdDomain}/${topicBase}` : topicBase)
     }
 
     private getSubscription(streamPartId: StreamPartID): StreamSubscription | undefined {

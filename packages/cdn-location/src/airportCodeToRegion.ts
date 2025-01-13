@@ -342,5 +342,5 @@ export const airportCodeToRegion: Record<string, [regionNumber: number, latitude
     IAD: [34000, 38.9445, -77.455803],
     DCA: [34100, 38.8521, -77.037697],
     PHL: [34200, 39.87189865112305, -75.24109649658203],
-    NYC: [34300, 40.639447, -73.779317],
+    NYC: [34300, 40.639447, -73.779317]
 }

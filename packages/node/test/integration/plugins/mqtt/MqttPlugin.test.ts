@@ -7,13 +7,17 @@ const MQTT_PORT = 12430
 
 jest.setTimeout(30000)
 
-createMessagingPluginTest('mqtt',
+createMessagingPluginTest(
+    'mqtt',
     {
         createClient: async (_action: 'publish' | 'subscribe', _streamId: string, apiKey?: string): Promise<AsyncMqttClient> => {
-            const opts = (apiKey !== undefined) ? {
-                username: '',
-                password: apiKey
-            } : undefined
+            const opts =
+                apiKey !== undefined
+                    ? {
+                          username: '',
+                          password: apiKey
+                      }
+                    : undefined
             return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PORT}`, opts)
         },
         closeClient: async (client: AsyncMqttClient): Promise<void> => {
@@ -32,7 +36,7 @@ createMessagingPluginTest('mqtt',
         },
         errors: {
             unauthorized: 'Connection refused: Not authorized',
-            forbidden: 'Connection refused: Bad username or password',
+            forbidden: 'Connection refused: Bad username or password'
         }
     },
     {

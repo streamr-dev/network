@@ -4,7 +4,6 @@ import { EventEmitter } from 'eventemitter3'
 import { MockConnectionsView } from './MockConnectionsView'
 
 export class MockControlLayerNode extends EventEmitter<TransportEvents> implements ControlLayerNode {
-
     private readonly peerDescriptor: PeerDescriptor
 
     constructor(peerDescriptor: PeerDescriptor) {
@@ -32,8 +31,7 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async deleteDataFromDht(): Promise<void> {
-    }
+    async deleteDataFromDht(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     async storeDataToDht(): Promise<PeerDescriptor[]> {
@@ -41,8 +39,7 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async send(): Promise<void> {
-    }
+    async send(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     getConnectionsView(): ConnectionsView {
@@ -55,8 +52,7 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async waitForNetworkConnectivity(): Promise<void> {
-    }
+    async waitForNetworkConnectivity(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     getTransport(): ITransport {
@@ -64,12 +60,10 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async start(): Promise<void> {
-    }
+    async start(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {
-    }
+    async stop(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {

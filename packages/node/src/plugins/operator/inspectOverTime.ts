@@ -1,13 +1,7 @@
 import { AbortError, composeAbortSignals, EthereumAddress, Gate, Logger, wait } from '@streamr/utils'
 import { StreamrClient } from '@streamr/sdk'
 import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
-import {
-    findNodesForTargetGivenFleetState,
-    FindNodesForTargetGivenFleetStateFn,
-    inspectTarget,
-    InspectTargetFn,
-    Target
-} from './inspectionUtils'
+import { findNodesForTargetGivenFleetState, FindNodesForTargetGivenFleetStateFn, inspectTarget, InspectTargetFn, Target } from './inspectionUtils'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import range from 'lodash/range'
 
@@ -71,7 +65,7 @@ class InspectionOverTimeTask {
         abortSignal: userAbortSignal,
         traceId,
         findNodesForTargetGivenFleetStateFn = findNodesForTargetGivenFleetState,
-        inspectTargetFn = inspectTarget,
+        inspectTargetFn = inspectTarget
     }: InspectOverTimeOpts) {
         this.target = target
         this.streamrClient = streamrClient
@@ -109,10 +103,7 @@ class InspectionOverTimeTask {
     }
 
     waitUntilPassOrDone(): Promise<void> {
-        return Promise.race([
-            this.doneGate.waitUntilOpen(),
-            this.passedSingleInspectionGate.waitUntilOpen()
-        ])
+        return Promise.race([this.doneGate.waitUntilOpen(), this.passedSingleInspectionGate.waitUntilOpen()])
     }
 
     destroy(): void {
@@ -189,10 +180,7 @@ class InspectionOverTimeTask {
         this.fleetState = this.createOperatorFleetState(formCoordinationStreamId(this.target.operatorAddress))
         await this.fleetState.start()
         this.logger.info('Waiting for fleet state')
-        await Promise.race([
-            this.fleetState.waitUntilReady(),
-            wait(this.heartbeatTimeoutInMs, this.abortSignal)
-        ])
+        await Promise.race([this.fleetState.waitUntilReady(), wait(this.heartbeatTimeoutInMs, this.abortSignal)])
         this.logger.info('Wait done for fleet state', { onlineNodeCount: this.fleetState.getNodeIds().length })
     }
 }

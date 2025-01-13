@@ -13,7 +13,6 @@ import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from './../.
 import { StreamrClientError } from '../../src/StreamrClientError'
 
 describe('Decrypt', () => {
-
     it('happy path', async () => {
         const groupKey = GroupKey.generate()
         const groupKeyManager = mock<GroupKeyManager>()
@@ -21,18 +20,20 @@ describe('Decrypt', () => {
         const destroySignal = new DestroySignal()
         // using Buffer to get around Jest's strict equality check
         const unencryptedContent = Buffer.from(utf8ToBinary(JSON.stringify({ hello: 'world' })))
-        const encryptedMessage = await createMockMessage({
+        const encryptedMessage = (await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             publisher: fastWallet(),
             encryptionKey: groupKey,
             content: unencryptedContent
-        }) as StreamMessageAESEncrypted
+        })) as StreamMessageAESEncrypted
         const decryptedMessage = await decrypt(encryptedMessage, groupKeyManager, destroySignal)
-        expect(decryptedMessage).toEqual(new StreamMessage({
-            ...encryptedMessage,
-            encryptionType: EncryptionType.NONE,
-            content: unencryptedContent
-        }))
+        expect(decryptedMessage).toEqual(
+            new StreamMessage({
+                ...encryptedMessage,
+                encryptionType: EncryptionType.NONE,
+                content: unencryptedContent
+            })
+        )
         expect(groupKeyManager.fetchKey).toHaveBeenCalledWith(
             encryptedMessage.getStreamPartID(),
             encryptedMessage.groupKeyId,
@@ -51,12 +52,7 @@ describe('Decrypt', () => {
             encryptionKey: groupKey
         })
         await expect(() => {
-            return decrypt(
-                msg as StreamMessageAESEncrypted,
-                groupKeyManager,
-                destroySignal)
-        }).rejects.toThrowStreamrClientError(
-            new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg)
-        )
+            return decrypt(msg as StreamMessageAESEncrypted, groupKeyManager, destroySignal)
+        }).rejects.toThrowStreamrClientError(new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg))
     })
 })

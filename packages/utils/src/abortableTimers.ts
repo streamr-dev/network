@@ -32,4 +32,3 @@ export const setAbortableInterval = (cb: () => void, ms: number, abortSignal: Ab
         cb()
     }, ms)
 }
-

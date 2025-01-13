@@ -38,7 +38,7 @@ const sendResponse = (res: express.Response, data?: object) => {
     }
 }
 
-const parseIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
+const parseIpAndPort = (req: express.Request): { ip: string; port: string } | undefined => {
     // take x-forwarded for into account
     const remoteIp = req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
     const remotePort = req.headers['x-forwarded-port'] ?? req.socket.remotePort
@@ -65,7 +65,6 @@ const parseIpAndPort = (req: express.Request): { ip: string, port: string } | un
 }
 
 export class RestServer {
-
     private server?: ServerType
     private engine: RestInterface
 
@@ -84,7 +83,6 @@ export class RestServer {
 
     public async start(): Promise<void> {
         return new Promise<void>((resolve, _reject) => {
-
             const app = express()
             app.use(bodyParser.json())
 
@@ -97,7 +95,9 @@ export class RestServer {
             app.post('/sessions', this.createSession)
 
             // create new subdomain and certificate
-            app.patch('/certificates', async (req, res) => {await this.createSubdomainAndCertificate(req, res)})
+            app.patch('/certificates', async (req, res) => {
+                await this.createSubdomainAndCertificate(req, res)
+            })
 
             // get new certificate for existing subdomain
             app.patch('/certificates/:subdomain', this.createNewCertificateForExistingSubdomain)
@@ -126,7 +126,6 @@ export class RestServer {
             sendResponse(res, session)
         } catch (err) {
             sendError(res, err)
-            
         }
     }
 
@@ -148,12 +147,14 @@ export class RestServer {
         const sessionId = body.sessionId
         try {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId
+                ipAndPort.ip,
+                ipAndPort.port,
+                streamrWebSocketPort,
+                sessionId
             )
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
             sendError(res, err)
-            
         }
     }
 
@@ -181,13 +182,18 @@ export class RestServer {
             return
         }
         try {
-            const certifiedSubdomain = await this.engine.createNewCertificateForSubdomain(subdomain,
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
+            const certifiedSubdomain = await this.engine.createNewCertificateForSubdomain(
+                subdomain,
+                ipAndPort.ip,
+                ipAndPort.port,
+                streamrWebSocketPort,
+                sessionId,
+                token
+            )
 
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
             sendError(res, err)
-            
         }
     }
 
@@ -209,20 +215,31 @@ export class RestServer {
         }
         const token = body.token
         const sessionId = body.sessionId
-        
+
         const ipAndPort = parseIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             sendError(res, err)
             return
         }
-        logger.debug('updateSubdomainIp() '
-            + 'subdomain: ' + subdomain + ', ip: ' + ipAndPort.ip
-            + ', port: ' + ipAndPort.port + ', streamrWebSocketPort: ' + streamrWebSocketPort
-            + ', sessionId: ' + ' ' + sessionId + ', token: ' + token)
+        logger.debug(
+            'updateSubdomainIp() ' +
+                'subdomain: ' +
+                subdomain +
+                ', ip: ' +
+                ipAndPort.ip +
+                ', port: ' +
+                ipAndPort.port +
+                ', streamrWebSocketPort: ' +
+                streamrWebSocketPort +
+                ', sessionId: ' +
+                ' ' +
+                sessionId +
+                ', token: ' +
+                token
+        )
         try {
-            await this.engine.updateSubdomainIp(subdomain, ipAndPort.ip,
-                ipAndPort.port, streamrWebSocketPort, sessionId, token)
+            await this.engine.updateSubdomainIp(subdomain, ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
 
             sendResponse(res)
         } catch (err) {

@@ -1,6 +1,6 @@
-/** 
- * Example that demonstrates passing context information through the RPC stack 
- * */ 
+/**
+ * Example that demonstrates passing context information through the RPC stack
+ * */
 
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -11,7 +11,6 @@ import { RoutedHelloRpcServiceClient } from './proto/RoutedHelloRpc.client'
 
 // Rpc service
 class HelloService implements IRoutedHelloRpcService {
-
     public serviceId: string
 
     constructor(serviceId: string) {
@@ -21,7 +20,7 @@ class HelloService implements IRoutedHelloRpcService {
 
     async sayHello(request: RoutedHelloRequest, cont: ServerCallContext): Promise<RoutedHelloResponse> {
         // proto-rpc always passes a CallContext instance to the RPC methods
-        // type-casting is safe here 
+        // type-casting is safe here
         const context = cont as ProtoCallContext
         let sourceId = 'unknown'
 
@@ -36,7 +35,6 @@ class HelloService implements IRoutedHelloRpcService {
 }
 
 const run = async () => {
-
     const clientCommunicators: Record<string, RpcCommunicator> = {}
 
     // Setup server
@@ -46,7 +44,7 @@ const run = async () => {
 
     // Setup server 2
     const serverCommunicator2 = new RpcCommunicator()
-    const helloService2 = new HelloService('2')    
+    const helloService2 = new HelloService('2')
     serverCommunicator2.registerRpcMethod(RoutedHelloRequest, RoutedHelloResponse, 'sayHello', helloService2.sayHello)
 
     // Setup client1
@@ -62,8 +60,7 @@ const run = async () => {
     // Simulate a network connection, in real life the message blobs would be transferred over a network
 
     serverCommunicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, callContext?: ProtoCallContext) => {
-
-        // Send the reply message to the calling client based on sourceId passed 
+        // Send the reply message to the calling client based on sourceId passed
         // through the network stack in the context information
         if (callContext!.sourceId) {
             const clientId = callContext!['sourceId'] as string
@@ -79,7 +76,6 @@ const run = async () => {
     })
 
     communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, clientContext?: ProtoCallContext) => {
-       
         // Choose the server to send the message to based on context information passed
         // through the RPC stack as client context information
         let server: RpcCommunicator
@@ -93,16 +89,16 @@ const run = async () => {
         // Here you would transport the msgBody over network to the server
         // ...
         // At the server you would pass the id of the calling client as context information to the server.
-        // The server is free to choose what to use as the id of the calling client; it might use, for example, 
-        // the id of the network socket, something negotiated during connection handshake, or something 
+        // The server is free to choose what to use as the id of the calling client; it might use, for example,
+        // the id of the network socket, something negotiated during connection handshake, or something
         // passed on in every network payload.
-        //  
+        //
         // The context information gets passed uncahged through the RPC stack, so the reply message can be
-        // routed to the correct client. 
+        // routed to the correct client.
 
         const serverContext = new ProtoCallContext()
         serverContext['sourceId'] = '1'
-        
+
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
@@ -116,12 +112,12 @@ const run = async () => {
         }
         const serverContext = new ProtoCallContext()
         serverContext['sourceId'] = '2'
-        
+
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
     const { greeting: greeting1 } = await helloClient1.sayHello({ myName: 'Alice' }, { targetServerId: '2' })
-    
+
     // eslint-disable-next-line no-console
     console.log('Client 1 (Alice) got message from server: ' + greeting1)
 

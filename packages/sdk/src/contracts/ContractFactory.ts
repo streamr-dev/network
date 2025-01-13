@@ -8,7 +8,6 @@ import { ObservableContract, createDecoratedContract } from './contract'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
-
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly loggerFactory: LoggerFactory
@@ -64,11 +63,7 @@ export class ContractFactory {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    createEventContract(
-        address: EthereumAddress,
-        contractInterface: InterfaceAbi,
-        provider: AbstractProvider
-    ): Contract {
+    createEventContract(address: EthereumAddress, contractInterface: InterfaceAbi, provider: AbstractProvider): Contract {
         return new Contract(address, contractInterface, provider)
     }
 }

@@ -7,5 +7,4 @@ import { createClientCommand } from '../src/command'
 createClientCommand(async (client: StreamrClient) => {
     const config = client.getConfig()
     console.info(JSON.stringify(config, undefined, 4))
-})
-    .parseAsync()
+}).parseAsync()

@@ -8,7 +8,6 @@ import { Empty } from './proto/google/protobuf/empty'
 
 // Rpc service
 class WakeUpService implements IWakeUpRpcService {
-
     public nodeId: string
 
     constructor(nodeId: string) {
@@ -26,7 +25,6 @@ class WakeUpService implements IWakeUpRpcService {
 }
 
 class Node {
-
     public nodeId: string
     public communicator: RpcCommunicator
     private client: ProtoRpcClient<WakeUpRpcServiceClient>
@@ -42,20 +40,21 @@ class Node {
 
     public wakeUpOtherNode(targetNodeId: string, reason: string) {
         // pass targetNodeId in CallContext
-        this.client.wakeUp({ reason: reason }, {
-            targetNodeId,
-            // By setting the notification flag the client will not wait for a response from the server
-            // and the server will know not to send a response.
-            notification: true
-        })
+        this.client.wakeUp(
+            { reason: reason },
+            {
+                targetNodeId,
+                // By setting the notification flag the client will not wait for a response from the server
+                // and the server will know not to send a response.
+                notification: true
+            }
+        )
     }
 }
 const run = async () => {
-
     const nodes: Record<string, Node> = {}
 
     const emulateNetwork = (msgBody: Uint8Array, _requestId: string, callContext?: ProtoCallContext) => {
-
         // Pass the message to the right based on targetNodeId passed in the context
         if (callContext!.targetNodeId) {
             const targetNodeId = callContext!['targetNodeId'] as string
@@ -65,7 +64,7 @@ const run = async () => {
     // Setup nodes
 
     nodes['1'] = new Node('1')
-    nodes['1'].communicator.on('outgoingMessage', emulateNetwork) 
+    nodes['1'].communicator.on('outgoingMessage', emulateNetwork)
 
     nodes['2'] = new Node('2')
     nodes['2'].communicator.on('outgoingMessage', emulateNetwork)
@@ -79,7 +78,6 @@ const run = async () => {
     nodes['1'].communicator.stop()
     nodes['2'].communicator.stop()
     nodes['3'].communicator.stop()
-   
 }
 
 run()

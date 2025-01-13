@@ -18,7 +18,6 @@ const SPONSORSHIP_ONE = randomEthereumAddress()
 const SPONSORSHIP_TWO = randomEthereumAddress()
 
 describe(MaintainTopologyHelper, () => {
-
     let operator: MockProxy<Operator>
     let helper: MaintainTopologyHelper
     let eventListeners: Multimap<StakeEventName, (payload: StakeEvent) => void>
@@ -37,7 +36,7 @@ describe(MaintainTopologyHelper, () => {
         eventListeners = new Multimap()
         operator = mock<Operator>()
         const onEvent = <E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void => {
-            if ((eventName === 'staked') || (eventName == 'unstaked')) {
+            if (eventName === 'staked' || eventName == 'unstaked') {
                 eventListeners.add(eventName, listener as (payload: StakeEvent) => void)
             }
         }
@@ -46,7 +45,6 @@ describe(MaintainTopologyHelper, () => {
     })
 
     describe('given two sponsorships pointing to different streams', () => {
-
         beforeEach(() => {
             operator.pullStakedStreams.mockReturnValue(fromArray([]))
             operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
@@ -83,7 +81,6 @@ describe(MaintainTopologyHelper, () => {
     })
 
     describe('given two sponsorships pointing to the same stream', () => {
-
         beforeEach(() => {
             operator.pullStakedStreams.mockReturnValue(fromArray([]))
             operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
@@ -97,9 +94,7 @@ describe(MaintainTopologyHelper, () => {
             await triggerEventHandler('staked', SPONSORSHIP_ONE)
             await triggerEventHandler('staked', SPONSORSHIP_TWO)
 
-            expect(events).toEqual([
-                ['addStakedStreams', [STREAM_ONE_ID]]
-            ])
+            expect(events).toEqual([['addStakedStreams', [STREAM_ONE_ID]]])
         })
 
         it('emits "removeStakedStream" only once and only after unstaking from both', async () => {
@@ -113,9 +108,7 @@ describe(MaintainTopologyHelper, () => {
             expect(events).toEqual([])
 
             await triggerEventHandler('unstaked', SPONSORSHIP_TWO)
-            expect(events).toEqual([
-                ['removeStakedStream', STREAM_ONE_ID]
-            ])
+            expect(events).toEqual([['removeStakedStream', STREAM_ONE_ID]])
         })
     })
 
@@ -128,20 +121,22 @@ describe(MaintainTopologyHelper, () => {
         const STREAM_THREE_ID = toStreamID('streamThree')
 
         beforeEach(() => {
-            operator.pullStakedStreams.mockReturnValue(fromArray([
-                {
-                    sponsorship: SPONSORSHIP_THREE,
-                    streamId: STREAM_ONE_ID
-                },
-                {
-                    sponsorship: SPONSORSHIP_FOUR,
-                    streamId: STREAM_TWO_ID
-                },
-                {
-                    sponsorship: SPONSORSHIP_FIVE,
-                    streamId: STREAM_ONE_ID
-                }
-            ]))
+            operator.pullStakedStreams.mockReturnValue(
+                fromArray([
+                    {
+                        sponsorship: SPONSORSHIP_THREE,
+                        streamId: STREAM_ONE_ID
+                    },
+                    {
+                        sponsorship: SPONSORSHIP_FOUR,
+                        streamId: STREAM_TWO_ID
+                    },
+                    {
+                        sponsorship: SPONSORSHIP_FIVE,
+                        streamId: STREAM_ONE_ID
+                    }
+                ])
+            )
             operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
             operator.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
             operator.getStreamId.calledWith(SPONSORSHIP_SIX).mockResolvedValue(STREAM_THREE_ID)
@@ -151,9 +146,7 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
             await helper.start()
 
-            expect(events).toEqual([
-                ['addStakedStreams', [STREAM_ONE_ID, STREAM_TWO_ID]]
-            ])
+            expect(events).toEqual([['addStakedStreams', [STREAM_ONE_ID, STREAM_TWO_ID]]])
         })
 
         it('event "addStakedStreams" is not emitted thereafter if staking to an already staked stream', async () => {
@@ -171,9 +164,7 @@ describe(MaintainTopologyHelper, () => {
 
             await triggerEventHandler('staked', SPONSORSHIP_SIX)
 
-            expect(events).toEqual([
-                ['addStakedStreams', [STREAM_THREE_ID]]
-            ])
+            expect(events).toEqual([['addStakedStreams', [STREAM_THREE_ID]]])
         })
 
         it('event "removeStakedStream" is emitted once and only after unstaking from all the sponsorships related to the stream', async () => {
@@ -189,9 +180,7 @@ describe(MaintainTopologyHelper, () => {
             expect(events).toEqual([])
 
             await triggerEventHandler('unstaked', SPONSORSHIP_THREE)
-            expect(events).toEqual([
-                ['removeStakedStream', STREAM_ONE_ID]
-            ])
+            expect(events).toEqual([['removeStakedStream', STREAM_ONE_ID]])
         })
     })
 })

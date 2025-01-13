@@ -105,10 +105,12 @@ describe('DnsServer', () => {
     describe('handleQuery', () => {
         it('should handle SOA query', async () => {
             const request = {
-                questions: [{
-                    name: 'example.com',
-                    type: 6
-                }]
+                questions: [
+                    {
+                        name: 'example.com',
+                        type: 6
+                    }
+                ]
             } as any
 
             const send = jest.fn()
@@ -123,10 +125,12 @@ describe('DnsServer', () => {
 
         it('should handle TXT query', async () => {
             const request = {
-                questions: [{
-                    name: '_acme-challenge.42342.example.com',
-                    type: 16
-                }]
+                questions: [
+                    {
+                        name: '_acme-challenge.42342.example.com',
+                        type: 16
+                    }
+                ]
             } as any
 
             const send = jest.fn()
@@ -146,10 +150,12 @@ describe('DnsServer', () => {
 
         it('should handle normal query', async () => {
             const request = {
-                questions: [{
-                    name: 'test.example.com',
-                    type: 1
-                }]
+                questions: [
+                    {
+                        name: 'test.example.com',
+                        type: 1
+                    }
+                ]
             } as any
 
             const send = jest.fn()
@@ -169,10 +175,12 @@ describe('DnsServer', () => {
 
         it('should handle invalid domain name', async () => {
             const request = {
-                questions: [{
-                    name: 'invalid.com',
-                    type: 1
-                }]
+                questions: [
+                    {
+                        name: 'invalid.com',
+                        type: 1
+                    }
+                ]
             } as any
 
             const send = jest.fn()

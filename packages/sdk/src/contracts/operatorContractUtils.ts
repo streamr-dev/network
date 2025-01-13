@@ -42,9 +42,7 @@ export interface SetupOperatorContractReturnType {
 
 const logger = new Logger(module)
 
-export async function setupOperatorContract(
-    opts: SetupOperatorContractOpts
-): Promise<SetupOperatorContractReturnType> {
+export async function setupOperatorContract(opts: SetupOperatorContractOpts): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await opts.generateWalletWithGasAndTokens()
     const operatorContract = await deployOperatorContract({
         deployer: operatorWallet,
@@ -52,7 +50,7 @@ export async function setupOperatorContract(
         metadata: opts?.operatorConfig?.metadata
     })
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
-    if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
+    if (opts?.nodeCount !== undefined && opts?.nodeCount > 0) {
         for (const _ of range(opts.nodeCount)) {
             nodeWallets.push(await opts.generateWalletWithGasAndTokens())
         }
@@ -84,20 +82,19 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
     }
-    const operatorReceipt = await (await operatorFactory.deployOperator(
-        multiplyWeiAmount(FRACTION_MAX, ((opts.operatorsCutPercentage ?? 0) / 100)),
-        opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
-        opts.metadata ?? '',
-        [
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultExchangeRatePolicy,
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultUndelegationPolicy,
-        ], [
-            0,
-            0,
-            0,
-        ]
-    )).wait()
+    const operatorReceipt = await (
+        await operatorFactory.deployOperator(
+            multiplyWeiAmount(FRACTION_MAX, (opts.operatorsCutPercentage ?? 0) / 100),
+            opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
+            opts.metadata ?? '',
+            [
+                TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
+                TEST_CHAIN_CONFIG.contracts.OperatorDefaultExchangeRatePolicy,
+                TEST_CHAIN_CONFIG.contracts.OperatorDefaultUndelegationPolicy
+            ],
+            [0, 0, 0]
+        )
+    ).wait()
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
     const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, OperatorArtifact, opts.deployer) as unknown as OperatorContract
@@ -131,12 +128,9 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         [
             TEST_CHAIN_CONFIG.contracts.SponsorshipStakeWeightedAllocationPolicy,
             TEST_CHAIN_CONFIG.contracts.SponsorshipDefaultLeavePolicy,
-            TEST_CHAIN_CONFIG.contracts.SponsorshipVoteKickPolicy,
-        ], [
-            opts.earningsPerSecond ?? parseEther('1'),
-            '0',
-            '0',
-        ]
+            TEST_CHAIN_CONFIG.contracts.SponsorshipVoteKickPolicy
+        ],
+        [opts.earningsPerSecond ?? parseEther('1'), '0', '0']
     )
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
     const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
@@ -148,8 +142,8 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 
 export function getProvider(): Provider {
     return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
-        batchStallTime: 0,       // Don't batch requests, send them immediately
-        cacheTimeout: -1         // Do not employ result caching
+        batchStallTime: 0, // Don't batch requests, send them immediately
+        cacheTimeout: -1 // Do not employ result caching
     })
 }
 
@@ -191,7 +185,7 @@ export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: str
 }
 
 export const transferTokens = async (from: Wallet, to: string, amount: WeiAmount, data?: string, token?: DATATokenContract): Promise<void> => {
-    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, amount, data ?? '0x'))
+    const tx = await (token ?? getTestTokenContract()).connect(from).transferAndCall(to, amount, data ?? '0x')
     await tx.wait()
 }
 

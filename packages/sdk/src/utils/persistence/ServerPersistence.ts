@@ -28,19 +28,14 @@ export default class ServerPersistence implements PersistenceContext {
     // uses createInstance factory pattern so that ServerPersistence and BrowserPersistence
     // are interchangeable
     static async createInstance(opts: ServerPersistenceOptions): Promise<ServerPersistence> {
-        // TODO init() call could called here, so that we don't need to separate logic for 
+        // TODO init() call could called here, so that we don't need to separate logic for
         // initialization (i.e. check this.initCalled flag before eaach call).
         // It would be ok to do initialization, because the PersistenceManager already lazy loads
         // and therefore doesn't create this instance before it is needed
         return new ServerPersistence(opts)
     }
 
-    private constructor({
-        loggerFactory,
-        ownerId,
-        migrationsPath,
-        onInit
-    }: ServerPersistenceOptions) {
+    private constructor({ loggerFactory, ownerId, migrationsPath, onInit }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
         const paths = envPaths('streamr-sdk')
         this.dbFilePath = resolve(paths.data, join('./', ownerId, `GroupKeys.db`))
@@ -76,11 +71,15 @@ export default class ServerPersistence implements PersistenceContext {
                     retryNo: maxRetries - retriesLeft + 1,
                     maxRetries
                 })
-                return this.tryExec(async () => {
-                    // wait random time and retry
-                    await wait(10 + Math.random() * 500)
-                    return fn()
-                }, maxRetries, retriesLeft - 1)
+                return this.tryExec(
+                    async () => {
+                        // wait random time and retry
+                        await wait(10 + Math.random() * 500)
+                        return fn()
+                    },
+                    maxRetries,
+                    retriesLeft - 1
+                )
             }
 
             throw err
@@ -134,27 +133,23 @@ export default class ServerPersistence implements PersistenceContext {
     async get(key: string, namespace: string): Promise<string | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
-            if (!(await this.exists())) { return undefined }
+            if (!(await this.exists())) {
+                return undefined
+            }
         }
 
         await this.init()
-        const row = await this.store!.get(
-            `SELECT value_ FROM ${namespace} WHERE key_ = ?`,
-            key
-        )
+        const row = await this.store!.get(`SELECT value_ FROM ${namespace} WHERE key_ = ?`, key)
         // eslint-disable-next-line no-underscore-dangle
         return row?.value_
     }
 
     async set(key: string, value: string, namespace: string): Promise<void> {
         await this.init()
-        await this.store!.run(
-            `INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`,
-            {
-                $key_: key,
-                $value_: value,
-            }
-        )
+        await this.store!.run(`INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`, {
+            $key_: key,
+            $value_: value
+        })
     }
 
     async close(): Promise<void> {

@@ -4,9 +4,7 @@ import { DhtAddress } from '../identifiers'
 type Offerer = 'local' | 'remote'
 
 export const getOfferer = (localNodeId: DhtAddress, remoteNodeId: DhtAddress): Offerer => {
-    return getOfferingHash(localNodeId + ',' + remoteNodeId) < getOfferingHash(remoteNodeId + ',' + localNodeId)
-        ? 'local'
-        : 'remote'
+    return getOfferingHash(localNodeId + ',' + remoteNodeId) < getOfferingHash(remoteNodeId + ',' + localNodeId) ? 'local' : 'remote'
 }
 
 const getOfferingHash = (idPair: string): number => {

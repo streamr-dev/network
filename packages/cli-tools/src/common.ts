@@ -1,6 +1,6 @@
 export enum OptionType {
     FLAG, // e.g. "--enable"
-    ARGUMENT  // e.g. "--private-key 0x1234"
+    ARGUMENT // e.g. "--private-key 0x1234"
 }
 
 export const getOptionType = (value: string | boolean): OptionType | never => {

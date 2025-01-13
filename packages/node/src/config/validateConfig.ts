@@ -11,15 +11,20 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
     ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
     ajv.addSchema(DEFINITIONS_SCHEMA)
     if (!ajv.validate(schema, data)) {
-        const prefix = (contextName !== undefined) ? (contextName + ': ') : ''
-        throw new Error(prefix + ajv.errors!.map((e: ErrorObject) => {
-            let text = ajv.errorsText([e], { dataVar: '' } ).trim()
-            if (e.params.additionalProperty) {
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                text += ` (${e.params.additionalProperty})`
-            }
-            return text
-        }).join('\n'))
+        const prefix = contextName !== undefined ? contextName + ': ' : ''
+        throw new Error(
+            prefix +
+                ajv
+                    .errors!.map((e: ErrorObject) => {
+                        let text = ajv.errorsText([e], { dataVar: '' }).trim()
+                        if (e.params.additionalProperty) {
+                            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                            text += ` (${e.params.additionalProperty})`
+                        }
+                        return text
+                    })
+                    .join('\n')
+        )
     }
     return data as StrictConfig
 }

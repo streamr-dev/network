@@ -1,12 +1,6 @@
 import { initEventGateway, Events, ObservableEventEmitter } from '@streamr/utils'
 import type { TransactionResponse } from 'ethers'
-import {
-    BaseContract,
-    Contract,
-    ContractTransactionReceipt,
-    ContractTransactionResponse,
-    FunctionFragment,
-} from 'ethers'
+import { BaseContract, Contract, ContractTransactionReceipt, ContractTransactionResponse, FunctionFragment } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
@@ -22,15 +16,13 @@ export type ObservableContract<T extends BaseContract> = T & {
     eventEmitter: EventEmitter<ContractEvent>
 }
 
-export async function waitForTx(
-    txToSubmit: Promise<TransactionResponse>
-): Promise<ContractTransactionReceipt> {
+export async function waitForTx(txToSubmit: Promise<TransactionResponse>): Promise<ContractTransactionReceipt> {
     const tx = await txToSubmit
     return tx.wait() as Promise<ContractTransactionReceipt> // cannot be null unless arg confirmations set to 0
 }
 
 const isTransactionResponse = (returnValue: any): returnValue is ContractTransactionResponse => {
-    return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
+    return returnValue.wait !== undefined && typeof returnValue.wait === 'function'
 }
 
 const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
@@ -60,11 +52,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
     })
 }
 
-const withErrorHandling = async <T>(
-    execute: () => Promise<T>,
-    methodName: string,
-    action: string
-): Promise<T> => {
+const withErrorHandling = async <T>(execute: () => Promise<T>, methodName: string, action: string): Promise<T> => {
     try {
         return await execute()
     } catch (e: any) {
@@ -73,9 +61,7 @@ const withErrorHandling = async <T>(
             ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
             undefined
         )
-        const wrappedError = new Error(
-            `Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`
-        )
+        const wrappedError = new Error(`Error while ${action} contract call "${methodName}"${suffixes.length > 0 ? ', ' + suffixes.join(', ') : ''}`)
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -92,10 +78,15 @@ const createWrappedContractMethod = (
     const originalMethod = contract[methodName]
     const methodFullName = `${contractName}.${methodName}`
     const fn = async (...args: any) => {
-        const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
-            eventEmitter.emit('onMethodExecute', methodFullName)
-            return originalMethod(...args)
-        }), methodFullName, 'executing')
+        const returnValue = await withErrorHandling(
+            () =>
+                concurrencyLimit(() => {
+                    eventEmitter.emit('onMethodExecute', methodFullName)
+                    return originalMethod(...args)
+                }),
+            methodFullName,
+            'executing'
+        )
         if (isTransactionResponse(returnValue)) {
             eventEmitter.emit('onTransactionSubmit', methodFullName, returnValue)
             const originalWait = returnValue.wait.bind(returnValue)
@@ -150,13 +141,7 @@ export const createDecoratedContract = <T extends BaseContract>(
      */
     const methodNames = contract.interface.fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => f.name)
     methodNames.forEach((methodName) => {
-        decoratedContract[methodName] = createWrappedContractMethod(
-            contract,
-            contractName,
-            methodName,
-            eventEmitter,
-            concurrencyLimit
-        )
+        decoratedContract[methodName] = createWrappedContractMethod(contract, contractName, methodName, eventEmitter, concurrencyLimit)
     })
 
     createLogger(eventEmitter, loggerFactory)

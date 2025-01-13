@@ -13,19 +13,13 @@ import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
 
-type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
-    'resends' |
-    'groupKeyManager' |
-    'streamRegistry' |
-    'signatureValidator' |
-    'destroySignal' |
-    'loggerFactory'>,
-    'getStorageNodes' |
-    'config'>
+type MessagePipelineFactoryOptions = MarkOptional<
+    Omit<MessagePipelineOptions, 'resends' | 'groupKeyManager' | 'streamRegistry' | 'signatureValidator' | 'destroySignal' | 'loggerFactory'>,
+    'getStorageNodes' | 'config'
+>
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
-
     private readonly resends: Resends
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly streamRegistry: StreamRegistry

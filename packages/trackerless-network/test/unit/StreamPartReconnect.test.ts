@@ -5,7 +5,6 @@ import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDesc
 import { until } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
-
     let peerDescriptorSoreManager: PeerDescriptorStoreManager
     let discoveryLayerNode: MockDiscoveryLayerNode
     let streamPartReconnect: StreamPartReconnect
@@ -26,5 +25,4 @@ describe('StreamPartReconnect', () => {
         discoveryLayerNode.addNewRandomPeerToKBucket()
         await until(() => streamPartReconnect.isRunning() === false)
     })
-
 })

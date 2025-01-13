@@ -9,10 +9,14 @@ export const addManagedEventListener = <TEventName extends string, TListener ext
 ): void => {
     if (!abortSignal.aborted) {
         emitter.on(eventName, listener)
-        abortSignal.addEventListener('abort', () => {
-            emitter.off(eventName, listener)
-        }, { 
-            once: true
-        })
+        abortSignal.addEventListener(
+            'abort',
+            () => {
+                emitter.off(eventName, listener)
+            },
+            {
+                once: true
+            }
+        )
     }
 }

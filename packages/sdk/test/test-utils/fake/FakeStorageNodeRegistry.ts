@@ -6,7 +6,6 @@ import { FakeChain } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
-
     private readonly chain: FakeChain
 
     constructor(chain: FakeChain) {

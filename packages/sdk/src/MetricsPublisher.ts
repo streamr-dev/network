@@ -38,7 +38,7 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
     } else if (config.metrics !== undefined) {
         return merge(DEFAULTS, config.metrics)
     } else {
-        const isEthereumAuth = ((config.auth as ProviderAuthConfig)?.ethereum !== undefined)
+        const isEthereumAuth = (config.auth as ProviderAuthConfig)?.ethereum !== undefined
         return {
             ...DEFAULTS,
             periods: isEthereumAuth ? [] : DEFAULTS.periods
@@ -48,7 +48,6 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
 
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
-
     private readonly publisher: Publisher
     private readonly node: NetworkNodeFacade
     private readonly config: NormalizedConfig
@@ -71,9 +70,13 @@ export class MetricsPublisher {
             const metricsContext = await this.node.getMetricsContext()
             const nodeId = await this.node.getNodeId()
             this.config.periods.forEach((config) => {
-                metricsContext.createReportProducer(async (report: MetricsReport) => {
-                    await this.publish(report, config.streamId, nodeId)
-                }, config.duration, this.destroySignal.abortSignal)
+                metricsContext.createReportProducer(
+                    async (report: MetricsReport) => {
+                        await this.publish(report, config.streamId, nodeId)
+                    },
+                    config.duration,
+                    this.destroySignal.abortSignal
+                )
             })
         })
         if (this.config.periods.length > 0) {
@@ -86,7 +89,7 @@ export class MetricsPublisher {
         await wait(Math.random() * this.config.maxPublishDelay)
         const message = {
             ...report,
-            node: { 
+            node: {
                 ...report.node,
                 id: nodeId
             }

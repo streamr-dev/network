@@ -2,14 +2,8 @@
 
 import * as Err from './errors'
 import { ErrorCode } from './errors'
-import {
-    ClientTransport,
-    ResultParts
-} from './ClientTransport'
-import {
-    RpcMessage,
-    RpcErrorType
-} from '../generated/ProtoRpc'
+import { ClientTransport, ResultParts } from './ClientTransport'
+import { RpcMessage, RpcErrorType } from '../generated/ProtoRpc'
 import { Empty } from '../generated/google/protobuf/empty'
 import { MethodOptions, ServerRegistry } from './ServerRegistry'
 import { DeferredState, ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -30,12 +24,11 @@ export interface RpcCommunicatorOptions {
 }
 
 class OngoingRequest<T extends ProtoCallContext> {
-
     private deferredPromises: ResultParts
     private callContext: T
     private timeoutRef?: NodeJS.Timeout
 
-    constructor(deferredPromises: ResultParts, callContext: T, timeoutOptions?: { timeout: number, onTimeout: () => void }) {
+    constructor(deferredPromises: ResultParts, callContext: T, timeoutOptions?: { timeout: number; onTimeout: () => void }) {
         this.deferredPromises = deferredPromises
         this.callContext = callContext
         if (timeoutOptions) {
@@ -45,7 +38,6 @@ class OngoingRequest<T extends ProtoCallContext> {
                 timeoutOptions.onTimeout()
             }, timeoutOptions.timeout)
         }
-        
     }
 
     public resolveRequest(response: RpcMessage) {
@@ -105,7 +97,7 @@ class OngoingRequest<T extends ProtoCallContext> {
 
     getCallContext(): T {
         return this.callContext
-    } 
+    }
 }
 
 const logger = new Logger(module)
@@ -130,18 +122,13 @@ export class RpcCommunicator<T extends ProtoCallContext> {
     private outgoingMessageListener?: OutgoingMessageListener<T>
 
     constructor(params?: RpcCommunicatorOptions) {
-
         this.rpcRequestTimeout = params?.rpcRequestTimeout ?? 5000
         this.rpcClientTransport = new ClientTransport(this.rpcRequestTimeout)
         this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
 
         // Client side listener for outgoing request
-        this.rpcClientTransport.on('rpcRequest', (
-            rpcMessage: RpcMessage,
-            options: ProtoRpcOptions,
-            deferredPromises: ResultParts | undefined
-        ) => {
+        this.rpcClientTransport.on('rpcRequest', (rpcMessage: RpcMessage, options: ProtoRpcOptions, deferredPromises: ResultParts | undefined) => {
             this.onOutgoingMessage(rpcMessage, options as T, deferredPromises)
         })
     }
@@ -153,10 +140,12 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         return this.onIncomingMessage(message, callContext)
     }
 
-    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+    public registerRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
         ReturnClass extends IMessageType<ReturnType>,
         RequestType extends object,
-        ReturnType extends object>(
+        ReturnType extends object
+    >(
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
@@ -166,8 +155,7 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn, options)
     }
 
-    public registerRpcNotification<RequestClass extends IMessageType<RequestType>,
-        RequestType extends object>(
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>, RequestType extends object>(
         requestClass: RequestClass,
         name: string,
         fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>,
@@ -302,14 +290,10 @@ export class RpcCommunicator<T extends ProtoCallContext> {
             return
         }
 
-        const ongoingRequest = new OngoingRequest(
-            deferredPromises, 
-            callContext,
-            { 
-                timeout,
-                onTimeout: () => this.ongoingRequests.delete(requestId) 
-            }
-        )
+        const ongoingRequest = new OngoingRequest(deferredPromises, callContext, {
+            timeout,
+            onTimeout: () => this.ongoingRequests.delete(requestId)
+        })
 
         this.ongoingRequests.set(requestId, ongoingRequest)
     }
@@ -362,14 +346,13 @@ export class RpcCommunicator<T extends ProtoCallContext> {
     }
 
     public getRequestIds(predicate: (request: OngoingRequest<T>) => boolean): string[] {
-        return Array.from(this.ongoingRequests.entries()).filter(([_, request]) => request.fulfillsPredicate(predicate)).map(([id]) => id)
+        return Array.from(this.ongoingRequests.entries())
+            .filter(([_, request]) => request.fulfillsPredicate(predicate))
+            .map(([id]) => id)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private createResponseRpcMessage(
-        { request, body, errorType, errorClassName, errorCode, errorMessage }:
-            RpcResponseParams
-    ): RpcMessage {
+    private createResponseRpcMessage({ request, body, errorType, errorClassName, errorCode, errorMessage }: RpcResponseParams): RpcMessage {
         return {
             body,
             header: {

@@ -8,7 +8,6 @@ import { createMockContentDeliveryRpcRemote, createMockHandshakeRpcRemote, creat
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('HandshakeRpcLocal', () => {
-
     let rpcLocal: HandshakeRpcLocal
 
     const localPeerDescriptor = createMockPeerDescriptor()
@@ -151,5 +150,4 @@ describe('HandshakeRpcLocal', () => {
         expect(res.accepted).toEqual(false)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
     })
-
 })

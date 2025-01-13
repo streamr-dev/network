@@ -4,7 +4,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { ConnectionEvents } from '../../src/connection/IConnection'
 
 describe('WebrtcConnection', () => {
-
     let connection: NodeWebrtcConnection
 
     beforeEach(() => {
@@ -25,5 +24,4 @@ describe('WebrtcConnection', () => {
             return true
         })
     })
-
 })

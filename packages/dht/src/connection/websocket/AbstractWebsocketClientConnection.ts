@@ -22,12 +22,11 @@ const OPEN = 1
 const logger = new Logger(module)
 
 export abstract class AbstractWebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
-
     public readonly connectionId: ConnectionID
     protected abstract socket?: Socket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
     protected destroyed = false
-    
+
     constructor() {
         super()
         this.connectionId = createRandomConnectionId()
@@ -35,7 +34,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
 
     // TODO explicit default value for "selfSigned" or make it required
     public abstract connect(address: string, allowSelfSignedCertificate: boolean): void
-    
+
     protected abstract stopListening(): void
 
     public send(data: Uint8Array): void {
@@ -46,7 +45,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
             } else {
                 // Could this throw for faster feedback on RPC calls?
                 // Currently this log line is seen if a connection is closing but the disconnected event has not been emitted yet.
-                logger.debug('Tried to send data on a non-open connection', { 
+                logger.debug('Tried to send data on a non-open connection', {
                     id: this.connectionId,
                     readyState: this.socket!.readyState,
                     destroyed: this.destroyed
@@ -114,9 +113,8 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
-        const gracefulLeave = (code === GOING_AWAY) || (code === CUSTOM_GOING_AWAY)
+        const gracefulLeave = code === GOING_AWAY || code === CUSTOM_GOING_AWAY
         this.emit('disconnected', gracefulLeave, code, reason)
         this.removeAllListeners()
     }
-
 }

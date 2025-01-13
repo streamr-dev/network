@@ -5,7 +5,6 @@ import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
 
 describe('Inspector', () => {
-    
     let inspector: Inspector
     const inspectorDescriptor = createMockPeerDescriptor()
 
@@ -47,5 +46,4 @@ describe('Inspector', () => {
         expect(inspector.isInspected(toNodeId(inspectedDescriptor))).toBe(false)
         expect(mockConnect).toHaveBeenCalledTimes(1)
     })
-
 })

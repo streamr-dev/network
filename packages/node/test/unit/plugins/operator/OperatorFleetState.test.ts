@@ -72,7 +72,7 @@ describe(OperatorFleetState, () => {
 
     it('can handle invalid messages in coordination stream', async () => {
         await state.start()
-        await setTimeAndPublishMessage(10, { foo: 'bar', 'lorem': 666 })
+        await setTimeAndPublishMessage(10, { foo: 'bar', lorem: 666 })
         await setTimeAndPublishMessage(10, {})
         expect(state.getNodeIds()).toEqual([])
     })

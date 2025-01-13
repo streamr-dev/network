@@ -7,7 +7,6 @@ const logger = new Logger(module)
 const BINARY_TYPE = 'nodebuffer'
 
 export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
-
     protected socket?: WebSocket
 
     // TODO explicit default value for "selfSigned" or make it required
@@ -35,5 +34,4 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
     protected stopListening(): void {
         this.socket?.removeAllListeners()
     }
-
 }

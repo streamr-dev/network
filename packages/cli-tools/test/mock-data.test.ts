@@ -3,7 +3,6 @@ import 'jest-extended'
 import { startCommand } from './utils'
 
 describe('mock-data', () => {
-
     it('generate', async () => {
         const abortController = new AbortController()
         const outputIterable = startCommand('mock-data generate', {
@@ -29,5 +28,4 @@ describe('mock-data', () => {
         expect(lengthInBytes).toBeGreaterThanOrEqual(32)
         expect(lengthInBytes).toBeLessThanOrEqual(64)
     })
-
 })

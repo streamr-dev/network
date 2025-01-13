@@ -1,11 +1,4 @@
-import {
-    ConnectionLocker,
-    DhtAddress,
-    ITransport,
-    ListeningRpcCommunicator,
-    PeerDescriptor,
-    toNodeId
-} from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, ITransport, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -70,7 +63,6 @@ const logger = new Logger(module)
 const SERVICE_ID = 'system/proxy-client'
 
 export class ProxyClient extends EventEmitter<Events> {
-
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private readonly options: ProxyClientOptions
@@ -118,18 +110,15 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
-            (msg: StreamMessage, context) => this.contentDeliveryRpcLocal.sendStreamMessage(msg, context))
-        this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
-            (req: LeaveStreamPartNotice, context) => this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context))
+        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage', (msg: StreamMessage, context) =>
+            this.contentDeliveryRpcLocal.sendStreamMessage(msg, context)
+        )
+        this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice', (req: LeaveStreamPartNotice, context) =>
+            this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context)
+        )
     }
 
-    async setProxies(
-        nodes: PeerDescriptor[],
-        direction: ProxyDirection,
-        userId: UserID,
-        connectionCount?: number
-    ): Promise<void> {
+    async setProxies(nodes: PeerDescriptor[], direction: ProxyDirection, userId: UserID, connectionCount?: number): Promise<void> {
         logger.trace('Setting proxies', { streamPartId: this.options.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
         if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw new Error('Cannot set connectionCount above the size of the configured array of nodes')
@@ -148,9 +137,11 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private async updateConnections(): Promise<void> {
-        await Promise.all(this.getInvalidConnections().map(async (id) => {
-            await this.closeConnection(id)
-        }))
+        await Promise.all(
+            this.getInvalidConnections().map(async (id) => {
+                await this.closeConnection(id)
+            })
+        )
         const connectionCountDiff = this.definition!.connectionCount - this.connections.size
         if (connectionCountDiff > 0) {
             await this.openRandomConnections(connectionCountDiff)
@@ -161,18 +152,16 @@ export class ProxyClient extends EventEmitter<Events> {
 
     private getInvalidConnections(): DhtAddress[] {
         return Array.from(this.connections.keys()).filter((id) => {
-            return !this.definition!.nodes.has(id)
-                || this.definition!.direction !== this.connections.get(id)!.direction
+            return !this.definition!.nodes.has(id) || this.definition!.direction !== this.connections.get(id)!.direction
         })
     }
 
     private async openRandomConnections(connectionCount: number): Promise<void> {
-        const proxiesToAttempt = sampleSize(Array.from(this.definition!.nodes.keys()).filter((id) =>
-            !this.connections.has(id)
-        ), connectionCount)
-        await Promise.all(proxiesToAttempt.map((id) =>
-            this.attemptConnection(id, this.definition!.direction, this.definition!.userId)
-        ))
+        const proxiesToAttempt = sampleSize(
+            Array.from(this.definition!.nodes.keys()).filter((id) => !this.connections.has(id)),
+            connectionCount
+        )
+        await Promise.all(proxiesToAttempt.map((id) => this.attemptConnection(id, this.definition!.direction, this.definition!.userId)))
     }
 
     private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: UserID): Promise<void> {
@@ -268,7 +257,7 @@ export class ProxyClient extends EventEmitter<Events> {
 
     public getDiagnosticInfo(): Record<string, unknown> {
         return {
-            neighbors: this.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+            neighbors: this.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
         }
     }
 
@@ -282,5 +271,4 @@ export class ProxyClient extends EventEmitter<Events> {
         this.connections.clear()
         this.abortController.abort()
     }
-
 }

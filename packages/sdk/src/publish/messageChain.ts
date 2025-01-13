@@ -17,11 +17,11 @@ export const createMessageRef = (timestamp: number, prevMsgRef?: MessageRef): Me
     // The sequence breaking issue above can be "fixed" if we throw an exception for backdated timestamp.
     // In that case we don't publish the message and the backdated timestamp won't be useds as prevMsgRef
     // for a possible subsequent publish request.
-    const isBackdated = (prevMsgRef !== undefined) && (timestamp < prevMsgRef.timestamp)
+    const isBackdated = prevMsgRef !== undefined && timestamp < prevMsgRef.timestamp
     if (isBackdated) {
         throw new Error('prevMessageRef must come before current')
     }
-    const isSameTimestamp = (prevMsgRef !== undefined) && (prevMsgRef.timestamp === timestamp)
+    const isSameTimestamp = prevMsgRef !== undefined && prevMsgRef.timestamp === timestamp
     const nextSequenceNumber = isSameTimestamp ? prevMsgRef.sequenceNumber + 1 : 0
     const createdMessageRef = new MessageRef(timestamp, nextSequenceNumber)
     return createdMessageRef

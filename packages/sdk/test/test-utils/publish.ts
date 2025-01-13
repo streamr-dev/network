@@ -11,7 +11,7 @@ export function Msg<T extends object = object>(opts?: T): any {
         {
             value: uid('msg')
         },
-        opts,
+        opts
     )
 }
 
@@ -22,10 +22,7 @@ type TestMessageOptions = Partial<{
     createMessage: (content: any) => any
 }>
 
-export async function* createTestMessages(
-    total: number = 5,
-    opts: TestMessageOptions = {}
-): AsyncGenerator<PublishMetadata & { content: any }> {
+export async function* createTestMessages(total: number = 5, opts: TestMessageOptions = {}): AsyncGenerator<PublishMetadata & { content: any }> {
     const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
     const batchId = counterId('createTestMessages')
     for (let i = 0; i < total; i++) {
@@ -36,7 +33,7 @@ export async function* createTestMessages(
                 batchId,
                 value: `${i + 1} of ${total}`,
                 index: i,
-                total,
+                total
             })
         }
 
@@ -79,13 +76,7 @@ export function getPublishTestStreamMessages(
     defaultOpts: PublishTestMessageOptions = {}
 ): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<Message[]> {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const {
-            waitForLast,
-            waitForLastCount,
-            waitForLastTimeout,
-            retainMessages = true,
-            ...options
-        } = merge(defaultOpts, opts)
+        const { waitForLast, waitForLastCount, waitForLastTimeout, retainMessages = true, ...options } = merge(defaultOpts, opts)
 
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         let streamMessages = []
@@ -104,7 +95,7 @@ export function getPublishTestStreamMessages(
         if (waitForLast) {
             await getWaitForStorage(client, {
                 count: waitForLastCount,
-                timeout: waitForLastTimeout,
+                timeout: waitForLastTimeout
             })(streamMessages[streamMessages.length - 1])
         }
 
@@ -112,12 +103,18 @@ export function getPublishTestStreamMessages(
     }
 }
 
-export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: Message, opts?: {
-    interval?: number
-    timeout?: number
-    count?: number
-    messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-}) => Promise<void> {
+export function getWaitForStorage(
+    client: StreamrClient,
+    defaultOpts = {}
+): (
+    lastPublished: Message,
+    opts?: {
+        interval?: number
+        timeout?: number
+        count?: number
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
+    }
+) => Promise<void> {
     return async (lastPublished: Message, opts = {}) => {
         return client.waitForStorage(lastPublished, merge(defaultOpts, opts))
     }

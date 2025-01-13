@@ -1,13 +1,9 @@
 import { toNodeId } from '../../identifiers'
-import {
-    ReplicateDataRequest,
-    StoreDataRequest
-} from '../../../generated/packages/dht/protos/DhtRpc'
+import { ReplicateDataRequest, StoreDataRequest } from '../../../generated/packages/dht/protos/DhtRpc'
 import { StoreRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
 
 export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {
-
     async storeData(request: StoreDataRequest): Promise<void> {
         const options = this.formDhtRpcOptions()
         try {
@@ -28,5 +24,4 @@ export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {
         })
         return this.getClient().replicateData(request, options)
     }
-
 }

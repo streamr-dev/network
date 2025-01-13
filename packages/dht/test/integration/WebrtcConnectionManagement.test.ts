@@ -11,17 +11,17 @@ import { createMockPeerDescriptor } from '../utils/utils'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
-        createConnectorFacade: () => new DefaultConnectorFacade({
-            transport,
-            createLocalPeerDescriptor: async () => localPeerDescriptor
-        }),
+        createConnectorFacade: () =>
+            new DefaultConnectorFacade({
+                transport,
+                createLocalPeerDescriptor: async () => localPeerDescriptor
+            }),
         metricsContext: new MetricsContext(),
         allowIncomingPrivateConnections: false
     })
 }
 
 describe('WebRTC Connection Management', () => {
-
     let manager1: ConnectionManager
     let manager2: ConnectionManager
     let simulator: Simulator
@@ -43,12 +43,7 @@ describe('WebRTC Connection Management', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            manager1.stop(),
-            manager2.stop(),
-            connectorTransport1.stop(),
-            connectorTransport2.stop()
-        ])
+        await Promise.all([manager1.stop(), manager2.stop(), connectorTransport1.stop(), connectorTransport2.stop()])
         simulator.stop()
     })
 
@@ -82,7 +77,7 @@ describe('WebRTC Connection Management', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            }, 
+            },
             messageId: 'mockerer'
         }
         manager1.on('message', (message: Message) => {
@@ -103,9 +98,7 @@ describe('WebRTC Connection Management', () => {
             messageId: 'mockerer'
         }
         dummyMessage.targetDescriptor = peerDescriptor1
-        await expect(manager1.send(dummyMessage))
-            .rejects
-            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+        await expect(manager1.send(dummyMessage)).rejects.toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
 
     it('Connects and disconnects webrtc connections', async () => {
@@ -151,7 +144,7 @@ describe('WebRTC Connection Management', () => {
         })
 
         msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg).catch((_e) => { })
+        manager1.send(msg).catch((_e) => {})
 
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
@@ -159,7 +152,6 @@ describe('WebRTC Connection Management', () => {
         manager1.closeConnection(peerDescriptor2)
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
-
     }, 20000)
 
     it('failed connections are cleaned up', async () => {
@@ -169,7 +161,7 @@ describe('WebRTC Connection Management', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            },
+            }
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
@@ -180,12 +172,9 @@ describe('WebRTC Connection Management', () => {
 
         msg.targetDescriptor = {
             nodeId: new Uint8Array([0, 0, 0, 0, 0]),
-            type: NodeType.NODEJS,
+            type: NodeType.NODEJS
         }
-        
-        await Promise.allSettled([
-            manager1.send(msg),
-            disconnectedPromise1
-        ])
+
+        await Promise.allSettled([manager1.send(msg), disconnectedPromise1])
     }, 20000)
 })

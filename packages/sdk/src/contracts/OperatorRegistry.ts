@@ -29,18 +29,15 @@ export class OperatorRegistry {
     private readonly theGraphClient: TheGraphClient
     private readonly logger: Logger
 
-    constructor(
-        theGraphClient: TheGraphClient,
-        loggerFactory: LoggerFactory
-    ) {
+    constructor(theGraphClient: TheGraphClient, loggerFactory: LoggerFactory) {
         this.theGraphClient = theGraphClient
         this.logger = loggerFactory.createLogger(module)
     }
 
     async findRandomNetworkEntrypoints(
         maxEntryPoints: number,
-        maxQueryResults: number, 
-        maxHeartbeatAgeHours: number,
+        maxQueryResults: number,
+        maxHeartbeatAgeHours: number
     ): Promise<NetworkPeerDescriptor[]> {
         const createQuery = (): GraphQLQuery => {
             return {
@@ -51,7 +48,7 @@ export class OperatorRegistry {
                         first: ${maxQueryResults}
                         where: {
                             latestHeartbeatMetadata_contains: "\\"tls\\":true", 
-                            latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
+                            latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - maxHeartbeatAgeHours * 60 * 60}"
                         }
                     ) {
                         id
@@ -71,7 +68,7 @@ export class OperatorRegistry {
     }
 
     async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number, maxHeartbeatAgeHours: number): Promise<NetworkPeerDescriptor[]> {
-        const query: GraphQLQuery = { 
+        const query: GraphQLQuery = {
             query: `{
                 stream(id: "${streamId}") {
                     sponsorships(where: { isRunning: true }) {
@@ -79,7 +76,7 @@ export class OperatorRegistry {
                             operator (
                                 where: {
                                     latestHeartbeatMetadata_contains: "\\"tls\\":true", 
-                                    latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
+                                    latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - maxHeartbeatAgeHours * 60 * 60}"
                                 }
                             ) {
                                 id
@@ -91,10 +88,9 @@ export class OperatorRegistry {
             }`
         }
         const result = await this.theGraphClient.queryEntity<StreamOperators>(query)
-        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships
-            .flatMap((sponsorship: Sponsorship) => sponsorship.stakes
-                .map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata)))
+        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships.flatMap((sponsorship: Sponsorship) =>
+            sponsorship.stakes.map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata))
+        )
         return peerDescriptors
     }
-
 }

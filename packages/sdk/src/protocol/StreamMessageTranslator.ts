@@ -67,12 +67,10 @@ const newToOldSignatureType = (type: NewSignatureType): OldSignatureType => {
         return OldSignatureType.ERC_1271
     }
     return OldSignatureType.SECP256K1
-
 }
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
-
     static toProtobuf(msg: OldStreamMessage): NewStreamMessage {
         const messageId: NewMessageID = {
             timestamp: msg.getTimestamp(),
@@ -144,10 +142,7 @@ export class StreamMessageTranslator {
             contentType = newToOldContentType(msg.body.contentMessage.contentType)
             encryptionType = newToOldEncryptionType(msg.body.contentMessage.encryptionType)
             if (msg.body.contentMessage.newGroupKey) {
-                newGroupKey = new OldEncryptedGroupKey(
-                    msg.body.contentMessage.newGroupKey.id,
-                    msg.body.contentMessage.newGroupKey.data
-                )
+                newGroupKey = new OldEncryptedGroupKey(msg.body.contentMessage.newGroupKey.id, msg.body.contentMessage.newGroupKey.data)
             }
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {

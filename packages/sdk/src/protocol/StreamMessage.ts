@@ -23,9 +23,9 @@ export enum EncryptionType {
 }
 
 export enum SignatureType {
-    LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
-    SECP256K1,          // Streamr 1.0 payload signed with secp256k1 curve
-    ERC_1271            // ERC-1271 with secp256k1 curve implementation
+    LEGACY_SECP256K1, // Brubeck payload signed with secp256k1 curve
+    SECP256K1, // Streamr 1.0 payload signed with secp256k1 curve
+    ERC_1271 // ERC-1271 with secp256k1 curve implementation
 }
 
 export interface StreamMessageOptions {
@@ -73,7 +73,6 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
 }
 
 export class StreamMessage implements StreamMessageOptions {
-
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
@@ -95,7 +94,7 @@ export class StreamMessage implements StreamMessageOptions {
         signatureType,
         encryptionType,
         groupKeyId,
-        newGroupKey,
+        newGroupKey
     }: StreamMessageOptions) {
         validateSequence(messageId, prevMsgRef)
         if (encryptionType === EncryptionType.AES) {

@@ -35,7 +35,6 @@ const isStorableMessage = (msg: StreamMessage): boolean => {
 }
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
-
     private streamrClient?: StreamrClient
     private cassandra?: Storage
     private storageConfig?: StorageConfig

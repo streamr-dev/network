@@ -8,25 +8,17 @@ import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/Dh
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const createDhtNodeRpcRemote = (
-    peerDescriptor: PeerDescriptor,
-    localPeerDescriptor: PeerDescriptor,
-    pingFailures: Set<DhtAddress>
-) => {
-    const remote = new class extends DhtNodeRpcRemote {
+const createDhtNodeRpcRemote = (peerDescriptor: PeerDescriptor, localPeerDescriptor: PeerDescriptor, pingFailures: Set<DhtAddress>) => {
+    const remote = new (class extends DhtNodeRpcRemote {
         // eslint-disable-next-line class-methods-use-this
         async ping(): Promise<boolean> {
             return !pingFailures.has(toNodeId(peerDescriptor))
         }
-    }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
+    })(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
     return remote
 }
 
-const createPeerManager = (
-    nodeIds: DhtAddress[], 
-    localPeerDescriptor = createMockPeerDescriptor(),
-    pingFailures: Set<DhtAddress> = new Set()
-) => {
+const createPeerManager = (nodeIds: DhtAddress[], localPeerDescriptor = createMockPeerDescriptor(), pingFailures: Set<DhtAddress> = new Set()) => {
     const manager = new PeerManager({
         localNodeId: toNodeId(localPeerDescriptor),
         localPeerDescriptor: localPeerDescriptor,
@@ -42,7 +34,6 @@ const createPeerManager = (
 }
 
 describe('PeerManager', () => {
-
     it('getNearbyContactCount', () => {
         const nodeIds = range(10).map(() => randomDhtAddress())
         const manager = createPeerManager(nodeIds)
@@ -89,5 +80,4 @@ describe('PeerManager', () => {
         )
         expect(manager.getNeighborCount()).toBe(5)
     })
-
 })

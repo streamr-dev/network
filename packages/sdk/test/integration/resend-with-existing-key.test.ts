@@ -16,7 +16,6 @@ import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } 
  * and therefore the subscriber can't get keys from it (all GroupKeyRequests timeout).
  */
 describe('resend with existing key', () => {
-
     const subscriberWallet = fastWallet()
     const publisherWallet = fastWallet()
     let subscriber: StreamrClient
@@ -24,7 +23,7 @@ describe('resend with existing key', () => {
     let initialKey: GroupKey
     let rotatedKey: GroupKey
     let rekeyedKey: GroupKey
-    let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
+    let allMessages: { timestamp: number; groupKey: GroupKey; nextGroupKey?: GroupKey }[]
     let environment: FakeEnvironment
 
     const storeMessage = async (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
@@ -113,7 +112,7 @@ describe('resend with existing key', () => {
     })
 
     describe('no keys available', () => {
-        it('can\'t decrypt', async () => {
+        it("can't decrypt", async () => {
             await assertNonDecryptable(1000, 6000)
         })
     })
@@ -128,10 +127,10 @@ describe('resend with existing key', () => {
         it('can decrypt rotated, if key rotation message is included', async () => {
             await assertDecryptable(2000, 4000)
         })
-        it('can\'t decrypt rotated, if key rotation message is not included', async () => {
+        it("can't decrypt rotated, if key rotation message is not included", async () => {
             await assertNonDecryptable(3000, 4000)
         })
-        it('can\'t decrypt rekeyed', async () => {
+        it("can't decrypt rekeyed", async () => {
             await assertNonDecryptable(5000, 6000)
         })
     })
@@ -140,13 +139,13 @@ describe('resend with existing key', () => {
         beforeEach(async () => {
             await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rotatedKey.id, toUserId(publisherWallet.address), rotatedKey.data)
         })
-        it('can\'t decrypt initial', async () => {
+        it("can't decrypt initial", async () => {
             await assertNonDecryptable(1000, 2000)
         })
         it('can decrypt rotated', async () => {
             await assertDecryptable(3000, 4000)
         })
-        it('can\'t decrypt rekeyed', async () => {
+        it("can't decrypt rekeyed", async () => {
             await assertNonDecryptable(5000, 6000)
         })
     })
@@ -155,10 +154,10 @@ describe('resend with existing key', () => {
         beforeEach(async () => {
             await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rekeyedKey.id, toUserId(publisherWallet.address), rekeyedKey.data)
         })
-        it('can\'t decrypt initial', async () => {
+        it("can't decrypt initial", async () => {
             await assertNonDecryptable(1000, 2000)
         })
-        it('can\'t decrypt rotated', async () => {
+        it("can't decrypt rotated", async () => {
             await assertNonDecryptable(3000, 4000)
         })
         it('can decrypt rekeyed', async () => {

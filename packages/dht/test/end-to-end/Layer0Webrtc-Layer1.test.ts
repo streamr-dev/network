@@ -3,7 +3,6 @@ import { randomDhtAddress, toNodeId } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
-
     const entrypointDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
@@ -23,7 +22,6 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     let layer1Node4: DhtNode
 
     beforeEach(async () => {
-
         layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor, websocketServerEnableTls: false })
 
         const layer0Node1Id = randomDhtAddress()

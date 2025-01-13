@@ -8,7 +8,6 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('content delivery layer node with real connections', () => {
-
     const epPeerDescriptor: PeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
     })
@@ -27,7 +26,7 @@ describe('content delivery layer node with real connections', () => {
     let contentDeliveryLayerNode3: ContentDeliveryLayerNode
     let contentDeliveryLayerNode4: ContentDeliveryLayerNode
     let contentDeliveryLayerNode5: ContentDeliveryLayerNode
-    const websocketPortRange = { min: 12222, max: 12225 } 
+    const websocketPortRange = { min: 12222, max: 12225 }
 
     beforeEach(async () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
@@ -41,16 +40,14 @@ describe('content delivery layer node with real connections', () => {
         await dhtNode3.start()
         await dhtNode4.start()
 
-        contentDeliveryLayerNode1 = createContentDeliveryLayerNode(
-            {
-                streamPartId,
-                discoveryLayerNode: epDhtNode,
-                transport: epDhtNode.getTransport(),
-                connectionLocker: epDhtNode.getTransport() as ConnectionManager,
-                localPeerDescriptor: epPeerDescriptor,
-                isLocalNodeEntryPoint: () => false
-            }
-        )
+        contentDeliveryLayerNode1 = createContentDeliveryLayerNode({
+            streamPartId,
+            discoveryLayerNode: epDhtNode,
+            transport: epDhtNode.getTransport(),
+            connectionLocker: epDhtNode.getTransport() as ConnectionManager,
+            localPeerDescriptor: epPeerDescriptor,
+            isLocalNodeEntryPoint: () => false
+        })
         contentDeliveryLayerNode2 = createContentDeliveryLayerNode({
             streamPartId,
             discoveryLayerNode: dhtNode1,
@@ -126,11 +123,13 @@ describe('content delivery layer node with real connections', () => {
 
     it('can fully connected topologies ', async () => {
         await until(() => {
-            return contentDeliveryLayerNode1.getNeighbors().length >= 3
-                && contentDeliveryLayerNode2.getNeighbors().length >= 3
-                && contentDeliveryLayerNode3.getNeighbors().length >= 3
-                && contentDeliveryLayerNode4.getNeighbors().length >= 3
-                && contentDeliveryLayerNode5.getNeighbors().length >= 3
+            return (
+                contentDeliveryLayerNode1.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode2.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode3.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode4.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode5.getNeighbors().length >= 3
+            )
         }, 10000)
         expect(contentDeliveryLayerNode1.getNeighbors().length).toBeGreaterThanOrEqual(3)
         expect(contentDeliveryLayerNode2.getNeighbors().length).toBeGreaterThanOrEqual(3)
@@ -141,24 +140,22 @@ describe('content delivery layer node with real connections', () => {
 
     it('can propagate messages', async () => {
         let receivedMessageCount = 0
-        contentDeliveryLayerNode2.on('message', () => receivedMessageCount += 1)
-        contentDeliveryLayerNode3.on('message', () => receivedMessageCount += 1)
-        contentDeliveryLayerNode4.on('message', () => receivedMessageCount += 1)
-        contentDeliveryLayerNode5.on('message', () => receivedMessageCount += 1)
+        contentDeliveryLayerNode2.on('message', () => (receivedMessageCount += 1))
+        contentDeliveryLayerNode3.on('message', () => (receivedMessageCount += 1))
+        contentDeliveryLayerNode4.on('message', () => (receivedMessageCount += 1))
+        contentDeliveryLayerNode5.on('message', () => (receivedMessageCount += 1))
 
         await until(() => {
-            return contentDeliveryLayerNode1.getNeighbors().length >= 3
-                && contentDeliveryLayerNode2.getNeighbors().length >= 3
-                && contentDeliveryLayerNode3.getNeighbors().length >= 3
-                && contentDeliveryLayerNode4.getNeighbors().length >= 3
-                && contentDeliveryLayerNode5.getNeighbors().length >= 3
+            return (
+                contentDeliveryLayerNode1.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode2.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode3.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode4.getNeighbors().length >= 3 &&
+                contentDeliveryLayerNode5.getNeighbors().length >= 3
+            )
         }, 10000)
 
-        const msg = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            streamPartId,
-            randomUserId()
-        )
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomUserId())
         contentDeliveryLayerNode1.broadcast(msg)
         await until(() => receivedMessageCount >= 4)
     })

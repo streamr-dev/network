@@ -8,15 +8,7 @@ import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger, LogLevel } from './Logger'
-import {
-    CountMetric,
-    Metric,
-    LevelMetric,
-    MetricsContext,
-    MetricsDefinition,
-    MetricsReport,
-    RateMetric
-} from './Metric'
+import { CountMetric, Metric, LevelMetric, MetricsContext, MetricsDefinition, MetricsReport, RateMetric } from './Metric'
 import { Multimap } from './Multimap'
 import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
@@ -111,15 +103,7 @@ export {
     Cache
 }
 
-export {
-    CountMetric,
-    LevelMetric,
-    Metric,
-    MetricsContext,
-    MetricsDefinition,
-    MetricsReport,
-    RateMetric
-}
+export { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, MetricsReport, RateMetric }
 
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
 export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'

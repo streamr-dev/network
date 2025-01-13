@@ -1,7 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('start node', () => {
-
     it('start without websocket', async () => {
         const client = new StreamrClient({
             environment: 'dev2',

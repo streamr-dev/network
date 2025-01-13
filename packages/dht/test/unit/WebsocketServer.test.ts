@@ -1,7 +1,6 @@
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 
 describe('WebsocketServer', () => {
-
     it('starts and stops', async () => {
         const server = new WebsocketServer({
             portRange: { min: 19792, max: 19792 },
@@ -24,9 +23,7 @@ describe('WebsocketServer', () => {
             portRange: { min: 19792, max: 19792 },
             enableTls: false
         })
-        await expect(server2.start())
-            .rejects
-            .toThrow()
+        await expect(server2.start()).rejects.toThrow()
 
         await server1.stop()
         await server2.stop()
@@ -57,9 +54,7 @@ describe('WebsocketServer', () => {
             enableTls: false
         })
 
-        await expect(server.start())
-            .rejects
-            .toThrow()
+        await expect(server.start()).rejects.toThrow()
 
         await server.stop()
     })

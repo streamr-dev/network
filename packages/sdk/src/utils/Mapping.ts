@@ -31,7 +31,7 @@ interface CacheMap<K extends string, V> {
  * A map that lazily creates values. The factory function is called only when a key
  * is accessed for the first time. Subsequent calls to `get()` return the cached value
  * unless it has been evicted due to `maxSize` or `maxAge` limits.
- * 
+ *
  * It is possible to implement e.g. positive cache by using `isCacheableValue()`
  * config option. If that method returns `false`, the value is not stored to cache.
  * Note that using this option doesn't change the concurrent promise handling:
@@ -41,15 +41,14 @@ interface CacheMap<K extends string, V> {
  * `isCacheableValue()` returns `true`.)
  */
 export class Mapping<K extends LookupKeyType, V> {
-
     private readonly delegate: CacheMap<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: MarkRequired<CacheMapOptions<K, V> | LazyMapOptions<K, V>, 'isCacheableValue'>
 
     /**
      * Prefer constructing the class via createCacheMap() and createLazyMap()
-     * 
-     * @internal 
+     *
+     * @internal
      **/
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {

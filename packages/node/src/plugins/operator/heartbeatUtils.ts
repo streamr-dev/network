@@ -6,11 +6,13 @@ export const HeartbeatMessageSchema = z.object({
     peerDescriptor: z.object({
         nodeId: z.string(),
         type: z.optional(z.nativeEnum(NetworkNodeType)),
-        websocket: z.optional(z.object({
-            host: z.string(),
-            port: z.number(),
-            tls: z.boolean()
-        })),
+        websocket: z.optional(
+            z.object({
+                host: z.string(),
+                port: z.number(),
+                tls: z.boolean()
+            })
+        ),
         region: z.optional(z.number())
     })
 })

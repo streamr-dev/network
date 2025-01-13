@@ -10,11 +10,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
     private ownServiceId: ServiceID
     private sendFn: (msg: Message, opts: SendOptions) => Promise<void>
 
-    constructor(
-        ownServiceId: ServiceID,
-        sendFn: (msg: Message, opts: SendOptions) => Promise<void>,
-        options?: RpcCommunicatorOptions
-    ) {
+    constructor(ownServiceId: ServiceID, sendFn: (msg: Message, opts: SendOptions) => Promise<void>, options?: RpcCommunicatorOptions) {
         super(options)
         this.ownServiceId = ownServiceId
         this.sendFn = sendFn
@@ -24,13 +20,14 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
             // rpc call message
             if (callContext!.targetDescriptor) {
                 targetDescriptor = callContext!.targetDescriptor!
-            } else { // rpc reply message
+            } else {
+                // rpc reply message
                 targetDescriptor = callContext!.incomingSourceDescriptor!
             }
 
             const message: Message = {
-                messageId: v4(), 
-                serviceId: this.ownServiceId, 
+                messageId: v4(),
+                serviceId: this.ownServiceId,
                 body: {
                     oneofKind: 'rpcMessage',
                     rpcMessage: msg
@@ -39,18 +36,20 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
             }
 
             // TODO maybe sendOptions could be a separate block inside callContext
-            const sendOpts = (msg.header.response !== undefined)
-                ? {
-                    // typically we already have a connection, but if it has disconnected for some reason
-                    // the receiver could have gone offline (or it is no longer a neighbor) and therefore there
-                    // is no point in trying form a new connection
-                    connect: false,
-                    // TODO maybe this options could be removed?
-                    sendIfStopped: true
-                } : {
-                    connect: callContext?.connect ?? DEFAULT_SEND_OPTIONS.connect,
-                    sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped
-                }
+            const sendOpts =
+                msg.header.response !== undefined
+                    ? {
+                          // typically we already have a connection, but if it has disconnected for some reason
+                          // the receiver could have gone offline (or it is no longer a neighbor) and therefore there
+                          // is no point in trying form a new connection
+                          connect: false,
+                          // TODO maybe this options could be removed?
+                          sendIfStopped: true
+                      }
+                    : {
+                          connect: callContext?.connect ?? DEFAULT_SEND_OPTIONS.connect,
+                          sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped
+                      }
             return this.sendFn(message, sendOpts)
         })
     }

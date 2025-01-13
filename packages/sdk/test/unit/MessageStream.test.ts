@@ -14,18 +14,20 @@ import { randomUserId } from '@streamr/test-utils'
 const PUBLISHER_ID = randomUserId()
 
 describe('MessageStream', () => {
-
     const streamId = toStreamID('streamId')
     let messageSigner: MessageSigner
 
     const createMockMessage = async () => {
-        return await messageSigner.createSignedMessage({
-            messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            messageType: StreamMessageType.MESSAGE,
-            content: utf8ToBinary(JSON.stringify(Msg())),
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        return await messageSigner.createSignedMessage(
+            {
+                messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: utf8ToBinary(JSON.stringify(Msg())),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            },
+            SignatureType.SECP256K1
+        )
     }
 
     beforeEach(async () => {

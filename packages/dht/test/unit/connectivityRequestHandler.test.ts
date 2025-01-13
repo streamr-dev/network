@@ -12,7 +12,6 @@ const HOST = '127.0.0.1'
 const PORT = 15001
 
 describe('connectivityRequestHandler', () => {
-
     let httpServer: HttpServer
     let wsServer: WsServer
     let connection: any
@@ -100,5 +99,4 @@ describe('connectivityRequestHandler', () => {
             serviceId: 'system/connectivity-checker'
         })
     })
-
 })

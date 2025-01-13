@@ -18,7 +18,6 @@ export interface InsertRecord {
 }
 
 export class Batch extends EventEmitter {
-
     // TODO convert to enum and rename to uppercase
     static states = Object.freeze({
         // OPENED => LOCKED => PENDING => INSERTED
@@ -155,4 +154,3 @@ export class Batch extends EventEmitter {
         this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getRecordCount())
     }
 }
-

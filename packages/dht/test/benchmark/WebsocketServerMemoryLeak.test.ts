@@ -9,7 +9,6 @@ import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWe
 // while wathing for memory leaks in Chrome DevTools
 
 describe('WebsocketServermemoryLeak', () => {
-
     it('Accepts and detroys connections', async () => {
         const server = new WebsocketServer({
             portRange: { min: 19792, max: 19792 },
@@ -24,13 +23,13 @@ describe('WebsocketServermemoryLeak', () => {
 
         const port = await server.start()
         expect(port).toEqual(19792)
-        
+
         for (let i = 0; i < 10000; i++) {
             const clientWebsocket: WebsocketClientConnection = new WebsocketClientConnection()
             clientWebsocket.on('connected', () => {
                 console.log('clientWebsocket connected ' + i)
             })
-            
+
             clientWebsocket.connect(`ws://127.0.0.1:${port}`, false)
             i++
             await wait(3000)

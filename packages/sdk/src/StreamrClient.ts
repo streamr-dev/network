@@ -154,11 +154,7 @@ export class StreamrClient {
      * @param metadata - provide additional metadata to be included in the message or to control the publishing process
      * @returns the published message (note: the field {@link Message.content} is encrypted if the stream is private)
      */
-    async publish(
-        streamDefinition: StreamDefinition,
-        content: unknown,
-        metadata?: PublishMetadata
-    ): Promise<Message> {
+    async publish(streamDefinition: StreamDefinition, content: unknown, metadata?: PublishMetadata): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
@@ -209,11 +205,8 @@ export class StreamrClient {
      * @param onMessage - callback will be invoked for each message received in subscription
      * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
-    async subscribe(
-        options: SubscribeOptions,
-        onMessage?: MessageListener
-    ): Promise<Subscription> {
-        if ((options.raw === true) && (options.resend !== undefined)) {
+    async subscribe(options: SubscribeOptions, onMessage?: MessageListener): Promise<Subscription> {
+        if (options.raw === true && options.resend !== undefined) {
             throw new Error('Raw subscriptions are not supported for resend')
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
@@ -271,9 +264,7 @@ export class StreamrClient {
      * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
-        const matcher = (streamDefinition !== undefined)
-            ? await this.streamIdBuilder.getMatcher(streamDefinition)
-            : () => true
+        const matcher = streamDefinition !== undefined ? await this.streamIdBuilder.getMatcher(streamDefinition) : () => true
         return this.subscriber.getSubscriptions().filter((s) => matcher(s.streamPartId))
     }
 
@@ -292,11 +283,7 @@ export class StreamrClient {
      * @returns a {@link MessageStream} that provides an alternative way of iterating messages. Rejects if the stream is
      * not stored (i.e. is not assigned to a storage node).
      */
-    async resend(
-        streamDefinition: StreamDefinition,
-        options: ResendOptions,
-        onMessage?: MessageListener
-    ): Promise<MessageStream> {
+    async resend(streamDefinition: StreamDefinition, options: ResendOptions, onMessage?: MessageListener): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
         const pipeline = await this.resends.resend(streamPartId, toInternalResendOptions(options), getStorageNodes)
@@ -314,29 +301,32 @@ export class StreamrClient {
      * @param options - additional options for controlling waiting and message matching
      * @returns rejects if message was found in storage before timeout
      */
-    waitForStorage(message: Message, options?: {
-        /**
-         * Determines how often should storage node be polled.
-         */
-        interval?: number
-        /**
-         * Timeout after which to give up if message was not seen.
-         */
-        timeout?: number
+    waitForStorage(
+        message: Message,
+        options?: {
+            /**
+             * Determines how often should storage node be polled.
+             */
+            interval?: number
+            /**
+             * Timeout after which to give up if message was not seen.
+             */
+            timeout?: number
 
-        /**
-         * Controls size of internal resend used in polling.
-         */
-        count?: number
+            /**
+             * Controls size of internal resend used in polling.
+             */
+            count?: number
 
-        /**
-         * Used to set a custom message equality operator.
-         * @param msgTarget - message being waited for (i.e. `message`)
-         * @param msgGot - candidate message polled from storage node
-         * @internal
-         */
-        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-    }): Promise<void> {
+            /**
+             * Used to set a custom message equality operator.
+             * @param msgTarget - message being waited for (i.e. `message`)
+             * @param msgGot - candidate message polled from storage node
+             * @internal
+             */
+            messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
+        }
+    ): Promise<void> {
         const defaultOptions = {
             // eslint-disable-next-line no-underscore-dangle
             interval: this.config._timeouts.storageNode.retryInterval,
@@ -377,10 +367,10 @@ export class StreamrClient {
      *
      * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
-    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: (StreamMetadata & { id: string }) | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') )
+        const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id'))
         await this.streamRegistry.createStream(streamId, metadata)
         return new Stream(streamId, this)
     }
@@ -394,7 +384,7 @@ export class StreamrClient {
      *
      * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
-    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+    async getOrCreateStream(props: { id: string; partitions?: number }): Promise<Stream> {
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
@@ -441,12 +431,12 @@ export class StreamrClient {
         orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
     ): AsyncIterable<Stream> {
         logger.debug('Search for streams', { term, permissionFilter })
-        if ((term === undefined) && (permissionFilter === undefined)) {
+        if (term === undefined && permissionFilter === undefined) {
             throw new Error('Requires a search term or a permission filter')
         }
         const streamIds = this.streamRegistry.searchStreams(
             term,
-            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
+            permissionFilter !== undefined ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
             orderBy
         )
         return map(streamIds, (id) => new Stream(id, this))
@@ -505,13 +495,15 @@ export class StreamrClient {
      * operations and saving gas costs. Notice that the behaviour is overwriting, therefore any existing permissions not
      * defined will be removed (per stream).
      */
-    setPermissions(...items: {
-        streamId: string
-        assignments: PermissionAssignment[]
-    }[]): Promise<void> {
-        return this.streamRegistry.setPermissions(...items.map((item) => (
-            { ...item, assignments: item.assignments.map(toInternalPermissionAssignment) }
-        )))
+    setPermissions(
+        ...items: {
+            streamId: string
+            assignments: PermissionAssignment[]
+        }[]
+    ): Promise<void> {
+        return this.streamRegistry.setPermissions(
+            ...items.map((item) => ({ ...item, assignments: item.assignments.map(toInternalPermissionAssignment) }))
+        )
     }
 
     /**
@@ -545,7 +537,7 @@ export class StreamrClient {
     async addStreamToStorageNode(
         streamIdOrPath: string,
         storageNodeAddress: HexString,
-        opts: { wait: boolean, timeout?: number } = { wait: false }
+        opts: { wait: boolean; timeout?: number } = { wait: false }
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await addStreamToStorageNode(
@@ -580,7 +572,7 @@ export class StreamrClient {
      *
      * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
-    async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[]; blockNumber: number }> {
         const queryResult = await this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
         for (const stream of queryResult.streams) {
             this.streamRegistry.populateMetadataCache(stream.id, stream.metadata)
@@ -678,7 +670,7 @@ export class StreamrClient {
     /**
      * Used to set known entry points for a stream partition. If entry points are not set they
      * will be automatically discovered from the Streamr Network.
-    */
+     */
     async setStreamPartitionEntryPoints(streamDefinition: StreamDefinition, entryPoints: NetworkPeerDescriptor[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
@@ -718,10 +710,7 @@ export class StreamrClient {
         this.eventEmitter.removeAllListeners()
         // eslint-disable-next-line no-underscore-dangle
         this._connect.reset() // reset connect (will error on next call)
-        const tasks = [
-            this.destroySignal.destroy().then(() => undefined),
-            this.unsubscribe()
-        ]
+        const tasks = [this.destroySignal.destroy().then(() => undefined), this.unsubscribe()]
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
@@ -783,16 +772,16 @@ export class StreamrClient {
         )
     }
 
-    /** 
+    /**
      * Discover operators that have been recently online on a given stream.
      *
      * The API may change soon (NET-1374).
-     * 
+     *
      * @internal
      */
     findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
         return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)
-    } 
+    }
 
     // --------------------------------------------------------------------------------------------
     // Events

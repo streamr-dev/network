@@ -11,7 +11,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
         it('runs to completion', async () => {
             const received = []
             const itr = fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })
             for await (const msg of itr) {
                 received.push(msg)
@@ -24,14 +25,15 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
             const received = []
             const itr = (async function* Outer() {
                 const innerItr = fn({
-                    items: expected, max: MAX_ITEMS
+                    items: expected,
+                    max: MAX_ITEMS
                 })[Symbol.asyncIterator]()
                 try {
                     yield* innerItr
                 } finally {
                     await innerItr.return() // note itr.return would block
                 }
-            }())
+            })()
 
             for await (const msg of itr) {
                 received.push(msg)
@@ -45,7 +47,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
         it('can return mid-iteration', async () => {
             const received = []
             for await (const msg of fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
@@ -60,7 +63,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
             const err = new Error('expected err')
             await expect(async () => {
                 for await (const msg of fn({
-                    items: expected, max: MAX_ITEMS
+                    items: expected,
+                    max: MAX_ITEMS
                 })) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
@@ -78,7 +82,7 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
                 const it = fn({
                     items: expected,
                     max: MAX_ITEMS,
-                    errors: [err],
+                    errors: [err]
                 })
                 for await (const msg of it) {
                     received.push(msg)
@@ -97,7 +101,7 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
                 const s = fn({
                     items: expected,
                     max: MAX_ITEMS,
-                    errors: [err],
+                    errors: [err]
                 })
                 for await (const msg of s) {
                     yield msg
@@ -117,7 +121,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
         it('can throw before iterating', async () => {
             const received = []
             const itr = fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })[Symbol.asyncIterator]()
             const err = new Error('expected err')
 
@@ -134,7 +139,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
 
         it('can return before iterating', async () => {
             const itr = fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })[Symbol.asyncIterator]()
             await itr.return()
             const received = []
@@ -157,7 +163,8 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
 
         it('can queue delayed next calls', async () => {
             const itr = fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })[Symbol.asyncIterator]()
             const tasks = expected.map(async () => {
                 await wait(WAIT)
@@ -170,12 +177,13 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
 
         it('can queue delayed next calls resolving out of order', async () => {
             const itr = fn({
-                items: expected, max: MAX_ITEMS
+                items: expected,
+                max: MAX_ITEMS
             })[Symbol.asyncIterator]()
             const tasks = expected.map(async (_v, index, arr) => {
                 // resolve backwards
                 const result = await itr.next()
-                await wait(WAIT + (WAIT * 10 * ((arr.length - index) / arr.length)))
+                await wait(WAIT + WAIT * 10 * ((arr.length - index) / arr.length))
                 return result
             })
             const received = await Promise.all(tasks)
@@ -185,7 +193,7 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
 
         it('can handle error in queued next calls', async () => {
             const itr = fn({
-                items: expected,
+                items: expected
             })[Symbol.asyncIterator]()
             const err = new Error('expected')
             const tasks = expected.map(async (_v, index, arr) => {
@@ -199,22 +207,24 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
 
             const received = await Promise.allSettled(tasks)
 
-            expect(received).toEqual(expected.map((value, index) => {
-                if (index === MAX_ITEMS) {
-                    return {
-                        status: 'rejected',
-                        reason: err
+            expect(received).toEqual(
+                expected.map((value, index) => {
+                    if (index === MAX_ITEMS) {
+                        return {
+                            status: 'rejected',
+                            reason: err
+                        }
                     }
-                }
 
-                return {
-                    status: 'fulfilled',
-                    value: {
-                        done: false,
-                        value,
+                    return {
+                        status: 'fulfilled',
+                        value: {
+                            done: false,
+                            value
+                        }
                     }
-                }
-            }))
+                })
+            )
             await itr.return()
         })
     })

@@ -39,7 +39,7 @@ export const toObject = (msg: StreamMessage): any => {
         contentType: msg.contentType,
         encryptionType: msg.encryptionType,
         content: parsedContent instanceof Uint8Array ? binaryToHex(parsedContent) : parsedContent,
-        signature: binaryToHex(msg.signature),
+        signature: binaryToHex(msg.signature)
     }
     if (msg.groupKeyId !== undefined) {
         result.groupKeyId = msg.groupKeyId
@@ -48,8 +48,8 @@ export const toObject = (msg: StreamMessage): any => {
 }
 
 const FORMATS: Record<string, Format> = {
-    'object': createJsonFormat((bytes: Uint8Array) => JSON.stringify(toObject(convertBytesToStreamMessage(bytes)))),
-    'raw': createBinaryFormat(toLengthPrefixedFrame)
+    object: createJsonFormat((bytes: Uint8Array) => JSON.stringify(toObject(convertBytesToStreamMessage(bytes)))),
+    raw: createBinaryFormat(toLengthPrefixedFrame)
 }
 
 export const getFormat = (id: string | undefined): Format | undefined => {

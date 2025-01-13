@@ -1,8 +1,14 @@
 import { DhtAddress, NodeType, PeerDescriptor, toDhtAddress, toDhtAddressRaw } from '@streamr/dht'
 import {
     LengthPrefixedFrameDecoder,
-    Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
-    randomString, toEthereumAddress, toStreamID
+    Logger,
+    StreamID,
+    TheGraphClient,
+    composeAbortSignals,
+    merge,
+    randomString,
+    toEthereumAddress,
+    toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
 import { Readable } from 'stream'
@@ -91,7 +97,6 @@ export function formStorageNodeAssignmentStreamId(clusterAddress: string): Strea
 }
 
 export class MaxSizedSet<T extends string> {
-
     private readonly delegate: LRUCache<T, true>
 
     constructor(maxSize: number) {
@@ -113,15 +118,15 @@ export class MaxSizedSet<T extends string> {
 
 // TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
 
-// This function contains temporary compatibility layer which allows that PeerDescriptor can be configured with 
+// This function contains temporary compatibility layer which allows that PeerDescriptor can be configured with
 // "id" field instead of "nodeId" field. This is done so that pretestnet users don't need to change their configs.
 // After strear-1.0 testnet1 or mainnet starts, remove this hack.
-// - Good to ensure at that point that the new format has landed to the public documentation: 
+// - Good to ensure at that point that the new format has landed to the public documentation:
 //   https://docs.streamr.network/guides/become-an-operator
 // - or maybe NET-1133 or NET-1004 have been implemented and the documentation no longer mentions the low
 //   level way of configuring the entry points.
 // Actions:
-// - remove "temporary compatibility" test case from Broker's config.test.ts 
+// - remove "temporary compatibility" test case from Broker's config.test.ts
 // - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
 // - remove "id" property handling from this method
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
@@ -157,9 +162,7 @@ export type LookupKeyType = (string | number | symbol) | (string | number | symb
 // A unique internal identifier to some list of primitive values. Useful
 // e.g. as a map key or a cache key.
 export const formLookupKey = <K extends LookupKeyType>(key: K): string => {
-    return Array.isArray(key)
-        ? key.map((a) => a.toString()).join('|')
-        : key.toString()
+    return Array.isArray(key) ? key.map((a) => a.toString()).join('|') : key.toString()
 }
 
 /** @internal */
@@ -206,7 +209,6 @@ export const createQueryString = (query: Record<string, any>): string => {
 }
 
 export class FetchHttpStreamResponseError extends Error {
-
     response: Response
 
     constructor(response: Response) {
@@ -215,7 +217,7 @@ export class FetchHttpStreamResponseError extends Error {
     }
 }
 
-export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
+export const fetchLengthPrefixedFrameHttpBinaryStream = async function* (
     url: string,
     abortSignal?: AbortSignal
 ): AsyncGenerator<Uint8Array, void, undefined> {
@@ -229,7 +231,7 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
         })
         logger.debug('Received HTTP response', {
             url,
-            status: response.status,
+            status: response.status
         })
         if (!response.ok) {
             throw new FetchHttpStreamResponseError(response)

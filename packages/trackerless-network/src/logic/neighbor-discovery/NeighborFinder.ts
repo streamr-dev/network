@@ -59,12 +59,13 @@ export class NeighborFinder {
         }
         this.running = true
         // TODO should we catch possible promise rejection?
-        setAbortableTimeout(async () => { 
-            await Promise.all([
-                this.findNeighbors(excluded),
-                this.findNeighbors(excluded)
-            ])
-        }, INITIAL_WAIT, this.abortController.signal)
+        setAbortableTimeout(
+            async () => {
+                await Promise.all([this.findNeighbors(excluded), this.findNeighbors(excluded)])
+            },
+            INITIAL_WAIT,
+            this.abortController.signal
+        )
     }
 
     stop(): void {

@@ -66,11 +66,13 @@ describe('Iterator Utils', () => {
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
-                        setTimeout(done.wrap(() => {
-                            onTimeoutReached()
-                            receievedAtCallTime = received
-                            itr.return(undefined)
-                        }))
+                        setTimeout(
+                            done.wrap(() => {
+                                onTimeoutReached()
+                                receievedAtCallTime = received
+                                itr.return(undefined)
+                            })
+                        )
                     }
                 }
 
@@ -144,13 +146,16 @@ describe('Iterator Utils', () => {
         it('runs fn when iterator returns before iteration (explicit return)', async () => {
             const received: number[] = []
             const onStarted = jest.fn()
-            const itr = iteratorFinally((async function* Test() {
-                onStarted()
-                yield* generate()
-            }()), async () => {
-                await wait(WAIT * 5)
-                await onFinally()
-            })
+            const itr = iteratorFinally(
+                (async function* Test() {
+                    onStarted()
+                    yield* generate()
+                })(),
+                async () => {
+                    await wait(WAIT * 5)
+                    await onFinally()
+                }
+            )
             itr.return(undefined) // no await
             for await (const msg of itr) {
                 received.push(msg)
@@ -195,9 +200,12 @@ describe('Iterator Utils', () => {
         it('runs fn when inner iterator throws during iteration', async () => {
             const received: number[] = []
             const err = new Error('expected err')
-            const itr = iteratorFinally(generateThrow(expected, {
-                err,
-            }), onFinally)
+            const itr = iteratorFinally(
+                generateThrow(expected, {
+                    err
+                }),
+                onFinally
+            )
             await expect(async () => {
                 for await (const msg of itr) {
                     received.push(msg)
@@ -295,14 +303,17 @@ describe('Iterator Utils', () => {
                 const received: number[] = []
                 const err = new Error('expected err')
                 const innerItr = iteratorFinally(generate(), onFinallyInner)
-                const itr = iteratorFinally((async function* Outer() {
-                    for await (const msg of innerItr) {
-                        yield msg
-                        if (received.length === MAX_ITEMS) {
-                            throw err
+                const itr = iteratorFinally(
+                    (async function* Outer() {
+                        for await (const msg of innerItr) {
+                            yield msg
+                            if (received.length === MAX_ITEMS) {
+                                throw err
+                            }
                         }
-                    }
-                }()), onFinally)
+                    })(),
+                    onFinally
+                )
 
                 await expect(async () => {
                     for await (const msg of itr) {
@@ -318,14 +329,17 @@ describe('Iterator Utils', () => {
             it('calls iterator onFinally with error if inner errors', async () => {
                 const received: number[] = []
                 const err = new Error('expected err')
-                const itrInner = iteratorFinally((async function* Outer() {
-                    for await (const msg of generate()) {
-                        yield msg
-                        if (received.length === MAX_ITEMS) {
-                            throw err
+                const itrInner = iteratorFinally(
+                    (async function* Outer() {
+                        for await (const msg of generate()) {
+                            yield msg
+                            if (received.length === MAX_ITEMS) {
+                                throw err
+                            }
                         }
-                    }
-                }()), onFinallyInner)
+                    })(),
+                    onFinallyInner
+                )
                 const itr = iteratorFinally(itrInner, onFinally)
 
                 await expect(async () => {
@@ -367,27 +381,27 @@ describe('Iterator Utils', () => {
 
 describe('nextValue', () => {
     it('happy path', async () => {
-        const generator = async function* () {
+        const generator = (async function* () {
             yield 1
             yield 2
-        }()
+        })()
         expect(await nextValue(generator)).toBe(1)
         expect(await nextValue(generator)).toBe(2)
         expect(await nextValue(generator)).toBe(undefined)
     })
 
     it('return value', async () => {
-        const generator = async function* () {
+        const generator = (async function* () {
             yield 1
             return 2
-        }()
+        })()
         expect(await nextValue(generator)).toBe(1)
         expect(await nextValue(generator)).toBe(2)
         expect(await nextValue(generator)).toBe(undefined)
     })
 
     it('empty', async () => {
-        const generator: AsyncGenerator<number, any, any> = async function* () {}()
+        const generator: AsyncGenerator<number, any, any> = (async function* () {})()
         expect(await nextValue(generator)).toBe(undefined)
     })
 })

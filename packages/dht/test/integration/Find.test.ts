@@ -8,7 +8,6 @@ const NUM_NODES = 100
 const K = 8
 
 describe('Find correctness', () => {
-
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -29,10 +28,7 @@ describe('Find correctness', () => {
     }, 90000)
 
     afterEach(async () => {
-        await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
-        ])
+        await Promise.all([entryPoint.stop(), ...nodes.map(async (node) => await node.stop())])
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
@@ -41,5 +37,4 @@ describe('Find correctness', () => {
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))
     }, 90000)
-
 })

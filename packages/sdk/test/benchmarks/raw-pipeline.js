@@ -38,7 +38,6 @@ function cachedRandomString(bytes) {
         randomStrings.set(bytes, randomString(bytes))
     }
     return randomStrings.get(bytes)
-
 }
 // note this is not the number of messages, just the start number
 let count = 0 // pedantic: use large initial number so payload size is similar
@@ -47,7 +46,7 @@ const Msg = (bytes) => {
     count += 1
     return {
         id: `msg${count}`,
-        data: cachedRandomString(bytes),
+        data: cachedRandomString(bytes)
     }
 }
 
@@ -57,7 +56,7 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 
     const stream = await client.createStream({
         id: `/test-stream-raw/${process.pid}`,
-        ...streamOpts,
+        ...streamOpts
     })
     await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     return [client, stream]
@@ -66,7 +65,7 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 const BATCH_SIZES = [
     // 4,
     // 128,
-    1024,
+    1024
     // 2048,
     // 4096,
 ]
@@ -74,7 +73,7 @@ const BATCH_SIZES = [
 const PAYLOAD_SIZES = [
     32, // 32b
     256, // 0.25kb
-    1024, // 1kb
+    1024 // 1kb
     // 2 * 1024, // 2kb
     // 16 * 1024, // 16 kb
     // 128 * 1024, // 128 kb
@@ -95,11 +94,17 @@ async function run() {
         const startTime = Date.now()
         try {
             log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.id.slice(0, 6))
-            const published = await client.collectMessages(client.publishFrom(stream, (async function* Generate() {
-                for (let i = 0; i < batchSize; i++) {
-                    yield Msg(payloadBytes)
-                }
-            }())), batchSize)
+            const published = await client.collectMessages(
+                client.publishFrom(
+                    stream,
+                    (async function* Generate() {
+                        for (let i = 0; i < batchSize; i++) {
+                            yield Msg(payloadBytes)
+                        }
+                    })()
+                ),
+                batchSize
+            )
             return published
         } finally {
             log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.id.slice(0, 6), Date.now() - startTime)
@@ -123,10 +128,7 @@ async function run() {
         return async function Fn(deferred) {
             try {
                 const sub = await client.subscribe(stream)
-                const tasks = [
-                    sub.collect(batchSize),
-                    mockSubMessages(client, streamMessages.slice(0, batchSize)),
-                ]
+                const tasks = [sub.collect(batchSize), mockSubMessages(client, streamMessages.slice(0, batchSize))]
                 this.BATCH_SIZE = batchSize
                 this.PAYLOAD_BYTES = payloadBytes
                 this.TOTAL_BYTES = this.TOTAL_BYTES || 0
@@ -149,12 +151,15 @@ async function run() {
 
     async function setup(clientOptions, streamOptions) {
         const account = StreamrClient.generateEthereumAccount()
-        const [client, stream] = await setupClientAndStream({
-            auth: {
-                privateKey: account.privateKey,
+        const [client, stream] = await setupClientAndStream(
+            {
+                auth: {
+                    privateKey: account.privateKey
+                },
+                ...clientOptions
             },
-            ...clientOptions
-        }, streamOptions)
+            streamOptions
+        )
 
         suite.on('complete', () => {
             client.destroy().catch(() => {})
@@ -165,15 +170,12 @@ async function run() {
 
     log('setting up...')
     log('using mocked network node')
-    const [[client1, stream1], [client2, stream2]] = await Promise.all([
-        setup({}),
-        setup({})
-    ])
+    const [[client1, stream1], [client2, stream2]] = await Promise.all([setup({}), setup({})])
 
     for (const payloadBytes of PAYLOAD_SIZES) {
         const published = await Promise.all([
             publish(client1, stream1, TOTAL_MESSAGES, payloadBytes),
-            publish(client2, stream2, TOTAL_MESSAGES, payloadBytes),
+            publish(client2, stream2, TOTAL_MESSAGES, payloadBytes)
         ])
 
         for (const batchSize of BATCH_SIZES) {
@@ -203,9 +205,18 @@ async function run() {
         }
         const avgMsgsBytes = bench.MESSAGES_BYTES.reduce((a, b) => a + b, 0) / bench.MESSAGES_BYTES.length
         const bytesPerSecond = avgMsgsBytes * benchHz
-        result += ' x ' + Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) + ' msgs/sec '
-            + `(${bytes(bench.TOTAL_BYTES)} at ${bytes(bytesPerSecond)}/sec) `
-            + pm + stats.rme.toFixed(2) + '% (' + size + ' run' + (size === 1 ? '' : 's') + ' sampled)'
+        result +=
+            ' x ' +
+            Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) +
+            ' msgs/sec ' +
+            `(${bytes(bench.TOTAL_BYTES)} at ${bytes(bytesPerSecond)}/sec) ` +
+            pm +
+            stats.rme.toFixed(2) +
+            '% (' +
+            size +
+            ' run' +
+            (size === 1 ? '' : 's') +
+            ' sampled)'
         return result
     }
 

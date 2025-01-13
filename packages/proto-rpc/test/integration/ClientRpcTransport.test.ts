@@ -16,7 +16,7 @@ describe('DhtClientRpcTransport', () => {
                 peers: getMockPeers(),
                 requestId: 'TO BE REMOVED'
             }
-            
+
             const response: RpcMessage = {
                 header: {
                     response: 'hiihii'
@@ -24,7 +24,7 @@ describe('DhtClientRpcTransport', () => {
                 body: Any.pack(responseBody, ClosestPeersResponse),
                 requestId: message.requestId
             }
-            
+
             rpcCommunicator.handleIncomingMessage(response, new ProtoCallContext())
         })
 

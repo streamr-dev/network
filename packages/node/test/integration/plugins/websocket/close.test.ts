@@ -19,7 +19,7 @@ describe('close', () => {
         expect(onClose).toHaveBeenCalled()
     })
 
-    it('paused client doesn\'t prevent server stop', async () => {
+    it("paused client doesn't prevent server stop", async () => {
         const server = new WebsocketServer(undefined as any, 0, 0)
         await server.start(WEBSOCKET_PORT, new PlainPayloadFormat())
         const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)

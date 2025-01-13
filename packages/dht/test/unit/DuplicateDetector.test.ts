@@ -3,7 +3,6 @@ import { DuplicateDetector } from '../../src/dht/routing/DuplicateDetector'
 const MAX_VALUE_COUNT = 10
 
 describe('Duplicate Detector', () => {
-
     let detector: DuplicateDetector
 
     beforeEach(async () => {

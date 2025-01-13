@@ -39,7 +39,6 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
-
     private authentication: Authentication
 
     constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
@@ -66,11 +65,11 @@ export class StreamIDBuilder {
 
     async getMatcher(definition: StreamDefinition): Promise<(streamPartId: StreamPartID) => boolean> {
         const [targetStreamId, targetPartition] = await this.toStreamPartElements(definition)
-        return ((streamPartId: StreamPartID) => {
-            return targetStreamId === StreamPartIDUtils.getStreamID(streamPartId)
-            && (
-                targetPartition === undefined || targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId)
+        return (streamPartId: StreamPartID) => {
+            return (
+                targetStreamId === StreamPartIDUtils.getStreamID(streamPartId) &&
+                (targetPartition === undefined || targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId))
             )
-        })
+        }
     }
 }

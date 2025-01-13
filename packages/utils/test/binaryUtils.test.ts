@@ -1,7 +1,6 @@
 import { areEqualBinaries, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '../src/binaryUtils'
 
 describe('binaryUtils', () => {
-
     it('can translate UTF8', () => {
         const utf8 = 'Hello, world!'
         const binary = utf8ToBinary(utf8)
@@ -23,7 +22,6 @@ describe('binaryUtils', () => {
     it('hexToBinary malformed input', () => {
         const hex = '0x123MMM'
         expect(() => hexToBinary(hex)).toThrow('Hex string input is likely malformed, received: 0x123MMM')
-    
     })
 
     it('hexToBinary odd input', () => {
@@ -38,5 +36,4 @@ describe('binaryUtils', () => {
         expect(areEqualBinaries(binary1, binary2)).toEqual(true)
         expect(areEqualBinaries(binary1, binary3)).toEqual(false)
     })
-
 })

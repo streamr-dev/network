@@ -1,35 +1,36 @@
 {
-    "$id": "definitions.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "definitions": {
-        "port": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 65353
-        },
-        "apiAuthentication": {
-            "type": "object",
-            "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
-            "required": [
-                "keys"
-            ],
-            "additionalProperties": false,
-            "properties": {
-                "keys": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "apiAuthenticationOverride": {
-            "description": "Override global API keys",
-            "anyOf": [{
-                "$ref": "definitions.schema.json#/definitions/apiAuthentication"
-            }, {
-                "type": "null"
-            }]
+  "$id": "definitions.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "port": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 65353
+    },
+    "apiAuthentication": {
+      "type": "object",
+      "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+      "required": ["keys"],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
+      }
+    },
+    "apiAuthenticationOverride": {
+      "description": "Override global API keys",
+      "anyOf": [
+        {
+          "$ref": "definitions.schema.json#/definitions/apiAuthentication"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
+  }
 }

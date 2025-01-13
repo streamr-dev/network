@@ -12,7 +12,7 @@ export interface Connection {
     init(ws: WebSocket, socketId: string, streamrClient: StreamrClient, payloadFormat: PayloadFormat): Promise<void>
 }
 
-// Implements application layer ping support. We have this feature because 
+// Implements application layer ping support. We have this feature because
 // browsers can't send pings in protocol level
 export const addPingListener = (ws: WebSocket): void => {
     ws.on('message', (data: WebSocket.RawData) => {
@@ -23,12 +23,7 @@ export const addPingListener = (ws: WebSocket): void => {
     })
 }
 
-export const addPingSender = (
-    ws: WebSocket,
-    socketId: string,
-    sendInterval: number,
-    disconnectTimeout: number
-): void => {
+export const addPingSender = (ws: WebSocket, socketId: string, sendInterval: number, disconnectTimeout: number): void => {
     let pendingStateChange: NodeJS.Timeout
     type State = 'active' | 'idle' | 'disconnected'
 
@@ -46,12 +41,12 @@ export const addPingSender = (
             ws.terminate()
         }
     }
-    
+
     const events = ['message', 'ping', 'pong']
     events.forEach((eventName) => {
         ws.on(eventName, () => setState('active'))
     })
     ws.on('close', () => clearTimeout(pendingStateChange))
-    
+
     setState('idle')
 }

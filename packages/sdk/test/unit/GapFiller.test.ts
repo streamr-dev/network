@@ -1,13 +1,4 @@
-import {
-    Defer,
-    EthereumAddress,
-    StreamPartIDUtils,
-    hexToBinary,
-    toEthereumAddress,
-    utf8ToBinary,
-    wait,
-    until
-} from '@streamr/utils'
+import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, until } from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
@@ -46,7 +37,6 @@ const MAX_REQUESTS_PER_GAP = 3
 const INITIAL_WAIT_TIME = 50
 
 describe('GapFiller', () => {
-
     let chain: OrderedMessageChain
     let onOrderedMessageAdded: jest.Mock<(msg: StreamMessage) => void>
     let abortController: AbortController
@@ -75,7 +65,7 @@ describe('GapFiller', () => {
         })
         filler.start()
     }
-    
+
     const startPassiveGapFiller = () => {
         const filler = new GapFiller({
             chain,
@@ -95,7 +85,7 @@ describe('GapFiller', () => {
             chain.addMessage(createMessage(timestamp, usePrevRefs))
         }
     }
-    
+
     const expectOrderedMessages = async (expectedTimestamps: number[]) => {
         await until(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
         const actualTimestamps = onOrderedMessageAdded.mock.calls.map((call) => call[0].getTimestamp())
@@ -103,15 +93,11 @@ describe('GapFiller', () => {
     }
 
     describe('active', () => {
-
         it('single gap', async () => {
             const storedMessages = [createMessage(2), createMessage(3)]
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
             const resend = jest.fn().mockReturnValue(fromArray(storedMessages))
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 4])
             await expectOrderedMessages([1, 2, 3, 4])
             expect(getStorageNodeAddresses).toHaveBeenCalledTimes(1)
@@ -137,10 +123,7 @@ describe('GapFiller', () => {
                     throw new Error('assertion failed')
                 }
             })
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 2, 3, 4, 5])
             expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
@@ -151,10 +134,7 @@ describe('GapFiller', () => {
             const storedMessages = [createMessage(3)]
             const resend = jest.fn().mockReturnValue(fromArray(storedMessages))
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 5])
             await expectOrderedMessages([1, 3, 5])
             expect(resend).toHaveBeenCalledTimes(MAX_REQUESTS_PER_GAP)
@@ -163,10 +143,7 @@ describe('GapFiller', () => {
         it('realtime data resolves gap', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn()
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 3, 2])
             await expectOrderedMessages([1, 2, 3])
             expect(getStorageNodeAddresses).not.toHaveBeenCalled()
@@ -176,11 +153,7 @@ describe('GapFiller', () => {
         it('no storage nodes', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([])
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses,
-                'full'
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses, 'full')
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
             expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
@@ -190,10 +163,7 @@ describe('GapFiller', () => {
         it('destroy while waiting', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn()
-            startActiveGapFiller(
-                resend, 
-                getStorageNodeAddresses,
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 3])
             abortController.abort()
             await expectOrderedMessages([1])
@@ -204,11 +174,7 @@ describe('GapFiller', () => {
         it('destroy while ongoing gap fill', async () => {
             let resendAborted = false
             // eslint-disable-next-line require-yield
-            const resend = async function* (
-                _gap: Gap,
-                _storageNodeAddress: EthereumAddress, 
-                abortSignal: AbortSignal
-            ) {
+            const resend = async function* (_gap: Gap, _storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
                 const defer = new Defer<undefined>()
                 abortSignal.addEventListener('abort', () => {
                     resendAborted = true
@@ -217,10 +183,7 @@ describe('GapFiller', () => {
                 await defer
             }
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
-            startActiveGapFiller(
-                resend,
-                getStorageNodeAddresses,
-            )
+            startActiveGapFiller(resend, getStorageNodeAddresses)
             addMessages([1, 3])
             await wait(INITIAL_WAIT_TIME * 1.1)
             abortController.abort()
@@ -230,7 +193,6 @@ describe('GapFiller', () => {
     })
 
     describe('passive', () => {
-
         it('single gap', async () => {
             startPassiveGapFiller()
             addMessages([1, 3])
@@ -255,6 +217,5 @@ describe('GapFiller', () => {
             abortController.abort()
             await expectOrderedMessages([1])
         })
-
     })
 })

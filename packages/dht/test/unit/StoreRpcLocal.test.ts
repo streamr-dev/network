@@ -7,7 +7,6 @@ import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { wait } from '@streamr/utils'
 
 describe('StoreRpcLocal', () => {
-
     const NODE_COUNT = 5
     const DATA_ENTRY = {
         key: toDhtAddressRaw(randomDhtAddress()),
@@ -31,11 +30,10 @@ describe('StoreRpcLocal', () => {
     })
 
     describe('local node is primary storer', () => {
-
         beforeEach(() => {
             const localPeerDescriptor = getNodeCloseToData(0)
             storeRpcLocal = new StoreRpcLocal({
-                localDataStore: { 
+                localDataStore: {
                     storeEntry: () => true,
                     setAllEntriesAsStale
                 } as any,
@@ -47,7 +45,7 @@ describe('StoreRpcLocal', () => {
 
         it('storeData', async () => {
             const request = StoreDataRequest.create({
-                key: DATA_ENTRY.key,
+                key: DATA_ENTRY.key
             })
             await storeRpcLocal.storeData(request)
             expect(setAllEntriesAsStale).not.toHaveBeenCalled()
@@ -63,14 +61,13 @@ describe('StoreRpcLocal', () => {
             await wait(50)
             expect(replicateDataToContact).toHaveBeenCalledTimes(NODE_COUNT - 1)
         })
-        
     })
 
     describe('local node is storer', () => {
         beforeEach(() => {
             const localPeerDescriptor = getNodeCloseToData(1)
             storeRpcLocal = new StoreRpcLocal({
-                localDataStore: { 
+                localDataStore: {
                     storeEntry: () => true,
                     setAllEntriesAsStale
                 } as any,
@@ -104,17 +101,19 @@ describe('StoreRpcLocal', () => {
         beforeEach(() => {
             const localPeerDescriptor = getNodeCloseToData(NODE_COUNT - 1)
             storeRpcLocal = new StoreRpcLocal({
-                localDataStore: { 
+                localDataStore: {
                     storeEntry: () => true,
                     setAllEntriesAsStale
                 } as any,
                 localPeerDescriptor,
                 replicateDataToContact,
-                getStorers: () => getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES)
-                    .filter((peerDescriptor) => !areEqualPeerDescriptors(peerDescriptor, localPeerDescriptor))
+                getStorers: () =>
+                    getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES).filter(
+                        (peerDescriptor) => !areEqualPeerDescriptors(peerDescriptor, localPeerDescriptor)
+                    )
             })
         })
-        
+
         it('storeData', async () => {
             const request = StoreDataRequest.create({
                 key: DATA_ENTRY.key
@@ -133,15 +132,13 @@ describe('StoreRpcLocal', () => {
             await wait(50)
             expect(replicateDataToContact).toHaveBeenCalledTimes(1)
         })
-
     })
 
     describe('data was not stored', () => {
-
         beforeEach(() => {
             const localPeerDescriptor = getNodeCloseToData(1)
             storeRpcLocal = new StoreRpcLocal({
-                localDataStore: { 
+                localDataStore: {
                     storeEntry: () => false,
                     setAllEntriesAsStale
                 } as any,
@@ -161,7 +158,5 @@ describe('StoreRpcLocal', () => {
             await wait(50)
             expect(replicateDataToContact).toHaveBeenCalledTimes(0)
         })
-
     })
-
 })

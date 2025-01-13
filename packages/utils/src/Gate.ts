@@ -4,7 +4,6 @@ import { Defer } from './Defer'
  * Gate to lock access to some resource.
  */
 export class Gate {
-
     private pending?: Defer<undefined>
 
     constructor(isOpen: boolean) {
@@ -29,7 +28,7 @@ export class Gate {
 
     private clearPending(): void {
         const { pending } = this
-        if (pending === undefined) { 
+        if (pending === undefined) {
             return
         }
         this.pending = undefined

@@ -41,8 +41,6 @@ describe('waitForEvent', () => {
 
     it('rejects if not event occurs within timeout', () => {
         const emitter = new EventEmitter()
-        return expect(waitForEvent(emitter, 'correctEvent', 20))
-            .rejects
-            .toEqual(new TimeoutError(20, 'waitForEvent'))
+        return expect(waitForEvent(emitter, 'correctEvent', 20)).rejects.toEqual(new TimeoutError(20, 'waitForEvent'))
     })
 })

@@ -28,7 +28,6 @@ interface DhtNodeRpcLocalOptions {
 const logger = new Logger(module)
 
 export class DhtNodeRpcLocal implements IDhtNodeRpc {
-
     private readonly options: DhtNodeRpcLocalOptions
 
     constructor(options: DhtNodeRpcLocalOptions) {
@@ -38,11 +37,9 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     // TODO rename to getClosestNeighbors (breaking change)
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.options.addContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const peers = getClosestNodes(
-            toDhtAddress(request.nodeId), 
-            this.options.getNeighbors(),
-            { maxCount: this.options.peerDiscoveryQueryBatchSize }
-        )
+        const peers = getClosestNodes(toDhtAddress(request.nodeId), this.options.getNeighbors(), {
+            maxCount: this.options.peerDiscoveryQueryBatchSize
+        })
         const response = {
             peers,
             requestId: request.requestId

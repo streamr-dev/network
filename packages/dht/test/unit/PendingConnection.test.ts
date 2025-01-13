@@ -5,9 +5,8 @@ import { PendingConnectionEvents } from '../../src/connection/PendingConnection'
 import { MockConnection } from '../utils/mock/MockConnection'
 
 describe('PendingConnection', () => {
-
     let pendingConnection: PendingConnection
-    
+
     beforeEach(() => {
         pendingConnection = new PendingConnection(createMockPeerDescriptor(), 500)
     })
@@ -26,7 +25,7 @@ describe('PendingConnection', () => {
     })
 
     it('emits disconnected after timed out', async () => {
-        await waitForEvent3<PendingConnectionEvents>(pendingConnection, 'disconnected')  
+        await waitForEvent3<PendingConnectionEvents>(pendingConnection, 'disconnected')
     })
 
     it('does not emit disconnected if destroyed', async () => {
@@ -44,7 +43,7 @@ describe('PendingConnection', () => {
             done()
         })
         pendingConnection.onHandshakeCompleted(mockConnection)
-    }) 
+    })
 
     it('does not emit connected if replaced', async () => {
         pendingConnection.once('connected', () => {
@@ -53,5 +52,4 @@ describe('PendingConnection', () => {
         pendingConnection.replaceAsDuplicate()
         await wait(50)
     })
-
 })

@@ -1,11 +1,11 @@
 // checks that require works
 const StreamrClient = require('@streamr/sdk')
 
-console.info('const StreamrClient = require(\'@streamr/sdk\'):', { StreamrClient })
+console.info("const StreamrClient = require('@streamr/sdk'):", { StreamrClient })
 
 const auth = StreamrClient.generateEthereumAccount()
 const client = new StreamrClient({
-    auth,
+    auth
 })
 
 client.connect().then(async () => {

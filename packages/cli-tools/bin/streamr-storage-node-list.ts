@@ -13,9 +13,13 @@ createClientCommand(async (client: StreamrClient, options: Options) => {
     const streamId = options.stream
     const addresses = await client.getStorageNodes(streamId)
     if (addresses.length > 0) {
-        console.info(EasyTable.print(addresses.map((address: string) => ({
-            address
-        }))))
+        console.info(
+            EasyTable.print(
+                addresses.map((address: string) => ({
+                    address
+                }))
+            )
+        )
     }
 })
     .description('fetch a list of storage nodes')

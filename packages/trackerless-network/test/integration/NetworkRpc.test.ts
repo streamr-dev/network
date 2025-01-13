@@ -1,9 +1,5 @@
 import { DhtCallContext } from '@streamr/dht'
-import {
-    ProtoRpcClient,
-    RpcCommunicator,
-    toProtoRpcClient
-} from '@streamr/proto-rpc'
+import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
@@ -25,14 +21,10 @@ describe('Network RPC', () => {
             rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
         client = toProtoRpcClient(new ContentDeliveryRpcClient(rpcCommunicator1.getRpcClientTransport()))
-        rpcCommunicator2.registerRpcNotification(
-            StreamMessage,
-            'sendStreamMessage',
-            async (): Promise<Empty> => {
-                recvCounter += 1
-                return {}
-            }
-        )
+        rpcCommunicator2.registerRpcNotification(StreamMessage, 'sendStreamMessage', async (): Promise<Empty> => {
+            recvCounter += 1
+            return {}
+        })
     })
 
     afterEach(() => {
@@ -41,11 +33,7 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
-        const msg = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            StreamPartIDUtils.parse('testStream#0'),
-            randomUserId()
-        )
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), StreamPartIDUtils.parse('testStream#0'), randomUserId())
         await client.sendStreamMessage(msg)
         await until(() => recvCounter === 1)
     })

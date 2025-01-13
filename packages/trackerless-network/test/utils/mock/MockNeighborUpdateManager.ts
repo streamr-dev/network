@@ -3,16 +3,11 @@ import { NeighborUpdateManager } from '../../../src/logic/neighbor-discovery/Nei
 import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export class MockNeighborUpdateManager implements Methods<NeighborUpdateManager> {
+    // eslint-disable-next-line class-methods-use-this
+    async start(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
-    async start(): Promise<void> {
-
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    stop(): void {
-
-    }
+    stop(): void {}
 
     // eslint-disable-next-line class-methods-use-this
     async neighborUpdate(): Promise<NeighborUpdate> {

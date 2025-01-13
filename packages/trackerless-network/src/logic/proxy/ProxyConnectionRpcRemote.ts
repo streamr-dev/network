@@ -6,7 +6,6 @@ import { ProxyConnectionRpcClient } from '../../../generated/packages/trackerles
 const logger = new Logger(module)
 
 export class ProxyConnectionRpcRemote extends RpcRemote<ProxyConnectionRpcClient> {
-
     async requestConnection(direction: ProxyDirection, userId: UserID): Promise<boolean> {
         const request: ProxyConnectionRequest = {
             direction,

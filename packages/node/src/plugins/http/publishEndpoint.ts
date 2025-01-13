@@ -26,7 +26,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
             })
             return
         }
-        if ((partition !== undefined) && (partitionKey !== undefined)) {
+        if (partition !== undefined && partitionKey !== undefined) {
             res.status(422).send({
                 error: 'Invalid combination of "partition" and "partitionKey"'
             })
@@ -59,7 +59,9 @@ export const createEndpoint = (streamrClient: StreamrClient): HttpServerEndpoint
         requestHandlers: [
             express.raw({
                 limit: '1024kb',
-                type() { return true },
+                type() {
+                    return true
+                }
             }),
             createHandler(msgChainId, streamrClient)
         ]

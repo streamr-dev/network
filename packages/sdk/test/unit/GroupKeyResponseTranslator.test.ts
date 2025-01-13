@@ -8,11 +8,10 @@ import { randomUserId } from '@streamr/test-utils'
 const RECIPIENT = randomUserId()
 
 describe('GroupKeyResponseTranslator', () => {
-
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
         recipient: RECIPIENT,
-        encryptedGroupKeys: [ new OldEncryptedGroupKey('id', hexToBinary('0000')) ]
+        encryptedGroupKeys: [new OldEncryptedGroupKey('id', hexToBinary('0000'))]
     })
     const newGroupKey: GroupKey = {
         id: 'id',
@@ -21,7 +20,7 @@ describe('GroupKeyResponseTranslator', () => {
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
         recipientId: toUserIdRaw(RECIPIENT),
-        groupKeys: [ newGroupKey ]
+        groupKeys: [newGroupKey]
     }
 
     it('translates old protocol to protobuf', () => {

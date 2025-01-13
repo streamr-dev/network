@@ -19,7 +19,7 @@ describe('Ring correctness', () => {
     const nodeIndicesById: Record<DhtAddress, number> = {}
 
     const regions: number[] = []
-    for (let i = 0; i < (NUM_NODES + 1); i++) {
+    for (let i = 0; i < NUM_NODES + 1; i++) {
         regions.push(i)
     }
 
@@ -36,9 +36,10 @@ describe('Ring correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, { name: string, distance: number, id: { type: string, data: number[] } }[]>
-        = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
+    const dhtIds: { type: string; data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> = JSON.parse(
+        fs.readFileSync('test/data/orderedneighbors.json').toString()
+    )
 
     beforeEach(async () => {
         jest.setTimeout(60000)
@@ -55,10 +56,7 @@ describe('Ring correctness', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map((node) => node.stop())
-        ])
+        await Promise.all([entryPoint.stop(), ...nodes.map((node) => node.stop())])
     })
 
     it('Can find correct neighbors', async () => {
@@ -78,7 +76,6 @@ describe('Ring correctness', () => {
             await nodes[i].joinRing()
             const ringEndTimestamp = Date.now()
             logger.info('Node ' + i + ' joined ring in ' + (ringEndTimestamp - ringStartTimestamp) + ' ms')
-
         }
 
         /*
@@ -91,12 +88,19 @@ describe('Ring correctness', () => {
         }*/
 
         for (let i = 1; i < NUM_NODES; i++) {
-            logger.info('Node ' + i + ', own region: ' + nodes[i].getLocalPeerDescriptor().region
-                + '. Regions of closest ring peers, left: '
-                + nodes[i].getClosestRingContactsTo(
-                    getRingIdRawFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()), 10).left.map((p) => p.region)
-                + ', right: ' + nodes[i].getClosestRingContactsTo(getRingIdRawFromPeerDescriptor(
-                nodes[i].getLocalPeerDescriptor()), 10).right.map((p) => p.region)
+            logger.info(
+                'Node ' +
+                    i +
+                    ', own region: ' +
+                    nodes[i].getLocalPeerDescriptor().region +
+                    '. Regions of closest ring peers, left: ' +
+                    nodes[i]
+                        .getClosestRingContactsTo(getRingIdRawFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()), 10)
+                        .left.map((p) => p.region) +
+                    ', right: ' +
+                    nodes[i]
+                        .getClosestRingContactsTo(getRingIdRawFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()), 10)
+                        .right.map((p) => p.region)
             )
         }
 
@@ -121,14 +125,13 @@ describe('Ring correctness', () => {
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j]] + '')) {
+                    if (groundTruth[i + ''][j].name != nodeIndicesById[kademliaNeighbors[j]] + '') {
                         break
                     }
                     correctNeighbors++
                 }
             } catch {
-                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only '
-                    + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

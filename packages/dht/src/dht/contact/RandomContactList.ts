@@ -2,14 +2,9 @@ import { DhtAddress } from '../../identifiers'
 import { ContactList } from './ContactList'
 
 export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extends ContactList<C> {
-
     private randomness: number
 
-    constructor(
-        localNodeId: DhtAddress,
-        maxSize: number,
-        randomness = 0.20
-    ) {
+    constructor(localNodeId: DhtAddress, maxSize: number, randomness = 0.2) {
         super(localNodeId, maxSize)
         this.randomness = randomness
     }
@@ -27,10 +22,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
                 }
                 this.contactIds.push(contact.getNodeId())
                 this.contactsById.set(contact.getNodeId(), contact)
-                this.emit(
-                    'contactAdded',
-                    contact
-                )
+                this.emit('contactAdded', contact)
             }
         }
     }
@@ -38,7 +30,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
     removeContact(id: DhtAddress): boolean {
         if (this.contactsById.has(id)) {
             const removed = this.contactsById.get(id)!
-            const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
+            const index = this.contactIds.findIndex((nodeId) => nodeId === id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
             this.emit('contactRemoved', removed)
@@ -48,9 +40,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
     }
 
     public getContacts(limit?: number): C[] {
-        const items = (limit === undefined)
-            ? this.contactIds
-            : this.contactIds.slice(0, Math.max(limit, 0))
+        const items = limit === undefined ? this.contactIds : this.contactIds.slice(0, Math.max(limit, 0))
         return items.map((contactId) => this.contactsById.get(contactId)!)
     }
 }

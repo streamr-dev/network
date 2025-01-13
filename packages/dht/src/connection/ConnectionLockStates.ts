@@ -6,7 +6,6 @@ import { DhtAddress } from '../identifiers'
 export type LockID = string
 
 export class ConnectionLockStates {
-
     private localLocks: Map<DhtAddress, Set<LockID>> = new Map()
     private remoteLocks: Map<DhtAddress, Set<LockID>> = new Map()
     // TODO: remove weakLocks use localLocks instead. When opening weakLocks from the ConnectioManager,
@@ -50,7 +49,7 @@ export class ConnectionLockStates {
     }
 
     public isLocked(id: DhtAddress): boolean {
-        return (this.isLocalLocked(id) || this.isRemoteLocked(id) || this.isWeakLocked(id))
+        return this.isLocalLocked(id) || this.isRemoteLocked(id) || this.isWeakLocked(id)
     }
 
     public addLocalLocked(id: DhtAddress, lockId: LockID): void {

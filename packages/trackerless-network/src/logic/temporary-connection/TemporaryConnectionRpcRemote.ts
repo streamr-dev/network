@@ -5,7 +5,6 @@ import { TemporaryConnectionRpcClient } from '../../../generated/packages/tracke
 const logger = new Logger(module)
 
 export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionRpcClient> {
-
     async openConnection(): Promise<boolean> {
         try {
             const response = await this.getClient().openConnection({}, this.formDhtRpcOptions())
@@ -18,10 +17,13 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
 
     async closeConnection(): Promise<void> {
         try {
-            await this.getClient().closeConnection({}, this.formDhtRpcOptions({
-                connect: false,
-                notification: true
-            }))
+            await this.getClient().closeConnection(
+                {},
+                this.formDhtRpcOptions({
+                    connect: false,
+                    notification: true
+                })
+            )
         } catch (err) {
             logger.trace(`closeConnection to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
         }

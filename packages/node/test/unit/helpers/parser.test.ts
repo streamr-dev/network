@@ -2,7 +2,6 @@ import { parse } from 'qs'
 import { parsePositiveInteger, parseQueryAndBase, parseQueryParameter } from '../../../src/helpers/parser'
 
 describe('parse', () => {
-
     describe('parseQueryParameter', () => {
         it('happy path', () => {
             const query = parse('x=3')

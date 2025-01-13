@@ -12,20 +12,20 @@ export interface Message {
 
 export type Metadata = Partial<Pick<MessageMetadata, 'timestamp' | 'sequenceNumber' | 'publisherId' | 'msgChainId'>>
 
-const METADATA_FIELDS = [ 'timestamp', 'sequenceNumber', 'publisherId', 'msgChainId' ]
+const METADATA_FIELDS = ['timestamp', 'sequenceNumber', 'publisherId', 'msgChainId']
 
 const pickProperties = (fields: string[], from: Record<string, unknown>): Record<string, unknown> => {
     const result: any = {}
-    fields.forEach((field) => result[field] = from[field])
+    fields.forEach((field) => (result[field] = from[field]))
     return result
 }
 
 const isJavascriptObject = (content: any): boolean => {
-    return (content instanceof Object) && (!(content instanceof Array))
+    return content instanceof Object && !(content instanceof Array)
 }
 
 const assertContent = (content: any): void | never => {
-    if ((content === undefined) || (content === null)) {
+    if (content === undefined || content === null) {
         throw new Error('Content missing')
     }
     if (!isJavascriptObject(content)) {
@@ -69,7 +69,6 @@ export class PlainPayloadFormat implements PayloadFormat {
 }
 
 export class MetadataPayloadFormat implements PayloadFormat {
-
     createMessage(payload: string): Message | never {
         const json = parsePayloadJson(payload)
         const content = json.content

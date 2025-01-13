@@ -57,7 +57,7 @@ describe('validations', () => {
         })
         it('does not throw on number that is representable as an integer', () => {
             expect(() => {
-                validateIsNotNegativeInteger('varName', 10.00)
+                validateIsNotNegativeInteger('varName', 10.0)
             }).not.toThrow()
         })
     })

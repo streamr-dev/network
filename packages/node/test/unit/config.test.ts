@@ -2,7 +2,6 @@ import { NetworkNodeType } from '@streamr/sdk'
 import { overrideConfigToEnvVarsIfGiven } from '../../src/config/config'
 
 describe('overrideConfigToEnvVarsIfGiven', () => {
-
     beforeEach(() => {
         const PREFIX = 'STREAMR__BROKER__'
         Object.keys(process.env).forEach((variableName: string) => {

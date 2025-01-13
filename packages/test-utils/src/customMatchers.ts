@@ -10,7 +10,7 @@ const formErrorMessage = (description: string, expected: string, actual: string)
 }
 
 const formTypeDescription = (value: unknown): string => {
-    if ((value !== undefined) && (value !== null)) {
+    if (value !== undefined && value !== null) {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         return `an instance of ${(value as any).constructor.name}`
     } else {
@@ -18,10 +18,7 @@ const formTypeDescription = (value: unknown): string => {
     }
 }
 
-const toEqualBinary = (
-    actual: unknown,
-    expected: Uint8Array
-): jest.CustomMatcherResult => {
+const toEqualBinary = (actual: unknown, expected: Uint8Array): jest.CustomMatcherResult => {
     if (!(actual instanceof Uint8Array)) {
         return {
             pass: false,

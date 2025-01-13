@@ -5,8 +5,7 @@ const airportsWithCoordinates = fs.readFileSync('./data-generation/intermediate-
 
 // parse the airportsWithCoordinates.csv file into an array of tuples
 const airportsWithCoordinatesLines = airportsWithCoordinates.split('\n')
-let airportsWithCoordinatesTuples = new Array<[code: string, x: string, y: string, 
-    number: number | undefined, continent: string, country: string]>()
+let airportsWithCoordinatesTuples = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
 for (const line of airportsWithCoordinatesLines) {
     if (line.length < 3) {
         continue
@@ -56,13 +55,11 @@ for (const tuple of airportsWithCoordinatesTuples) {
 // go through countries Set
 
 for (const country of countries) {
-
     const clusters: [beginIdex: number, endIndex: number][] = []
-    
+
     // find all the indice of beginnings and ends of the country in the sorted array
 
     for (let j = 0; j < airportsWithCoordinatesTuples.length; j++) {
-
         let beginIndex = -1
         let endIndex = -1
 
@@ -96,11 +93,11 @@ for (const country of countries) {
     // sort clusters by the number of airports in them
 
     clusters.sort((a, b) => {
-        return (b[1] - b[0]) - (a[1] - a[0]) 
+        return b[1] - b[0] - (a[1] - a[0])
     })
 
     // copy all lines of the country from airportsWithCoordinatesTuples
-    // into a new array in the order of clusters array 
+    // into a new array in the order of clusters array
 
     const countryArray = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
     for (const cluster of clusters) {
@@ -177,22 +174,23 @@ for (const tuple of airportsWithCoordinatesTuples) {
 
 const airportCodeToIndex: Record<string, [regionNumber: number, latitude: string, longitude: string]> = {}
 for (const airportLine of airportsWithCoordinatesTuples) {
-    airportCodeToIndex[airportLine[0]] = [airportLine[3]!, airportLine[1], airportLine[2]] 
+    airportCodeToIndex[airportLine[0]] = [airportLine[3]!, airportLine[1], airportLine[2]]
 }
 
-// write the airportCodeToIndex to a generated typescript file 
+// write the airportCodeToIndex to a generated typescript file
 // at src/airportCodeToRegion.ts and data-generation/final-data/airportCodeToRegion.ts
 
 const airportCodeToIndexFile = fs.createWriteStream('./src/airportCodeToRegion.ts')
 const airportCodeToIndexFile2 = fs.createWriteStream('./data-generation/final-data/airportCodeToRegion.ts')
 
 // eslint-disable-next-line max-len
-const airportCodeToIndexFileHeader = 'export const airportCodeToRegion: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {\n'
+const airportCodeToIndexFileHeader =
+    'export const airportCodeToRegion: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {\n'
 airportCodeToIndexFile.write(airportCodeToIndexFileHeader)
 airportCodeToIndexFile2.write(airportCodeToIndexFileHeader)
 
 for (const key in airportCodeToIndex) {
-    const airportCodeToIndexLine = `    ${key}: [${airportCodeToIndex[key][0]}, ${airportCodeToIndex[key][1]}, ${airportCodeToIndex[key][2]}],\n` 
+    const airportCodeToIndexLine = `    ${key}: [${airportCodeToIndex[key][0]}, ${airportCodeToIndex[key][1]}, ${airportCodeToIndex[key][2]}],\n`
     airportCodeToIndexFile.write(airportCodeToIndexLine)
     airportCodeToIndexFile2.write(airportCodeToIndexLine)
 }

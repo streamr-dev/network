@@ -18,12 +18,12 @@ export const createLegacySignaturePayload = (opts: {
     prevMsgRef?: MessageRef
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array => {
-    const prev = ((opts.prevMsgRef !== undefined) ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : '')
-    const newGroupKey = ((opts.newGroupKey !== undefined) ? serializeGroupKey(opts.newGroupKey) : '')
+    const prev = opts.prevMsgRef !== undefined ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : ''
+    const newGroupKey = opts.newGroupKey !== undefined ? serializeGroupKey(opts.newGroupKey) : ''
     // In the legacy signature type, encrypted content was signed as a hex-encoded string
-    const contentAsString = (opts.encryptionType === EncryptionType.NONE)
-        ? binaryToUtf8(opts.content)
-        : binaryToHex(opts.content)
-    return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`
-        + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`)
+    const contentAsString = opts.encryptionType === EncryptionType.NONE ? binaryToUtf8(opts.content) : binaryToHex(opts.content)
+    return Buffer.from(
+        `${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}` +
+            `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`
+    )
 }

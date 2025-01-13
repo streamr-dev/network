@@ -35,9 +35,7 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
 
     it('does not crash if monthly database check fails because of fetch returning garbage', async () => {
         const oldFetch = globalThis.fetch
-        const fetchMock = jest
-            .spyOn(globalThis, 'fetch')
-            .mockImplementation(() => oldFetch('https://streamr.network'))
+        const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(() => oldFetch('https://streamr.network'))
 
         await wait(10000)
 
@@ -50,6 +48,5 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
         // Helsinki, Finland
         expect(location!.latitude).toBe(60.1797)
         expect(location!.longitude).toBe(24.9344)
-
     }, 60000)
 })

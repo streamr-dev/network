@@ -2,12 +2,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { Empty } from '../../../generated/google/protobuf/empty'
-import {
-    IceCandidate,
-    PeerDescriptor,
-    RtcAnswer,
-    RtcOffer
-} from '../../../generated/packages/dht/protos/DhtRpc'
+import { IceCandidate, PeerDescriptor, RtcAnswer, RtcOffer } from '../../../generated/packages/dht/protos/DhtRpc'
 import { IWebrtcConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -20,7 +15,7 @@ import { PendingConnection } from '../PendingConnection'
 const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalOptions {
-    connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection 
+    connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection
     onNewConnection: (connection: PendingConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
     ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection>
@@ -30,7 +25,6 @@ interface WebrtcConnectorRpcLocalOptions {
 }
 
 export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
-
     private readonly options: WebrtcConnectorRpcLocalOptions
 
     constructor(options: WebrtcConnectorRpcLocalOptions) {
@@ -99,7 +93,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     private isIceCandidateAllowed(candidate: string): boolean {
         if (!this.options.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
-            if ((address !== undefined) && isPrivateIPv4(address)) {
+            if (address !== undefined && isPrivateIPv4(address)) {
                 return false
             }
         }

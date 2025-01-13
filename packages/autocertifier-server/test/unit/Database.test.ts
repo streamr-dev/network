@@ -65,8 +65,7 @@ describe('Database', () => {
             const newIp = '192.168.0.1'
             const newPort = '80'
 
-            await expect(db.updateSubdomainIp(
-                subdomain.subdomainName, newIp, newPort, 'wrongToken')).rejects.toThrow()
+            await expect(db.updateSubdomainIp(subdomain.subdomainName, newIp, newPort, 'wrongToken')).rejects.toThrow()
         })
     })
 

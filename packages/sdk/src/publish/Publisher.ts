@@ -35,14 +35,13 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
         return metadata.timestamp instanceof Date
             ? metadata.timestamp.getTime()
             : isString(metadata.timestamp)
-                ? new Date(metadata.timestamp).getTime()
-                : metadata.timestamp
+              ? new Date(metadata.timestamp).getTime()
+              : metadata.timestamp
     }
 }
 
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
-
     private readonly messageFactories: Mapping<StreamID, MessageFactory>
     private readonly groupKeyQueues: Mapping<StreamID, GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
@@ -80,11 +79,7 @@ export class Publisher {
         })
     }
 
-    async publish(
-        streamDefinition: StreamDefinition,
-        content: unknown,
-        metadata?: PublishMetadata
-    ): Promise<StreamMessage> {
+    async publish(streamDefinition: StreamDefinition, content: unknown, metadata?: PublishMetadata): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
         /*
          * There are some steps in the publish process which need to be done sequentially:
@@ -102,7 +97,7 @@ export class Publisher {
          * tasks which we'd execute in parallel.
          */
         return this.concurrencyLimit(async () => {
-            const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
+            const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             try {
                 const messageFactory = await this.messageFactories.get(streamId)
                 const message = await messageFactory.createMessage(
@@ -116,7 +111,7 @@ export class Publisher {
                 await this.node.broadcast(message)
                 return message
             } catch (e) {
-                const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'
+                const errorCode = e instanceof StreamrClientError ? e.code : 'UNKNOWN_ERROR'
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new StreamrClientError(`Failed to publish to stream ${streamId}. Cause: ${e.message}`, errorCode)
             }

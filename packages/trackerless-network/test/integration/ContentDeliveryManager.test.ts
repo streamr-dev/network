@@ -1,8 +1,4 @@
-import {
-    DhtNode,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils, until, waitForEvent3, wait } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
@@ -10,7 +6,6 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryManager', () => {
-
     let controlLayerNode1: ControlLayerNode
     let controlLayerNode2: ControlLayerNode
     let transport1: SimulatorTransport
@@ -22,11 +17,7 @@ describe('ContentDeliveryManager', () => {
     const peerDescriptor2 = createMockPeerDescriptor()
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
-    const msg = createStreamMessage(
-        JSON.stringify({ hello: 'WORLD' }),
-        STREAM_PART_ID,
-        randomUserId()
-    )
+    const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -47,14 +38,8 @@ describe('ContentDeliveryManager', () => {
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })
-        await Promise.all([
-            controlLayerNode1.start(),
-            controlLayerNode2.start()
-        ])
-        await Promise.all([
-            controlLayerNode1.joinDht([peerDescriptor1]),
-            controlLayerNode2.joinDht([peerDescriptor1])
-        ])
+        await Promise.all([controlLayerNode1.start(), controlLayerNode2.start()])
+        await Promise.all([controlLayerNode1.joinDht([peerDescriptor1]), controlLayerNode2.joinDht([peerDescriptor1])])
 
         manager1 = new ContentDeliveryManager({ neighborUpdateInterval: 100 })
         manager2 = new ContentDeliveryManager({ neighborUpdateInterval: 100 })
@@ -116,11 +101,7 @@ describe('ContentDeliveryManager', () => {
             until(() => manager1.getNeighbors(streamPartId2).length === 1),
             until(() => manager2.getNeighbors(streamPartId2).length === 1)
         ])
-        const msg2 = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            streamPartId2,
-            randomUserId()
-        )
+        const msg2 = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId2, randomUserId())
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),
             waitForEvent3<Events>(manager2, 'newMessage'),
@@ -156,5 +137,4 @@ describe('ContentDeliveryManager', () => {
         expect(nodeInfo1[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
         expect(nodeInfo2[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
     })
-
 })

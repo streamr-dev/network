@@ -8,7 +8,6 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { getLocalGroupKeyStore } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
-    
     let ownerId: UserID
     let publisherId: UserID
     let store: LocalGroupKeyStore

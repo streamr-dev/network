@@ -5,8 +5,5 @@
     "rootDirs": ["src", "test"],
     "noImplicitOverride": false
   },
-  "include": [
-    "src/**/*",
-    "test/**/*"
-  ]
+  "include": ["src/**/*", "test/**/*"]
 }

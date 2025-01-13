@@ -4,9 +4,7 @@
   "type": "object",
   "description": "Operator plugin configuration",
   "additionalProperties": false,
-  "required": [
-    "operatorContractAddress"
-  ],
+  "required": ["operatorContractAddress"],
   "properties": {
     "operatorContractAddress": {
       "type": "string",

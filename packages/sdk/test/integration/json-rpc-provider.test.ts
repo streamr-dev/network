@@ -20,7 +20,6 @@ const QUORUM = 2
  * within the Ethers.js library itself, we can consider removing these tests.
  */
 describe('use JsonRpcProvider', () => {
-
     let client: StreamrClient
     let servers: FakeJsonRpcServer[]
 
@@ -33,11 +32,13 @@ describe('use JsonRpcProvider', () => {
     }
 
     beforeEach(async () => {
-        servers = await Promise.all(range(SERVER_COUNT).map(async () => {
-            const server = new FakeJsonRpcServer()
-            await server.start()
-            return server
-        }))
+        servers = await Promise.all(
+            range(SERVER_COUNT).map(async () => {
+                const server = new FakeJsonRpcServer()
+                await server.start()
+                return server
+            })
+        )
         client = new StreamrClient({
             contracts: {
                 ethereumNetwork: {
@@ -61,7 +62,6 @@ describe('use JsonRpcProvider', () => {
     })
 
     describe('read', () => {
-
         const runErrorTest = async (errorState: ErrorState): Promise<JsonRpcRequest[]> => {
             await client.isStreamPublisher('/stream1', randomUserId())
             const errorServer = servers[0]
@@ -80,7 +80,7 @@ describe('use JsonRpcProvider', () => {
         })
 
         it('uses another server, if server sends HTTP 503 response', async () => {
-            const requests = await runErrorTest({ httpStatus: 503 } )
+            const requests = await runErrorTest({ httpStatus: 503 })
             expect(requests).toHaveLength(QUORUM + 1)
         })
 
@@ -89,12 +89,12 @@ describe('use JsonRpcProvider', () => {
             expect(requests).toHaveLength(QUORUM + 1)
         })
 
-        it('uses another server, if server doesn\'t respond', async () => {
+        it("uses another server, if server doesn't respond", async () => {
             const requests = await runErrorTest('doNotRespond')
             expect(requests).toHaveLength(QUORUM + 1)
         })
 
-        it('reading information from contract doesn\'t cause multiple chainId requests', async () => {
+        it("reading information from contract doesn't cause multiple chainId requests", async () => {
             await client.isStreamPublisher('/stream1', randomUserId())
             clearRequests()
             await client.isStreamPublisher('/stream1', randomUserId())
@@ -105,7 +105,6 @@ describe('use JsonRpcProvider', () => {
     })
 
     describe('events', () => {
-
         const runErrorTest = async (errorState: ErrorState, extraWait = 0): Promise<void> => {
             servers.forEach((s) => s.setError('eth_getLogs', errorState))
             const receivedEvents: StreamCreationEvent[] = []
@@ -115,13 +114,15 @@ describe('use JsonRpcProvider', () => {
             await until(() => getRequests().some((r) => r.method === 'eth_getLogs'), 5000 + extraWait)
             servers.forEach((s) => s.setError('eth_getLogs', undefined))
             await wait(1.5 * POLL_INTERVAL + extraWait)
-            expect(receivedEvents).toEqual([{
-                streamId: '0x0000000000000000000000000000000000000001/foo',
-                metadata: {
-                    partitions: 1
-                },
-                blockNumber: 123
-            }])
+            expect(receivedEvents).toEqual([
+                {
+                    streamId: '0x0000000000000000000000000000000000000001/foo',
+                    metadata: {
+                        partitions: 1
+                    },
+                    blockNumber: 123
+                }
+            ])
         }
 
         it('happy path', async () => {
@@ -133,13 +134,15 @@ describe('use JsonRpcProvider', () => {
             expect(getRequests().filter((r) => r.method === 'eth_getLogs')).toHaveLength(1)
             await wait(1.5 * POLL_INTERVAL)
             expect(getRequests().filter((r) => r.method === 'eth_getLogs')).toHaveLength(2)
-            expect(receivedEvents).toEqual([{
-                streamId: '0x0000000000000000000000000000000000000001/foo',
-                metadata: {
-                    partitions: 1
-                },
-                blockNumber: 123
-            }])
+            expect(receivedEvents).toEqual([
+                {
+                    streamId: '0x0000000000000000000000000000000000000001/foo',
+                    metadata: {
+                        partitions: 1
+                    },
+                    blockNumber: 123
+                }
+            ])
         })
 
         it('continues polling after HTTP 503 response', async () => {
@@ -149,8 +152,8 @@ describe('use JsonRpcProvider', () => {
         it('continues polling after HTTP 429 response', async () => {
             await runErrorTest({ httpStatus: 429 })
         })
-        
-        it('continues polling, if server doesn\'t respond', async () => {
+
+        it("continues polling, if server doesn't respond", async () => {
             await runErrorTest('doNotRespond', TIMEOUT)
         })
     })

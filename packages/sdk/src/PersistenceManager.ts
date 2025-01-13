@@ -15,17 +15,12 @@ export const NAMESPACES = {
 
 @scoped(Lifecycle.ContainerScoped)
 export class PersistenceManager {
-
     private persistence?: ServerPersistence
     private readonly authentication: Authentication
     private readonly loggerFactory: LoggerFactory
 
     /* eslint-disable indent */
-    constructor(
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
-        destroySignal: DestroySignal,
-        loggerFactory: LoggerFactory
-    ) {
+    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication, destroySignal: DestroySignal, loggerFactory: LoggerFactory) {
         this.authentication = authentication
         this.loggerFactory = loggerFactory
         destroySignal.onDestroy.listen(() => {

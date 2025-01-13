@@ -26,7 +26,6 @@ export interface JsonRpcRequest {
 export type ErrorState = { httpStatus: number } | 'doNotRespond'
 
 export class FakeJsonRpcServer {
-
     private requests: JsonRpcRequest[] = []
     private errorStates: Map<string, ErrorState> = new Map()
     private httpServer?: Server
@@ -40,9 +39,12 @@ export class FakeJsonRpcServer {
             this.requests.push(...requests)
             // Note that a batch can contain requests to multiple methods. As we can't do partial failures,
             // we fail the whole batch if just some of the method is defined to be an error.
-            const errorMethods = intersection(requests.map((r) => r.method), [...this.errorStates.keys()])
+            const errorMethods = intersection(
+                requests.map((r) => r.method),
+                [...this.errorStates.keys()]
+            )
             if (errorMethods.length > 0) {
-                const errorState = this.errorStates.get(errorMethods[0])!  // pick some error state if multiple methods match the request
+                const errorState = this.errorStates.get(errorMethods[0])! // pick some error state if multiple methods match the request
                 if (errorState !== 'doNotRespond') {
                     httpResponse.sendStatus(errorState.httpStatus)
                 } else {
@@ -55,10 +57,10 @@ export class FakeJsonRpcServer {
                 id: req.id,
                 result: this.createResult(req)
             }))
-            const responseJson = (requests.length === 1) ? responses[0] : responses
+            const responseJson = requests.length === 1 ? responses[0] : responses
             httpResponse.json(responseJson)
         })
-        this.httpServer = app.listen(0)  // uses random port
+        this.httpServer = app.listen(0) // uses random port
         await once(this.httpServer, 'listening')
     }
 
@@ -66,7 +68,7 @@ export class FakeJsonRpcServer {
         const timestamp = Date.now()
         const serverPort = this.getPort()
         const items = isArray(httpRequest.body) ? httpRequest.body : [httpRequest.body]
-        return items.map((item) => ({ 
+        return items.map((item) => ({
             id: item.id,
             method: item.method,
             params: item.params,
@@ -93,7 +95,7 @@ export class FakeJsonRpcServer {
         } else if (request.method === 'eth_getLogs') {
             const topics = request.params[0].topics
             const topicId = id('StreamCreated(string,string)')
-            if ((topics.length !== 1) || (topics[0] !== topicId)) {
+            if (topics.length !== 1 || topics[0] !== topicId) {
                 throw new Error('Not implemented')
             }
             if (request.params[0].toBlock !== 'latest') {
@@ -102,17 +104,19 @@ export class FakeJsonRpcServer {
             const fromBlock = parseInt(request.params[0].fromBlock, 16)
             if (BLOCK_NUMBER >= fromBlock) {
                 const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
-                return [{
-                    address: request.params[0].address,
-                    topics: [topicId],
-                    data,
-                    blockNumber: toHex(BLOCK_NUMBER),
-                    transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-                    transactionIndex: '0x0',
-                    blockHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-                    logIndex: '0x0',
-                    removed: false
-                }]
+                return [
+                    {
+                        address: request.params[0].address,
+                        topics: [topicId],
+                        data,
+                        blockNumber: toHex(BLOCK_NUMBER),
+                        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                        transactionIndex: '0x0',
+                        blockHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                        logIndex: '0x0',
+                        removed: false
+                    }
+                ]
             } else {
                 return []
             }

@@ -69,19 +69,10 @@ describe('broker subscriptions', () => {
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)
         await grantPermissions([freshStream1, freshStream2], [broker1User, broker2User])
-
     })
 
     afterEach(async () => {
-        await Promise.allSettled([
-            mqttClient1.end(true),
-            mqttClient2.end(true),
-            client1.destroy(),
-            client2.destroy(),
-            broker1.stop(),
-            broker2.stop(),
-        ])
-
+        await Promise.allSettled([mqttClient1.end(true), mqttClient2.end(true), client1.destroy(), client2.destroy(), broker1.stop(), broker2.stop()])
     })
 
     it('manage list of subscribed stream partitions when plugins subscribe/unsubscribe', async () => {
@@ -94,8 +85,8 @@ describe('broker subscriptions', () => {
         await until(async () => (await getStreamParts(broker1)).length === 1)
         await until(async () => (await getStreamParts(broker2)).length === 1)
 
-        expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream1.id + '#0'])
-        expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream2.id + '#0'])
 
         await mqttClient1.subscribe(freshStream2.id)
         await mqttClient2.subscribe(freshStream1.id)
@@ -103,8 +94,8 @@ describe('broker subscriptions', () => {
         await until(async () => (await getStreamParts(broker1)).length === 2)
         await until(async () => (await getStreamParts(broker2)).length === 2)
 
-        expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-        expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         // client boots own node, so broker streams should not change
         await client1.subscribe(freshStream1, () => {})
@@ -113,21 +104,21 @@ describe('broker subscriptions', () => {
 
         await wait(500) // give some time for client1 to subscribe.
 
-        expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-        expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
         await until(async () => (await getStreamParts(broker2)).length === 2)
 
-        expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream2.id + '#0'])
-        expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
         await until(async () => (await getStreamParts(broker2)).length === 2)
 
-        expect((await getStreamParts(broker1))).toIncludeSameMembers([])
-        expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
     })
 })

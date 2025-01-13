@@ -3,7 +3,6 @@ import { createCacheMap, createLazyMap } from '../../src/utils/Mapping'
 import { range } from 'lodash'
 
 describe('Mapping', () => {
-
     it('create', async () => {
         const mapping = createLazyMap<[string, number], string>({
             valueFactory: async ([p1, p2]: [string, number]) => `${p1}${p2}`
@@ -70,9 +69,9 @@ describe('Mapping', () => {
         const result4 = await mapping.get(['foo', 2])
         expect(result3).toBe('foo2')
         expect(result4).toBe('foo2')
-        expect(valueFactory).toHaveBeenCalledTimes(1 + 2)  // two additional calls as neither of the new calls was cached
+        expect(valueFactory).toHaveBeenCalledTimes(1 + 2) // two additional calls as neither of the new calls was cached
     })
-    
+
     it('concurrency', async () => {
         const valueFactory = jest.fn().mockImplementation(async ([p1, p2]: [string, number]) => {
             await wait(50)
@@ -87,13 +86,7 @@ describe('Mapping', () => {
             mapping.get(['foo', 1])
         ])
         expect(valueFactory).toHaveBeenCalledTimes(2)
-        expect(results).toEqual([
-            'foo1',
-            'foo2',
-            'foo2',
-            'foo1',
-            'foo1'
-        ])
+        expect(results).toEqual(['foo1', 'foo2', 'foo2', 'foo1', 'foo1'])
     })
 
     it('max size', async () => {
@@ -143,14 +136,14 @@ describe('Mapping', () => {
 
     it('invalidate', async () => {
         const mapping = createLazyMap<[string, number], string>({
-            valueFactory: async ([p1, p2]: [string, number]) => `${p1}${p2}`,
+            valueFactory: async ([p1, p2]: [string, number]) => `${p1}${p2}`
         })
         mapping.set(['foo', 1], 'foo1')
         mapping.set(['bar', 1], 'bar1')
         await mapping.get(['foo', 2])
         await mapping.get(['bar', 2])
         expect([...mapping.values()]).toIncludeSameMembers(['foo1', 'bar1', 'foo2', 'bar2'])
-        mapping.invalidate(([p1]) => (p1 === 'bar'))
+        mapping.invalidate(([p1]) => p1 === 'bar')
         expect([...mapping.values()]).toIncludeSameMembers(['foo1', 'foo2'])
     })
 })

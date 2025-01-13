@@ -3,7 +3,6 @@ import 'reflect-metadata'
 import { Stream } from '../../src/Stream'
 
 describe('Stream', () => {
-
     it('getPartitionCount', async () => {
         const stream = new Stream(
             undefined as any,

@@ -23,7 +23,6 @@ interface ForwardingTableEntry {
 const logger = new Logger(module)
 
 export class Router {
-
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private readonly routingTablesCache = new RoutingTablesCache()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
@@ -69,7 +68,6 @@ export class Router {
                 return rpcLocal.forwardMessage(forwardMessage)
             }
         )
-
     }
 
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
@@ -116,8 +114,9 @@ export class Router {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        logger.trace(`Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} `
-            + `to ${toDhtAddress(routedMessage.target)}`)
+        logger.trace(
+            `Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} ` + `to ${toDhtAddress(routedMessage.target)}`
+        )
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
@@ -125,11 +124,7 @@ export class Router {
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
-                eventReceived = raceEvents3<RoutingSessionEvents>(
-                    session,
-                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
-                    null
-                )
+                eventReceived = raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'], null)
             })
             setImmediate(async () => {
                 try {
@@ -137,10 +132,10 @@ export class Router {
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
                 } catch {
-                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
+                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId)
                 }
                 session.stop()
-                this.removeRoutingSession(session.sessionId) 
+                this.removeRoutingSession(session.sessionId)
             })
             session.sendMoreRequests(contacts)
             this.messagesRouted += 1
@@ -226,7 +221,7 @@ export class Router {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
             return !areEqualPeerDescriptors(peer, this.options.localPeerDescriptor)
         })
-        
+
         if (reachableThroughWithoutSelf.length > 0) {
             const sourceNodeId = toNodeId(routedMessage.sourcePeer!)
             if (this.forwardingTable.has(sourceNodeId)) {
@@ -238,7 +233,7 @@ export class Router {
                 peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
                     this.forwardingTable.delete(sourceNodeId)
-                }, 10000)  // TODO use options option or named constant?
+                }, 10000) // TODO use options option or named constant?
             }
             this.forwardingTable.set(sourceNodeId, forwardingEntry)
         }

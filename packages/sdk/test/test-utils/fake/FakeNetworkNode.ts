@@ -1,11 +1,6 @@
 import { DhtAddress, PeerDescriptor, toDhtAddress } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import {
-    ExternalRpcClient,
-    NetworkOptions,
-    StreamMessage as NewStreamMessage,
-    ProxyDirection
-} from '@streamr/trackerless-network'
+import { ExternalRpcClient, NetworkOptions, StreamMessage as NewStreamMessage, ProxyDirection } from '@streamr/trackerless-network'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
@@ -17,7 +12,6 @@ import { FakeNetwork } from './FakeNetwork'
 type MessageListener = (msg: NewStreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
-
     private readonly id: DhtAddress
     private readonly options: NetworkOptions
     readonly subscriptions: Set<StreamPartID> = new Set()
@@ -43,7 +37,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout?: number }): Promise<void> {
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout?: number }): Promise<void> {
         if (neighborRequirement !== undefined) {
             throw new Error('not implemented')
         }
@@ -56,7 +50,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     async broadcast(newStreamMessage: NewStreamMessage): Promise<void> {
         const msg = StreamMessageTranslator.toClientProtocol(newStreamMessage)
-        // by adding a subscription we emulate the functionality of real network node, which subscribes to 
+        // by adding a subscription we emulate the functionality of real network node, which subscribes to
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())
         this.network.send(msg, this.id, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
@@ -69,14 +63,13 @@ export class FakeNetworkNode implements NetworkNodeStub {
     getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         const allNodes = this.network.getNodes()
         return allNodes
-            .filter((node) => (node.id !== this.id))
+            .filter((node) => node.id !== this.id)
             .filter((node) => node.subscriptions.has(streamPartId))
             .map((node) => node.id)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
-    }
+    setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {}
 
     // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
@@ -116,7 +109,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         _userId: UserID,
         connectionCount?: number
     ): Promise<void> {
-        const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        const enable = nodes.length > 0 && (connectionCount === undefined || connectionCount > 0)
         if (enable) {
             this.proxiedStreamParts.add(streamPartId)
         } else {
@@ -140,12 +133,10 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     // eslint-disable-next-line class-methods-use-this
     registerExternalNetworkRpcMethod(): void {}
-
 }
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeNetworkNodeFactory implements NetworkNodeFactory {
-
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork) {

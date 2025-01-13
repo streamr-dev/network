@@ -11,16 +11,21 @@ interface Endpoint {
 }
 
 const startTestServer = (...endpoints: Endpoint[]) => {
-    return startServer(endpoints.map((endpoint) => ({
-        path: `/${endpoint.id}`,
-        method: 'get',
-        requestHandlers: [(_req: Request, res: Response) => {
-            res.send(endpoint.id.toUpperCase())
-        }],
-        apiAuthentication: (endpoint.keys !== undefined) ? { keys: endpoint.keys } : undefined
-    })), {
-        port: PORT
-    })
+    return startServer(
+        endpoints.map((endpoint) => ({
+            path: `/${endpoint.id}`,
+            method: 'get',
+            requestHandlers: [
+                (_req: Request, res: Response) => {
+                    res.send(endpoint.id.toUpperCase())
+                }
+            ],
+            apiAuthentication: endpoint.keys !== undefined ? { keys: endpoint.keys } : undefined
+        })),
+        {
+            port: PORT
+        }
+    )
 }
 
 const createRequest = async (endpoint: string, headers?: Record<string, string>) => {
@@ -31,7 +36,6 @@ const createRequest = async (endpoint: string, headers?: Record<string, string>)
 }
 
 describe('HttpServer', () => {
-
     let server: Server | undefined
 
     afterEach(async () => {
@@ -41,7 +45,6 @@ describe('HttpServer', () => {
     })
 
     describe('API authentication', () => {
-        
         it('no authentication required', async () => {
             server = await startTestServer({ id: 'foo' })
             const response = await createRequest('foo')
@@ -67,7 +70,7 @@ describe('HttpServer', () => {
 
         it('unauthorized', async () => {
             server = await startTestServer({ id: 'foo', keys: [MOCK_API_KEY] })
-            const response = await createRequest('foo', )
+            const response = await createRequest('foo')
             expect(response.status).toBe(401)
         })
 
@@ -86,7 +89,5 @@ describe('HttpServer', () => {
             })
             expect(endpoint3response.status).toBe(403)
         })
-
     })
-
 })

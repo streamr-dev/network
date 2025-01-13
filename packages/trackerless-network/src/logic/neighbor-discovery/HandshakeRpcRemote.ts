@@ -14,7 +14,6 @@ interface HandshakeResponse {
 export const INTERLEAVE_REQUEST_TIMEOUT = 10000
 
 export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
-
     async handshake(
         streamPartId: StreamPartID,
         neighborNodeIds: DhtAddress[],
@@ -25,8 +24,8 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
             streamPartId,
             requestId: v4(),
             neighborNodeIds: neighborNodeIds.map((id) => toDhtAddressRaw(id)),
-            concurrentHandshakeNodeId: (concurrentHandshakeNodeId !== undefined) ? toDhtAddressRaw(concurrentHandshakeNodeId) : undefined,
-            interleaveNodeId: (interleaveNodeId !== undefined) ? toDhtAddressRaw(interleaveNodeId) : undefined
+            concurrentHandshakeNodeId: concurrentHandshakeNodeId !== undefined ? toDhtAddressRaw(concurrentHandshakeNodeId) : undefined,
+            interleaveNodeId: interleaveNodeId !== undefined ? toDhtAddressRaw(interleaveNodeId) : undefined
         }
         try {
             const response = await this.getClient().handshake(request, this.formDhtRpcOptions())
@@ -61,6 +60,5 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
                 accepted: false
             }
         }
-        
     }
 }

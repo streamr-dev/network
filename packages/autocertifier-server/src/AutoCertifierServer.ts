@@ -23,7 +23,6 @@ export const validateEnvironmentVariable = (name: string): string | never => {
 }
 
 export class AutoCertifierServer implements RestInterface, ChallengeManager {
-
     private domainName?: string
     private dnsServer?: DnsServer
     private restServer?: RestServer
@@ -48,7 +47,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
         const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
         const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
-        const useRoute53 = (validateEnvironmentVariable('AUTOCERTIFIER_USE_ROUTE53') === 'true')
+        const useRoute53 = validateEnvironmentVariable('AUTOCERTIFIER_USE_ROUTE53') === 'true'
 
         if (useRoute53) {
             // these env variables are needed by route53 package, it will read the env variables internally
@@ -64,32 +63,14 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         await this.database.start()
         logger.info('database is running on file ' + databaseFilePath)
 
-        this.dnsServer = new DnsServer(
-            this.domainName,
-            ownHostName,
-            dnsServerPort,
-            ownIpAddress,
-            this.database
-        )
+        this.dnsServer = new DnsServer(this.domainName, ownHostName, dnsServerPort, ownIpAddress, this.database)
         await this.dnsServer.start()
         logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
 
-        this.certificateCreator = new CertificateCreator(
-            acmeDirectoryUrl,
-            hmacKid,
-            hmacKey,
-            accountPrivateKeyPath,
-            this
-        )
+        this.certificateCreator = new CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey, accountPrivateKeyPath, this)
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(
-            ownIpAddress,
-            restServerPort,
-            restServerCertPath,
-            restServerKeyPath,
-            this
-        )
+        this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCertPath, restServerKeyPath, this)
         await this.restServer.start()
     }
 
@@ -107,7 +88,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     ): Promise<CertifiedSubdomain> {
         logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
 
-        // this will throw if the client cannot answer the challenge of getting sessionId 
+        // this will throw if the client cannot answer the challenge of getting sessionId
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
 
         const subdomain = v4()
@@ -136,7 +117,6 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         sessionId: string,
         authenticationToken: string
     ): Promise<CertifiedSubdomain> {
-
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
         // This will throw if the authenticationToken is incorrect
@@ -164,10 +144,9 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         sessionId: string,
         authenticationToken: string
     ): Promise<void> {
-
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
-        // this will throw if the client cannot answer the challenge of getting sessionId 
+        // this will throw if the client cannot answer the challenge of getting sessionId
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName

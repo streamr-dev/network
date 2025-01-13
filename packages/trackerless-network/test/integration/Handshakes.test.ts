@@ -1,11 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport,
-    toNodeId
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
@@ -14,7 +7,6 @@ import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-n
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 
 describe('Handshakes', () => {
-
     const peerDescriptor1: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
@@ -84,12 +76,7 @@ describe('Handshakes', () => {
         leftNodeView = new NodeList(handshakerNodeId, 10)
         rightNodeView = new NodeList(handshakerNodeId, 10)
         nodeView = new NodeList(handshakerNodeId, 10)
-        nodeView.add(new ContentDeliveryRpcRemote(
-            peerDescriptor2,
-            peerDescriptor1,
-            rpcCommunicator2,
-            ContentDeliveryRpcClient
-        ))
+        nodeView.add(new ContentDeliveryRpcRemote(peerDescriptor2, peerDescriptor1, rpcCommunicator2, ContentDeliveryRpcClient))
         neighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor2,
@@ -103,7 +90,6 @@ describe('Handshakes', () => {
             maxNeighborCount: 4,
             ongoingHandshakes: new Set()
         })
-
     })
 
     afterEach(async () => {

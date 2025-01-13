@@ -12,13 +12,10 @@ const MOCK_METADATA = {
 }
 
 describe('PayloadFormat', () => {
-
     describe('plain', () => {
-
         const format = new PlainPayloadFormat()
 
         describe('createMessage', () => {
-
             it('happy path', () => {
                 expect(format.createMessage(JSON.stringify(MOCK_CONTENT))).toEqual({
                     content: MOCK_CONTENT,
@@ -26,47 +23,35 @@ describe('PayloadFormat', () => {
                 })
             })
 
-            it.each([
-                [''],
-                ['foobar'],
-                [undefined],
-                [[]]
-            ])('invalid: %p', (payload: any) => {
+            it.each([[''], ['foobar'], [undefined], [[]]])('invalid: %p', (payload: any) => {
                 expect(() => format.createMessage(payload)).toThrow()
             })
-
         })
 
         describe('createPayload', () => {
-
             it('happy path', () => {
                 expect(JSON.parse(format.createPayload(MOCK_CONTENT))).toEqual(MOCK_CONTENT)
             })
 
-            it.each([
-                [''],
-                ['foobar'],
-                [undefined],
-                [[]],
-            ])('invalid: %p', (content: any) => {
+            it.each([[''], ['foobar'], [undefined], [[]]])('invalid: %p', (content: any) => {
                 expect(() => format.createPayload(content)).toThrow()
             })
-
         })
-
     })
 
     describe('metadata', () => {
-
         const format = new MetadataPayloadFormat()
 
         describe('createMessage', () => {
-
             it('happy path', () => {
-                expect(format.createMessage(JSON.stringify({
-                    content: MOCK_CONTENT,
-                    metadata: MOCK_METADATA
-                }))).toEqual({
+                expect(
+                    format.createMessage(
+                        JSON.stringify({
+                            content: MOCK_CONTENT,
+                            metadata: MOCK_METADATA
+                        })
+                    )
+                ).toEqual({
                     content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
                 })
@@ -83,11 +68,9 @@ describe('PayloadFormat', () => {
             ])('invalid: %p', (payload: any) => {
                 expect(() => format.createMessage(payload)).toThrow()
             })
-
         })
 
         describe('createPayload', () => {
-
             it('happy path', () => {
                 expect(JSON.parse(format.createPayload(MOCK_CONTENT, MOCK_METADATA))).toEqual({
                     content: MOCK_CONTENT,
@@ -106,8 +89,6 @@ describe('PayloadFormat', () => {
             ])('invalid: %p %p', (content: any, metadata: any) => {
                 expect(() => format.createPayload(content, metadata)).toThrow()
             })
-
         })
-
     })
 })

@@ -1,9 +1,7 @@
 export class AbortError extends Error {
     readonly code = 'AbortError'
     constructor(customErrorContext?: string) {
-        super(customErrorContext === undefined
-            ? `aborted`
-            : `${customErrorContext} aborted`)
+        super(customErrorContext === undefined ? `aborted` : `${customErrorContext} aborted`)
     }
 }
 
@@ -16,11 +14,7 @@ export class AbortError extends Error {
  * logic in a `finally` or `catch` block in case of resources that need to be
  * freed up.
  */
-export function asAbortable<T>(
-    promise: Promise<T>,
-    abortSignal?: AbortSignal,
-    customErrorContext?: string
-): Promise<T> {
+export function asAbortable<T>(promise: Promise<T>, abortSignal?: AbortSignal, customErrorContext?: string): Promise<T> {
     if (abortSignal === undefined) {
         return promise
     }

@@ -46,19 +46,14 @@ describe('Subscriber Plugin', () => {
     })
 
     afterAll(async () => {
-        await Promise.allSettled([
-            client.destroy(),
-            plugin.stop()
-        ])
+        await Promise.allSettled([client.destroy(), plugin.stop()])
     })
 
     it('subscribes to the configured list of streams', async () => {
         const node = client.getNode()
         await until(async () => {
             const streams = (await node.getStreamParts()).map((stream) => stream.toString())
-            return streams.includes('stream-0#0')
-                && streams.includes('stream-0#1')
-                && streams.includes('stream-1#0')
+            return streams.includes('stream-0#0') && streams.includes('stream-0#1') && streams.includes('stream-1#0')
         })
         // If until succeeds we are okay
         expect(true).toEqual(true)

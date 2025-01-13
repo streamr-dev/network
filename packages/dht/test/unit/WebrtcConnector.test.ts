@@ -4,22 +4,19 @@ import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('WebrtcConnector', () => {
-
     let connector: WebrtcConnector
 
     beforeEach(() => {
-        
         connector = new WebrtcConnector({
-            transport: new MockTransport() 
-        } as any) 
+            transport: new MockTransport()
+        } as any)
     })
 
     afterEach(() => {
         connector.stop()
     })
-    
-    describe('Connect', () => {
 
+    describe('Connect', () => {
         it('Returns existing connecting connection', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor())
             const remotePeerDescriptor = createMockPeerDescriptor()
@@ -50,7 +47,5 @@ describe('WebrtcConnector', () => {
             firstConnection.close(false)
             secondConnection.close(false)
         })
-
     })
-
 })

@@ -9,18 +9,12 @@ import { toNodeId } from '../../identifiers'
 const logger = new Logger(module)
 
 export class SimulatorConnection extends Connection implements IConnection {
-
     private stopped = false
     public localPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
     private simulator: Simulator
 
-    constructor(
-        localPeerDescriptor: PeerDescriptor,
-        targetPeerDescriptor: PeerDescriptor,
-        connectionType: ConnectionType,
-        simulator: Simulator
-    ) {
+    constructor(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor, connectionType: ConnectionType, simulator: Simulator) {
         super(connectionType)
 
         this.localPeerDescriptor = localPeerDescriptor
@@ -41,9 +35,7 @@ export class SimulatorConnection extends Connection implements IConnection {
     public send(data: Uint8Array): void {
         logger.trace('send()')
         if (!this.stopped) {
-
             this.simulator.send(this, data)
-
         } else {
             const localNodeId = toNodeId(this.localPeerDescriptor)
             const targetNodeId = toNodeId(this.targetPeerDescriptor)
@@ -70,7 +62,6 @@ export class SimulatorConnection extends Connection implements IConnection {
                 logger.trace(localNodeId + ', ' + targetNodeId + ' calling this.doDisconnect')
                 this.doDisconnect(gracefulLeave)
             }
-
         } else {
             logger.trace(localNodeId + ', ' + targetNodeId + ' close() tried to close a stopped connection')
         }
@@ -118,7 +109,7 @@ export class SimulatorConnection extends Connection implements IConnection {
         if (!this.stopped) {
             logger.trace(localNodeId + ' destroy()')
             this.removeAllListeners()
-            this.close(false).catch((_e) => { })
+            this.close(false).catch((_e) => {})
         } else {
             logger.trace(localNodeId + ' tried to call destroy() a stopped connection')
         }

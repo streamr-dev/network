@@ -1,8 +1,5 @@
 import { Logger } from '@streamr/utils'
-import {
-    ConnectivityResponse,
-    PeerDescriptor
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { Simulator } from './simulator/Simulator'
@@ -50,7 +47,6 @@ export interface DefaultConnectorFacadeOptions {
 }
 
 export class DefaultConnectorFacade implements ConnectorFacade {
-
     private readonly options: DefaultConnectorFacadeOptions
     private localPeerDescriptor?: PeerDescriptor
     private websocketConnectorRpcCommunicator?: ListeningRpcCommunicator
@@ -68,10 +64,9 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
         this.websocketConnectorRpcCommunicator = new ListeningRpcCommunicator(
-            WebsocketClientConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, 
-            this.options.transport, 
-            { rpcRequestTimeout: 15000 }  // TODO use options option or named constant?
-        
+            WebsocketClientConnector.WEBSOCKET_CONNECTOR_SERVICE_ID,
+            this.options.transport,
+            { rpcRequestTimeout: 15000 } // TODO use options option or named constant?
         )
         const webSocketClientConnectorOptions = {
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
@@ -112,9 +107,9 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         await this.websocketServerConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the options. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
-        // DhtNode in each call. 
+        // DhtNode in each call.
         // LocalPeerDescriptor could be stored in one place and passed from there to the connectors
-        const temporarilySelfSigned = (!this.options.tlsCertificate && this.options.websocketServerEnableTls === true)
+        const temporarilySelfSigned = !this.options.tlsCertificate && this.options.websocketServerEnableTls === true
         const connectivityResponse = await this.websocketServerConnector.checkConnectivity(temporarilySelfSigned)
         const localPeerDescriptor = await this.options.createLocalPeerDescriptor(connectivityResponse)
         this.setLocalPeerDescriptor(localPeerDescriptor)
@@ -148,7 +143,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.websocketClientConnector!.setLocalPeerDescriptor(peerDescriptor)
         this.webrtcConnector!.setLocalPeerDescriptor(peerDescriptor)
     }
-    
+
     async restartWebsocketServerConnector(options: WebsocketServerConnectorOptions): Promise<void> {
         await this.websocketServerConnector!.destroy()
         this.websocketServerConnector = new WebsocketServerConnector(options)
@@ -181,7 +176,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 }
 
 export class SimulatorConnectorFacade implements ConnectorFacade {
-
     private readonly localPeerDescriptor: PeerDescriptor
     private simulatorConnector?: SimulatorConnector
     private simulator: Simulator
@@ -191,15 +185,9 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(
-        onNewConnection: (connection: PendingConnection) => boolean,
-    ): Promise<void> {
+    async start(onNewConnection: (connection: PendingConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
-        this.simulatorConnector = new SimulatorConnector(
-            this.localPeerDescriptor,
-            this.simulator,
-            onNewConnection
-        )
+        this.simulatorConnector = new SimulatorConnector(this.localPeerDescriptor, this.simulator, onNewConnection)
         this.simulator.addConnector(this.simulatorConnector)
     }
 

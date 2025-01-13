@@ -85,9 +85,7 @@ export class SetMembershipSynchronizer<E extends string> {
             return EMPTY_DIFF
         }
 
-        const nonStaleElements = [...elements].filter((element) => (
-            sequenceNo > (this.lastSequenceNoByElement.get(element) ?? 0)
-        ))
+        const nonStaleElements = [...elements].filter((element) => sequenceNo > (this.lastSequenceNoByElement.get(element) ?? 0))
 
         nonStaleElements.forEach((element) => {
             this.lastSequenceNoByElement.set(element, sequenceNo)
@@ -100,7 +98,7 @@ export class SetMembershipSynchronizer<E extends string> {
                     const didStateChange = !this.state.has(element)
                     this.state.add(element)
                     return didStateChange
-                }),
+                })
             }
         } else {
             return {

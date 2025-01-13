@@ -6,7 +6,6 @@
  *    (we could implement a Multiset class if we need a different kind of duplication handling)
  **/
 export class Multimap<K, V> {
-
     private readonly delegatee: Map<K, V[]> = new Map()
 
     get(key: K): V[] {

@@ -17,7 +17,6 @@ const createApp = (): express.Application => {
 }
 
 describe('StorageConfigEndpoints', () => {
-
     it('stream in storage config', async () => {
         const app = createApp()
         await createRequest('existing', 12, app).expect(200)

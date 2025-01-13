@@ -15,7 +15,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 
 describe('Resends', () => {
-
     let stream: Stream
     let subscriber: StreamrClient
     let messageFactory: MessageFactory
@@ -74,10 +73,7 @@ describe('Resends', () => {
         storageNode.storeMessage(allMessages[2])
         const messageStream = await subscriber.resend(stream.id, { last: 2 })
         const receivedMessages = await collect(messageStream)
-        expect(receivedMessages.map((msg) => msg.content)).toEqual([
-            { foo: 1 },
-            { foo: 3 }
-        ])
+        expect(receivedMessages.map((msg) => msg.content)).toEqual([{ foo: 1 }, { foo: 3 }])
     })
 
     it('multiple storage nodes', async () => {
@@ -99,11 +95,6 @@ describe('Resends', () => {
         storageNode2.storeMessage(allMessages[3])
         const messageStream = await subscriber.resend(stream.id, { last: 4 })
         const receivedMessages = await collect(messageStream)
-        expect(receivedMessages.map((msg) => msg.content)).toEqual([
-            { foo: 1 },
-            { foo: 2 },
-            { foo: 3 },
-            { foo: 4 }
-        ])
+        expect(receivedMessages.map((msg) => msg.content)).toEqual([{ foo: 1 }, { foo: 2 }, { foo: 3 }, { foo: 4 }])
     })
 })

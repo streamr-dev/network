@@ -5,7 +5,6 @@ import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntr
 import { toDhtAddress } from '../../src/identifiers'
 
 describe('Storing data in DHT with two peers', () => {
-
     let entryPoint: DhtNode
     let node1: DhtNode
     let node2: DhtNode
@@ -24,10 +23,7 @@ describe('Storing data in DHT with two peers', () => {
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
         node1.joinDht([entryPoint.getLocalPeerDescriptor()]).catch(() => {})
         node2.joinDht([entryPoint.getLocalPeerDescriptor()]).catch(() => {})
-        await Promise.all([
-            node1.waitForNetworkConnectivity(),
-            node2.waitForNetworkConnectivity()
-        ])
+        await Promise.all([node1.waitForNetworkConnectivity(), node2.waitForNetworkConnectivity()])
     })
 
     afterEach(async () => {
@@ -40,10 +36,10 @@ describe('Storing data in DHT with two peers', () => {
     it('Node can store on three peer DHT', async () => {
         const storedData1 = createMockDataEntry()
         const storedData2 = createMockDataEntry()
-        // Here we effectively test that fetching "null" data doesn't take too long. A test timeout here indicates an issue. 
+        // Here we effectively test that fetching "null" data doesn't take too long. A test timeout here indicates an issue.
         await node1.fetchDataFromDht(toDhtAddress(storedData1.key))
         await node2.fetchDataFromDht(toDhtAddress(storedData1.key))
-        
+
         await node1.storeDataToDht(toDhtAddress(storedData1.key), storedData1.data!)
         await node2.storeDataToDht(toDhtAddress(storedData1.key), storedData1.data!)
         await entryPoint.storeDataToDht(toDhtAddress(storedData2.key), storedData2.data!)

@@ -2,7 +2,6 @@ import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, toNodeId } from '../../identifiers'
 
 export class Contact {
-
     private peerDescriptor: PeerDescriptor
 
     constructor(peerDescriptor: PeerDescriptor) {

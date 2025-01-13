@@ -1,8 +1,7 @@
 import { applyPluginClientConfigs } from '../../../src/helpers/applyPluginClientConfigs'
 
 describe('applyPluginClientConfigs', () => {
-
-    const applyConfig = (item: { path: string, value: any }, mutatedClientConfig: any) => {
+    const applyConfig = (item: { path: string; value: any }, mutatedClientConfig: any) => {
         const plugin = {
             getClientConfig: () => [item],
             name: 'mock'
@@ -35,7 +34,6 @@ describe('applyPluginClientConfigs', () => {
     })
 
     describe('non-equal existing value', () => {
-
         it('primitive', () => {
             const config = {
                 foo: {
@@ -68,7 +66,7 @@ describe('applyPluginClientConfigs', () => {
                 }
             }
             expect(() => {
-                applyConfig({ path: 'foo.bar', value: [ 'dolor', 'sit' ] }, config)
+                applyConfig({ path: 'foo.bar', value: ['dolor', 'sit'] }, config)
             }).toThrow('Plugin mock doesn\'t support client config value "["lorem","ipsum"]" in foo.bar')
         })
     })

@@ -39,7 +39,6 @@ export class TestServer extends EventEmitter<TestServerEvents> {
     private static dbData?: Uint8Array
 
     private static async prefetchData(): Promise<void> {
-
         TestServer.hashData = await fetchFileToMemory(hashUrl)
 
         // check if db data is already prefetched to CACHE_PATH
@@ -103,12 +102,13 @@ export class TestServer extends EventEmitter<TestServerEvents> {
             app.get(dbFileName, (_req, res) => {
                 if (kiloBytesPerSecond !== undefined) {
                     res.setHeader('Content-Type', 'application/gzip')
-                    this.writeDataKilobytesPerSecond(res, TestServer.dbData!,
-                        kiloBytesPerSecond).then(() => {
-                        res.end()
-                    }).catch((_err) => {
-                        res.end()
-                    })
+                    this.writeDataKilobytesPerSecond(res, TestServer.dbData!, kiloBytesPerSecond)
+                        .then(() => {
+                            res.end()
+                        })
+                        .catch((_err) => {
+                            res.end()
+                        })
                 } else {
                     // send data without throttling from file
                     const readable = bufferToStream(Buffer.from(TestServer.dbData!))
@@ -132,7 +132,7 @@ export class TestServer extends EventEmitter<TestServerEvents> {
 
             this.server = app.listen(port, '127.0.0.1', () => {
                 logger.info('Test server is running on port ' + port)
-                
+
                 // The server is not really ready after listen callback, possible bug in express
                 setTimeout(() => {
                     resolve()

@@ -15,17 +15,22 @@ export class StreamPartReconnect {
 
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {
         this.abortController = new AbortController()
-        await scheduleAtInterval(async () => {
-            const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
-            await this.discoveryLayerNode.joinDht(entryPoints)
-            // Is is necessary to store the node as an entry point here?
-            if (!this.peerDescriptorStoreManager.isLocalNodeStored() && entryPoints.length < MAX_NODE_COUNT) {
-                await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
-            }
-            if (this.discoveryLayerNode.getNeighborCount() > 0) {
-                this.abortController!.abort()
-            }
-        }, timeout, true, this.abortController.signal)
+        await scheduleAtInterval(
+            async () => {
+                const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
+                await this.discoveryLayerNode.joinDht(entryPoints)
+                // Is is necessary to store the node as an entry point here?
+                if (!this.peerDescriptorStoreManager.isLocalNodeStored() && entryPoints.length < MAX_NODE_COUNT) {
+                    await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
+                }
+                if (this.discoveryLayerNode.getNeighborCount() > 0) {
+                    this.abortController!.abort()
+                }
+            },
+            timeout,
+            true,
+            this.abortController.signal
+        )
     }
 
     isRunning(): boolean {

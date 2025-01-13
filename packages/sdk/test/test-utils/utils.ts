@@ -60,15 +60,15 @@ export const uid = (prefix?: string): string => counterId(`p${process.pid}${pref
 
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
-    const moduleFilename = (module.filename ?? module.id) // browser has no filename
+    const moduleFilename = module.filename ?? module.id // browser has no filename
     const groups = moduleFilename.match(fileNamePattern)
-    return (groups !== null) ? groups[1] : moduleFilename
+    return groups !== null ? groups[1] : moduleFilename
 }
 
 const randomTestRunId = process.pid ?? crypto.randomBytes(4).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
-    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
+    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${suffix !== undefined ? '-' + suffix : ''}`, '-')
 }
 
 export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
@@ -82,7 +82,7 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
 export const getCreateClient = (
     defaultOpts = {},
     defaultParentContainer?: DependencyContainer
-): (opts?: StreamrClientConfig, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
+): ((opts?: StreamrClientConfig, parentContainer?: DependencyContainer) => Promise<StreamrClient>) => {
     const addAfter = addAfterFn()
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
@@ -92,20 +92,25 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const client = new StreamrClient(merge<StreamrClientConfig>(
-            {
-                environment: 'dev2',
-                auth: {
-                    privateKey: key,
-                }
-            },
-            defaultOpts,
-            opts,
-        ), defaultParentContainer ?? parentContainer)
+        const client = new StreamrClient(
+            merge<StreamrClientConfig>(
+                {
+                    environment: 'dev2',
+                    auth: {
+                        privateKey: key
+                    }
+                },
+                defaultOpts,
+                opts
+            ),
+            defaultParentContainer ?? parentContainer
+        )
 
         addAfter(async () => {
             await wait(0)
-            if (!client) { return }
+            if (!client) {
+                return
+            }
             logger.debug(`disconnecting after test >> (clientId=${client.id})`)
             await client.destroy()
             logger.debug(`disconnecting after test << (clientId=${client.id})`)
@@ -122,21 +127,17 @@ type CreateMockMessageOptions = {
     timestamp?: number
     encryptionKey?: GroupKey
     nextEncryptionKey?: GroupKey
-} & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
+} & ({ streamPartId: StreamPartID; stream?: never } | { stream: Stream; streamPartId?: never })
 
-export const createMockMessage = async (
-    opts: CreateMockMessageOptions
-): Promise<StreamMessage> => {
-    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
-        opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
-    )
+export const createMockMessage = async (opts: CreateMockMessageOptions): Promise<StreamMessage> => {
+    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(opts.streamPartId ?? (await opts.stream.getStreamParts())[0])
     const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
         authentication,
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
-            isPublicStream: (opts.encryptionKey === undefined),
+            isPublicStream: opts.encryptionKey === undefined,
             isStreamPublisher: true
         }),
         groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
@@ -145,10 +146,14 @@ export const createMockMessage = async (
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
-    return factory.createMessage(plainContent, {
-        timestamp: opts.timestamp ?? Date.now(),
-        msgChainId: opts.msgChainId
-    }, partition)
+    return factory.createMessage(
+        plainContent,
+        {
+            timestamp: opts.timestamp ?? Date.now(),
+            msgChainId: opts.msgChainId
+        },
+        partition
+    )
 }
 
 // When binary contents are supported we don't need this anymore.
@@ -160,19 +165,13 @@ export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
-        new PersistenceManager(
-            authentication,
-            new DestroySignal(),
-            loggerFactory
-        ),
+        new PersistenceManager(authentication, new DestroySignal(), loggerFactory),
         new StreamrClientEventEmitter(),
         loggerFactory
     )
 }
 
-export const startPublisherKeyExchangeSubscription = async (
-    publisherClient: StreamrClient,
-    streamPartId: StreamPartID): Promise<void> => {
+export const startPublisherKeyExchangeSubscription = async (publisherClient: StreamrClient, streamPartId: StreamPartID): Promise<void> => {
     const node = publisherClient.getNode()
     await node.join(streamPartId)
 }
@@ -228,11 +227,7 @@ export const createGroupKeyManager = (
 }
 
 export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = await GroupKeyQueue.createInstance(
-        undefined as any,
-        authentication,
-        createGroupKeyManager(undefined, authentication)
-    )
+    const queue = await GroupKeyQueue.createInstance(undefined as any, authentication, createGroupKeyManager(undefined, authentication))
     if (current !== undefined) {
         await queue.rekey(current)
     }
@@ -243,9 +238,15 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 }
 
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
-    await until(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
-        return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
-    })
+    await until(
+        () => mockFunction.mock.calls.length >= n,
+        1000,
+        10,
+        undefined,
+        () => {
+            return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
+        }
+    )
 }
 
 export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
@@ -268,7 +269,7 @@ export const createTestClient = (privateKey: string, wsPort?: number, acceptProx
 export const startTestServer = async (
     endpoint: string,
     onRequest: (req: Request, res: Response) => Promise<void>
-): Promise<{ url: string, stop: () => Promise<void> }> => {
+): Promise<{ url: string; stop: () => Promise<void> }> => {
     const app = express()
     app.get(endpoint, async (req, res) => {
         await onRequest(req, res)
@@ -286,16 +287,16 @@ export const startTestServer = async (
 }
 
 export const startFailingStorageNode = async (error: Error, environment: FakeEnvironment): Promise<FakeStorageNode> => {
-    const node = new class extends FakeStorageNode {
+    const node = new (class extends FakeStorageNode {
         // eslint-disable-next-line class-methods-use-this, require-yield
-        override async* getLast(): AsyncIterable<StreamMessage> {
+        override async *getLast(): AsyncIterable<StreamMessage> {
             throw error
         }
         // eslint-disable-next-line class-methods-use-this, require-yield
-        override async* getRange(): AsyncIterable<StreamMessage> {
+        override async *getRange(): AsyncIterable<StreamMessage> {
             throw error
         }
-    }(environment)
+    })(environment)
     await node.start()
     return node
 }
@@ -318,7 +319,7 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
     })
 }
 
-const ETHEREUM_FUNCTION_SELECTOR_LENGTH = 10  // 0x + 4 bytes
+const ETHEREUM_FUNCTION_SELECTOR_LENGTH = 10 // 0x + 4 bytes
 
 export const formEthereumFunctionSelector = (methodSignature: string): string => {
     return id(methodSignature).substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)

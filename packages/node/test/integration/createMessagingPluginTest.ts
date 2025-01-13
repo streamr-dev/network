@@ -49,9 +49,7 @@ export const createMessagingPluginTest = <T>(
     testModule: NodeJS.Module,
     pluginConfig: any = {}
 ): any => {
-
     describe(`Plugin: ${pluginName}`, () => {
-
         let stream: Stream
         let streamrClient: StreamrClient
         let pluginClient: T
@@ -75,15 +73,13 @@ export const createMessagingPluginTest = <T>(
                             }
                         },
                         pluginConfig
-                    )            
+                    )
                 }
             })
         })
 
         afterAll(async () => {
-            await Promise.allSettled([
-                broker.stop(),
-            ])
+            await Promise.allSettled([broker.stop()])
         })
 
         beforeEach(async () => {

@@ -9,13 +9,11 @@ const WEBSOCKET_PORT = 12404
 const STREAM_ID = 'stream'
 
 describe('ping', () => {
-
     describe('when client sends ping, server responds with pong', () => {
-
         let server: WebsocketServer
         let client: WebSocket
         let streamrClient: StreamrClient
-        
+
         beforeAll(async () => {
             streamrClient = {
                 publish: jest.fn()
@@ -23,7 +21,7 @@ describe('ping', () => {
             server = new WebsocketServer(streamrClient, 0, 0)
             await server.start(WEBSOCKET_PORT, undefined as any)
         })
-    
+
         afterAll(async () => {
             await server.stop()
         })
@@ -63,7 +61,6 @@ describe('ping', () => {
     })
 
     describe('server sends protocol pings', () => {
-
         let server: WebsocketServer
 
         const startServer = async (sendInterval: number, disconnectTimeout: number) => {
@@ -73,7 +70,7 @@ describe('ping', () => {
             server = new WebsocketServer(streamrClient as any, sendInterval, disconnectTimeout)
             await server.start(WEBSOCKET_PORT, new PlainPayloadFormat())
         }
-    
+
         afterEach(async () => {
             await server.stop()
         })

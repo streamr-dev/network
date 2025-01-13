@@ -12,7 +12,7 @@ export interface StreamrClientEvents {
     /** @internal */
     encryptionKeyStoredToLocalStore: (keyId: string) => void
     /** @internal */
-    contractTransactionConfirmed: (payload: { methodName: string, receipt: ContractTransactionReceipt | null }) => void
+    contractTransactionConfirmed: (payload: { methodName: string; receipt: ContractTransactionReceipt | null }) => void
 }
 
 // events for internal communication between StreamrClient components
@@ -22,5 +22,4 @@ export interface InternalEvents {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents & InternalEvents> {
-}
+export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents & InternalEvents> {}

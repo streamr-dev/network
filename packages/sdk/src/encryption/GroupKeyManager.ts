@@ -13,7 +13,6 @@ import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
-
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly litProtocolFacade: LitProtocolFacade
     private readonly localGroupKeyStore: LocalGroupKeyStore
@@ -81,7 +80,8 @@ export class GroupKeyManager {
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: UserID, streamId: StreamID): Promise<GroupKey> {
-        if (publisherId !== (await this.authentication.getUserId())) { // TODO: unit test?
+        if (publisherId !== (await this.authentication.getUserId())) {
+            // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {

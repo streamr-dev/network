@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-const { GitRevisionPlugin } =  require('git-revision-webpack-plugin')
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
 
 const pkg = require('./package.json')
 
@@ -11,13 +11,17 @@ module.exports = async () => {
         const [GIT_VERSION, GIT_COMMITHASH, GIT_BRANCH] = await Promise.all([
             gitRevisionPlugin.version(),
             gitRevisionPlugin.commithash(),
-            gitRevisionPlugin.branch(),
+            gitRevisionPlugin.branch()
         ])
-        Object.assign(process.env, {
-            version: pkg.version,
-            GIT_VERSION,
-            GIT_COMMITHASH,
-            GIT_BRANCH,
-        }, process.env) // don't override whatever is in process.env
+        Object.assign(
+            process.env,
+            {
+                version: pkg.version,
+                GIT_VERSION,
+                GIT_COMMITHASH,
+                GIT_BRANCH
+            },
+            process.env
+        ) // don't override whatever is in process.env
     }
 }

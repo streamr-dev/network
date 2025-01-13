@@ -7,7 +7,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 
 describe('client destroy', () => {
-
     let client: StreamrClient
     let stream: Stream
     let environment: FakeEnvironment

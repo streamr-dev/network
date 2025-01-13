@@ -50,21 +50,19 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
 }
 
 function formChainOfMessages(publisherId: UserID): MessageInfo[] {
-    const chainOfMessages: MessageInfo[] = [{
-        publisherId,
-        timestamp: 1,
-        delivery: Delivery.REAL_TIME
-    }]
+    const chainOfMessages: MessageInfo[] = [
+        {
+            publisherId,
+            timestamp: 1,
+            delivery: Delivery.REAL_TIME
+        }
+    ]
     for (let i = 2; i < MESSAGES_PER_PUBLISHER; i++) {
         chainOfMessages.push({
             publisherId,
             timestamp: i,
-            delivery: Math.random() < UNAVAILABLE_RATE
-                ? Delivery.UNAVAILABLE
-                : (Math.random() < GAP_FILLED_RATE
-                    ? Delivery.GAP_FILL
-                    : Delivery.REAL_TIME
-                )
+            delivery:
+                Math.random() < UNAVAILABLE_RATE ? Delivery.UNAVAILABLE : Math.random() < GAP_FILLED_RATE ? Delivery.GAP_FILL : Delivery.REAL_TIME
         })
     }
     chainOfMessages.push({
@@ -104,102 +102,112 @@ function calculateUnfillableGapCount(messageInfosInOrder: MessageInfo[]): number
 }
 
 describe.skip('OrderMessages2', () => {
+    it(
+        'randomized "worst-case" scenario with unavailable messages and gap fill needs (full strategy)',
+        async () => {
+            const groundTruthMessages: Record<string, MessageInfo[]> = {}
+            const actual: Record<string, number[]> = {}
+            const expected: Record<string, number[]> = {}
 
-    it('randomized "worst-case" scenario with unavailable messages and gap fill needs (full strategy)', async () => {
-        const groundTruthMessages: Record<string, MessageInfo[]> = {}
-        const actual: Record<string, number[]> = {}
-        const expected: Record<string, number[]> = {}
-
-        for (const publisherId of PUBLISHER_IDS) {
-            groundTruthMessages[publisherId] = formChainOfMessages(publisherId)
-            actual[publisherId] = []
-            expected[publisherId] = groundTruthMessages[publisherId]
-                .filter(({ delivery }) => delivery !== Delivery.UNAVAILABLE)
-                .map(({ timestamp }) => timestamp)
-        }
-
-        const totalUnfillableGaps = PUBLISHER_IDS.reduce((sum, publisherId) => (
-            sum + calculateUnfillableGapCount(groundTruthMessages[publisherId])
-        ), 0)
-
-        const inOrderHandler = (msg: StreamMessage) => {
-            actual[msg.getPublisherId()].push(msg.getTimestamp())
-        }
-
-        const gapHandler = async (from: number, to: number, publisherId: UserID): Promise<PushPipeline<StreamMessage>> => {
-            const pipeline = new PushPipeline<StreamMessage>
-            const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
-                return delivery === Delivery.GAP_FILL && (timestamp > from && timestamp <= to)
-            })
-            for (const msgInfo of requestedMessages) {
-                await wait(Math.random() * MAX_GAP_FILL_MESSAGE_LATENCY)
-                const msg = createMsg(msgInfo)
-                pipeline.push(msg)
-            }
-            pipeline.endWrite()
-            return pipeline
-        }
-
-        const onUnfillableGap = jest.fn()
-        const orderMessages = new OrderMessages(
-            StreamPartIDUtils.parse('stream#0'),
-            async () => [randomEthereumAddress()],
-            onUnfillableGap,
-            {
-                resend: (
-                    _: StreamPartID,
-                    options: ChangeFieldType<ResendRangeOptions, 'publisherId', UserID>
-                ): Promise<PushPipeline<StreamMessage>> => {
-                    return gapHandler(options.from.timestamp as number, options.to.timestamp as number, options.publisherId)
-                }
-            } as any,
-            {
-                gapFill: true,
-                gapFillStrategy: 'full',
-                gapFillTimeout: PROPAGATION_TIMEOUT,
-                retryResendAfter: RESEND_TIMEOUT,
-                maxGapRequests: MAX_GAP_REQUESTS
-            }
-        )
-
-        setImmediate(async () => {
-            for await (const msg of orderMessages) {
-                inOrderHandler(msg)
-            }
-        })
-
-        const producer = async function* (): AsyncGenerator<StreamMessage> {
-            // supply 1st message of chain always to set gap detection to work from 1st message onwards
             for (const publisherId of PUBLISHER_IDS) {
-                yield createMsg(groundTruthMessages[publisherId][0])
+                groundTruthMessages[publisherId] = formChainOfMessages(publisherId)
+                actual[publisherId] = []
+                expected[publisherId] = groundTruthMessages[publisherId]
+                    .filter(({ delivery }) => delivery !== Delivery.UNAVAILABLE)
+                    .map(({ timestamp }) => timestamp)
             }
-            const realTimeMessages = Object.values(groundTruthMessages)
-                .flat()
-                .filter(({ delivery }) => delivery === Delivery.REAL_TIME)
-            const shuffledWithDuplicates = duplicateElements(shuffle(realTimeMessages), NUM_OF_DUPLICATE_MESSAGES)
-            const realTimeStart = Date.now()
-            for (const chunkOfMsgInfos of intoChunks(shuffledWithDuplicates, 10)) {
-                await wait(0)
-                for (const msgInfo of chunkOfMsgInfos) {
-                    yield createMsg(msgInfo)
-                }
-            }
-            const realTimeEnd = Date.now()
-            const realTimeTook = realTimeEnd - realTimeStart
-            const firstGapFillCouldFailAfter = PROPAGATION_TIMEOUT + RESEND_TIMEOUT * MAX_GAP_REQUESTS
-            if (realTimeTook > firstGapFillCouldFailAfter) {
-                // The time it takes to push all real-time messages should not exceed the time the first gap fill could fail
-                // due to the message arriving later on...
-                throw new Error(`took too long (${realTimeTook} ms > ${firstGapFillCouldFailAfter} ms) to ` +
-                'push real-time messages, consider adding more timeout...')
-            }
-        }()
-        await orderMessages.addMessages(producer)
 
-        await until(() => PUBLISHER_IDS.every((publisherId) => {
-            return expected[publisherId].length === actual[publisherId].length
-        }), 60 * 1000)
-        expect(onUnfillableGap).toHaveBeenCalledTimes(totalUnfillableGaps)
-        expect(actual).toStrictEqual(expected)
-    }, 120 * 1000)
+            const totalUnfillableGaps = PUBLISHER_IDS.reduce(
+                (sum, publisherId) => sum + calculateUnfillableGapCount(groundTruthMessages[publisherId]),
+                0
+            )
+
+            const inOrderHandler = (msg: StreamMessage) => {
+                actual[msg.getPublisherId()].push(msg.getTimestamp())
+            }
+
+            const gapHandler = async (from: number, to: number, publisherId: UserID): Promise<PushPipeline<StreamMessage>> => {
+                const pipeline = new PushPipeline<StreamMessage>()
+                const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
+                    return delivery === Delivery.GAP_FILL && timestamp > from && timestamp <= to
+                })
+                for (const msgInfo of requestedMessages) {
+                    await wait(Math.random() * MAX_GAP_FILL_MESSAGE_LATENCY)
+                    const msg = createMsg(msgInfo)
+                    pipeline.push(msg)
+                }
+                pipeline.endWrite()
+                return pipeline
+            }
+
+            const onUnfillableGap = jest.fn()
+            const orderMessages = new OrderMessages(
+                StreamPartIDUtils.parse('stream#0'),
+                async () => [randomEthereumAddress()],
+                onUnfillableGap,
+                {
+                    resend: (
+                        _: StreamPartID,
+                        options: ChangeFieldType<ResendRangeOptions, 'publisherId', UserID>
+                    ): Promise<PushPipeline<StreamMessage>> => {
+                        return gapHandler(options.from.timestamp as number, options.to.timestamp as number, options.publisherId)
+                    }
+                } as any,
+                {
+                    gapFill: true,
+                    gapFillStrategy: 'full',
+                    gapFillTimeout: PROPAGATION_TIMEOUT,
+                    retryResendAfter: RESEND_TIMEOUT,
+                    maxGapRequests: MAX_GAP_REQUESTS
+                }
+            )
+
+            setImmediate(async () => {
+                for await (const msg of orderMessages) {
+                    inOrderHandler(msg)
+                }
+            })
+
+            const producer = (async function* (): AsyncGenerator<StreamMessage> {
+                // supply 1st message of chain always to set gap detection to work from 1st message onwards
+                for (const publisherId of PUBLISHER_IDS) {
+                    yield createMsg(groundTruthMessages[publisherId][0])
+                }
+                const realTimeMessages = Object.values(groundTruthMessages)
+                    .flat()
+                    .filter(({ delivery }) => delivery === Delivery.REAL_TIME)
+                const shuffledWithDuplicates = duplicateElements(shuffle(realTimeMessages), NUM_OF_DUPLICATE_MESSAGES)
+                const realTimeStart = Date.now()
+                for (const chunkOfMsgInfos of intoChunks(shuffledWithDuplicates, 10)) {
+                    await wait(0)
+                    for (const msgInfo of chunkOfMsgInfos) {
+                        yield createMsg(msgInfo)
+                    }
+                }
+                const realTimeEnd = Date.now()
+                const realTimeTook = realTimeEnd - realTimeStart
+                const firstGapFillCouldFailAfter = PROPAGATION_TIMEOUT + RESEND_TIMEOUT * MAX_GAP_REQUESTS
+                if (realTimeTook > firstGapFillCouldFailAfter) {
+                    // The time it takes to push all real-time messages should not exceed the time the first gap fill could fail
+                    // due to the message arriving later on...
+                    throw new Error(
+                        `took too long (${realTimeTook} ms > ${firstGapFillCouldFailAfter} ms) to ` +
+                            'push real-time messages, consider adding more timeout...'
+                    )
+                }
+            })()
+            await orderMessages.addMessages(producer)
+
+            await until(
+                () =>
+                    PUBLISHER_IDS.every((publisherId) => {
+                        return expected[publisherId].length === actual[publisherId].length
+                    }),
+                60 * 1000
+            )
+            expect(onUnfillableGap).toHaveBeenCalledTimes(totalUnfillableGaps)
+            expect(actual).toStrictEqual(expected)
+        },
+        120 * 1000
+    )
 })

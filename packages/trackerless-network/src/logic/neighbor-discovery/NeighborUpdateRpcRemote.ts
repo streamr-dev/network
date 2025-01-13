@@ -11,7 +11,6 @@ interface UpdateNeighborsResponse {
 }
 
 export class NeighborUpdateRpcRemote extends RpcRemote<NeighborUpdateRpcClient> {
-
     async updateNeighbors(streamPartId: StreamPartID, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
             streamPartId,

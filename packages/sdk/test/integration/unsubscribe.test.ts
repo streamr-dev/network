@@ -13,7 +13,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage, createTestStream } from '../test-utils/utils'
 
 describe('unsubscribe', () => {
-
     let environment: FakeEnvironment
     let client: StreamrClient
     let wallet: Wallet

@@ -8,7 +8,6 @@ import { mockLoggerFactory } from '../test-utils/utils'
 const NAMESPACE = 'MockTable'
 
 describe('ServerPersistence', () => {
-
     let persistence: ServerPersistence
 
     beforeEach(async () => {
@@ -56,17 +55,19 @@ describe('ServerPersistence', () => {
     it.skip('concurrency', async () => {
         const instanceCount = 10
         const ownerId = randomUserId()
-        const values = await Promise.all(range(instanceCount).map(async (i: number) => {
-            const instance = await ServerPersistence.createInstance({
-                loggerFactory: mockLoggerFactory(),
-                ownerId,
-                namespaces: ['EncryptionKeys'],
-                migrationsPath: join(__dirname, '../../src/encryption/migrations')
+        const values = await Promise.all(
+            range(instanceCount).map(async (i: number) => {
+                const instance = await ServerPersistence.createInstance({
+                    loggerFactory: mockLoggerFactory(),
+                    ownerId,
+                    namespaces: ['EncryptionKeys'],
+                    migrationsPath: join(__dirname, '../../src/encryption/migrations')
+                })
+                await instance.set('key', `value${i}`, 'EncryptionKeys')
+                const value = await instance.get('key', 'EncryptionKeys')
+                return value
             })
-            await instance.set('key', `value${i}`, 'EncryptionKeys')
-            const value = await instance.get('key', 'EncryptionKeys')
-            return value
-        }))
+        )
         expect(values).toEqual(range(instanceCount).map((i: number) => `value${i}`))
     })
 })

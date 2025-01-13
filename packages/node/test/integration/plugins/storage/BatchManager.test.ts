@@ -12,12 +12,7 @@ const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-function buildRecord(
-    streamId: string,
-    partition: number,
-    timestamp: number,
-    sequenceNo: number
-): InsertRecord {
+function buildRecord(streamId: string, partition: number, timestamp: number, sequenceNo: number): InsertRecord {
     return {
         streamId,
         partition,
@@ -40,7 +35,7 @@ describe('BatchManager', () => {
         cassandraClient = new Client({
             contactPoints,
             localDataCenter,
-            keyspace,
+            keyspace
         })
 
         await cassandraClient.connect()
@@ -96,9 +91,7 @@ describe('BatchManager', () => {
         })
 
         batch.on('inserted', async () => {
-            const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [
-                streamId
-            ])
+            const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [streamId])
 
             expect(result.rows.length).toEqual(1)
             done()

@@ -29,37 +29,39 @@ const getApiKey = (req: Request) => {
     return undefined
 }
 
-export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthentication): (req: Request, res: Response, next: NextFunction) => void => {
+export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthentication): ((req: Request, res: Response, next: NextFunction) => void) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const apiKey = getApiKey(req)
         if (isValidAuthentication(apiKey, apiAuthentication)) {
             next()
         } else {
-            const status = (apiKey === undefined) ? HTTP_STATUS_UNAUTHORIZED : HTTP_STATUS_FORBIDDEN
+            const status = apiKey === undefined ? HTTP_STATUS_UNAUTHORIZED : HTTP_STATUS_FORBIDDEN
             res.sendStatus(status)
         }
     }
 }
 
-export const startServer = async (
-    endpoints: Endpoint[],
-    config: StrictConfig['httpServer']
-): Promise<HttpServer | https.Server> => {
+export const startServer = async (endpoints: Endpoint[], config: StrictConfig['httpServer']): Promise<HttpServer | https.Server> => {
     const app = express()
-    app.use(cors({
-        origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
-        credentials: true // Access-Control-Allow-Credentials: true
-    }))
+    app.use(
+        cors({
+            origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
+            credentials: true // Access-Control-Allow-Credentials: true
+        })
+    )
     endpoints.forEach((endpoint: Endpoint) => {
         const handlers = [createAuthenticatorMiddleware(endpoint.apiAuthentication)].concat(endpoint.requestHandlers)
         app.route(endpoint.path)[endpoint.method](handlers)
     })
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
     if (config.sslCertificate !== undefined) {
-        serverFactory = https.createServer({
-            cert: fs.readFileSync(config.sslCertificate.certFileName),
-            key: fs.readFileSync(config.sslCertificate.privateKeyFileName)
-        }, app)
+        serverFactory = https.createServer(
+            {
+                cert: fs.readFileSync(config.sslCertificate.certFileName),
+                key: fs.readFileSync(config.sslCertificate.privateKeyFileName)
+            },
+            app
+        )
     } else {
         serverFactory = app
     }

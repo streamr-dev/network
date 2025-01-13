@@ -13,7 +13,6 @@ export enum ErrorCode {
 }
 
 class Err extends Error {
-
     public code: ErrorCode
     public originalError?: Error | string
 
@@ -24,8 +23,16 @@ class Err extends Error {
     }
 }
 
-export class RpcTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_TIMEOUT, message, originalError) } }
-export class RpcRequest extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_REQUEST, message, originalError) } }
+export class RpcTimeout extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.RPC_TIMEOUT, message, originalError)
+    }
+}
+export class RpcRequest extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.RPC_REQUEST, message, originalError)
+    }
+}
 export class RpcServerError extends Err {
     public errorClassName?: string
     public errorCode?: string
@@ -36,9 +43,33 @@ export class RpcServerError extends Err {
         this.errorCode = errorCode
     }
 }
-export class RpcClientError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_CLIENT_ERROR, message, originalError) } }
-export class NotImplemented extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NOT_IMPLEMENTED, message, originalError) } }
-export class UnknownRpcMethod extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError) } }
-export class FailedToParse extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_PARSE, message, originalError) } }
-export class FailedToSerialize extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_SERIALIZE, message, originalError) } }
-export class Disconnected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DISCONNECTED, message, originalError) } }
+export class RpcClientError extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.RPC_CLIENT_ERROR, message, originalError)
+    }
+}
+export class NotImplemented extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.NOT_IMPLEMENTED, message, originalError)
+    }
+}
+export class UnknownRpcMethod extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError)
+    }
+}
+export class FailedToParse extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.FAILED_TO_PARSE, message, originalError)
+    }
+}
+export class FailedToSerialize extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.FAILED_TO_SERIALIZE, message, originalError)
+    }
+}
+export class Disconnected extends Err {
+    constructor(message?: string, originalError?: Error | string) {
+        super(ErrorCode.DISCONNECTED, message, originalError)
+    }
+}

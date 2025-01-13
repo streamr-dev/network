@@ -22,12 +22,11 @@ export interface Events {
 }
 
 export class FakeChain {
-
     private readonly streams: Map<StreamID, StreamRegistryItem> = new Map()
     private readonly storageAssignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     private readonly storageNodeMetadatas: Map<EthereumAddress, StorageNodeMetadata> = new Map()
     private readonly erc1271AllowedAddresses: Multimap<EthereumAddress, UserID> = new Multimap()
-    private readonly eventEmitter = new EventEmitter<Events>
+    private readonly eventEmitter = new EventEmitter<Events>()
 
     getStream(streamId: StreamID): StreamRegistryItem | undefined {
         return this.streams.get(streamId)

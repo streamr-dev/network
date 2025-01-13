@@ -9,7 +9,6 @@ import { toNodeId } from '../../src/identifiers'
 const MESSAGE_ID = 'mock-message-id'
 
 describe('memory leak', () => {
-
     it('send message', async () => {
         const entryPointDescriptor = createMockPeerDescriptor({
             websocket: {
@@ -44,7 +43,7 @@ describe('memory leak', () => {
         ])
 
         let receivedMessage: Message | undefined = undefined
-        receiver.on('message', (msg: Message) => receivedMessage = msg)
+        receiver.on('message', (msg: Message) => (receivedMessage = msg))
         const msg: Message = {
             serviceId: 'mock-service-id',
             targetDescriptor: receiver.getLocalPeerDescriptor(),
@@ -58,11 +57,7 @@ describe('memory leak', () => {
         await until(() => receivedMessage !== undefined)
         expect(receivedMessage!.messageId).toEqual(MESSAGE_ID)
 
-        await Promise.all([
-            entryPoint.stop(),
-            sender.stop(),
-            receiver.stop()
-        ])
+        await Promise.all([entryPoint.stop(), sender.stop(), receiver.stop()])
 
         const detector1 = new LeakDetector(entryPoint)
         entryPoint = undefined

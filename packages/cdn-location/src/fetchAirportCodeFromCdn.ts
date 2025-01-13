@@ -7,9 +7,12 @@ const fetchHeader: (url: string, header: string, timeout: number) => Promise<str
     header: string,
     timeout: number
 ) => {
-    const response = await withTimeout(fetch(url, {
-        method: 'HEAD'
-    }), timeout)
+    const response = await withTimeout(
+        fetch(url, {
+            method: 'HEAD'
+        }),
+        timeout
+    )
     return response.headers.get(header)
 }
 

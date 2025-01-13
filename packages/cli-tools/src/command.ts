@@ -11,10 +11,7 @@ export interface Options {
 }
 
 export const createCommand = (): commander.Command => {
-    return new Command()
-        .version(pkg.version)
-        .showHelpAfterError()
-        .allowExcessArguments(false)
+    return new Command().version(pkg.version).showHelpAfterError().allowExcessArguments(false)
 }
 
 export interface CommandOpts {
@@ -23,7 +20,7 @@ export interface CommandOpts {
 }
 
 export const createClientCommand = (
-    action: (...handleArgs: any[]) => Promise<void>, 
+    action: (...handleArgs: any[]) => Promise<void>,
     opts: CommandOpts = {
         autoDestroyClient: true,
         clientOptionsFactory: () => ({})
@@ -32,8 +29,11 @@ export const createClientCommand = (
     return createCommand()
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
         .option('--config <file>', 'read connection and authentication settings from a config file')
-        .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
-            createFnParseEnum('env', ENVIRONMENT_IDS))
+        .option(
+            '--env <environmentId>',
+            `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
+            createFnParseEnum('env', ENVIRONMENT_IDS)
+        )
         .action(async (...args: any[]) => {
             const commandOptions = args[args.length - 1].opts()
             try {

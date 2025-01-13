@@ -13,7 +13,6 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
  * The subscriber can get the updated key and decrypt received messages with it.
  */
 describe('update encryption key', () => {
-
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let streamPartId: StreamPartID
@@ -107,7 +106,6 @@ describe('update encryption key', () => {
     })
 
     describe('permission revoked', () => {
-
         it('rotate', async () => {
             await publisher.publish(streamPartId, {
                 mockId: 1
@@ -137,32 +135,36 @@ describe('update encryption key', () => {
             })
         })
 
-        it('rekey', async () => {
-            await publisher.publish(streamPartId, {
-                mockId: 1
-            })
-            const msg1 = await nextValue(messageIterator)
-            expect(msg1!.content).toEqual({
-                mockId: 1
-            })
+        it(
+            'rekey',
+            async () => {
+                await publisher.publish(streamPartId, {
+                    mockId: 1
+                })
+                const msg1 = await nextValue(messageIterator)
+                expect(msg1!.content).toEqual({
+                    mockId: 1
+                })
 
-            await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                userId: await subscriber.getUserId(),
-                permissions: [StreamPermission.SUBSCRIBE]
-            })
-            await publisher.updateEncryptionKey({
-                key: GroupKey.generate(),
-                distributionMethod: 'rekey',
-                streamId: StreamPartIDUtils.getStreamID(streamPartId)
-            })
+                await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
+                    userId: await subscriber.getUserId(),
+                    permissions: [StreamPermission.SUBSCRIBE]
+                })
+                await publisher.updateEncryptionKey({
+                    key: GroupKey.generate(),
+                    distributionMethod: 'rekey',
+                    streamId: StreamPartIDUtils.getStreamID(streamPartId)
+                })
 
-            await publisher.publish(streamPartId, {
-                mockId: 2
-            })
-            await until(() => onError.mock.calls.length > 0, 10 * 1000)
-            expect(onError.mock.calls[0][0]).toEqualStreamrClientError({
-                code: 'DECRYPT_ERROR'
-            })
-        }, 10 * 1000)
+                await publisher.publish(streamPartId, {
+                    mockId: 2
+                })
+                await until(() => onError.mock.calls.length > 0, 10 * 1000)
+                expect(onError.mock.calls[0][0]).toEqualStreamrClientError({
+                    code: 'DECRYPT_ERROR'
+                })
+            },
+            10 * 1000
+        )
     })
 })

@@ -29,13 +29,7 @@ export function hash(message: Uint8Array): Buffer {
 function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array {
     const signatureBuffer = Buffer.from(signature)
     const recoveryId = signatureBuffer.readUInt8(signatureBuffer.length - 1) - 27
-    return secp256k1.ecdsaRecover(
-        signatureBuffer.subarray(0, signatureBuffer.length - 1),
-        recoveryId,
-        hash(payload),
-        false,
-        Buffer.alloc,
-    )
+    return secp256k1.ecdsaRecover(signatureBuffer.subarray(0, signatureBuffer.length - 1), recoveryId, hash(payload), false, Buffer.alloc)
 }
 
 export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {

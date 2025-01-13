@@ -16,7 +16,6 @@ interface SentMessagesFilter {
 }
 
 export class FakeNetwork {
-
     private readonly nodes: Map<DhtAddress, FakeNetworkNode> = new Map()
     private sends: Send[] = []
 
@@ -57,28 +56,37 @@ export class FakeNetwork {
         return this.sends
             .filter((send: Send) => {
                 const msg = send.message
-                return (predicate.messageType === undefined) || (msg.messageType === predicate.messageType)
+                return predicate.messageType === undefined || msg.messageType === predicate.messageType
             })
             .map((m) => m.message)
     }
 
-    async waitForSentMessages(opts: SentMessagesFilter & { count: number }, timeout = 60 * 1000): Promise<StreamMessage[]> { 
+    async waitForSentMessages(opts: SentMessagesFilter & { count: number }, timeout = 60 * 1000): Promise<StreamMessage[]> {
         let found: StreamMessage[] = []
         const count = opts.count
-        await until(() => {
-            found = this.getSentMessages(opts)
-            return found.length >= count
-        }, timeout, timeout / 100, undefined, () => {
-            return `waitForSentMessages timed out: ${JSON.stringify(opts)} matches ${found.length}/${count}`
-        })
+        await until(
+            () => {
+                found = this.getSentMessages(opts)
+                return found.length >= count
+            },
+            timeout,
+            timeout / 100,
+            undefined,
+            () => {
+                return `waitForSentMessages timed out: ${JSON.stringify(opts)} matches ${found.length}/${count}`
+            }
+        )
         return found.slice(0, count)
     }
-    
+
     async waitForSentMessage(opts: SentMessagesFilter, timeout?: number): Promise<StreamMessage> {
-        const messages = await this.waitForSentMessages({
-            ...opts,
-            count: 1
-        }, timeout)
+        const messages = await this.waitForSentMessages(
+            {
+                ...opts,
+                count: 1
+            },
+            timeout
+        )
         return messages[0]
     }
 }

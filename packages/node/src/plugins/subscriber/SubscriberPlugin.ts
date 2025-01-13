@@ -14,13 +14,15 @@ export interface SubscriberPluginConfig {
 const logger = new Logger(module)
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
-
     private subscriptions: Subscription[] = []
 
     private async subscribeToStreamParts(streamrClient: StreamrClient): Promise<void> {
-        this.subscriptions = await pTransaction(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
-            streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true }, () => {})
-        )), (sub) => sub.unsubscribe())
+        this.subscriptions = await pTransaction(
+            this.pluginConfig.streams.map(({ streamId, streamPartition }) =>
+                streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true }, () => {})
+            ),
+            (sub) => sub.unsubscribe()
+        )
     }
 
     async start(streamrClient: StreamrClient): Promise<void> {
@@ -32,5 +34,4 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
         logger.info('Stop subscriber plugin')
         await Promise.all(this.subscriptions.map((sub) => sub.unsubscribe()))
     }
-
 }

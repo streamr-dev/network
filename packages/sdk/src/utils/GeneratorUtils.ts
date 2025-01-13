@@ -18,11 +18,7 @@ const noopConsume = async (src: AsyncGenerator) => {
  * Allows inspection of a pipeline without mutating it.
  * Note: Pipeline will block until forEach call resolves.
  */
-export async function* forEach<InType>(
-    src: AsyncGenerator<InType>,
-    fn: GeneratorForEach<InType>,
-    onError?: OnError<InType>
-): AsyncGenerator<InType> {
+export async function* forEach<InType>(src: AsyncGenerator<InType>, fn: GeneratorForEach<InType>, onError?: OnError<InType>): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
         try {
@@ -69,11 +65,7 @@ export async function* map<InType, OutType>(
 /**
  * Similar to Array#filter
  */
-export async function* filter<InType>(
-    src: AsyncGenerator<InType>,
-    fn: GeneratorFilter<InType>,
-    onError?: OnError<InType>
-): AsyncGenerator<InType> {
+export async function* filter<InType>(src: AsyncGenerator<InType>, fn: GeneratorFilter<InType>, onError?: OnError<InType>): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
         let ok
@@ -107,10 +99,7 @@ export async function consume<InType>(
     return noopConsume(forEach(src, fn, onError))
 }
 
-export async function* unique<T>(
-    source: AsyncIterable<T>,
-    getIdentity: (item: T) => string
-): AsyncGenerator<T> {
+export async function* unique<T>(source: AsyncIterable<T>, getIdentity: (item: T) => string): AsyncGenerator<T> {
     const seenIdentities = new Set<string>()
     for await (const item of source) {
         const identity = getIdentity(item)

@@ -7,7 +7,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('inspect', () => {
-
     const publisherDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
@@ -38,7 +37,7 @@ describe('inspect', () => {
 
     let inspectorNode: NetworkNode
 
-    const message: StreamMessage = { 
+    const message: StreamMessage = {
         messageId: {
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
@@ -54,17 +53,19 @@ describe('inspect', () => {
         body: {
             oneofKind: 'contentMessage',
             contentMessage: {
-                content: utf8ToBinary(JSON.stringify({
-                    hello: 'world'
-                })),
+                content: utf8ToBinary(
+                    JSON.stringify({
+                        hello: 'world'
+                    })
+                ),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE
             }
         },
         signatureType: SignatureType.SECP256K1,
-        signature: hexToBinary('0x1234'),
+        signature: hexToBinary('0x1234')
     }
-    
+
     beforeEach(async () => {
         publisherNode = createNetworkNode({
             layer0: {
@@ -98,19 +99,16 @@ describe('inspect', () => {
         inspectedNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         inspectorNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
 
-        await until(() => 
-            publisherNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectedNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectorNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2
+        await until(
+            () =>
+                publisherNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 &&
+                inspectedNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 &&
+                inspectorNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2
         )
     }, 30000)
 
     afterEach(async () => {
-        await Promise.all([
-            publisherNode.stop(),
-            inspectedNode.stop(),
-            inspectorNode.stop()
-        ])
+        await Promise.all([publisherNode.stop(), inspectedNode.stop(), inspectorNode.stop()])
     })
 
     it('should inspect succesfully', async () => {
@@ -120,5 +118,4 @@ describe('inspect', () => {
         const success = await inspectorNode.inspect(inspectedDescriptor, STREAM_PART_ID)
         expect(success).toBe(true)
     })
-
 })

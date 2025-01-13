@@ -2,7 +2,6 @@ import EventEmitter from 'eventemitter3'
 import { ConnectionEvents, IConnection } from '../../../src/connection/IConnection'
 
 export class MockConnection extends EventEmitter<ConnectionEvents> implements IConnection {
-
     public sentData: Uint8Array[] = []
 
     send(data: Uint8Array): Promise<void> {
@@ -22,5 +21,4 @@ export class MockConnection extends EventEmitter<ConnectionEvents> implements IC
     emitData(message: Uint8Array): void {
         this.emit('data', message)
     }
-
 }

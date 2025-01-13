@@ -21,7 +21,6 @@ const MOCK_EVENT_PAYLOAD = {
 const OTHER_EVENT_NAME = 'bar'
 
 describe('gateway', () => {
-
     let emitter: ObservableEventEmitter<MockEvents>
     let start: () => MockGatewayListener
     let stop: (listener: MockGatewayListener) => void

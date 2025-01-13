@@ -18,9 +18,7 @@ interface GapFillerOptions {
     abortSignal: AbortSignal
 }
 
-const runAbortableTask = async (
-    run: () => Promise<void>
-): Promise<void> => {
+const runAbortableTask = async (run: () => Promise<void>): Promise<void> => {
     try {
         await run()
     } catch (e) {
@@ -31,8 +29,7 @@ const runAbortableTask = async (
 }
 
 export class GapFiller {
-
-    private currentTask: { gap: Gap, abortController: AbortController } | undefined = undefined
+    private currentTask: { gap: Gap; abortController: AbortController } | undefined = undefined
     private readonly chain: OrderedMessageChain
     private readonly resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     private readonly getStorageNodeAddresses: () => Promise<EthereumAddress[]>
@@ -73,7 +70,7 @@ export class GapFiller {
                 }
                 /*
                  * The "fetchFromStorageNode" typically provides all the missing messages and the chain emits the
-                 * "gapResolved" event. In that case "chain.on('gapResolved')" callback aborts this task 
+                 * "gapResolved" event. In that case "chain.on('gapResolved')" callback aborts this task
                  * before we reach this line. Alternatively the callback may have been called by the chain because
                  * it received the missing messages from another source (i.e. the real-time pipeline). But if
                  * this task has not been aborted by either of these reasons, we resolve the gap manually as we
@@ -124,7 +121,7 @@ export class GapFiller {
         logger.debug('Unable to fill gap', {
             error: {
                 message: error?.message,
-                code: error?.code,
+                code: error?.code
             },
             context: this.chain.getContext(),
             from: gap.from.getMessageRef(),

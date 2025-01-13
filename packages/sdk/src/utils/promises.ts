@@ -22,8 +22,8 @@ export function pLimitFn<ArgsType extends unknown[], ReturnType>(
  */
 
 export function pOne<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
-): ((...args: ArgsType) => Promise<ReturnType>) {
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
+): (...args: ArgsType) => Promise<ReturnType> {
     const once = pOnce(fn)
     return async (...args: ArgsType): Promise<ReturnType> => {
         try {
@@ -41,64 +41,68 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
 
 export function pOnce<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
-): ((...args: ArgsType) => Promise<ReturnType>) & { reset(): void, isStarted(): boolean } {
-    type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending', promise: Promise<ReturnType> }
+): ((...args: ArgsType) => Promise<ReturnType>) & { reset(): void; isStarted(): boolean } {
+    type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending'; promise: Promise<ReturnType> }
     let currentCall: CallStatus = { status: 'init' }
 
-    return Object.assign(async function pOnceWrap(...args: ArgsType): Promise<ReturnType> { // eslint-disable-line prefer-arrow-callback
-        // capture currentCall so can assign to it, even after reset
-        const thisCall = currentCall
-        if (thisCall.status === 'pending') {
-            return thisCall.promise
-        }
-
-        if (thisCall.status === 'fulfilled') {
-            return thisCall.value
-        }
-
-        if (thisCall.status === 'rejected') {
-            throw thisCall.reason
-        }
-
-        // status === 'init'
-
-        currentCall = thisCall
-
-        const promise = (async () => {
-            // capture value/error
-            try {
-                const value = await fn(...args)
-                Object.assign(thisCall, {
-                    promise: undefined, // release promise
-                    status: 'fulfilled',
-                    value,
-                })
-                return value
-            } catch (reason) {
-                Object.assign(thisCall, {
-                    promise: undefined, // release promise
-                    status: 'rejected',
-                    reason,
-                })
-
-                throw reason
+    return Object.assign(
+        async function pOnceWrap(...args: ArgsType): Promise<ReturnType> {
+            // eslint-disable-line prefer-arrow-callback
+            // capture currentCall so can assign to it, even after reset
+            const thisCall = currentCall
+            if (thisCall.status === 'pending') {
+                return thisCall.promise
             }
-        })()
-        promise.catch(() => {}) // prevent unhandled
-        Object.assign(thisCall, {
-            status: 'pending',
-            promise,
-        })
 
-        return promise
-    }, {
-        isStarted() {
-            return currentCall.status !== 'init'
+            if (thisCall.status === 'fulfilled') {
+                return thisCall.value
+            }
+
+            if (thisCall.status === 'rejected') {
+                throw thisCall.reason
+            }
+
+            // status === 'init'
+
+            currentCall = thisCall
+
+            const promise = (async () => {
+                // capture value/error
+                try {
+                    const value = await fn(...args)
+                    Object.assign(thisCall, {
+                        promise: undefined, // release promise
+                        status: 'fulfilled',
+                        value
+                    })
+                    return value
+                } catch (reason) {
+                    Object.assign(thisCall, {
+                        promise: undefined, // release promise
+                        status: 'rejected',
+                        reason
+                    })
+
+                    throw reason
+                }
+            })()
+            promise.catch(() => {}) // prevent unhandled
+            Object.assign(thisCall, {
+                status: 'pending',
+                promise
+            })
+
+            return promise
         },
-        reset() {
-            currentCall = { status: 'init' }
+        {
+            isStarted() {
+                return currentCall.status !== 'init'
+            },
+            reset() {
+                currentCall = { status: 'init' }
+            }
         }
-    })
+    )
 }
 
 // TODO better type annotations

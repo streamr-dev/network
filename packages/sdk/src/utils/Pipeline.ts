@@ -21,14 +21,10 @@ export type IPipeline<InType, OutType = InType> = {
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-
     public source: AsyncGeneratorWithId<InType>
     protected transforms: PipelineTransform[]
 
-    constructor(
-        source: AsyncGenerator<InType>,
-        transforms: PipelineTransform[] = [],
-    ) {
+    constructor(source: AsyncGenerator<InType>, transforms: PipelineTransform[] = []) {
         this.source = this.setSource(source)
         this.transforms = transforms
     }
@@ -49,7 +45,7 @@ class PipelineDefinition<InType, OutType = InType> {
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {
         const id = 'id' in source ? source.id : instanceId(source, 'Source')
         this.source = Object.assign(source, {
-            id,
+            id
         })
 
         return this.source
@@ -61,7 +57,6 @@ class PipelineDefinition<InType, OutType = InType> {
 }
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-
     public source: AsyncGenerator<InType>
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
@@ -141,7 +136,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         await this.onError.trigger(err)
     }
 
-    private async* iterate(): AsyncGenerator<any, void, unknown> {
+    private async *iterate(): AsyncGenerator<any, void, unknown> {
         this.isIterating = true
 
         if (!this.definition.source) {

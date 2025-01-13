@@ -9,7 +9,6 @@ const parseJSONs = (lines: string[]): any[] => {
 }
 
 describe('resend stream', () => {
-
     let privateKey: string
     let stream: Stream
     const messages: Message[] = []
@@ -28,39 +27,39 @@ describe('resend stream', () => {
         await client.destroy()
     }, 30 * 1000)
 
-    it('last', async () => {
-        const outputLines = await runCommand(`stream resend last 3 ${stream.id}`, {
-            privateKey
-        })
-        expect(parseJSONs(outputLines)).toEqual([
-            { msgId: 7 },
-            { msgId: 8 },
-            { msgId: 9 }
-        ])
-    }, 20 * 1000)
+    it(
+        'last',
+        async () => {
+            const outputLines = await runCommand(`stream resend last 3 ${stream.id}`, {
+                privateKey
+            })
+            expect(parseJSONs(outputLines)).toEqual([{ msgId: 7 }, { msgId: 8 }, { msgId: 9 }])
+        },
+        20 * 1000
+    )
 
-    it('from', async () => {
-        const minTimestamp = new Date(messages[8].timestamp).toISOString()
-        const outputLines = await runCommand(`stream resend from ${minTimestamp} ${stream.id}`, {
-            privateKey
-        })
-        expect(parseJSONs(outputLines)).toEqual([
-            { msgId: 8 },
-            { msgId: 9 }
-        ])
-    }, 20 * 1000)
+    it(
+        'from',
+        async () => {
+            const minTimestamp = new Date(messages[8].timestamp).toISOString()
+            const outputLines = await runCommand(`stream resend from ${minTimestamp} ${stream.id}`, {
+                privateKey
+            })
+            expect(parseJSONs(outputLines)).toEqual([{ msgId: 8 }, { msgId: 9 }])
+        },
+        20 * 1000
+    )
 
-    it('range', async () => {
-        const minTimestamp = new Date(messages[2].timestamp).toISOString()
-        const maxTimestamp = new Date(messages[4].timestamp).toISOString()
-        const outputLines = await runCommand(`stream resend range ${minTimestamp} ${maxTimestamp} ${stream.id}`, {
-            privateKey
-        })
-        expect(parseJSONs(outputLines)).toEqual([
-            { msgId: 2 },
-            { msgId: 3 },
-            { msgId: 4 }
-        ])
-    }, 20 * 1000)
-
+    it(
+        'range',
+        async () => {
+            const minTimestamp = new Date(messages[2].timestamp).toISOString()
+            const maxTimestamp = new Date(messages[4].timestamp).toISOString()
+            const outputLines = await runCommand(`stream resend range ${minTimestamp} ${maxTimestamp} ${stream.id}`, {
+                privateKey
+            })
+            expect(parseJSONs(outputLines)).toEqual([{ msgId: 2 }, { msgId: 3 }, { msgId: 4 }])
+        },
+        20 * 1000
+    )
 })

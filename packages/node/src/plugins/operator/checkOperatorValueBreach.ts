@@ -16,20 +16,18 @@ export const checkOperatorValueBreach = async (
         logger.info('No operators found')
         return
     }
-    logger.info('Check other operator\'s earnings for breach', { targetOperatorAddress })
-    const { sum, maxAllowedEarnings, sponsorshipAddresses } = await client.getOperator(targetOperatorAddress).getEarnings(
-        minSponsorshipEarningsInWithdraw,
-        maxSponsorshipsInWithdraw
-    )
+    logger.info("Check other operator's earnings for breach", { targetOperatorAddress })
+    const { sum, maxAllowedEarnings, sponsorshipAddresses } = await client
+        .getOperator(targetOperatorAddress)
+        .getEarnings(minSponsorshipEarningsInWithdraw, maxSponsorshipsInWithdraw)
     logger.trace(` -> is ${sum} > ${maxAllowedEarnings}?`)
     if (sum > maxAllowedEarnings) {
-        logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
-            {
-                targetOperatorAddress,
-                sponsorshipAddresses,
-                sum: sum.toString(),
-                maxAllowedEarnings: maxAllowedEarnings.toString()
-            })
+        logger.info('Withdraw earnings from sponsorships (target operator value in breach)', {
+            targetOperatorAddress,
+            sponsorshipAddresses,
+            sum: sum.toString(),
+            maxAllowedEarnings: maxAllowedEarnings.toString()
+        })
         await myOperator.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

@@ -19,5 +19,4 @@ export class NodeInfoClient {
         // each of the field as required in the decorated type
         return remote.getInfo() as unknown as NodeInfo
     }
-
 }

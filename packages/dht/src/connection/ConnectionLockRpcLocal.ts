@@ -27,7 +27,6 @@ interface ConnectionLockRpcLocalOptions {
 const logger = new Logger(module)
 
 export class ConnectionLockRpcLocal implements IConnectionLockRpc {
-
     private readonly options: ConnectionLockRpcLocalOptions
 
     constructor(options: ConnectionLockRpcLocalOptions) {
@@ -71,7 +70,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
 
     async setPrivate(request: SetPrivateRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderId = toNodeId(senderPeerDescriptor)            
+        const senderId = toNodeId(senderPeerDescriptor)
         this.options.setPrivate(senderId, request.isPrivate)
         return {}
     }

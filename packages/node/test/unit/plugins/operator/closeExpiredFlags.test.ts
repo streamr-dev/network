@@ -12,7 +12,7 @@ operatorMock.getSponsorships.mockImplementation(async () => {
         {
             sponsorshipAddress,
             operatorCount: 2,
-            streamId: '0x123',
+            streamId: '0x123'
         } as GetOperatorSponsorshipsResult
     ]
 })
@@ -28,7 +28,6 @@ operatorMock.getExpiredFlags.mockImplementation(async () => {
 })
 
 describe('closeExpiredFlags', () => {
-    
     const flagLifetime = 1000
 
     test('closes expired flags', async () => {

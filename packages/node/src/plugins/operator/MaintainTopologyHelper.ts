@@ -17,7 +17,6 @@ export interface MaintainTopologyHelperEvents {
 }
 
 export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
-
     private readonly streamIdOfSponsorship: Map<EthereumAddress, StreamID> = new Map()
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
     private onStakedListener?: (sponsorship: StakeEvent) => unknown
@@ -68,7 +67,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             }
         }
         this.operator.on('unstaked', this.onUnstakedListener)
-        
+
         const queryResult = this.operator.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
             if (this.streamIdOfSponsorship.get(stake.sponsorship) !== stake.streamId) {

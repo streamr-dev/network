@@ -16,20 +16,24 @@ export interface ConsoleMetricsPluginConfig {
 }
 
 export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
-
     private readonly abortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
         const metricsContext = await streamrClient.getNode().getMetricsContext()
-        metricsContext.createReportProducer((report: MetricsReport) => {
-            // omit timestamp info as that is printed by the logger
-            const data = omit(report, 'period')
-            // remove quote chars to improve readability
-            const output = JSON.stringify(data, undefined, 4).replace(/"/g, '')
-            logger.info(`Report\n${output}`)
-        }, this.pluginConfig.interval * 1000, this.abortController.signal, formatNumber)
+        metricsContext.createReportProducer(
+            (report: MetricsReport) => {
+                // omit timestamp info as that is printed by the logger
+                const data = omit(report, 'period')
+                // remove quote chars to improve readability
+                const output = JSON.stringify(data, undefined, 4).replace(/"/g, '')
+                logger.info(`Report\n${output}`)
+            },
+            this.pluginConfig.interval * 1000,
+            this.abortController.signal,
+            formatNumber
+        )
     }
-    
+
     async stop(): Promise<void> {
         this.abortController.abort()
     }

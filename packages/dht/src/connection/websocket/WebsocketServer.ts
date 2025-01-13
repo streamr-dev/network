@@ -4,7 +4,7 @@ import EventEmitter from 'eventemitter3'
 import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Logger, asAbortable } from '@streamr/utils'
-import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
+import { createSelfSignedCertificate } from '@streamr/autocertifier-client'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -23,11 +23,10 @@ interface WebsocketServerOptions {
 }
 
 interface Events {
-    connected: ((connection: IConnection) => void) 
+    connected: (connection: IConnection) => void
 }
 
 export class WebsocketServer extends EventEmitter<Events> {
-
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WebSocket.Server
     private readonly abortController = new AbortController()
@@ -67,19 +66,25 @@ export class WebsocketServer extends EventEmitter<Events> {
         }
         return new Promise((resolve, reject) => {
             if (this.options.tlsCertificate) {
-                this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(this.options.tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(this.options.tlsCertificate.certFileName)
-                }, requestListener)
+                this.httpServer = createHttpsServer(
+                    {
+                        key: fs.readFileSync(this.options.tlsCertificate.privateKeyFileName),
+                        cert: fs.readFileSync(this.options.tlsCertificate.certFileName)
+                    },
+                    requestListener
+                )
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
             } else {
                 // TODO use options option or named constant?
                 const certificate = createSelfSignedCertificate('streamr-self-signed-' + uuid(), 1000)
-                this.httpServer = createHttpsServer({
-                    key: certificate.serverKey,
-                    cert: certificate.serverCert
-                }, requestListener)
+                this.httpServer = createHttpsServer(
+                    {
+                        key: certificate.serverKey,
+                        cert: certificate.serverCert
+                    },
+                    requestListener
+                )
             }
 
             function originIsAllowed() {
@@ -87,7 +92,7 @@ export class WebsocketServer extends EventEmitter<Events> {
             }
 
             this.wsServer = this.createWsServer()
-            
+
             this.wsServer.on('connection', (ws: WebSocket, request: IncomingMessage) => {
                 logger.trace(`New connection from ${request.socket.remoteAddress}`)
                 if (!originIsAllowed()) {
@@ -125,7 +130,7 @@ export class WebsocketServer extends EventEmitter<Events> {
     }
 
     public updateCertificate(cert: string, key: string): void {
-        (this.httpServer! as HttpsServer).setSecureContext({
+        ;(this.httpServer! as HttpsServer).setSecureContext({
             cert,
             key
         })
@@ -145,8 +150,8 @@ export class WebsocketServer extends EventEmitter<Events> {
                 resolve()
             })
             this.httpServer?.close()
-            // the close method "Stops the server from accepting new connections and closes all 
-            // connections connected to this server which are not sending a request or waiting for a 
+            // the close method "Stops the server from accepting new connections and closes all
+            // connections connected to this server which are not sending a request or waiting for a
             // response." (https://nodejs.org/api/http.html#serverclosecallback)
             // i.e. we need to call closeAllConnections() to close the rest of the connections
             // (in practice this closes the active websocket connections)
@@ -156,9 +161,9 @@ export class WebsocketServer extends EventEmitter<Events> {
 
     private createWsServer(): WebSocket.Server {
         const maxPayload = this.options.maxMessageSize ?? 1048576
-        return this.wsServer = new WebSocket.Server({
+        return (this.wsServer = new WebSocket.Server({
             noServer: true,
             maxPayload
-        })
+        }))
     }
 }

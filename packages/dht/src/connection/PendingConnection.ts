@@ -12,11 +12,10 @@ export interface PendingConnectionEvents {
 const logger = new Logger(module)
 
 // PendingConnection is used as a reference to a connection that should be opened and handshaked to a given PeerDescriptor
-// It does not hold a connection internally. The public method onHandshakedCompleted should be called once a connection for the 
+// It does not hold a connection internally. The public method onHandshakedCompleted should be called once a connection for the
 // remotePeerDescriptor is opened and handshaked successfully.
 // PendingConnections are created by the Connectors.
 export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
-
     private readonly connectingAbortController: AbortController = new AbortController()
     private remotePeerDescriptor: PeerDescriptor
     private replacedAsDuplicate: boolean = false
@@ -25,9 +24,13 @@ export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
     constructor(remotePeerDescriptor: PeerDescriptor, timeout = 15 * 1000) {
         super()
         this.remotePeerDescriptor = remotePeerDescriptor
-        setAbortableTimeout(() => {
-            this.close(false)
-        }, timeout, this.connectingAbortController.signal)
+        setAbortableTimeout(
+            () => {
+                this.close(false)
+            },
+            timeout,
+            this.connectingAbortController.signal
+        )
     }
 
     replaceAsDuplicate(): void {
@@ -64,5 +67,4 @@ export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
     getPeerDescriptor(): PeerDescriptor {
         return this.remotePeerDescriptor
     }
-
 }

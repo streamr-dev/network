@@ -11,7 +11,6 @@ interface ObserverEvents<E extends Events<E>> {
  * whenever a listener is added or removed
  */
 export class ObservableEventEmitter<E extends Events<E>> {
-
     private delegate: EventEmitter3<any> = new EventEmitter3()
     private observer: EventEmitter3<ObserverEvents<E>> = new EventEmitter3()
 

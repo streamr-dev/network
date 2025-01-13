@@ -14,7 +14,6 @@ const normalizePeerDescriptor = (peerDescriptor: PeerDescriptor) => {
 }
 
 describe('NetworkStack NodeInfoRpc', () => {
-
     let requesteStack: NetworkStack
     let otherStack: NetworkStack
     let nodeInfoClient: NodeInfoClient
@@ -72,11 +71,12 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
         requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
-        await until(() => 
-            requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 
-            && otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1
-            && requesteStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
-            && otherStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
+        await until(
+            () =>
+                requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 &&
+                otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 &&
+                requesteStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1 &&
+                otherStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
         )
         const result = await nodeInfoClient.getInfo(requesteePeerDescriptor)
         expect(result).toMatchObject({
@@ -89,21 +89,24 @@ describe('NetworkStack NodeInfoRpc', () => {
                 {
                     id: streamPartId1,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [{
-                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
-                    }]
+                    contentDeliveryLayerNeighbors: [
+                        {
+                            peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                        }
+                    ]
                 },
                 {
                     id: streamPartId2,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [{
-                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
-                    }]
+                    contentDeliveryLayerNeighbors: [
+                        {
+                            peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                        }
+                    ]
                 }
             ],
             applicationVersion: expect.any(String)
         })
         expect(result.streamPartitions.length).toEqual(2)
     })
-
 })

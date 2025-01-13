@@ -11,7 +11,6 @@ import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
 
 describe('ContentDeliveryLayerNode', () => {
-
     let contentDeliveryLayerNode: ContentDeliveryLayerNode
     const peerDescriptor = createMockPeerDescriptor()
 

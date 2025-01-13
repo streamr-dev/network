@@ -4,7 +4,7 @@ import crypto from 'crypto'
  * Computes a deterministic index for a given string or number key.
  * Used for deterministically selecting an entry from an ordered list
  * for various load balancing and partitioning purposes.
- * 
+ *
  * @param lengthOfArray Number of items to select from
  * @param key Input string or number
  * @returns Array index between [0..lengthOfArray-1]

@@ -58,6 +58,6 @@ export class ConsistentHashRing {
             }
         }
         const result = this.consistentHash.get(formKey(streamPartId), this.redundancyFactor)
-        return result as DhtAddress[] ?? []
+        return (result as DhtAddress[]) ?? []
     }
 }

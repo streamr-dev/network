@@ -9,7 +9,6 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 const SERVICE_ID = 'test'
 
 describe('RemoteRouter', () => {
-
     let remoteRouter: RouterRpcRemote
     let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
     let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
@@ -73,5 +72,4 @@ describe('RemoteRouter', () => {
         })
         expect(routable).toEqual(false)
     })
-
 })

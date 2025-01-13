@@ -21,10 +21,7 @@ describe('getDiagnosticInfo', () => {
     }, 30 * 1000)
 
     afterAll(async () => {
-        await Promise.all([
-            client.destroy(),
-            otherClient.destroy()
-        ])
+        await Promise.all([client.destroy(), otherClient.destroy()])
     })
 
     it('does not reject', async () => {

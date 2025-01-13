@@ -33,7 +33,7 @@ const toThrowStreamrClientError = (
             actual()
             return {
                 pass: false,
-                message: () => 'Function didn\'t throw'
+                message: () => "Function didn't throw"
             }
         } catch (e) {
             actualError = e
@@ -53,10 +53,7 @@ const toEqualStreamrClientError = (
     return toCustomMatcherResult(assertionErrors, 'StreamrClientErrors are equal')
 }
 
-const createAssertionErrors = (
-    actualError: unknown,
-    expectedError: PartialStreamrClientError
-): string[] => {
+const createAssertionErrors = (actualError: unknown, expectedError: PartialStreamrClientError): string[] => {
     const assertionErrors: string[] = []
     if (!(actualError instanceof StreamrClientError)) {
         const received = isObject(actualError) ? actualError.constructor.name : actualError
@@ -67,9 +64,8 @@ const createAssertionErrors = (
         }
         if (expectedError.message !== undefined) {
             // similar matching logic as in https://jestjs.io/docs/expect#tothrowerror
-            const isMatch = (expectedError instanceof Error)
-                ? (actualError.message === expectedError.message)
-                : actualError.message.includes(expectedError.message)
+            const isMatch =
+                expectedError instanceof Error ? actualError.message === expectedError.message : actualError.message.includes(expectedError.message)
             if (!isMatch) {
                 assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
             }

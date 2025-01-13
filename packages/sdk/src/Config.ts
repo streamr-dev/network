@@ -26,7 +26,6 @@ export interface PrivateKeyAuthConfig {
 }
 
 export interface ControlLayerConfig {
-
     /**
      * The list of entry point PeerDescriptors used to join the Streamr Network.
      */
@@ -36,7 +35,7 @@ export interface ControlLayerConfig {
      * The maximum number of connections before unwanted connections are clean up.
      * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
      * Locked connections such as the ones used for stream operations are not counted towards this limit.
-    */
+     */
     maxConnections?: number
 
     /**
@@ -49,7 +48,7 @@ export interface ControlLayerConfig {
     /**
      * The list of STUN and TURN servers to use in ICE protocol when
      * forming WebRTC connections.
-    */
+     */
     iceServers?: IceServer[]
 
     /**
@@ -63,17 +62,17 @@ export interface ControlLayerConfig {
      * on a local network.
      *
      * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
-    */
+     */
     webrtcAllowPrivateAddresses?: boolean
 
     /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
-    */
+     */
     webrtcDatachannelBufferThresholdLow?: number
 
     /**
      * Sets the high-water mark used by send buffers of WebRTC connections.
-    */
+     */
     webrtcDatachannelBufferThresholdHigh?: number
 
     /**
@@ -93,7 +92,7 @@ export interface ControlLayerConfig {
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
-    */
+     */
     peerDescriptor?: NetworkPeerDescriptor
 
     /**
@@ -106,7 +105,7 @@ export interface ControlLayerConfig {
 
     /**
      * The host name or IP address of the WebSocket server used to connect to it over the internet.
-     * If not specified, the host name will be auto-detected. 
+     * If not specified, the host name will be auto-detected.
      * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
      */
     websocketHost?: string
@@ -115,7 +114,7 @@ export interface ControlLayerConfig {
      * TLS configuration for the WebSocket server
      */
     tlsCertificate?: TlsCertificate
-    
+
     /*
      * Used to assign a custom external IPv4 address for the node.
      * Useful in cases where the node has a public IP address but
@@ -123,7 +122,7 @@ export interface ControlLayerConfig {
      *
      * Works only if the Full Cone NAT that the node is behind preserves local
      * port mappings on the public side.
-    */
+     */
     externalIp?: string
 
     /**
@@ -145,7 +144,7 @@ export interface ControlLayerConfig {
 
     /**
      * If the node is running a WS server, this option can be used to disable TLS autocertification to
-     * run the server without TLS. This will speed up the starting time of the network node 
+     * run the server without TLS. This will speed up the starting time of the network node
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
@@ -158,11 +157,10 @@ export interface ControlLayerConfig {
 }
 
 export interface NetworkNodeConfig {
-
     /**
      * The number of connections the client's network node should have
      * on each stream partition.
-    */
+     */
     streamPartitionNeighborTargetCount?: number
 
     /**
@@ -226,7 +224,7 @@ export interface EthereumNetworkConfig {
 // - do not include legacy configs, which no longer work, e.g. "dev0"
 // - and no need to include configs, which users won't use in practice
 // - note that there is no special handling for empty arrays in the applyConfig and therefore
-//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
+//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
@@ -239,7 +237,6 @@ export const DEFAULT_ENVIRONMENT_ID: EnvironmentId = 'polygon'
  * @category Important
  */
 export interface StreamrClientConfig {
-
     environment?: EnvironmentId
 
     /** Custom human-readable debug id for client. Used in logging. */
@@ -251,9 +248,9 @@ export interface StreamrClientConfig {
     logLevel?: LogLevel
 
     /**
-    * The Ethereum identity to be used by the client. Either a private key
-    * or a window.ethereum object.
-    */
+     * The Ethereum identity to be used by the client. Either a private key
+     * or a window.ethereum object.
+     */
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
     /**
@@ -393,13 +390,15 @@ export interface StreamrClientConfig {
      *
      * By setting this to false, you disable the feature.
      */
-    metrics?: {
-        periods?: {
-            streamId: string
-            duration: number
-        }[]
-        maxPublishDelay?: number
-    } | boolean
+    metrics?:
+        | {
+              periods?: {
+                  streamId: string
+                  duration: number
+              }[]
+              maxPublishDelay?: number
+          }
+        | boolean
 
     /**
      * Determines caching behaviour for certain repeated smart contract queries.
@@ -451,25 +450,28 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
-    let config = merge({
-        network: {
-            controlLayer: {
-                entryPoints: defaults.entryPoints
-            }
-        } as any,
-        contracts: {
-            ethereumNetwork: {
-                chainId: defaults.id
-            },
-            streamRegistryChainAddress: defaults.contracts.StreamRegistry,
-            streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
-            storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
-            rpcs: defaults.rpcEndpoints,
-            theGraphUrl: defaults.theGraphUrl
-        } as any
-    }, data) as any
+    let config = merge(
+        {
+            network: {
+                controlLayer: {
+                    entryPoints: defaults.entryPoints
+                }
+            } as any,
+            contracts: {
+                ethereumNetwork: {
+                    chainId: defaults.id
+                },
+                streamRegistryChainAddress: defaults.contracts.StreamRegistry,
+                streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
+                storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
+                rpcs: defaults.rpcEndpoints,
+                theGraphUrl: defaults.theGraphUrl
+            } as any
+        },
+        data
+    ) as any
     if (environmentId === 'polygon') {
-        config.contracts.ethereumNetwork = { 
+        config.contracts.ethereumNetwork = {
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
@@ -481,21 +483,25 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
 
 export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
     if (!validate(data)) {
-        throw new Error((validate as any).errors!.map((e: any) => {
-            let text = e.instancePath + ' ' + e.message
-            if (e.params.additionalProperty) {
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                text += `: ${e.params.additionalProperty}`
-            }
-            return text
-        }).join('\n'))
+        throw new Error(
+            (validate as any)
+                .errors!.map((e: any) => {
+                    let text = e.instancePath + ' ' + e.message
+                    if (e.params.additionalProperty) {
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                        text += `: ${e.params.additionalProperty}`
+                    }
+                    return text
+                })
+                .join('\n')
+        )
     }
     return data as any
 }
 
 export const redactConfig = (config: StrictStreamrClientConfig): void => {
     if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
-        (config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
+        ;(config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
     }
 }
 

@@ -40,7 +40,6 @@ describe('ConversionWrappers', () => {
                     { asd: 'aaaaa' }
                 )
             )
-
         } catch {
             errorCount += 1
         }

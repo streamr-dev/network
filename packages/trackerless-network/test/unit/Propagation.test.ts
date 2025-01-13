@@ -1,13 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
 import { Propagation } from '../../src/logic/propagation/Propagation'
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    SignatureType,
-    StreamMessage
-} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { randomUserId } from '@streamr/test-utils'
 
 const PUBLISHER_ID = randomUserId()

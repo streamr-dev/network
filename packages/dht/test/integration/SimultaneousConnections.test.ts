@@ -21,17 +21,17 @@ const BASE_MESSAGE: Message = {
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
-        createConnectorFacade: () => new DefaultConnectorFacade({
-            createLocalPeerDescriptor: async () => localPeerDescriptor,
-            ...opts
-        }),
+        createConnectorFacade: () =>
+            new DefaultConnectorFacade({
+                createLocalPeerDescriptor: async () => localPeerDescriptor,
+                ...opts
+            }),
         metricsContext: new MetricsContext(),
         allowIncomingPrivateConnections: false
     })
 }
 
 describe('SimultaneousConnections', () => {
-
     let simulator: Simulator
     let simTransport1: SimulatorTransport
     let simTransport2: SimulatorTransport
@@ -73,21 +73,15 @@ describe('SimultaneousConnections', () => {
                 resolve()
             })
         })
-        await Promise.all([
-            promise1,
-            promise2,
-            simTransport1.send(msg1),
-            simTransport2.send(msg2)
-        ])
+        await Promise.all([promise1, promise2, simTransport1.send(msg1), simTransport2.send(msg2)])
         await until(() => simTransport2.hasConnection(toNodeId(peerDescriptor1)))
         await until(() => simTransport1.hasConnection(toNodeId(peerDescriptor2)))
     })
 
     describe('Websocket 2 servers', () => {
-
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
-        
+
         const wsPeerDescriptor1 = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
@@ -107,7 +101,6 @@ describe('SimultaneousConnections', () => {
         })
 
         beforeEach(async () => {
-
             const websocketPortRange = { min: 43432, max: 43433 }
             connectionManager1 = createConnectionManager(wsPeerDescriptor1, {
                 transport: new MockTransport(),
@@ -153,12 +146,7 @@ describe('SimultaneousConnections', () => {
                 })
             })
 
-            await Promise.all([
-                promise1,
-                promise2,
-                connectionManager1.send(msg1),
-                connectionManager2.send(msg2)
-            ])
+            await Promise.all([promise1, promise2, connectionManager1.send(msg1), connectionManager2.send(msg2)])
 
             await until(() => connectionManager1.hasConnection(toNodeId(wsPeerDescriptor2)))
             await until(() => connectionManager2.hasConnection(toNodeId(wsPeerDescriptor1)))
@@ -166,7 +154,6 @@ describe('SimultaneousConnections', () => {
     })
 
     describe('Websocket 1 server (ConnectionRequests)', () => {
-    
         let simTransport1: SimulatorTransport
         let simTransport2: SimulatorTransport
         let connectionManager1: ConnectionManager
@@ -233,12 +220,7 @@ describe('SimultaneousConnections', () => {
                 })
             })
 
-            await Promise.all([
-                promise1,
-                promise2,
-                connectionManager1.send(msg1),
-                connectionManager2.send(msg2)
-            ])
+            await Promise.all([promise1, promise2, connectionManager1.send(msg1), connectionManager2.send(msg2)])
 
             await until(() => connectionManager1.hasConnection(toNodeId(wsPeerDescriptor2)))
             await until(() => connectionManager2.hasConnection(toNodeId(wsPeerDescriptor1)))
@@ -246,7 +228,6 @@ describe('SimultaneousConnections', () => {
     })
 
     describe('WebRTC', () => {
-
         let simTransport1: SimulatorTransport
         let simTransport2: SimulatorTransport
         let connectionManager1: ConnectionManager
@@ -262,10 +243,10 @@ describe('SimultaneousConnections', () => {
             simTransport2 = new SimulatorTransport(wrtcPeerDescriptor2, simulator)
             await simTransport2.start()
             connectionManager1 = createConnectionManager(wrtcPeerDescriptor1, {
-                transport: simTransport1,
+                transport: simTransport1
             })
             connectionManager2 = createConnectionManager(wrtcPeerDescriptor2, {
-                transport: simTransport2,
+                transport: simTransport2
             })
             await connectionManager1.start()
             await connectionManager2.start()
@@ -301,16 +282,10 @@ describe('SimultaneousConnections', () => {
                 })
             })
 
-            await Promise.all([
-                promise1,
-                promise2,
-                connectionManager1.send(msg1),
-                connectionManager2.send(msg2)
-            ])
+            await Promise.all([promise1, promise2, connectionManager1.send(msg1), connectionManager2.send(msg2)])
 
             await until(() => connectionManager1.hasConnection(toNodeId(wrtcPeerDescriptor2)))
             await until(() => connectionManager2.hasConnection(toNodeId(wrtcPeerDescriptor1)))
         })
     })
-
 })

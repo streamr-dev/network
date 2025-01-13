@@ -19,7 +19,6 @@ export type Events = ManagedConnectionEvents
 // ManagedConnection is a component used as a wrapper for IConnection after they have been successfully handshaked.
 // Should only be used in the ConnectionManager.
 export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
-
     private connection: IConnection
     public connectionId: ConnectionID
     private remotePeerDescriptor: PeerDescriptor
@@ -78,7 +77,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         if (this.stopped) {
             return
         }
-        await this.connection.close(gracefulLeave)       
+        await this.connection.close(gracefulLeave)
         this.removeAllListeners()
     }
 
@@ -107,7 +106,5 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             messagesReceived: this.messagesReceived
             // Add connection type?
         }
-
     }
-
 }

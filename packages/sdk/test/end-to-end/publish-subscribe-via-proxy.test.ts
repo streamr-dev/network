@@ -11,7 +11,8 @@ const TIMEOUT = 30 * 1000
 const SUBSCRIBE_WAIT_TIME = 2000
 const WEBSOCKET_PORT = 14231
 
-describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy server in browser
+describeOnlyInNodeJs('publish/subscribe via proxy', () => {
+    // Cannot run proxy server in browser
 
     let stream: Stream
     let client: StreamrClient
@@ -31,47 +32,59 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await client.destroy()
     })
 
-    it('publish', async () => {
-        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
-        const subscription = await proxy.subscribe(stream)
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
+    it(
+        'publish',
+        async () => {
+            const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+            const subscription = await proxy.subscribe(stream)
+            await wait(SUBSCRIBE_WAIT_TIME)
+            await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
 
-        await client.publish(stream, {
-            foo: 'bar'
-        })
-        const receivedMessages = await collect(subscription, 1)
-        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
-        await proxy.destroy()
-    }, TIMEOUT)
+            await client.publish(stream, {
+                foo: 'bar'
+            })
+            const receivedMessages = await collect(subscription, 1)
+            expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+            await proxy.destroy()
+        },
+        TIMEOUT
+    )
 
-    it('subscribe', async () => {
-        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
-        await proxy.subscribe(stream)
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.SUBSCRIBE)
-        const subscription = await client.subscribe(stream)
+    it(
+        'subscribe',
+        async () => {
+            const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+            await proxy.subscribe(stream)
+            await wait(SUBSCRIBE_WAIT_TIME)
+            await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.SUBSCRIBE)
+            const subscription = await client.subscribe(stream)
 
-        await proxy.publish(stream, {
-            foo: 'bar'
-        })
-        const receivedMessages = await collect(subscription, 1)
-        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
-        await proxy.destroy()
-    }, TIMEOUT)
+            await proxy.publish(stream, {
+                foo: 'bar'
+            })
+            const receivedMessages = await collect(subscription, 1)
+            expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+            await proxy.destroy()
+        },
+        TIMEOUT
+    )
 
-    it('proxy doesn\'t accept connections', async () => {
-        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, false)
-        const subscription = await proxy.subscribe(stream)
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
+    it(
+        "proxy doesn't accept connections",
+        async () => {
+            const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, false)
+            const subscription = await proxy.subscribe(stream)
+            await wait(SUBSCRIBE_WAIT_TIME)
+            await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
 
-        await client.publish(stream, {
-            foo: 'bar'
-        })
-        await expect(async () => {
-            return withTimeout(collect(subscription, 1), 2000)
-        }).rejects.toThrow('timed out')
-        await proxy.destroy()
-    }, TIMEOUT)
+            await client.publish(stream, {
+                foo: 'bar'
+            })
+            await expect(async () => {
+                return withTimeout(collect(subscription, 1), 2000)
+            }).rejects.toThrow('timed out')
+            await proxy.destroy()
+        },
+        TIMEOUT
+    )
 })

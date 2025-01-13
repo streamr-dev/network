@@ -14,7 +14,6 @@ const NODE_ID = '12345678' as DhtAddress
 const DEFAULT_DURATIONS = DEFAULTS.periods.map((p) => p.duration)
 
 describe('MetricsPublisher', () => {
-
     let publishReportMessage: jest.Mock
     let metricsContext: MetricsContext
     let destroySignal: DestroySignal
@@ -28,22 +27,13 @@ describe('MetricsPublisher', () => {
             getNodeId: async () => NODE_ID
         }
         const eventEmitter = new StreamrClientEventEmitter()
-        new MetricsPublisher(
-            publisher as any,
-            node as any,
-            config,
-            eventEmitter,
-            destroySignal
-        )
+        new MetricsPublisher(publisher as any, node as any, config, eventEmitter, destroySignal)
 
         // trigger metric publisher to start
         eventEmitter.emit('streamPartSubscribed', undefined)
     }
 
-    const assertPublisherEnabled = async (
-        config: Pick<StreamrClientConfig, 'metrics'>,
-        expectedDurations: number[]
-    ) => {
+    const assertPublisherEnabled = async (config: Pick<StreamrClientConfig, 'metrics'>, expectedDurations: number[]) => {
         startMetricsPublisher(config)
         const createReportProducer = metricsContext.createReportProducer as jest.Mock
         await waitForCalls(createReportProducer, 1)
@@ -56,13 +46,13 @@ describe('MetricsPublisher', () => {
         await wait(10)
         expect(metricsContext.createReportProducer).not.toHaveBeenCalled()
     }
-    
+
     beforeEach(() => {
         publishReportMessage = jest.fn()
         metricsContext = new MetricsContext()
         jest.spyOn(metricsContext, 'createReportProducer')
         const metrics = {
-            'level': new LevelMetric()
+            level: new LevelMetric()
         }
         metricsContext.addMetrics('mockNamespace', metrics)
         metrics.level.record(123)
@@ -77,15 +67,17 @@ describe('MetricsPublisher', () => {
         const PERIOD_DURATION = 50
         const config: Pick<StreamrClientConfig, 'metrics' | 'auth'> = {
             metrics: {
-                periods: [{
-                    streamId: 'mock-stream-id',
-                    duration: PERIOD_DURATION
-                }],
+                periods: [
+                    {
+                        streamId: 'mock-stream-id',
+                        duration: PERIOD_DURATION
+                    }
+                ],
                 maxPublishDelay: 1
             }
         }
         startMetricsPublisher(config)
-        
+
         await waitForCalls(publishReportMessage, 1)
 
         const [streamId, reportContent, publishMetadata] = publishReportMessage.mock.calls[0]
@@ -106,7 +98,6 @@ describe('MetricsPublisher', () => {
     })
 
     describe('config', () => {
-
         it('default', async () => {
             await assertPublisherEnabled({}, DEFAULT_DURATIONS)
         })
@@ -128,23 +119,29 @@ describe('MetricsPublisher', () => {
         })
 
         it('custom periods', async () => {
-            await assertPublisherEnabled({
-                metrics: {
-                    periods: [
-                        { duration: 1234, streamId: '' },
-                        { duration: 5678, streamId: '' }
-                    ], 
-                    maxPublishDelay: 1 
-                }
-            }, [1234, 5678])
+            await assertPublisherEnabled(
+                {
+                    metrics: {
+                        periods: [
+                            { duration: 1234, streamId: '' },
+                            { duration: 5678, streamId: '' }
+                        ],
+                        maxPublishDelay: 1
+                    }
+                },
+                [1234, 5678]
+            )
         })
 
         it('custom maxPublishDelay', async () => {
-            await assertPublisherEnabled({
-                metrics: {
-                    maxPublishDelay: 1 
-                }
-            }, DEFAULT_DURATIONS)
+            await assertPublisherEnabled(
+                {
+                    metrics: {
+                        maxPublishDelay: 1
+                    }
+                },
+                DEFAULT_DURATIONS
+            )
         })
     })
 })

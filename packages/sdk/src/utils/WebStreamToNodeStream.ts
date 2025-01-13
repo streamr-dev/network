@@ -5,12 +5,9 @@ import { once } from 'events'
 /**
  * Background async task to pull data from the browser stream and push it into the node stream.
  */
-async function pull(
-    webStream: ReadableStream | WebStream.ReadableStream,
-    nodeStream: PassThrough
-): Promise<void> {
+async function pull(webStream: ReadableStream | WebStream.ReadableStream, nodeStream: PassThrough): Promise<void> {
     const reader = webStream.getReader()
-  
+
     const abortController = new AbortController()
 
     try {
@@ -24,7 +21,7 @@ async function pull(
             if (!nodeStream.writable) {
                 break
             }
-    
+
             const canWrite = nodeStream.write(value)
 
             if (!canWrite) {

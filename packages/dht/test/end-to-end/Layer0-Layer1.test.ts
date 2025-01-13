@@ -7,7 +7,6 @@ const STREAM_ID2 = 'stream2'
 const WEBSOCKET_PORT_RANGE = { min: 10017, max: 10018 }
 
 describe('Layer0-Layer1', () => {
-
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10016, tls: false }
     })
@@ -20,17 +19,16 @@ describe('Layer0-Layer1', () => {
     let stream2Node2: DhtNode
 
     beforeEach(async () => {
-
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ 
-            websocketPortRange: WEBSOCKET_PORT_RANGE, 
-            entryPoints: [epPeerDescriptor], 
+        node1 = new DhtNode({
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
+            entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
         })
-        node2 = new DhtNode({ 
+        node2 = new DhtNode({
             websocketPortRange: WEBSOCKET_PORT_RANGE,
             entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
@@ -45,13 +43,7 @@ describe('Layer0-Layer1', () => {
         stream2Node1 = new DhtNode({ transport: epDhtNode, connectionsView: epDhtNode.getConnectionsView(), serviceId: STREAM_ID2 })
         stream2Node2 = new DhtNode({ transport: node2, connectionsView: node2.getConnectionsView(), serviceId: STREAM_ID2 })
 
-        await Promise.all([
-            stream1Node1.start(),
-            stream1Node2.start(),
-            stream2Node1.start(),
-            stream2Node2.start()
-        ])
-
+        await Promise.all([stream1Node1.start(), stream1Node2.start(), stream2Node1.start(), stream2Node2.start()])
     })
 
     afterEach(async () => {
@@ -67,19 +59,10 @@ describe('Layer0-Layer1', () => {
     })
 
     it('Happy path', async () => {
-        await Promise.all([
-            node1.joinDht([epPeerDescriptor]),
-            node2.joinDht([epPeerDescriptor])
-        ])
-        await Promise.all([
-            stream1Node1.joinDht([epPeerDescriptor]),
-            stream1Node2.joinDht([epPeerDescriptor])
-        ])
-        
-        await Promise.all([
-            stream2Node1.joinDht([epPeerDescriptor]),
-            stream2Node2.joinDht([epPeerDescriptor])
-        ])
+        await Promise.all([node1.joinDht([epPeerDescriptor]), node2.joinDht([epPeerDescriptor])])
+        await Promise.all([stream1Node1.joinDht([epPeerDescriptor]), stream1Node2.joinDht([epPeerDescriptor])])
+
+        await Promise.all([stream2Node1.joinDht([epPeerDescriptor]), stream2Node2.joinDht([epPeerDescriptor])])
         expect(stream1Node1.getClosestContacts()).toHaveLength(1)
         expect(stream1Node2.getClosestContacts()).toHaveLength(1)
         expect(stream2Node1.getClosestContacts()).toHaveLength(1)

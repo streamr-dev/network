@@ -60,7 +60,9 @@ describe('pOnce', () => {
     it('works with concurrent starts', async () => {
         let isInProgress = false
         const next = jest.fn(async () => {
-            if (isInProgress) { throw new Error('already in progress') }
+            if (isInProgress) {
+                throw new Error('already in progress')
+            }
             isInProgress = true
             await wait(WAIT_TIME)
             // eslint-disable-next-line require-atomic-updates
@@ -68,11 +70,7 @@ describe('pOnce', () => {
         })
 
         const wrappedFn = pOnce(next)
-        const tasks = [
-            wrappedFn(),
-            wrappedFn(),
-            wrappedFn(),
-        ]
+        const tasks = [wrappedFn(), wrappedFn(), wrappedFn()]
         expect(isInProgress).toBe(true) // ensure fn was executed in same tick
         await Promise.all(tasks)
         expect(isInProgress).toBe(false)
@@ -93,11 +91,7 @@ describe('pOnce', () => {
         })
 
         const wrappedFn = pOnce(next)
-        const tasks = [
-            wrappedFn(),
-            wrappedFn(),
-            wrappedFn(),
-        ]
+        const tasks = [wrappedFn(), wrappedFn(), wrappedFn()]
         expect(await Promise.all(tasks)).toEqual([1, 1, 1])
         wrappedFn.reset()
         const task1 = wrappedFn(WAIT_TIME)
@@ -117,11 +111,7 @@ describe('pOnce', () => {
         })
 
         const wrappedFn = pOnce(next)
-        const tasks = [
-            wrappedFn(),
-            wrappedFn(),
-            wrappedFn(),
-        ]
+        const tasks = [wrappedFn(), wrappedFn(), wrappedFn()]
         await expect(async () => {
             await Promise.all(tasks)
         }).rejects.toThrow(err)
@@ -144,11 +134,7 @@ describe('pOnce', () => {
         })
 
         const wrappedFn = pOnce(next)
-        const tasks = [
-            wrappedFn(),
-            wrappedFn(),
-            wrappedFn(),
-        ]
+        const tasks = [wrappedFn(), wrappedFn(), wrappedFn()]
         await expect(async () => {
             await Promise.all(tasks)
         }).rejects.toThrow(err)
@@ -201,6 +187,6 @@ describe('pOne', () => {
         // parallel calls should be same
         expect(await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()])).toEqual([3, 3, 3])
         // can call again immediately after resolved
-        expect(await (wrappedFn().then(() => wrappedFn()))).toEqual(5)
+        expect(await wrappedFn().then(() => wrappedFn())).toEqual(5)
     })
 })

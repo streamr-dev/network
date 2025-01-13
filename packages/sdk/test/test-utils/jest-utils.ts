@@ -1,6 +1,6 @@
 import { AggregatedError } from '../../src/utils/AggregatedError'
 
-const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
+const TEST_REPEATS = process.env.TEST_REPEATS ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function describeRepeats(msg: string, fn: any, describeFn = describe): void {

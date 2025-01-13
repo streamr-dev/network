@@ -38,10 +38,10 @@ describe('collect', () => {
     })
 
     it('rejects if source throws', async () => {
-        const source = async function* () {
+        const source = (async function* () {
             yield 1
             throw new Error('mock-error')
-        }()
+        })()
         await expect(() => collect(source)).rejects.toThrow('mock-error')
     })
 })

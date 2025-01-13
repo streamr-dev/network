@@ -17,14 +17,13 @@ describe('BucketManager', () => {
     const insertBuckets = async (startTimestamp: Date) => {
         for (let i = 0; i < 100; i++) {
             const currentTimestamp = new Date(startTimestamp.getTime() + i * 60 * 1000) // + "i" minutes
-            await cassandraClient.execute('INSERT INTO bucket (stream_id, partition, date_create, id, records, size) '
-                + 'VALUES (?, 0, ?, ?, 5, 5)', [
-                streamId,
-                currentTimestamp,
-                TimeUuid.fromDate(currentTimestamp).toString()
-            ], {
-                prepare: true
-            })
+            await cassandraClient.execute(
+                'INSERT INTO bucket (stream_id, partition, date_create, id, records, size) ' + 'VALUES (?, 0, ?, ?, 5, 5)',
+                [streamId, currentTimestamp, TimeUuid.fromDate(currentTimestamp).toString()],
+                {
+                    prepare: true
+                }
+            )
         }
     }
 
@@ -32,7 +31,7 @@ describe('BucketManager', () => {
         cassandraClient = new Client({
             contactPoints,
             localDataCenter,
-            keyspace,
+            keyspace
         })
 
         await cassandraClient.connect()
@@ -62,9 +61,7 @@ describe('BucketManager', () => {
         expect(Object.values(bucketManager.buckets)).toHaveLength(0)
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
-        let result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [
-            streamId
-        ])
+        let result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [streamId])
         expect(result.rows.length).toEqual(0)
 
         // first time we call in constructor, second after timeout
@@ -86,9 +83,7 @@ describe('BucketManager', () => {
         expect(bucketManager.buckets[foundBucketId].isStored()).toBeFalsy()
 
         await until(() => bucketManager.buckets[foundBucketId].isStored())
-        result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [
-            streamId
-        ])
+        result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [streamId])
         const row = result.first()
 
         expect(row).not.toBeUndefined()

@@ -9,7 +9,6 @@ interface MetricEvents {
 }
 
 abstract class Sampler {
-
     protected readonly metric: Metric
     private readonly listener: any
 
@@ -32,7 +31,6 @@ abstract class Sampler {
 }
 
 export class Metric {
-
     private latestValue: number | undefined
     private readonly eventEmitter: EventEmitter<MetricEvents> = new EventEmitter()
     private readonly samplerFactory: (metric: Metric) => Sampler
@@ -74,7 +72,6 @@ export class Metric {
  * E.g. count of failed connections
  */
 class CountSampler extends Sampler {
-
     private sum: number = 0
 
     protected onRecord(value: number): void {
@@ -99,7 +96,6 @@ export class CountMetric extends Metric {
  * E.g. average latency
  */
 class AverageSampler extends Sampler {
-
     private sum: number = 0
     private count: number = 0
 
@@ -171,7 +167,7 @@ class RateSampler extends Sampler {
     }
 
     getAggregatedValue(): number | undefined {
-        if ((this.startTimestamp !== undefined) && (this.stopTimestamp !== undefined) && (this.startTimestamp !== this.stopTimestamp)) {
+        if (this.startTimestamp !== undefined && this.stopTimestamp !== undefined && this.startTimestamp !== this.stopTimestamp) {
             const elapsedSeconds = (this.stopTimestamp - this.startTimestamp) / 1000
             return this.sum / elapsedSeconds
         } else {
@@ -210,33 +206,37 @@ export class MetricsContext {
         onReport: (report: MetricsReport) => void,
         interval: number,
         abortSignal: AbortSignal,
-        formatNumber?: (value: number) => string,
+        formatNumber?: (value: number) => string
     ): void {
         const ongoingSamples: Map<string, Sampler> = new Map()
-        scheduleAtFixedRate(async (now: number) => {
-            if (ongoingSamples.size > 0) {
-                const report = {
-                    period: {
-                        start: now - interval,
-                        end: now
+        scheduleAtFixedRate(
+            async (now: number) => {
+                if (ongoingSamples.size > 0) {
+                    const report = {
+                        period: {
+                            start: now - interval,
+                            end: now
+                        }
                     }
+                    ongoingSamples.forEach((sample, metricId) => {
+                        sample.stop(now)
+                        const value = sample.getAggregatedValue()
+                        if (value !== undefined) {
+                            set(report, metricId, formatNumber !== undefined ? formatNumber(value) : value)
+                        }
+                    })
+                    onReport(report)
+                    ongoingSamples.clear()
                 }
-                ongoingSamples.forEach((sample, metricId) => {
-                    sample.stop(now)
-                    const value = sample.getAggregatedValue()
-                    if (value !== undefined) {
-                        set(report, metricId, (formatNumber !== undefined) ? formatNumber(value) : value)
-                    }
+                this.metrics.forEach((metric, id) => {
+                    const sample = metric.createSampler()
+                    sample.start(now)
+                    ongoingSamples.set(id, sample)
                 })
-                onReport(report)
-                ongoingSamples.clear()
-            }
-            this.metrics.forEach((metric, id) => {
-                const sample = metric.createSampler()
-                sample.start(now)
-                ongoingSamples.set(id, sample)
-            })
-        }, interval, abortSignal)
+            },
+            interval,
+            abortSignal
+        )
     }
 
     getMetric(id: string): Metric | undefined {

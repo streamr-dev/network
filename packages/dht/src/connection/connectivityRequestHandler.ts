@@ -1,10 +1,6 @@
 import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import {
-    ConnectivityRequest,
-    ConnectivityResponse,
-    Message
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityRequest, ConnectivityResponse, Message } from '../../generated/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
@@ -25,8 +21,7 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('ConnectivityRequest received: ' + JSON.stringify(Message.toJson(message)))
                 try {
-                    await handleIncomingConnectivityRequest(connectionToListenTo,
-                        message.body.connectivityRequest, geoIpLocator)
+                    await handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest, geoIpLocator)
                     logger.trace('handleIncomingConnectivityRequest ok')
                 } catch (err1) {
                     logger.error('handleIncomingConnectivityRequest', { err: err1 })

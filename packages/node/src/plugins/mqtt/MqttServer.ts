@@ -30,7 +30,8 @@ export class MqttServer {
             authenticate: MqttServer.createAuthenicationHandler(apiAuthentication)
         })
         this.aedes.on('publish', (packet, client) => {
-            if (client !== null) {  // is null if the this server sent the message
+            if (client !== null) {
+                // is null if the this server sent the message
                 this.listener?.onMessageReceived(packet.topic, packet.payload.toString(), client.id)
             }
         })
@@ -88,8 +89,8 @@ export class MqttServer {
             if (isValidAuthentication(password?.toString(), apiAuthentication)) {
                 done(null, true)
             } else {
-                const error: aedes.AuthenticateError = Object.assign(new Error(), { 
-                    returnCode: (password !== undefined) ? MqttServer.BAD_USERNAME_OR_PASSWORD : MqttServer.NOT_AUTHORIZED
+                const error: aedes.AuthenticateError = Object.assign(new Error(), {
+                    returnCode: password !== undefined ? MqttServer.BAD_USERNAME_OR_PASSWORD : MqttServer.NOT_AUTHORIZED
                 })
                 done(error, false)
             }

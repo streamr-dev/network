@@ -51,81 +51,73 @@ describe('Scaffold', () => {
 
     it('calls up/down once', async () => {
         let shouldUp = true
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
             }
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+        )
 
-        await Promise.all([
-            next(),
-            next()
-        ])
+        await Promise.all([next(), next()])
 
         await next()
 
         shouldUp = false
 
-        await Promise.all([
-            next(),
-            next()
-        ])
+        await Promise.all([next(), next()])
 
         await next()
 
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'done up',
-            'change down',
-            'down start',
-            'down end',
-            'done down'
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'done up', 'change down', 'down start', 'down end', 'done down'])
     })
 
     it('calls down automatically if check is false after up complete', async () => {
         let shouldUp = true
-        const next = Scaffold([
-            async () => {
-                await up()
-                shouldUp = false
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    shouldUp = false
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
             }
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+        )
 
         await next()
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'change down',
-            'down start',
-            'down end',
-            'done down'
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'change down', 'down start', 'down end', 'done down'])
     })
 
     it('downs on error in up', async () => {
         const err = new Error('expected')
-        const next = Scaffold([
-            async () => {
-                await up('a')
-                return () => down('a')
-            },
-            async () => {
-                await up('b')
-                throw err
-            },
-        ], async () => true, {
-            onDone, onChange
-        })
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a')
+                },
+                async () => {
+                    await up('b')
+                    throw err
+                }
+            ],
+            async () => true,
+            {
+                onDone,
+                onChange
+            }
+        )
 
         await expect(async () => {
             await next()
@@ -147,24 +139,29 @@ describe('Scaffold', () => {
     it('downs on error in check', async () => {
         const err = new Error('expected')
         let shouldThrow = false
-        const next = Scaffold([
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a')
+                },
+                async () => {
+                    await up('b')
+                    shouldThrow = true
+                    return () => down('b')
+                }
+            ],
             async () => {
-                await up('a')
-                return () => down('a')
+                if (shouldThrow) {
+                    throw err
+                }
+                return true
             },
-            async () => {
-                await up('b')
-                shouldThrow = true
-                return () => down('b')
-            },
-        ], async () => {
-            if (shouldThrow) {
-                throw err
+            {
+                onDone,
+                onChange
             }
-            return true
-        }, {
-            onDone, onChange
-        })
+        )
 
         await expect(async () => {
             await next()
@@ -196,26 +193,31 @@ describe('Scaffold', () => {
             }
         })
 
-        const next = Scaffold([
-            async () => {
-                await up('a')
-                return () => down('a')
-            },
-            async () => {
-                await up('b')
-                return async () => {
-                    await down('b')
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a')
+                },
+                async () => {
+                    await up('b')
+                    return async () => {
+                        await down('b')
+                    }
+                },
+                async () => {
+                    await up('c')
+                    return async () => {
+                        await down('c') // this should throw due to on('next' above
+                    }
                 }
-            },
-            async () => {
-                await up('c')
-                return async () => {
-                    await down('c') // this should throw due to on('next' above
-                }
-            },
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
+            }
+        )
 
         await next()
         shouldUp = false
@@ -238,7 +240,7 @@ describe('Scaffold', () => {
             'down end b',
             'down start a', // down for other steps should continue
             'down end a',
-            'done down',
+            'done down'
         ])
     })
 
@@ -253,20 +255,25 @@ describe('Scaffold', () => {
             }
         })
 
-        const next = Scaffold([
-            async () => {
-                await up('a')
-                return () => down('a') // this should throw due to on('next' above
-            },
-            async () => {
-                await up('b')
-                return async () => {
-                    await down('b')
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a') // this should throw due to on('next' above
+                },
+                async () => {
+                    await up('b')
+                    return async () => {
+                        await down('b')
+                    }
                 }
-            },
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
+            }
+        )
 
         await next()
         shouldUp = false
@@ -285,7 +292,7 @@ describe('Scaffold', () => {
             'down start b', // down should run (will error)
             'down end b',
             'down start a', // down for other steps should continue
-            'done down',
+            'done down'
         ])
     })
 
@@ -295,36 +302,33 @@ describe('Scaffold', () => {
 
         const err = new Error('expected')
         const onErrorNoop = jest.fn()
-        const next = Scaffold([
-            async () => {
-                await up('a')
-                return () => down('a') // this should throw due to on('next' above
-            },
-            async () => {
-                await up('b')
-                return async () => {
-                    await down('b')
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a') // this should throw due to on('next' above
+                },
+                async () => {
+                    await up('b')
+                    return async () => {
+                        await down('b')
+                    }
+                },
+                async () => {
+                    throw err
                 }
-            },
-            async () => {
-                throw err
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange,
+                onError: onErrorNoop
             }
-        ], async () => shouldUp, {
-            onDone,
-            onChange,
-            onError: onErrorNoop,
-        })
+        )
 
         await next()
 
-        expect(order).toEqual([
-            'change up',
-            'up start a',
-            'up end a',
-            'up start b',
-            'up end b',
-            'done up',
-        ])
+        expect(order).toEqual(['change up', 'up start a', 'up end a', 'up start b', 'up end b', 'done up'])
         expect(onErrorNoop).toHaveBeenCalledWith(err)
     })
 
@@ -336,25 +340,29 @@ describe('Scaffold', () => {
         const onErrorRethrow = jest.fn((error) => {
             throw error
         })
-        const next = Scaffold([
-            async () => {
-                await up('a')
-                return () => down('a') // this should throw due to on('next' above
-            },
-            async () => {
-                await up('b')
-                return async () => {
-                    await down('b')
+        const next = Scaffold(
+            [
+                async () => {
+                    await up('a')
+                    return () => down('a') // this should throw due to on('next' above
+                },
+                async () => {
+                    await up('b')
+                    return async () => {
+                        await down('b')
+                    }
+                },
+                async () => {
+                    throw err
                 }
-            },
-            async () => {
-                throw err
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange,
+                onError: onErrorRethrow
             }
-        ], async () => shouldUp, {
-            onDone,
-            onChange,
-            onError: onErrorRethrow,
-        })
+        )
 
         await expect(async () => {
             await next()
@@ -371,21 +379,26 @@ describe('Scaffold', () => {
             'down end b',
             'down start a',
             'down end a',
-            'done down',
+            'done down'
         ])
         expect(onErrorRethrow).toHaveBeenCalledWith(err)
     })
 
     it('does nothing if check fails', async () => {
         const shouldUp = false
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
             }
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+        )
 
         await next()
 
@@ -394,42 +407,43 @@ describe('Scaffold', () => {
 
     it('cancels up if check fails', async () => {
         let shouldUp = true
-        const next = Scaffold([
-            async () => {
-                await up()
-                shouldUp = false
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    shouldUp = false
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
             }
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+        )
 
         await next()
 
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'change down',
-            'down start',
-            'down end',
-            'done down',
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'change down', 'down start', 'down end', 'done down'])
     })
 
     it('cancels up if onChange errors', async () => {
         const err = new Error('expected')
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => true,
+            {
+                onDone,
+                onChange: () => {
+                    throw err
+                }
             }
-        ], async () => true, {
-            onDone,
-            onChange: () => {
-                throw err
-            }
-        })
+        )
 
         await expect(async () => next()).rejects.toThrow(err)
 
@@ -439,20 +453,24 @@ describe('Scaffold', () => {
     it('continues down if onChange errors', async () => {
         let shouldUp = true
         const err = new Error('expected')
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
-            }
-        ], async () => shouldUp, {
-            onDone,
-            onChange: (goingUp) => {
-                onChange(goingUp)
-                if (!goingUp) {
-                    throw err
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange: (goingUp) => {
+                    onChange(goingUp)
+                    if (!goingUp) {
+                        throw err
+                    }
                 }
             }
-        })
+        )
 
         await next()
 
@@ -460,36 +478,31 @@ describe('Scaffold', () => {
 
         await expect(async () => next()).rejects.toThrow(err)
 
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'done up',
-            'change down',
-            'down start',
-            'down end',
-            'done down',
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'done up', 'change down', 'down start', 'down end', 'done down'])
     })
 
     it('can change status in onChange', async () => {
         let shouldUp = true
         let once = false
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
-            }
-        ], async () => shouldUp, {
-            onDone,
-            onChange: (goingUp) => {
-                onChange(goingUp)
-                if (!goingUp && !once) {
-                    once = true
-                    shouldUp = true
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange: (goingUp) => {
+                    onChange(goingUp)
+                    if (!goingUp && !once) {
+                        once = true
+                        shouldUp = true
+                    }
                 }
             }
-        })
+        )
 
         await next()
 
@@ -497,27 +510,25 @@ describe('Scaffold', () => {
 
         await next()
 
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'done up',
-            'change down',
-            'change up',
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'done up', 'change down', 'change up'])
     })
 
     it('calls one at a time when down called during up', async () => {
         let shouldUp = true
 
-        const next = Scaffold([
-            async () => {
-                await up()
-                return () => down()
+        const next = Scaffold(
+            [
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ],
+            async () => shouldUp,
+            {
+                onDone,
+                onChange
             }
-        ], async () => shouldUp, {
-            onDone, onChange
-        })
+        )
         const done = new Defer()
         emitter.on('next', async (name: string) => {
             if (name === 'up start') {
@@ -526,66 +537,42 @@ describe('Scaffold', () => {
             }
         })
 
-        await Promise.all([
-            next(),
-            done,
-        ])
+        await Promise.all([next(), done])
 
-        expect(order).toEqual([
-            'change up',
-            'up start',
-            'up end',
-            'change down',
-            'down start',
-            'down end',
-            'done down',
-        ])
+        expect(order).toEqual(['change up', 'up start', 'up end', 'change down', 'down start', 'down end', 'done down'])
     })
 
     describe('plays undo stack at point of state change', () => {
         let shouldUp: boolean
         let next: ReturnType<typeof Scaffold>
-        const allUp = [
-            'change up',
-            'up start a',
-            'up end a',
-            'up start b',
-            'up end b',
-            'up start c',
-            'up end c',
-            'done up',
-        ]
+        const allUp = ['change up', 'up start a', 'up end a', 'up start b', 'up end b', 'up start c', 'up end c', 'done up']
 
-        const allDown = [
-            'change down',
-            'down start c',
-            'down end c',
-            'down start b',
-            'down end b',
-            'down start a',
-            'down end a',
-            'done down',
-        ]
+        const allDown = ['change down', 'down start c', 'down end c', 'down start b', 'down end b', 'down start a', 'down end a', 'done down']
 
         beforeEach(() => {
             shouldUp = false
 
-            next = Scaffold([
-                async () => {
-                    await up('a')
-                    return () => down('a')
-                },
-                async () => {
-                    await up('b')
-                    return () => down('b')
-                },
-                async () => {
-                    await up('c')
-                    return () => down('c')
-                },
-            ], () => shouldUp, {
-                onDone, onChange
-            })
+            next = Scaffold(
+                [
+                    async () => {
+                        await up('a')
+                        return () => down('a')
+                    },
+                    async () => {
+                        await up('b')
+                        return () => down('b')
+                    },
+                    async () => {
+                        await up('c')
+                        return () => down('c')
+                    }
+                ],
+                () => shouldUp,
+                {
+                    onDone,
+                    onChange
+                }
+            )
         })
 
         it('plays all up steps in order, then down steps in order', async () => {
@@ -595,10 +582,7 @@ describe('Scaffold', () => {
             shouldUp = false
 
             await next()
-            expect(order).toEqual([
-                ...allUp,
-                ...allDown
-            ])
+            expect(order).toEqual([...allUp, ...allDown])
         })
 
         it('can stop before first step', async () => {
@@ -611,20 +595,9 @@ describe('Scaffold', () => {
                 }
             })
 
-            await Promise.all([
-                next(),
-                done,
-            ])
+            await Promise.all([next(), done])
 
-            expect(order).toEqual([
-                'change up',
-                'up start a',
-                'up end a',
-                'change down',
-                'down start a',
-                'down end a',
-                'done down',
-            ])
+            expect(order).toEqual(['change up', 'up start a', 'up end a', 'change down', 'down start a', 'down end a', 'done down'])
         })
 
         it('can stop before second step', async () => {
@@ -637,10 +610,7 @@ describe('Scaffold', () => {
                 }
             })
 
-            await Promise.all([
-                next(),
-                done,
-            ])
+            await Promise.all([next(), done])
 
             expect(order).toEqual([
                 'change up',
@@ -653,7 +623,7 @@ describe('Scaffold', () => {
                 'down end b',
                 'down start a',
                 'down end a',
-                'done down',
+                'done down'
             ])
         })
 
@@ -682,7 +652,7 @@ describe('Scaffold', () => {
                 'up end b',
                 'up start c',
                 'up end c',
-                'done up',
+                'done up'
             ])
         })
 
@@ -731,7 +701,7 @@ describe('Scaffold', () => {
                 'up end b',
                 'up start c',
                 'up end c',
-                'done up',
+                'done up'
             ])
         })
     })

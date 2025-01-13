@@ -3,7 +3,6 @@ import { Handshaker } from '../../../src/logic/neighbor-discovery/Handshaker'
 import { DhtAddress } from '@streamr/dht'
 
 export class MockHandshaker implements Methods<Handshaker> {
-
     // eslint-disable-next-line class-methods-use-this
     getOngoingHandshakes(): Set<DhtAddress> {
         return new Set()
@@ -13,5 +12,4 @@ export class MockHandshaker implements Methods<Handshaker> {
     async attemptHandshakesOnContacts(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         return excludedIds
     }
-
 }

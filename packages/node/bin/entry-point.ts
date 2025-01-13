@@ -7,7 +7,7 @@ const main = async () => {
     const peerDescriptor = {
         ...entryPoint,
         nodeId: toDhtAddressRaw(entryPoint.nodeId as DhtAddress),
-        type: NodeType.NODEJS  // TODO remove this when NET-1070 done
+        type: NodeType.NODEJS // TODO remove this when NET-1070 done
     }
     const dhtNode = new DhtNode({
         nodeId: entryPoint.nodeId as DhtAddress,

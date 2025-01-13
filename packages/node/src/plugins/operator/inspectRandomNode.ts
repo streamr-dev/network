@@ -15,7 +15,7 @@ export async function inspectRandomNode(
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
     createOperatorFleetState: CreateOperatorFleetStateFn,
     abortSignal: AbortSignal,
-    findTargetFn = findTarget,
+    findTargetFn = findTarget
 ): Promise<void> {
     const traceId = randomString(6)
     const logger = new Logger(module, { traceId })
@@ -54,9 +54,5 @@ export async function inspectRandomNode(
     }
 
     logger.info('Raise flag', { target })
-    await myOperator.flag(
-        target.sponsorshipAddress,
-        target.operatorAddress,
-        StreamPartIDUtils.getStreamPartition(target.streamPart)
-    )
+    await myOperator.flag(target.sponsorshipAddress, target.operatorAddress, StreamPartIDUtils.getStreamPartition(target.streamPart))
 }

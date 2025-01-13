@@ -13,7 +13,7 @@ const formJsonRpcApiProviderOptions = (config: Pick<StrictStreamrClientConfig, '
     return {
         staticNetwork: true,
         batchStallTime: isDevChain(config) ? 0 : undefined, // Don't batch requests, send them immediately
-        cacheTimeout: isDevChain(config) ? -1 : undefined   // Do not employ result caching
+        cacheTimeout: isDevChain(config) ? -1 : undefined // Do not employ result caching
     }
 }
 

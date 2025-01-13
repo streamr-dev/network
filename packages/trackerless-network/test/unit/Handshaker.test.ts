@@ -6,7 +6,6 @@ import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '../utils/utils'
 
 describe('Handshaker', () => {
-
     let handshaker: Handshaker
     const peerDescriptor = createMockPeerDescriptor()
 
@@ -21,7 +20,7 @@ describe('Handshaker', () => {
 
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
-    
+
     beforeEach(async () => {
         simulator = new Simulator()
         simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
@@ -65,5 +64,4 @@ describe('Handshaker', () => {
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })
-
 })

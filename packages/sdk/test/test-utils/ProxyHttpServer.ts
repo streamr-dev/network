@@ -16,7 +16,6 @@ const logger = new Logger(module)
  * Forwards requests to targetUrl. Supports only JSON requests and responses.
  */
 export class ProxyHttpServer {
-
     private httpServer?: Server
     private readonly targetUrl: string
     private readonly requests: ProxyHttpServerRequest[] = []
@@ -34,7 +33,7 @@ export class ProxyHttpServer {
             const isPost = req.method === 'POST'
             const requestInit: RequestInit = {
                 method: req.method,
-                body: isPost ? JSON.stringify(req.body) : undefined,
+                body: isPost ? JSON.stringify(req.body) : undefined
             }
             const targetResponse = await fetch(this.targetUrl, requestInit)
             const targetBody = await targetResponse.json()
@@ -45,7 +44,7 @@ export class ProxyHttpServer {
                 timestamp: Date.now()
             })
         })
-        this.httpServer = app.listen(0)  // uses random port
+        this.httpServer = app.listen(0) // uses random port
         await once(this.httpServer, 'listening')
         logger.debug(`Started proxy server at port ${this.getPort()}`)
     }

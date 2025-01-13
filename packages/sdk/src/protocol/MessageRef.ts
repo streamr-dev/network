@@ -1,7 +1,6 @@
 import { validateIsNotNegativeInteger } from './validations'
 
 export class MessageRef {
-
     readonly timestamp: number
     readonly sequenceNumber: number
 

@@ -22,9 +22,10 @@ describe('Kademlia correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, { name: string, distance: number, id: { type: string, data: number[] } }[]>
-        = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
+    const dhtIds: { type: string; data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> = JSON.parse(
+        fs.readFileSync('test/data/orderedneighbors.json').toString()
+    )
 
     beforeEach(async () => {
         nodes = []
@@ -40,10 +41,7 @@ describe('Kademlia correctness', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map((node) => node.stop())
-        ])
+        await Promise.all([entryPoint.stop(), ...nodes.map((node) => node.stop())])
     })
 
     it('Can find correct neighbors', async () => {
@@ -54,7 +52,7 @@ describe('Kademlia correctness', () => {
             const startTimestamp = Date.now()
             await nodes[i].joinDht([entryPoint.getLocalPeerDescriptor()])
             const endTimestamp = Date.now()
-            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')  
+            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')
         }
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
@@ -78,14 +76,13 @@ describe('Kademlia correctness', () => {
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j]] + '')) {
+                    if (groundTruth[i + ''][j].name != nodeIndicesById[kademliaNeighbors[j]] + '') {
                         break
                     }
                     correctNeighbors++
                 }
             } catch {
-                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
-                    + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

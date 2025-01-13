@@ -6,10 +6,7 @@ import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import {
-    Msg,
-    getPublishTestStreamMessages
-} from '../test-utils/publish'
+import { Msg, getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream, readUtf8ExampleIndirectly } from '../test-utils/utils'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
@@ -19,7 +16,6 @@ const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
 describe('StreamrClient', () => {
-
     let client: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let streamDefinition: StreamPartID
@@ -41,11 +37,14 @@ describe('StreamrClient', () => {
             userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        }), streamDefinition)
+        publishTestMessages = getPublishTestStreamMessages(
+            environment.createClient({
+                auth: {
+                    privateKey: publisherWallet.privateKey
+                }
+            }),
+            streamDefinition
+        )
     })
 
     afterEach(async () => {
@@ -53,37 +52,52 @@ describe('StreamrClient', () => {
     })
 
     describe('Pub/Sub', () => {
-        it('client.publish does not error', async () => {
-            await client.publish(streamDefinition, {
-                test: 'client.publish',
-            })
-            await wait(WAIT_TIME)
-        }, TIMEOUT)
+        it(
+            'client.publish does not error',
+            async () => {
+                await client.publish(streamDefinition, {
+                    test: 'client.publish'
+                })
+                await wait(WAIT_TIME)
+            },
+            TIMEOUT
+        )
 
-        it('Stream.publish does not error', async () => {
-            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
-            await stream.publish({
-                test: 'Stream.publish',
-            })
-            await wait(WAIT_TIME)
-        }, TIMEOUT)
+        it(
+            'Stream.publish does not error',
+            async () => {
+                const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
+                await stream.publish({
+                    test: 'Stream.publish'
+                })
+                await wait(WAIT_TIME)
+            },
+            TIMEOUT
+        )
 
-        it('client.publish with Stream object as arg', async () => {
-            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
-            await client.publish(stream, {
-                test: 'client.publish.Stream.object',
-            })
-            await wait(WAIT_TIME)
-        }, TIMEOUT)
+        it(
+            'client.publish with Stream object as arg',
+            async () => {
+                const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
+                await client.publish(stream, {
+                    test: 'client.publish.Stream.object'
+                })
+                await wait(WAIT_TIME)
+            },
+            TIMEOUT
+        )
 
         it('client.subscribe (realtime) with onMessage callback', async () => {
             const done = new Defer<void>()
             const mockMessage = Msg()
-            await client.subscribe(streamDefinition, done.wrap(async (content, metadata) => {
-                expect(content).toEqual(mockMessage)
-                expect(metadata.publisherId).toBeTruthy()
-                expect(metadata.signature).toBeTruthy()
-            }))
+            await client.subscribe(
+                streamDefinition,
+                done.wrap(async (content, metadata) => {
+                    expect(content).toEqual(mockMessage)
+                    expect(metadata.publisherId).toBeTruthy()
+                    expect(metadata.signature).toBeTruthy()
+                })
+            )
 
             // Publish after subscribed
             await client.publish(streamDefinition, mockMessage)
@@ -103,7 +117,7 @@ describe('StreamrClient', () => {
             const published = await publishTestMessages(MAX_MESSAGES)
             await expect(async () => collect(sub, 1)).rejects.toThrow()
             await done
-            expect(onMessageMsgs.map(((m) => m.signature))).toEqual(published.map(((m) => m.signature)))
+            expect(onMessageMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
 
         it('client.subscribe with onMessage callback that throws', async () => {
@@ -122,7 +136,7 @@ describe('StreamrClient', () => {
 
             const published = await publishTestMessages(MAX_MESSAGES)
             await sub.onFinally.listen()
-            expect(onMessageMsgs.map(((m) => m.signature))).toEqual(published.slice(0, 1).map(((m) => m.signature)))
+            expect(onMessageMsgs.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(onSubError).toHaveBeenCalledWith(err)
         })
@@ -143,7 +157,7 @@ describe('StreamrClient', () => {
             const published = await publishTestMessages(MAX_MESSAGES)
 
             await done
-            expect(received.map((m) => m.signature)).toEqual(published.map(((m) => m.signature)))
+            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
     })
 

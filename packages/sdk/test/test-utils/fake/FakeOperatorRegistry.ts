@@ -8,13 +8,12 @@ export const fakeEntrypoint = {
     websocket: {
         host: 'test',
         port: 12345,
-        tls: true,
+        tls: true
     }
 }
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeOperatorRegistry implements Methods<OperatorRegistry> {
-
     // eslint-disable-next-line class-methods-use-this
     async findRandomNetworkEntrypoints(): Promise<NetworkPeerDescriptor[]> {
         return [fakeEntrypoint]
@@ -24,5 +23,4 @@ export class FakeOperatorRegistry implements Methods<OperatorRegistry> {
     async findOperatorsOnStream(): Promise<NetworkPeerDescriptor[]> {
         return [fakeEntrypoint]
     }
-
 }

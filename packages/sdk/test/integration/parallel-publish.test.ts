@@ -14,7 +14,6 @@ const MESSAGE_COUNT = 100
  * Publishes message concurrently. Produces one message chain which contains messages in the correct order.
  */
 describe('parallel publish', () => {
-
     const publisherWallet = fastWallet()
     let publisher: StreamrClient
     let stream: Stream
@@ -53,18 +52,20 @@ describe('parallel publish', () => {
 
         const sortedMessages = sentMessages.sort((m1, m2) => {
             const timestampDiff = m1.getTimestamp() - m2.getTimestamp()
-            return (timestampDiff !== 0) ? timestampDiff : (m1.getSequenceNumber() - m2.getSequenceNumber())
+            return timestampDiff !== 0 ? timestampDiff : m1.getSequenceNumber() - m2.getSequenceNumber()
         })
         expect(uniq(sortedMessages.map((m) => m.getMsgChainId()))).toHaveLength(1)
         expect(sortedMessages[0].prevMsgRef).toBeUndefined()
-        expect(sortedMessages.every((m, i) => {
-            if (i === 0) {
-                return m.prevMsgRef === undefined
-            } else {
-                const previous = sortedMessages[i - 1]
-                return (m.prevMsgRef!.timestamp === previous.getTimestamp()) && (m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber())
-            }
-        })).toBeTrue()
+        expect(
+            sortedMessages.every((m, i) => {
+                if (i === 0) {
+                    return m.prevMsgRef === undefined
+                } else {
+                    const previous = sortedMessages[i - 1]
+                    return m.prevMsgRef!.timestamp === previous.getTimestamp() && m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber()
+                }
+            })
+        ).toBeTrue()
 
         const groupKeyIds = uniq(sortedMessages.map((m) => m.groupKeyId))
         expect(groupKeyIds).toHaveLength(1)

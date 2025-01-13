@@ -15,7 +15,6 @@ export const MIN_SEQUENCE_NUMBER_VALUE = 0
 export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 
 class ResponseTransform extends Transform {
-
     format: Format
     firstMessage = true
 
@@ -69,19 +68,14 @@ const sendSuccess = (data: Readable, format: Format, streamId: string, res: Resp
             })
         }
     })
-    pipeline(
-        data,
-        new ResponseTransform(format),
-        res,
-        (err) => {
-            if ((err !== undefined) && (err !== null)) {
-                logger.error('Encountered error in pipeline', {
-                    streamId,
-                    err
-                })
-            }
+    pipeline(data, new ResponseTransform(format), res, (err) => {
+        if (err !== undefined && err !== null) {
+            logger.error('Encountered error in pipeline', {
+                streamId,
+                err
+            })
         }
-    )
+    })
 }
 
 const sendError = (message: string, res: Response) => {
@@ -110,7 +104,7 @@ type RangeRequest = BaseRequest<{
     publisherId?: string
     msgChainId?: string
     fromOffset?: string // no longer supported
-    toOffset?: string   // no longer supported
+    toOffset?: string // no longer supported
 }>
 
 const handleLast = (
@@ -128,11 +122,7 @@ const handleLast = (
         sendError(`Query parameter "count" not a number: ${req.query.count}`, res)
         return
     }
-    const data = storage.requestLast(
-        streamId,
-        partition,
-        count!,
-    )
+    const data = storage.requestLast(streamId, partition, count!)
     sendSuccess(data, format, streamId, res)
 }
 
@@ -156,7 +146,7 @@ const handleFrom = (
         sendError(`Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`, res)
         return
     }
-    if ((req.query.publisherId !== undefined) && (!isValidUserId(req.query.publisherId))) {
+    if (req.query.publisherId !== undefined && !isValidUserId(req.query.publisherId)) {
         sendError(`Query parameter "publisherId" not valid: ${req.query.publisherId}`, res)
         return
     }
@@ -165,7 +155,7 @@ const handleFrom = (
         partition,
         fromTimestamp,
         fromSequenceNumber,
-        (req.query.publisherId !== undefined) ? toUserId(req.query.publisherId) : undefined
+        req.query.publisherId !== undefined ? toUserId(req.query.publisherId) : undefined
     )
     sendSuccess(data, format, streamId, res)
 }
@@ -198,7 +188,10 @@ const handleRange = (
     }
     if (toTimestamp === undefined) {
         // eslint-disable-next-line max-len
-        sendError('Query parameter "toTimestamp" required as well. To request all messages since a timestamp, use the endpoint /streams/:id/data/partitions/:partition/from', res)
+        sendError(
+            'Query parameter "toTimestamp" required as well. To request all messages since a timestamp, use the endpoint /streams/:id/data/partitions/:partition/from',
+            res
+        )
         return
     }
     if (Number.isNaN(toTimestamp)) {
@@ -209,7 +202,7 @@ const handleRange = (
         sendError('Invalid combination of "publisherId" and "msgChainId"', res)
         return
     }
-    if ((req.query.publisherId !== undefined) && (!isValidUserId(req.query.publisherId))) {
+    if (req.query.publisherId !== undefined && !isValidUserId(req.query.publisherId)) {
         sendError(`Query parameter "publisherId" not valid: ${req.query.publisherId}`, res)
         return
     }
@@ -220,7 +213,7 @@ const handleRange = (
         fromSequenceNumber,
         toTimestamp,
         toSequenceNumber,
-        (req.query.publisherId !== undefined) ? toUserId(req.query.publisherId) : undefined,
+        req.query.publisherId !== undefined ? toUserId(req.query.publisherId) : undefined,
         req.query.msgChainId
     )
     sendSuccess(data, format, streamId, res)
@@ -250,7 +243,7 @@ const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHan
             case 'range':
                 handleRange(req, streamId, partition, format, res, storage, metrics)
                 break
-            default: 
+            default:
                 sendError('Unknown resend type', res)
                 break
         }

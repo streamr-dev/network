@@ -27,12 +27,7 @@ export class Propagation {
     private readonly minPropagationTargets: number
     private readonly activeTaskStore: PropagationTaskStore
 
-    constructor({
-        sendToNeighbor,
-        minPropagationTargets,
-        ttl = DEFAULT_TTL,
-        maxMessages = DEFAULT_MAX_MESSAGES
-    }: ConstructorOptions) {
+    constructor({ sendToNeighbor, minPropagationTargets, ttl = DEFAULT_TTL, maxMessages = DEFAULT_MAX_MESSAGES }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
         this.activeTaskStore = new PropagationTaskStore(ttl, maxMessages)
@@ -65,7 +60,7 @@ export class Propagation {
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-            (async () => {
+            ;(async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)
                 } catch {

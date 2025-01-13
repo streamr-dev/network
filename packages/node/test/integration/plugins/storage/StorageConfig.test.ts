@@ -2,12 +2,7 @@ import cassandra, { Client } from 'cassandra-driver'
 import { StreamrClient, Stream, convertBytesToStreamMessage } from '@streamr/sdk'
 import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import {
-    createClient,
-    STREAMR_DOCKER_DEV_HOST,
-    createTestStream,
-    startStorageNode
-} from '../../../utils'
+import { createClient, STREAMR_DOCKER_DEV_HOST, createTestStream, startStorageNode } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { until } from '@streamr/utils'
 
@@ -33,7 +28,7 @@ describe('StorageConfig', () => {
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
-            keyspace,
+            keyspace
         })
     })
 
@@ -49,9 +44,7 @@ describe('StorageConfig', () => {
 
     afterEach(async () => {
         await client.destroy()
-        await Promise.allSettled([
-            storageNode.stop(),
-        ])
+        await Promise.allSettled([storageNode.stop()])
     })
 
     it('when client publishes a message, it is written to the store', async () => {
@@ -61,7 +54,7 @@ describe('StorageConfig', () => {
         })
         await until(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
-            return (result.first().count > 0)
+            return result.first().count > 0
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = convertBytesToStreamMessage(result.first().payload)

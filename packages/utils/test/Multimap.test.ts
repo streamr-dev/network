@@ -1,7 +1,6 @@
 import { Multimap } from '../src/Multimap'
 
 describe('Multimap', () => {
-
     it('happy path', () => {
         const map: Multimap<string, number> = new Multimap()
         map.add('foo', 5)

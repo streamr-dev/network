@@ -5,7 +5,6 @@ import { GroupKeyResponse as OldGroupKeyResponse } from './GroupKeyResponse'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyResponseTranslator {
-
     static toProtobuf(msg: OldGroupKeyResponse): NewGroupKeyResponse {
         const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
             return {
@@ -22,10 +21,7 @@ export class GroupKeyResponseTranslator {
     }
 
     static toClientProtocol(msg: NewGroupKeyResponse): OldGroupKeyResponse {
-        const encryptedGroupKeys = msg.groupKeys.map((groupKey: NewGroupKey) => new OldEncryptedGroupKey(
-            groupKey.id,
-            groupKey.data,
-        ))
+        const encryptedGroupKeys = msg.groupKeys.map((groupKey: NewGroupKey) => new OldEncryptedGroupKey(groupKey.id, groupKey.data))
         return new OldGroupKeyResponse({
             requestId: msg.requestId,
             recipient: toUserId(msg.recipientId),

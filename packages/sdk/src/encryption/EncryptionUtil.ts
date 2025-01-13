@@ -9,8 +9,11 @@ export const INITIALIZATION_VECTOR_LENGTH = 16
 export class EncryptionUtil {
     private static validateRSAPublicKey(publicKey: crypto.KeyLike): void | never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
-        if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
-            || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
+        if (
+            typeof keyString !== 'string' ||
+            !keyString.startsWith('-----BEGIN PUBLIC KEY-----') ||
+            !keyString.endsWith('-----END PUBLIC KEY-----\n')
+        ) {
             throw new Error('"publicKey" must be a PKCS#8 RSA public key in the PEM format')
         }
     }

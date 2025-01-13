@@ -15,25 +15,31 @@ interface Options extends BaseOptions {
     withMetadata: boolean
 }
 
-createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
-    const formContent = (content: unknown) => content instanceof Uint8Array ? binaryToHex(content) : content
-    const formMessage = options.withMetadata
-        ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
-        : (content: unknown) => formContent(content)
-    await client.subscribe({
-        streamId,
-        partition: options.partition,
-        raw: options.raw
-    }, (content, metadata) => {
-        const output = formMessage(content, metadata)
-        console.info(isString(output) ? output : JSON.stringify(output))
-    })
-}, {
-    autoDestroyClient: false,
-    clientOptionsFactory: (options) => ({
-        orderMessages: !options.disableOrdering
-    })
-})
+createClientCommand(
+    async (client: StreamrClient, streamId: string, options: Options) => {
+        const formContent = (content: unknown) => (content instanceof Uint8Array ? binaryToHex(content) : content)
+        const formMessage = options.withMetadata
+            ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
+            : (content: unknown) => formContent(content)
+        await client.subscribe(
+            {
+                streamId,
+                partition: options.partition,
+                raw: options.raw
+            },
+            (content, metadata) => {
+                const output = formMessage(content, metadata)
+                console.info(isString(output) ? output : JSON.stringify(output))
+            }
+        )
+    },
+    {
+        autoDestroyClient: false,
+        clientOptionsFactory: (options) => ({
+            orderMessages: !options.disableOrdering
+        })
+    }
+)
     .arguments('<streamId>')
     .description('subscribe to a stream, prints JSON messages to stdout line-by-line')
     .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)

@@ -5,13 +5,12 @@ import { DhtAddress, toNodeId } from '../../identifiers'
 import EventEmitter from 'eventemitter3'
 import { Events } from './ContactList'
 
-export interface RingContacts { 
+export interface RingContacts {
     left: PeerDescriptor[]
     right: PeerDescriptor[]
 }
 
 export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> extends EventEmitter<Events<C>> {
-
     private readonly numNeighborsPerSide = 5
     private readonly referenceId: RingId
     private readonly excludedIds: Set<DhtAddress>
@@ -101,7 +100,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
         return undefined
     }
 
-    getClosestContacts(limitPerSide?: number): { left: C[], right: C[] } {
+    getClosestContacts(limitPerSide?: number): { left: C[]; right: C[] } {
         const leftContacts: C[] = []
         const rightContacts: C[] = []
 
@@ -112,7 +111,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             }
             leftContacts.push(item[1])
             leftCount++
-        } 
+        }
 
         let rightCount = 0
         for (const item of this.rightNeighbors) {

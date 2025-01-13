@@ -5,15 +5,12 @@ import { EthereumAddress, wait } from '@streamr/utils'
 const POLL_TIME = 5
 
 const POLL_RESULT = Object.freeze({
-    streams: [
-        { id: 'stream-1' },
-        { id: 'stream-2' },
-    ] as Stream[],
+    streams: [{ id: 'stream-1' }, { id: 'stream-2' }] as Stream[],
     blockNumber: 13
 })
 
 describe(StoragePoller, () => {
-    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
+    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[]; blockNumber: number }>, [nodeAddress: EthereumAddress]>
     let onNewSnapshot: jest.Mock<Promise<void>, [streams: Stream[], block: number]>
     let stubClient: Pick<StreamrClient, 'getStoredStreams'>
     let poller: StoragePoller

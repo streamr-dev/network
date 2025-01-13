@@ -13,5 +13,4 @@ describe('RSAKeyPair', () => {
         const ciphertext = EncryptionUtil.encryptWithRSAPublicKey(Buffer.from(plaintext, 'utf8'), rsaKeyPair.getPublicKey())
         expect(EncryptionUtil.decryptWithRSAPrivateKey(ciphertext, rsaKeyPair.getPrivateKey()).toString('utf8')).toStrictEqual(plaintext)
     })
-
 })

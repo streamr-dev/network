@@ -1,11 +1,6 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { WebrtcConnectorRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
-import {
-    IceCandidate,
-    RtcAnswer,
-    RtcOffer,
-    WebrtcConnectionRequest
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { IceCandidate, RtcAnswer, RtcOffer, WebrtcConnectionRequest } from '../../generated/packages/dht/protos/DhtRpc'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { IWebrtcConnectorRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
@@ -14,7 +9,6 @@ import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
-
     let rpcCommunicator1: RpcCommunicator<DhtCallContext>
     let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client: ProtoRpcClient<WebrtcConnectorRpcClient>
@@ -32,7 +26,6 @@ describe('WebRTC rpc messages', () => {
 
         rpcCommunicator1 = new RpcCommunicator()
         const serverFunctions: IWebrtcConnectorRpc = {
-
             requestConnection: async (): Promise<Empty> => {
                 requestConnectionCounter += 1
                 const res: Empty = {}
@@ -81,43 +74,43 @@ describe('WebRTC rpc messages', () => {
     })
 
     it('send connectionRequest', async () => {
-        client.requestConnection({
-        },
-        { targetDescriptor, notification: true }
-        )
+        client.requestConnection({}, { targetDescriptor, notification: true })
 
         await until(() => requestConnectionCounter === 1)
     })
 
     it('send rtcOffer', async () => {
-        client.rtcOffer({
-            connectionId: 'rtcOffer',
-            description: 'aaaaaa'
-        },
-        { targetDescriptor, notification: true }
+        client.rtcOffer(
+            {
+                connectionId: 'rtcOffer',
+                description: 'aaaaaa'
+            },
+            { targetDescriptor, notification: true }
         )
 
         await until(() => rtcOfferCounter === 1)
     })
 
     it('send rtcAnswer', async () => {
-        client.rtcAnswer({
-            connectionId: 'rtcOffer',
-            description: 'aaaaaa'
-        },
-        { targetDescriptor, notification: true }
+        client.rtcAnswer(
+            {
+                connectionId: 'rtcOffer',
+                description: 'aaaaaa'
+            },
+            { targetDescriptor, notification: true }
         )
 
         await until(() => rtcAnswerCounter === 1)
     })
 
     it('send iceCandidate', async () => {
-        client.iceCandidate({
-            connectionId: 'rtcOffer',
-            candidate: 'aaaaaa',
-            mid: 'asdasdasdasdasd'
-        },
-        { targetDescriptor, notification: true }
+        client.iceCandidate(
+            {
+                connectionId: 'rtcOffer',
+                candidate: 'aaaaaa',
+                mid: 'asdasdasdasdasd'
+            },
+            { targetDescriptor, notification: true }
         )
 
         await until(() => iceCandidateCounter === 1)

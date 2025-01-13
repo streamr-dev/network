@@ -26,7 +26,7 @@ describe('withRateLimit', () => {
         const JITTER_FACTOR = 10
         const INTERVAL = 100
         const rateLimitFn = withRateLimit(fn, INTERVAL)
-        await rateLimitFn()  // +1
+        await rateLimitFn() // +1
         await rateLimitFn()
         await wait(INTERVAL + JITTER_FACTOR)
         await rateLimitFn() // +1

@@ -2,12 +2,7 @@ import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
-import {
-    ClosestPeersRequest,
-    ClosestRingPeersRequest,
-    PeerDescriptor,
-    PingRequest
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestRingPeersRequest, PeerDescriptor, PingRequest } from '../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'
@@ -24,7 +19,6 @@ export interface KBucketContact {
 }
 
 export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBucketContact {
-
     private static counter = 0
     public vectorClock: number
     public readonly id: DhtAddressRaw
@@ -96,9 +90,11 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        this.getClient().leaveNotice({}, options).catch((e) => {
-            logger.trace('Failed to send leaveNotice' + e)
-        })
+        this.getClient()
+            .leaveNotice({}, options)
+            .catch((e) => {
+                logger.trace('Failed to send leaveNotice' + e)
+            })
     }
 
     getNodeId(): DhtAddress {

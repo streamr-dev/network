@@ -6,10 +6,7 @@ import {
     RouteMessageWrapper,
     RecursiveOperationRequest
 } from '../../generated/packages/dht/protos/DhtRpc'
-import {
-    createWrappedClosestPeersRequest,
-    createMockPeerDescriptor
-} from '../utils/utils'
+import { createWrappedClosestPeersRequest, createMockPeerDescriptor } from '../utils/utils'
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
@@ -43,7 +40,6 @@ const createRequest = (): RecursiveOperationRequest => {
 }
 
 describe('RecursiveOperationManager', () => {
-
     const peerDescriptor1 = createMockPeerDescriptor()
     const peerDescriptor2 = createMockPeerDescriptor()
     const recursiveOperationRequest = createRequest()
@@ -87,7 +83,7 @@ describe('RecursiveOperationManager', () => {
 
     it('RecursiveOperationManager server', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage) as RouteMessageAck
+        const res = (await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)) as RouteMessageAck
         expect(res.error).toBeUndefined()
         recursiveOperationManager.stop()
     })
@@ -112,21 +108,23 @@ describe('RecursiveOperationManager', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(() => rpcCommunicator.callRpcMethod('routeRequest', {
-            message: badMessage,
-            requestId: 'REQ',
-            routingPath: [],
-            reachableThrough: [],
-            target: peerDescriptor1.nodeId,
-            sourcePeer: peerDescriptor2
-        })).rejects.toThrow()
+        await expect(() =>
+            rpcCommunicator.callRpcMethod('routeRequest', {
+                message: badMessage,
+                requestId: 'REQ',
+                routingPath: [],
+                reachableThrough: [],
+                target: peerDescriptor1.nodeId,
+                sourcePeer: peerDescriptor2
+            })
+        ).rejects.toThrow()
         manager.stop()
     })
 
     it('no targets', async () => {
         const router = createMockRouter(RouteMessageError.NO_TARGETS)
         const send = jest.fn()
-        const transport = { 
+        const transport = {
             send,
             getConnections: () => [],
             on: () => {},
@@ -145,7 +143,7 @@ describe('RecursiveOperationManager', () => {
     it('error', async () => {
         const router = createMockRouter(RouteMessageError.DUPLICATE)
         const send = jest.fn()
-        const transport = { 
+        const transport = {
             send,
             getConnections: () => []
         }

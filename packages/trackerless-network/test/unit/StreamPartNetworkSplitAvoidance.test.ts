@@ -2,16 +2,15 @@ import { MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from '../../src/l
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 
 describe('StreamPartNetworkSplitAvoidance', () => {
-
     let avoidance: StreamPartNetworkSplitAvoidance
     let discoveryLayerNode: MockDiscoveryLayerNode
-    
+
     beforeEach(() => {
         discoveryLayerNode = new MockDiscoveryLayerNode()
         avoidance = new StreamPartNetworkSplitAvoidance({
             discoveryLayerNode,
-            discoverEntryPoints: async () => { 
-                discoveryLayerNode.addNewRandomPeerToKBucket() 
+            discoverEntryPoints: async () => {
+                discoveryLayerNode.addNewRandomPeerToKBucket()
                 return discoveryLayerNode.getNeighbors()
             },
             exponentialRunOfBaseDelay: 1
@@ -27,5 +26,4 @@ describe('StreamPartNetworkSplitAvoidance', () => {
         await avoidance.avoidNetworkSplit()
         expect(discoveryLayerNode.getNeighborCount()).toBeGreaterThan(MIN_NEIGHBOR_COUNT)
     })
-
 })

@@ -1,8 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import {
-    PeerDescriptor,
-    WebsocketConnectionRequest
-} from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, WebsocketConnectionRequest } from '../../../generated/packages/dht/protos/DhtRpc'
 import { IWebsocketClientConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { Empty } from '../../../generated/google/protobuf/empty'
@@ -17,7 +14,6 @@ interface WebsocketClientConnectorRpcLocalOptions {
 }
 
 export class WebsocketClientConnectorRpcLocal implements IWebsocketClientConnectorRpc {
-
     private readonly options: WebsocketClientConnectorRpcLocalOptions
 
     constructor(options: WebsocketClientConnectorRpcLocalOptions) {

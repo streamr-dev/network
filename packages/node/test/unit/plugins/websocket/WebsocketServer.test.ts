@@ -28,13 +28,12 @@ const createTestClient = (path: string, queryParams?: any): WebSocket => {
 }
 
 describe('WebsocketServer', () => {
-
     let wsServer: WebsocketServer
     let wsClient: WebSocket
     let streamrClient: MockProxy<StreamrClient>
 
     const assertConnectionError = async (expectedHttpStatus: number) => {
-        const [ error ] = await waitForEvent(wsClient, 'error')
+        const [error] = await waitForEvent(wsClient, 'error')
         expect((error as Error).message).toBe(`Unexpected server response: ${expectedHttpStatus}`)
     }
 
@@ -52,11 +51,7 @@ describe('WebsocketServer', () => {
         await wsServer.stop()
     })
 
-    describe.each([
-        ['/streams/dummy/invalid-action'],
-        ['/invalid-path'],
-        ['/']
-    ])('invalid connection url', (path: string) => {
+    describe.each([['/streams/dummy/invalid-action'], ['/invalid-path'], ['/']])('invalid connection url', (path: string) => {
         it(path, async () => {
             wsClient = createTestClient(path)
             await assertConnectionError(400)
@@ -64,12 +59,11 @@ describe('WebsocketServer', () => {
     })
 
     describe('publish', () => {
-
         const connectAndPublish = async (queryParams?: any) => {
             wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
             await waitForEvent(wsClient, 'open')
             wsClient.send(JSON.stringify(MOCK_MESSAGE))
-            await until(() => (streamrClient.publish.mock.calls.length === 1))
+            await until(() => streamrClient.publish.mock.calls.length === 1)
         }
 
         it('without parameters', async () => {
@@ -78,7 +72,7 @@ describe('WebsocketServer', () => {
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
-                }, 
+                },
                 MOCK_MESSAGE,
                 {
                     msgChainId: expect.any(String)
@@ -92,7 +86,7 @@ describe('WebsocketServer', () => {
                 {
                     id: MOCK_STREAM_ID,
                     partition: 50
-                }, 
+                },
                 MOCK_MESSAGE,
                 {
                     msgChainId: expect.any(String)
@@ -106,7 +100,7 @@ describe('WebsocketServer', () => {
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
-                }, 
+                },
                 MOCK_MESSAGE,
                 {
                     partitionKey: 'mock-key',
@@ -121,7 +115,7 @@ describe('WebsocketServer', () => {
                 {
                     id: MOCK_STREAM_ID,
                     partition: undefined
-                }, 
+                },
                 MOCK_MESSAGE,
                 {
                     partitionKey: 'bar',
@@ -131,21 +125,19 @@ describe('WebsocketServer', () => {
         })
 
         describe.each([
-            [ { partition: -1 } ],
-            [ { partition: 123, partitionKey: 'mock-key' } ],
-            [ { partition: 123, partitionKeyField: 'foo' } ],
-            [ { partitionKey: 'mock-key', partitionKeyField: 'foo' } ]
+            [{ partition: -1 }],
+            [{ partition: 123, partitionKey: 'mock-key' }],
+            [{ partition: 123, partitionKeyField: 'foo' }],
+            [{ partitionKey: 'mock-key', partitionKeyField: 'foo' }]
         ])('invalid partition definition', (queryParams: any) => {
             it(qs.stringify(queryParams), async () => {
                 wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
                 await assertConnectionError(400)
             })
         })
-
     })
 
     describe('subscribe', () => {
-
         it('without parameters', async () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM)
             await waitForEvent(wsClient, 'open')
@@ -197,5 +189,4 @@ describe('WebsocketServer', () => {
             await until(() => singletonSubscription.unsubscribe.mock.calls.length === 3)
         })
     })
-
 })

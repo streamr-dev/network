@@ -8,14 +8,10 @@ import { FakeChain } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
-
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
 
-    constructor(
-        chain: FakeChain,
-        streamIdBuilder: StreamIDBuilder
-    ) {
+    constructor(chain: FakeChain, streamIdBuilder: StreamIDBuilder) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
     }
@@ -57,7 +53,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreams(): Promise<{ streams: { id: StreamID, metadata: StreamMetadata }[], blockNumber: number }> {
+    getStoredStreams(): Promise<{ streams: { id: StreamID; metadata: StreamMetadata }[]; blockNumber: number }> {
         throw new Error('not implemented')
     }
 }

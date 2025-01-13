@@ -24,9 +24,8 @@ const createConnection = async (streamrClient: StreamrClient): Promise<(payload:
 }
 
 describe('PublishConnection', () => {
-
     let mockStreamrClient: MockProxy<StreamrClient>
-    
+
     beforeEach(() => {
         mockStreamrClient = mock<StreamrClient>()
     })

@@ -25,7 +25,9 @@ function ab2str(...args: any[]): string {
 
 // shim browser btoa for node
 function btoa(str: string | Uint8Array): string {
-    if (global.btoa) { return global.btoa(str as string) }
+    if (global.btoa) {
+        return global.btoa(str as string)
+    }
     let buffer
 
     if (Buffer.isBuffer(str)) {
@@ -65,9 +67,7 @@ export class RSAKeyPair {
     }
 
     static async create(keyLength: number): Promise<RSAKeyPair> {
-        return (typeof window !== 'undefined')
-            ? RSAKeyPair.create_browserEnvironment(keyLength)
-            : RSAKeyPair.create_serverEnvironment(keyLength)
+        return typeof window !== 'undefined' ? RSAKeyPair.create_browserEnvironment(keyLength) : RSAKeyPair.create_serverEnvironment(keyLength)
     }
 
     private static async create_serverEnvironment(keyLength: number): Promise<RSAKeyPair> {
@@ -77,31 +77,35 @@ export class RSAKeyPair {
             modulusLength: keyLength,
             publicKeyEncoding: {
                 type: 'spki',
-                format: 'pem',
+                format: 'pem'
             },
             privateKeyEncoding: {
                 type: 'pkcs8',
-                format: 'pem',
-            },
+                format: 'pem'
+            }
         })
 
         return new RSAKeyPair(privateKey, publicKey)
     }
 
     private static async create_browserEnvironment(keyLength: number): Promise<RSAKeyPair> {
-        const { publicKey, privateKey } = await getSubtle().generateKey({
-            name: 'RSA-OAEP',
-            modulusLength: keyLength,
-            publicExponent: new Uint8Array([1, 0, 1]), // 65537
-            hash: 'SHA-256'
-        }, true, ['encrypt', 'decrypt'])
+        const { publicKey, privateKey } = await getSubtle().generateKey(
+            {
+                name: 'RSA-OAEP',
+                modulusLength: keyLength,
+                publicExponent: new Uint8Array([1, 0, 1]), // 65537
+                hash: 'SHA-256'
+            },
+            true,
+            ['encrypt', 'decrypt']
+        )
 
         const [exportedPrivate, exportedPublic] = await Promise.all([
             exportCryptoKey(privateKey, {
-                isPrivate: true,
+                isPrivate: true
             }),
             exportCryptoKey(publicKey, {
-                isPrivate: false,
+                isPrivate: false
             })
         ])
         return new RSAKeyPair(exportedPrivate, exportedPublic)

@@ -1,9 +1,6 @@
 import { ConnectionType } from '../IConnection'
 
-import {
-    HandshakeError,
-    PeerDescriptor,
-} from '../../../generated/packages/dht/protos/DhtRpc'
+import { HandshakeError, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
@@ -14,18 +11,13 @@ import { PendingConnection } from '../PendingConnection'
 const logger = new Logger(module)
 
 export class SimulatorConnector {
-
     private connectingConnections: Map<DhtAddress, PendingConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
     private onNewConnection: (connection: PendingConnection) => boolean
 
-    constructor(
-        localPeerDescriptor: PeerDescriptor,
-        simulator: Simulator,
-        onNewConnection: (connection: PendingConnection) => boolean,
-    ) {
+    constructor(localPeerDescriptor: PeerDescriptor, simulator: Simulator, onNewConnection: (connection: PendingConnection) => boolean) {
         this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onNewConnection = onNewConnection
@@ -53,7 +45,7 @@ export class SimulatorConnector {
         connection.once('disconnected', delFunc)
         pendingConnection.once('connected', delFunc)
         pendingConnection.once('disconnected', delFunc)
-        
+
         connection.connect()
         return pendingConnection
     }
@@ -71,7 +63,7 @@ export class SimulatorConnector {
             return
         }
         const connection = new SimulatorConnection(this.localPeerDescriptor, remotePeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
-        
+
         const pendingConnection = new PendingConnection(remotePeerDescriptor)
         const handshaker = createIncomingHandshaker(this.localPeerDescriptor, pendingConnection, connection)
         logger.trace('connected')

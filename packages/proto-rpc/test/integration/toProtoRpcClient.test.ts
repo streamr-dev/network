@@ -115,7 +115,7 @@ describe('toProtoRpcClient', () => {
         })
 
         const { someOptionalField } = await optionalClient.getOptional({ someOptionalField: 'something' })
-        
+
         expect(someOptionalField).toBe(undefined)
 
         communicator1.stop()
@@ -131,13 +131,10 @@ describe('toProtoRpcClient', () => {
             throw new Error('testException')
         })
 
-        await expect(helloClient.sayHello({ myName: 'School' }))
-            .rejects.toThrow('testException')
-
+        await expect(helloClient.sayHello({ myName: 'School' })).rejects.toThrow('testException')
     })
 
     it('Awaiting RPC notifications returns when using events', async () => {
-
         // Setup server
         const communicator1 = new RpcCommunicator()
         const wakeUpService = new WakeUpService()
@@ -157,7 +154,6 @@ describe('toProtoRpcClient', () => {
     })
 
     it('Awaiting RPC notifications returns when using outgoingMessageListener', async () => {
-
         // Setup server
         const communicator1 = new RpcCommunicator()
         const wakeUpService = new WakeUpService()
@@ -185,9 +181,7 @@ describe('toProtoRpcClient', () => {
             throw new Error('test exception')
         })
 
-        await expect(wakeUpClient.wakeUp({ reason: 'School' }))
-            .rejects.toThrow('test exception')
-
+        await expect(wakeUpClient.wakeUp({ reason: 'School' })).rejects.toThrow('test exception')
     })
 
     it('making a rpc call with protobuf-ts client throws', (done) => {
@@ -212,7 +206,9 @@ describe('toProtoRpcClient', () => {
             helloClient.sayHello({ myName: 'Alice' })
         } catch (e) {
             // eslint-disable-next-line max-len
-            expect(e.message).toEqual('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
+            expect(e.message).toEqual(
+                'ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).'
+            )
             communicator1.stop()
             communicator2.stop()
             done()
@@ -247,11 +243,12 @@ describe('toProtoRpcClient', () => {
             wakeUpClient.wakeUp({ reason: 'School' })
         } catch (e) {
             // eslint-disable-next-line max-len
-            expect(e.message).toEqual('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
+            expect(e.message).toEqual(
+                'ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).'
+            )
             communicator1.stop()
             communicator2.stop()
             done()
         }
     })
-
 })

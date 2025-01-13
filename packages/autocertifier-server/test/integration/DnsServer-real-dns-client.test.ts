@@ -17,7 +17,6 @@ beforeAll(async () => {
     await db.createSubdomain('www', '1.2.3.4', '80', 'wfewfweafe')
     await db.createSubdomain('mail', '5.6.7.8', '25', 'geegreaegrge')
     await db.updateSubdomainAcmeChallenge('www', 'abc123')
-
 })
 
 afterAll(async () => {
@@ -34,8 +33,7 @@ describe('DnsServer', () => {
         })
 
         it('should fail with enotfound for an invalid subdomain', async () => {
-            await expect(promisify(dns.resolve4)('foo.example.com'))
-                .rejects.toThrow('ENOTFOUND')
+            await expect(promisify(dns.resolve4)('foo.example.com')).rejects.toThrow('ENOTFOUND')
         })
     })
 
@@ -46,9 +44,7 @@ describe('DnsServer', () => {
         })
 
         it('should fail with enotfound for an invalid subdomain', async () => {
-
-            await expect(promisify(dns.resolveTxt)('_acme-challenge.foo.example.com'))
-                .rejects.toThrow('ENOTFOUND')
+            await expect(promisify(dns.resolveTxt)('_acme-challenge.foo.example.com')).rejects.toThrow('ENOTFOUND')
         })
     })
 
@@ -104,8 +100,7 @@ describe('DnsServer', () => {
         })
 
         it('should handle a query for an invalid domain', async () => {
-            await expect(promisify(dns.resolve4)('wewfwefew.fe'))
-                .rejects.toThrow('ENOTFOUND')
+            await expect(promisify(dns.resolve4)('wewfwefew.fe')).rejects.toThrow('ENOTFOUND')
         })
     })
 })

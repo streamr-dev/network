@@ -17,7 +17,6 @@ import { MessageFactory } from './../../src/publish/MessageFactory'
 const GROUP_KEY = GroupKey.generate()
 
 describe('gap fill', () => {
-
     let publisherWallet: Wallet
     let stream: Stream
     let messageFactory: MessageFactory
@@ -69,7 +68,8 @@ describe('gap fill', () => {
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 2000, 3000])
     })
 
-    testOnlyInNodeJs('failing storage node', async () => { // TODO: why doesn't this work in electron?
+    testOnlyInNodeJs('failing storage node', async () => {
+        // TODO: why doesn't this work in electron?
         const storageNode = await startFailingStorageNode(new Error('expected'), environment)
         await stream.addToStorageNode(storageNode.getAddress())
         const subscriber = environment.createClient({
@@ -84,5 +84,4 @@ describe('gap fill', () => {
         await publish(await createMessage(3000))
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 3000])
     })
-
 })

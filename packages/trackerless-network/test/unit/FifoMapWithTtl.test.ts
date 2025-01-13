@@ -3,13 +3,11 @@ import { FifoMapWithTTL } from '../../src/logic/propagation/FifoMapWithTTL'
 describe('FifoMapWithTtl', () => {
     describe('invalid constructor arguments', () => {
         it('cannot instantiate with negative ttl', () => {
-            expect(() => new FifoMapWithTTL({ ttlInMs: -5, maxSize: 10 }))
-                .toThrow('ttlInMs (-5) cannot be < 0')
+            expect(() => new FifoMapWithTTL({ ttlInMs: -5, maxSize: 10 })).toThrow('ttlInMs (-5) cannot be < 0')
         })
 
         it('cannot instantiate with negative maxSize', () => {
-            expect(() => new FifoMapWithTTL({ ttlInMs: 100, maxSize: -6 }))
-                .toThrow('maxSize (-6) cannot be < 0')
+            expect(() => new FifoMapWithTTL({ ttlInMs: 100, maxSize: -6 })).toThrow('maxSize (-6) cannot be < 0')
         })
     })
 
@@ -114,7 +112,7 @@ describe('FifoMapWithTtl', () => {
 
             it('deleting a non-existing item does not throw', () => {
                 setFirstFiveMessages()
-                expect(() =>fifoMap.delete('non-existing-key')).not.toThrow()
+                expect(() => fifoMap.delete('non-existing-key')).not.toThrow()
             })
 
             it('deleting a non-existing item keeps existing items intact', () => {

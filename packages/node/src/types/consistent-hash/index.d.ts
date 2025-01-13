@@ -1,10 +1,6 @@
 declare module 'consistent-hash' {
     export default class ConsistentHash {
-        constructor(options?: {
-            range?: number
-            weight?: number
-            distribution?: 'uniform' | string
-        })
+        constructor(options?: { range?: number; weight?: number; distribution?: 'uniform' | string })
 
         add(node: string): ConsistentHash
 

@@ -1,12 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import {
-    DhtAddress,
-    DhtAddressRaw,
-    DhtCallContext,
-    PeerDescriptor,
-    toDhtAddress,
-    toNodeId
-} from '@streamr/dht'
+import { DhtAddress, DhtAddressRaw, DhtCallContext, PeerDescriptor, toDhtAddress, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import {
     InterleaveRequest,
@@ -33,7 +26,6 @@ interface HandshakeRpcLocalOptions {
 const logger = new Logger(module)
 
 export class HandshakeRpcLocal implements IHandshakeRpc {
-
     private readonly options: HandshakeRpcLocalOptions
 
     constructor(options: HandshakeRpcLocalOptions) {
@@ -46,21 +38,19 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
 
     private handleRequest(request: StreamPartHandshakeRequest, context: ServerCallContext): StreamPartHandshakeResponse {
         const senderDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const getInterleaveNodeIds = () => (request.interleaveNodeId !== undefined) ? [toDhtAddress(request.interleaveNodeId)] : []
+        const getInterleaveNodeIds = () => (request.interleaveNodeId !== undefined ? [toDhtAddress(request.interleaveNodeId)] : [])
         const senderNodeId = toNodeId(senderDescriptor)
         if (this.options.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
-        } else if (this.options.neighbors.has(senderNodeId)
-            || this.options.ongoingHandshakes.has(senderNodeId)
-        ) {
+        } else if (this.options.neighbors.has(senderNodeId) || this.options.ongoingHandshakes.has(senderNodeId)) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.options.neighbors.size() + this.options.ongoingHandshakes.size < this.options.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (
-            this.options.neighbors.size(getInterleaveNodeIds()) - this.options.ongoingInterleaves.size >= 2
-            && this.options.neighbors.size() <= this.options.maxNeighborCount
+            this.options.neighbors.size(getInterleaveNodeIds()) - this.options.ongoingInterleaves.size >= 2 &&
+            this.options.neighbors.size() <= this.options.maxNeighborCount
         ) {
-            // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2 
+            // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2
             // due to interleaving. This ensures that a stable number of connections is kept during high churn.
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)
         } else {
@@ -102,18 +92,22 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             this.options.ongoingInterleaves.add(nodeId)
             // Run this with then catch instead of setImmediate to avoid changes in state
             // eslint-disable-next-line promise/catch-or-return
-            remote.interleaveRequest(requester).then((response) => {
-                // If response is accepted, remove the last node from the target neighbors
-                // and unlock the connection
-                // If response is not accepted, keep the last node as a neighbor
-                if (response.accepted) {
-                    this.options.neighbors.remove(toNodeId(lastPeerDescriptor!))
-                }
-            }).catch(() => {
-                // no-op: InterleaveRequest cannot reject
-            }).finally(() => {
-                this.options.ongoingInterleaves.delete(nodeId)
-            })
+            remote
+                .interleaveRequest(requester)
+                .then((response) => {
+                    // If response is accepted, remove the last node from the target neighbors
+                    // and unlock the connection
+                    // If response is not accepted, keep the last node as a neighbor
+                    if (response.accepted) {
+                        this.options.neighbors.remove(toNodeId(lastPeerDescriptor!))
+                    }
+                })
+                .catch(() => {
+                    // no-op: InterleaveRequest cannot reject
+                })
+                .finally(() => {
+                    this.options.ongoingInterleaves.delete(nodeId)
+                })
         }
         this.options.neighbors.add(this.options.createContentDeliveryRpcRemote(requester))
         return {

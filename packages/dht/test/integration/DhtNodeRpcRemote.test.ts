@@ -1,12 +1,7 @@
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
-import {
-    ClosestPeersRequest,
-    ClosestPeersResponse,
-    PingRequest,
-    PingResponse
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { toNodeId } from '../../src/identifiers'
@@ -14,7 +9,6 @@ import { toNodeId } from '../../src/identifiers'
 const SERVICE_ID = 'test'
 
 describe('DhtNodeRpcRemote', () => {
-
     let rpcRemote: DhtNodeRpcRemote
     let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
     let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
@@ -59,8 +53,6 @@ describe('DhtNodeRpcRemote', () => {
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.throwGetClosestPeersError)
-        await expect(rpcRemote.getClosestPeers(toNodeId(clientPeerDescriptor)))
-            .rejects.toThrow('Closest peers error')
+        await expect(rpcRemote.getClosestPeers(toNodeId(clientPeerDescriptor))).rejects.toThrow('Closest peers error')
     })
-
 })

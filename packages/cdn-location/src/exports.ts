@@ -6,10 +6,4 @@ import {
     getLocalAirportCodeByCoordinates
 } from './getLocalRegion'
 
-export {
-    getLocalRegion,
-    getLocalRegionWithCache,
-    getLocalRegionByCoordinates,
-    getLocalAirportCode,
-    getLocalAirportCodeByCoordinates
-}
+export { getLocalRegion, getLocalRegionWithCache, getLocalRegionByCoordinates, getLocalAirportCode, getLocalAirportCodeByCoordinates }

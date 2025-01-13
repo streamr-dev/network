@@ -20,9 +20,11 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
         throw new Error('stream id may not be empty')
     }
     const firstSlashIdx = streamIdOrPath.indexOf('/')
-    if (firstSlashIdx === -1) { // legacy format
+    if (firstSlashIdx === -1) {
+        // legacy format
         return streamIdOrPath as StreamID
-    } else if (firstSlashIdx === 0) { // path-only format
+    } else if (firstSlashIdx === 0) {
+        // path-only format
         if (domain === undefined) {
             throw new Error(`path-only format "${streamIdOrPath}" provided without domain`)
         }
@@ -36,7 +38,6 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamIDUtils {
-
     static isPathOnlyFormat(streamIdOrPath: string): boolean {
         return streamIdOrPath.startsWith('/')
     }
@@ -45,12 +46,12 @@ export class StreamIDUtils {
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         return domainAndPath?.[0]
     }
-    
+
     static getPath(streamId: StreamID): string | undefined {
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         return domainAndPath?.[1]
     }
-    
+
     static getDomainAndPath(streamId: StreamID): [EthereumAddress | ENSName, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
         if (firstSlashIdx !== -1) {

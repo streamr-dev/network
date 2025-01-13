@@ -7,7 +7,6 @@ const NUM_OF_NODES_PER_KBUCKET = 8
 const WEBSOCKET_PORT_RANGE = { min: 62200, max: 62200 + NUM_OF_NODES }
 
 describe('Layer1 Scale', () => {
-
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 43225, tls: false }
     })
@@ -24,7 +23,7 @@ describe('Layer1 Scale', () => {
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ 
+        epLayer1Node = new DhtNode({
             transport: epLayer0Node,
             connectionsView: epLayer0Node.getConnectionsView(),
             peerDescriptor: epPeerDescriptor,
@@ -37,7 +36,7 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ 
+            const node = new DhtNode({
                 websocketPortRange: WEBSOCKET_PORT_RANGE,
                 entryPoints: [epPeerDescriptor],
                 websocketServerEnableTls: false,
@@ -60,7 +59,6 @@ describe('Layer1 Scale', () => {
         await Promise.all(layer0Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
         await Promise.all(layer1Nodes.map((node) => node.joinDht([epPeerDescriptor])))
-
     }, 120000)
 
     afterEach(async () => {
@@ -75,7 +73,7 @@ describe('Layer1 Scale', () => {
         layer0Nodes.forEach((node) => {
             expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
-        layer1Nodes.forEach((node ) => {
+        layer1Nodes.forEach((node) => {
             expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })

@@ -5,7 +5,6 @@ const MAX_AGE = 100
 const JITTER_FACTOR = 10
 
 describe('Cache', () => {
-    
     it('happy path', async () => {
         let plainValue = 'foo'
         const valueFactory = jest.fn().mockImplementation(async () => plainValue)

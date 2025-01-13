@@ -1,8 +1,4 @@
 {
   "extends": "../../tsconfig.jest.json",
-  "include": [
-    "src/**/*",
-    "bin/**/*",
-    "test/**/*"
-  ]
+  "include": ["src/**/*", "bin/**/*", "test/**/*"]
 }

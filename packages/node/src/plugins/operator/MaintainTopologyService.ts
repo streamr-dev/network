@@ -21,11 +21,14 @@ export class MaintainTopologyService {
         let subscription: Subscription
         try {
             logger.info('Join stream partition', { streamPartId })
-            subscription = await this.streamrClient.subscribe({
-                id,
-                partition,
-                raw: true
-            }, () => {})
+            subscription = await this.streamrClient.subscribe(
+                {
+                    id,
+                    partition,
+                    raw: true
+                },
+                () => {}
+            )
         } catch (err) {
             logger.warn('Failed to join stream partition', { streamPartId, reason: err?.reason })
             return
@@ -44,9 +47,7 @@ export class MaintainTopologyService {
         }
     })
 
-    private concurrencyLimiter(
-        fn: (streamPartId: StreamPartID) => Promise<void>
-    ): (streamPartId: StreamPartID) => void {
+    private concurrencyLimiter(fn: (streamPartId: StreamPartID) => Promise<void>): (streamPartId: StreamPartID) => void {
         return (streamPartId) => {
             this.concurrencyLimit(() => fn(streamPartId)).catch((err) => {
                 logger.warn('Encountered error while processing event', { err })

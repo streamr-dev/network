@@ -18,7 +18,7 @@ export interface Params {
     bufferThresholdHigh?: number
     bufferThresholdLow?: number
     maxMessageSize?: number
-    iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
+    iceServers?: IceServer[] // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
 }
 
@@ -41,7 +41,6 @@ type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 type Events = WebrtcConnectionEvents & ConnectionEvents
 
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IConnection, IWebrtcConnection {
-
     public connectionId: ConnectionID
     private connection?: PeerConnection
     private dataChannel?: DataChannel
@@ -81,7 +80,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: this.maxMessageSize,
             portRangeBegin: this.portRange?.min,
-            portRangeEnd: this.portRange?.max,
+            portRangeEnd: this.portRange?.max
         })
 
         this.connection.onStateChange((state: string) => this.onStateChange(state))
@@ -155,10 +154,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         if (!this.closed) {
             clearTimeout(this.earlyTimeout)
             const remoteNodeId = toNodeId(this.remotePeerDescriptor)
-            logger.trace(`Closing Node WebRTC Connection to ${remoteNodeId}` + `${(reason !== undefined) ? `, reason: ${reason}` : ''}`)
+            logger.trace(`Closing Node WebRTC Connection to ${remoteNodeId}` + `${reason !== undefined ? `, reason: ${reason}` : ''}`)
 
             this.closed = true
-            
+
             this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
 
@@ -170,7 +169,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace('dc.close() errored: %s', e)
                 }
             }
-            
+
             if (this.connection) {
                 try {
                     this.connection.close()
@@ -220,19 +219,23 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     private onStateChange(state: string): void {
         logger.trace('onStateChange ' + state)
-        if (!Object.keys(RtcPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
+        if (
+            !Object.keys(RtcPeerConnectionStateEnum)
+                .filter((s) => isNaN(+s))
+                .includes(state)
+        ) {
             throw new IllegalRtcPeerConnectionState('NodeWebrtcConnection used an unknown state: ' + state)
         } else {
             this.lastState = state as RtcPeerConnectionState
         }
-        
-        if (state === RtcPeerConnectionStateEnum.closed
-            || state === RtcPeerConnectionStateEnum.disconnected
-            || state === RtcPeerConnectionStateEnum.failed
+
+        if (
+            state === RtcPeerConnectionStateEnum.closed ||
+            state === RtcPeerConnectionStateEnum.disconnected ||
+            state === RtcPeerConnectionStateEnum.failed
         ) {
             this.doClose(false)
         }
-        
     }
 
     isOpen(): boolean {

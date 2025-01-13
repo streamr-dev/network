@@ -23,8 +23,7 @@ export interface ITransport {
 
     once<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
-    once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, 
-        gracefulLeave: boolean) => void): void
+    once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
 
     off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void

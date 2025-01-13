@@ -56,13 +56,11 @@ class WebsocketPluginPublisher implements PluginPublisher {
 
 /* eslint-disable class-methods-use-this */
 class HttpPluginPublisher implements PluginPublisher {
-    async connect(): Promise<void> {
-    }
+    async connect(): Promise<void> {}
     async publish(msg: object, streamId: string): Promise<void> {
         return sendPostRequest(`http://127.0.0.1:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
     }
-    async close(): Promise<void> {
-    }
+    async close(): Promise<void> {}
 }
 
 const publishMessages = async (streamId: string): Promise<any[]> => {
@@ -72,10 +70,10 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
         websocket1: new WebsocketPluginPublisher(),
         websocket2: new WebsocketPluginPublisher(),
         http1: new HttpPluginPublisher(),
-        http2: new HttpPluginPublisher(),
+        http2: new HttpPluginPublisher()
     }
     await Promise.all(Object.values(publishers).map((publisher) => publisher.connect(streamId)))
-    const messages: { index: number, publisher: string }[] = []
+    const messages: { index: number; publisher: string }[] = []
     for (const index of range(MESSAGE_COUNT)) {
         messages.push({
             index,
@@ -95,7 +93,6 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
 }
 
 describe('multiple publisher plugins', () => {
-
     let broker: Broker
     let privateKey: string
     let streamId: string
@@ -123,7 +120,7 @@ describe('multiple publisher plugins', () => {
                 websocket: {
                     port: wsPort
                 },
-                http: {},
+                http: {}
             }
         })
     })
@@ -132,24 +129,25 @@ describe('multiple publisher plugins', () => {
         await broker.stop()
     })
 
-    it('subscribe by StreamrClient', async () => {
+    it(
+        'subscribe by StreamrClient',
+        async () => {
+            const receivedMessages: Queue<unknown> = new Queue()
+            const subscriber = createClient(fastPrivateKey())
+            await subscriber.subscribe(streamId, (message: unknown) => {
+                receivedMessages.push(message)
+            })
 
-        const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = createClient(fastPrivateKey())
-        await subscriber.subscribe(streamId, (message: unknown) => {
-            receivedMessages.push(message)
-        })
+            const messages = await publishMessages(streamId)
 
-        const messages = await publishMessages(streamId)
-
-        await until(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.values()).toIncludeSameMembers(messages)
-        await subscriber.destroy()
-
-    }, 10 * 1000)
+            await until(() => receivedMessages.size() >= messages.length)
+            expect(receivedMessages.values()).toIncludeSameMembers(messages)
+            await subscriber.destroy()
+        },
+        10 * 1000
+    )
 
     it('subscribe by websocket plugin', async () => {
-
         const receivedMessages: Queue<object> = new Queue()
         const subscriber = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
         subscriber.on('message', (data: WebSocket.RawData) => {
@@ -162,11 +160,9 @@ describe('multiple publisher plugins', () => {
         await until(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.values()).toIncludeSameMembers(messages)
         subscriber.close()
-
     })
 
     it('subscribe by mqtt plugin', async () => {
-
         const receivedMessages: Queue<object> = new Queue()
         const subscriber = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
         subscriber.on('message', (topic: string, message: Buffer) => {

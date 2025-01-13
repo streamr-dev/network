@@ -3,7 +3,6 @@ import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 export class GroupKeyError extends Error {
-
     public groupKey?: GroupKey
 
     constructor(message: string, groupKey?: GroupKey) {
@@ -18,7 +17,6 @@ export class GroupKeyError extends Error {
  */
 
 export class GroupKey {
-
     /** @internal */
     readonly id: string
     /** @internal */
@@ -75,17 +73,11 @@ export class GroupKey {
 
     /** @internal */
     decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
-        return new GroupKey(
-            nextGroupKey.id,
-            EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data)
-        )
+        return new GroupKey(nextGroupKey.id, EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data))
     }
 
     /** @internal */
     static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
-        return new GroupKey(
-            encryptedKey.id,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
-        )
+        return new GroupKey(encryptedKey.id, EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey))
     }
 }

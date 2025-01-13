@@ -8,13 +8,7 @@ import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
-import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType
-} from '../protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { createLazyMap, Mapping } from '../utils/Mapping'
@@ -33,14 +27,16 @@ export interface MessageFactoryOptions {
 }
 
 export class MessageFactory {
-
     private readonly streamId: StreamID
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     // eslint-disable-next-line max-len
-    private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
+    private readonly streamRegistry: Pick<
+        StreamRegistry,
+        'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'
+    >
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
@@ -60,11 +56,7 @@ export class MessageFactory {
         })
     }
 
-    async createMessage(
-        content: unknown,
-        metadata: PublishMetadata & { timestamp: number },
-        explicitPartition?: number
-    ): Promise<StreamMessage> {
+    async createMessage(content: unknown, metadata: PublishMetadata & { timestamp: number }, explicitPartition?: number): Promise<StreamMessage> {
         const publisherId = await this.getPublisherId(metadata)
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
@@ -76,7 +68,7 @@ export class MessageFactory {
         const partitionCount = getPartitionCount(streamMetadata)
         let partition
         if (explicitPartition !== undefined) {
-            if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
+            if (explicitPartition < 0 || explicitPartition >= partitionCount) {
                 throw new Error(`Partition ${explicitPartition} is out of range (0..${partitionCount - 1})`)
             }
             if (metadata.partitionKey !== undefined) {
@@ -84,12 +76,13 @@ export class MessageFactory {
             }
             partition = explicitPartition
         } else {
-            partition = (metadata.partitionKey !== undefined)
-                ? keyToArrayIndex(partitionCount, metadata.partitionKey)
-                : this.getDefaultPartition(partitionCount)
+            partition =
+                metadata.partitionKey !== undefined
+                    ? keyToArrayIndex(partitionCount, metadata.partitionKey)
+                    : this.getDefaultPartition(partitionCount)
         }
 
-        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+        const msgChainId = metadata.msgChainId ?? (await this.defaultMessageChainIds.get(partition))
         const msgChainKey = formLookupKey([partition, msgChainId])
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
@@ -117,16 +110,19 @@ export class MessageFactory {
             }
         }
 
-        const msg = await this.messageSigner.createSignedMessage({
-            messageId,
-            messageType: StreamMessageType.MESSAGE,
-            content: rawContent,
-            prevMsgRef,
-            encryptionType,
-            groupKeyId,
-            newGroupKey,
-            contentType
-        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1)
+        const msg = await this.messageSigner.createSignedMessage(
+            {
+                messageId,
+                messageType: StreamMessageType.MESSAGE,
+                content: rawContent,
+                prevMsgRef,
+                encryptionType,
+                groupKeyId,
+                newGroupKey,
+                contentType
+            },
+            metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1
+        )
 
         // Assert the signature is valid for the first message. This is done here to improve user experience
         // in case the client signer is not authorized for the ERC-1271 contract.
@@ -154,7 +150,7 @@ export class MessageFactory {
         // 1) this is the first publish, and we have not yet selected any partition (the most typical case)
         // 2) the partition count may have decreased since we initially selected a random partitions, and it
         //    is now out-of-range (very rare case)
-        if ((this.defaultPartition === undefined) || (this.defaultPartition >= partitionCount)) {
+        if (this.defaultPartition === undefined || this.defaultPartition >= partitionCount) {
             this.defaultPartition = random(partitionCount - 1)
         }
         return this.defaultPartition

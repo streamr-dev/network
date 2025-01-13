@@ -3,7 +3,6 @@ import { wait } from '../src/wait'
 import { withTimeout } from '../src/withTimeout'
 
 describe('Gate', () => {
-
     it('happy path', async () => {
         const gate = new Gate(false)
         expect(gate.isOpen()).toBe(false)
@@ -19,5 +18,4 @@ describe('Gate', () => {
         gate.close()
         expect(gate.isOpen()).toBe(false)
     })
-
 })

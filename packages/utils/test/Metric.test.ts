@@ -6,36 +6,38 @@ const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000
 
 describe('metrics', () => {
-
     describe('producer', () => {
-
         let context: MetricsContext
         let reports: (MetricsReport & { generationTime: number })[]
         let abortController: AbortController
 
         const getReport = (timestamp: number) => {
-            return reports.find((report) => (timestamp <= report.generationTime))
+            return reports.find((report) => timestamp <= report.generationTime)
         }
 
         beforeEach(() => {
             context = new MetricsContext()
             reports = []
             abortController = new AbortController()
-            context.createReportProducer((report) => {
-                reports.push({
-                    ...report,
-                    generationTime: Date.now()
-                })
-            }, REPORT_INTERVAL, abortController.signal)
+            context.createReportProducer(
+                (report) => {
+                    reports.push({
+                        ...report,
+                        generationTime: Date.now()
+                    })
+                },
+                REPORT_INTERVAL,
+                abortController.signal
+            )
         })
-    
+
         afterEach(() => {
             abortController.abort()
         })
-    
+
         it('happy path', async () => {
             const metricOne = {
-                count: new CountMetric(),
+                count: new CountMetric()
             }
             context.addMetrics('metricOne', metricOne)
             context.addMetrics('metricTwo', {})
@@ -46,7 +48,7 @@ describe('metrics', () => {
             }
             context.addMetrics('metricThree', metricThree)
             metricThree.level.record(30)
-    
+
             // wait until the initial values have been seen by the producer
             await wait(REPORT_INTERVAL)
             const inputTime1 = Date.now()
@@ -58,7 +60,7 @@ describe('metrics', () => {
             metricThree.level.record(35)
             metricThree.rate.record(2000)
             metricThree.rate.record(4000)
-    
+
             await until(() => getReport(inputTime1) !== undefined)
             expect(getReport(inputTime1)).toMatchObject({
                 metricOne: {
@@ -74,12 +76,12 @@ describe('metrics', () => {
                     end: expect.anything()
                 }
             })
-    
+
             const inputTime2 = Date.now()
             metricOne.count.record(3)
             metricThree.level.record(39)
             metricThree.rate.record(1000)
-    
+
             await until(() => getReport(inputTime2) !== undefined)
             expect(getReport(inputTime2)).toMatchObject({
                 metricOne: {
@@ -95,7 +97,7 @@ describe('metrics', () => {
                 }
             })
         })
-    
+
         it('no data', async () => {
             context.addMetrics('foo', {
                 bar: new CountMetric()
@@ -114,9 +116,7 @@ describe('metrics', () => {
     })
 
     describe('samplers', () => {
-
         describe('count', () => {
-
             it('happy path', () => {
                 const metric = new CountMetric()
                 const sampler = metric.createSampler()
@@ -129,7 +129,6 @@ describe('metrics', () => {
         })
 
         describe('average', () => {
-
             it('happy path', () => {
                 const metric = new AverageMetric()
                 const sampler = metric.createSampler()
@@ -139,7 +138,7 @@ describe('metrics', () => {
                 sampler.stop(Date.now())
                 expect(sampler.getAggregatedValue()).toBe(8)
             })
-            
+
             it('no data', () => {
                 const metric = new AverageMetric()
                 const sampler = metric.createSampler()
@@ -150,7 +149,6 @@ describe('metrics', () => {
         })
 
         describe('level', () => {
-
             it('happy path', () => {
                 const metric = new LevelMetric()
                 const sampler = metric.createSampler()
@@ -160,7 +158,7 @@ describe('metrics', () => {
                 sampler.stop(Date.now())
                 expect(sampler.getAggregatedValue()).toBe(11)
             })
-    
+
             it('include latest before start', () => {
                 const metric = new LevelMetric()
                 const sampler = metric.createSampler()
@@ -182,7 +180,6 @@ describe('metrics', () => {
         })
 
         describe('rate', () => {
-
             it('happy path', () => {
                 const metric = new RateMetric()
                 const sampler = metric.createSampler()
@@ -192,7 +189,7 @@ describe('metrics', () => {
                 sampler.stop(14000)
                 expect(sampler.getAggregatedValue()).toBe(25)
             })
-            
+
             it('no data', () => {
                 const metric = new RateMetric()
                 const sampler = metric.createSampler()

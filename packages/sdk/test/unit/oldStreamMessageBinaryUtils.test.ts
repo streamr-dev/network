@@ -8,14 +8,7 @@ import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../
 describe('oldStreamMessageBinaryUtils', () => {
     it('convertStreamMessageToBytes and convertBytesToStreamMessage', () => {
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(
-                toStreamID('test.ens/foobar'),
-                0,
-                10001,
-                0,
-                randomUserId(),
-                'msgChainId'
-            ),
+            messageId: new MessageID(toStreamID('test.ens/foobar'), 0, 10001, 0, randomUserId(), 'msgChainId'),
             prevMsgRef: new MessageRef(10000, 1),
             content: new Uint8Array([1, 2, 3]),
             contentType: ContentType.BINARY,

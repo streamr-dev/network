@@ -1,10 +1,4 @@
-import {
-    waitForStreamToEnd,
-    toReadableStream,
-    eventsToArray,
-    eventsWithArgsToArray,
-    isRunningInElectron
-} from '../src'
+import { waitForStreamToEnd, toReadableStream, eventsToArray, eventsWithArgsToArray, isRunningInElectron } from '../src'
 import { Readable } from 'stream'
 import { EventEmitter } from 'events'
 
@@ -74,7 +68,7 @@ describe(eventsToArray, () => {
 })
 
 describe(eventsWithArgsToArray, () => {
-    it('collects whitelisted events and the invocations\' arguments', () => {
+    it("collects whitelisted events and the invocations' arguments", () => {
         const emitter = new EventEmitter()
         const array = eventsWithArgsToArray(emitter, ['eventA', 'eventB'])
 
@@ -105,7 +99,7 @@ describe(eventsWithArgsToArray, () => {
             ['eventA', 123],
             ['eventB', 'hello'],
             ['eventB', 'world'],
-            ['eventA', 256, 512, '!'],
+            ['eventA', 256, 512, '!']
         ])
     })
 })
@@ -128,11 +122,7 @@ describe(toReadableStream, () => {
         readable.on('data', (data) => dataPoints.push(data))
         readable.once('error', () => fail('should not have errored'))
         readable.once('end', () => {
-            expect(dataPoints).toEqual([
-                'hello',
-                666,
-                'world'
-            ])
+            expect(dataPoints).toEqual(['hello', 666, 'world'])
             done()
         })
     })
@@ -147,7 +137,7 @@ describe(toReadableStream, () => {
             done()
         })
         readable.once('end', () => {
-            fail('should not hit \'end\' event')
+            fail("should not hit 'end' event")
         })
     })
 })

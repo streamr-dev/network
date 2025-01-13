@@ -10,13 +10,13 @@ export async function waitForAssignmentsToPropagate(
     },
     loggerFactory: LoggerFactory
 ): Promise<void> {
-    const foundPartitions = new Set<number>
+    const foundPartitions = new Set<number>()
     for await (const msg of messages) {
         const streamPart = (msg.content as any).streamPart
         try {
             const streamPartId = StreamPartIDUtils.parse(streamPart)
             const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-            if ((streamId === targetStream.id) && (partition < targetStream.partitions)) {
+            if (streamId === targetStream.id && partition < targetStream.partitions) {
                 foundPartitions.add(partition)
                 if (foundPartitions.size === targetStream.partitions) {
                     return

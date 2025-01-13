@@ -21,10 +21,9 @@ describe('Find correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const dhtIds: { type: string; data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
 
     beforeEach(async () => {
-
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[0].data)), undefined)
 
@@ -35,18 +34,13 @@ describe('Find correctness', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
-        ])
+        await Promise.all([entryPoint.stop(), ...nodes.map(async (node) => await node.stop())])
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
-        await Promise.all(
-            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
-        )
+        await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
 
         logger.info('waiting 120s')
         debugVars.waiting = true
@@ -55,11 +49,21 @@ describe('Find correctness', () => {
         debugVars.waiting = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(toNodeId(node.getLocalPeerDescriptor()) + ': connections:' +
-            node.getConnectionsView().getConnectionCount() + ', kbucket: ' + node.getNeighborCount()
-            + ', localLocked: ' + node.getLocalLockedConnectionCount()
-            + ', remoteLocked: ' + node.getRemoteLockedConnectionCount()
-            + ', weakLocked: ' + node.getWeakLockedConnectionCount()))
+        nodes.forEach((node) =>
+            logger.info(
+                toNodeId(node.getLocalPeerDescriptor()) +
+                    ': connections:' +
+                    node.getConnectionsView().getConnectionCount() +
+                    ', kbucket: ' +
+                    node.getNeighborCount() +
+                    ', localLocked: ' +
+                    node.getLocalLockedConnectionCount() +
+                    ', remoteLocked: ' +
+                    node.getRemoteLockedConnectionCount() +
+                    ', weakLocked: ' +
+                    node.getWeakLockedConnectionCount()
+            )
+        )
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
@@ -67,6 +71,5 @@ describe('Find correctness', () => {
         logger.info('find over')
         expect(closestNodes).toBeGreaterThanOrEqual(5)
         expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))
-
     }, 180000)
 })

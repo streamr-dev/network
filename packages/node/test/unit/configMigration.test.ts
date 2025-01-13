@@ -22,7 +22,6 @@ const testMigration = async (source: any, assertTarget: (target: any) => void | 
 }
 
 describe('Config migration', () => {
-
     it('no migration', () => {
         const source = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION)
@@ -36,7 +35,6 @@ describe('Config migration', () => {
     })
 
     describe('from v1 to v3', () => {
-
         const createConfig = (version: number, customConfig: any) => {
             const minimalConfig = {
                 $schema: `https://schema.streamr.network/config-v${version}.schema.json`,
@@ -206,7 +204,7 @@ describe('Config migration', () => {
                                 duration: 86400000,
                                 streamId: 'mock-prefix/day'
                             }
-                        ]        
+                        ]
                     }
                 }
             })

@@ -6,7 +6,6 @@ import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntr
 import { toDhtAddress } from '../../src/identifiers'
 
 describe('Storing data in DHT with two peers', () => {
-
     let entryPoint: DhtNode
     let otherNode: DhtNode
     let simulator: Simulator | undefined

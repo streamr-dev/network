@@ -79,7 +79,6 @@ const areEqualRefs = (ref1: MessageRef, ref2: MessageRef) => {
  *   any messages which we've already processed. 
  */
 export class OrderedMessageChain {
-
     private lastOrderedMsg?: StreamMessage
     private currentGap?: Gap
     private readonly pendingMsgs: Heap<StreamMessage>
@@ -102,30 +101,25 @@ export class OrderedMessageChain {
     addMessage(msg: StreamMessage): void {
         if (!this.isStaleMessage(msg)) {
             this.pendingMsgs.push(msg)
-            this.consumePendingOrderedMessages(
-                (msg) => this.isNextOrderedMessage(msg)
-            )
+            this.consumePendingOrderedMessages((msg) => this.isNextOrderedMessage(msg))
         }
     }
 
     resolveMessages(to: MessageRef | undefined, gapCheckEnabled: boolean): void {
-        this.consumePendingOrderedMessages(
-            (msg) => {
-                if (this.isNextOrderedMessage(msg)) {
-                    return true
-                } else if ((to === undefined) || (msg.getMessageRef().compareTo(to) <= 0)) {
-                    const gap = {
-                        from: this.lastOrderedMsg!,
-                        to: msg
-                    }
-                    this.eventEmitter.emit('unfillableGap', gap)
-                    return true
-                } else {
-                    return false
+        this.consumePendingOrderedMessages((msg) => {
+            if (this.isNextOrderedMessage(msg)) {
+                return true
+            } else if (to === undefined || msg.getMessageRef().compareTo(to) <= 0) {
+                const gap = {
+                    from: this.lastOrderedMsg!,
+                    to: msg
                 }
-            }, 
-            gapCheckEnabled
-        )
+                this.eventEmitter.emit('unfillableGap', gap)
+                return true
+            } else {
+                return false
+            }
+        }, gapCheckEnabled)
     }
 
     async waitUntilIdle(): Promise<void> {
@@ -158,7 +152,7 @@ export class OrderedMessageChain {
     }
 
     private checkGapFound() {
-        if (!this.pendingMsgs.isEmpty() && (this.currentGap === undefined)) {
+        if (!this.pendingMsgs.isEmpty() && this.currentGap === undefined) {
             this.currentGap = {
                 from: this.lastOrderedMsg!,
                 to: this.pendingMsgs.peek()!
@@ -173,7 +167,7 @@ export class OrderedMessageChain {
     }
 
     private checkGapResolved() {
-        if ((this.currentGap !== undefined) && areEqualRefs(this.lastOrderedMsg!.getMessageRef(), this.currentGap.to.getMessageRef())) {
+        if (this.currentGap !== undefined && areEqualRefs(this.lastOrderedMsg!.getMessageRef(), this.currentGap.to.getMessageRef())) {
             const gap = this.currentGap
             this.currentGap = undefined
             logger.debug('Gap resolved', {
@@ -187,12 +181,14 @@ export class OrderedMessageChain {
 
     private isNextOrderedMessage(msg: StreamMessage) {
         const previousRef = msg.prevMsgRef
-        return (this.lastOrderedMsg === undefined) || (previousRef === undefined) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
+        return this.lastOrderedMsg === undefined || previousRef === undefined || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
     }
 
     private isStaleMessage(msg: StreamMessage): boolean {
-        return ((this.lastOrderedMsg !== undefined) && (msg.getMessageRef().compareTo(this.lastOrderedMsg.getMessageRef()) <= 0))
-            || this.pendingMsgs.contains(msg)
+        return (
+            (this.lastOrderedMsg !== undefined && msg.getMessageRef().compareTo(this.lastOrderedMsg.getMessageRef()) <= 0) ||
+            this.pendingMsgs.contains(msg)
+        )
     }
 
     getContext(): OrderedMessageChainContext {

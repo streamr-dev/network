@@ -1,9 +1,7 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
-    "include": [
-        "tests/typescript.ts"
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["tests/typescript.ts"]
 }

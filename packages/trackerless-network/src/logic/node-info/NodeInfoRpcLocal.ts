@@ -6,10 +6,9 @@ import { ListeningRpcCommunicator } from '@streamr/dht'
 export const NODE_INFO_RPC_SERVICE_ID = 'system/node-info-rpc'
 
 export class NodeInfoRpcLocal implements INodeInfoRpc {
-    
     private readonly stack: NetworkStack
     private readonly rpcCommunicator: ListeningRpcCommunicator
- 
+
     constructor(stack: NetworkStack, rpcCommunicator: ListeningRpcCommunicator) {
         this.stack = stack
         this.rpcCommunicator = rpcCommunicator
@@ -17,12 +16,10 @@ export class NodeInfoRpcLocal implements INodeInfoRpc {
     }
 
     private registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcMethod(NodeInfoRequest, NodeInfoResponse, 'getInfo',
-            () => this.getInfo())
+        this.rpcCommunicator.registerRpcMethod(NodeInfoRequest, NodeInfoResponse, 'getInfo', () => this.getInfo())
     }
- 
+
     async getInfo(): Promise<NodeInfoResponse> {
         return this.stack.createNodeInfo()
     }
-
 }

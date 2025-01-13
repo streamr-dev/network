@@ -5,9 +5,7 @@ module.exports = {
     webdriver: {
         start_process: true,
         server_path: chromedriver.path,
-        cli_args: [
-            '--verbose'
-        ],
+        cli_args: ['--verbose'],
         port: 9515
     },
     globals: {
@@ -19,11 +17,7 @@ module.exports = {
                 browserName: 'chrome',
                 loggingPrefs: { browser: 'DEBUG' },
                 chromeOptions: {
-                    args: [
-                        '--no-sandbox',
-                        '--headless',
-                        '--disable-dev-shm-usage'
-                    ]
+                    args: ['--no-sandbox', '--headless', '--disable-dev-shm-usage']
                 }
             }
         }

@@ -3,7 +3,6 @@ import { DhtAddress, toDhtAddress } from '../../identifiers'
 import { MapWithTtl } from '@streamr/utils'
 
 export class LocalDataStore {
-
     private readonly maxTtl: number
 
     constructor(maxTtl: number) {
@@ -22,9 +21,9 @@ export class LocalDataStore {
             this.store.set(key, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }
         if (this.store.get(key)!.has(creatorNodeId)) {
-            const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)
+            const storedMillis = dataEntry.createdAt!.seconds * 1000 + dataEntry.createdAt!.nanos / 1000000
             const oldLocalEntry = this.store.get(key)!.get(creatorNodeId)!
-            const oldStoredMillis = (oldLocalEntry.createdAt!.seconds * 1000) + (oldLocalEntry.createdAt!.nanos / 1000000)
+            const oldStoredMillis = oldLocalEntry.createdAt!.seconds * 1000 + oldLocalEntry.createdAt!.nanos / 1000000
             // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {
                 return false
@@ -44,7 +43,7 @@ export class LocalDataStore {
         return true
     }
 
-    public* values(key?: DhtAddress): IterableIterator<DataEntry> {
+    public *values(key?: DhtAddress): IterableIterator<DataEntry> {
         if (key !== undefined) {
             const map = this.store.get(key)
             if (map !== undefined) {

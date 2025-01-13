@@ -17,12 +17,12 @@ export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
     const emit = (payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
     let producer: P | undefined
     observer.on('addEventListener', (sourceEvent: keyof E) => {
-        if ((sourceEvent === eventName) && (producer === undefined)) {
+        if (sourceEvent === eventName && producer === undefined) {
             producer = start(emit)
         }
     })
     observer.on('removeEventListener', (sourceEvent: keyof E) => {
-        if ((sourceEvent === eventName) && (producer !== undefined) && (emitter.getListenerCount(eventName) === 0)) {
+        if (sourceEvent === eventName && producer !== undefined && emitter.getListenerCount(eventName) === 0) {
             stop(producer)
             producer = undefined
         }

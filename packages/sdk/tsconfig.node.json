@@ -1,28 +1,19 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "declarationDir": "dist/types",
-        "lib": ["es2021", "dom"],
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "resolveJsonModule": true,
-        "noImplicitOverride": false
-    },
-    "include": [
-        "package.json",
-        "src/**/*",
-        "src/**/*.json",
-        "src/config.schema.json"
-    ],
-    "exclude": [
-        "src/exports-esm.mjs",
-        "src/utils/persistence/BrowserPersistence.ts"
-    ],
-    "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../trackerless-network/tsconfig.node.json" },
-        { "path": "../dht/tsconfig.node.json" }
-
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "lib": ["es2021", "dom"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "noImplicitOverride": false
+  },
+  "include": ["package.json", "src/**/*", "src/**/*.json", "src/config.schema.json"],
+  "exclude": ["src/exports-esm.mjs", "src/utils/persistence/BrowserPersistence.ts"],
+  "references": [
+    { "path": "../test-utils/tsconfig.node.json" },
+    { "path": "../trackerless-network/tsconfig.node.json" },
+    { "path": "../dht/tsconfig.node.json" }
+  ]
 }

@@ -7,12 +7,8 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import {
-    getPublishTestStreamMessages
-} from '../test-utils/publish'
-import {
-    createTestStream
-} from '../test-utils/utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -28,7 +24,6 @@ import {
 // and subscriber errored with something about group key or
 // permissions
 describe('revoke permissions', () => {
-
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
     let publisherPrivateKey: string
@@ -68,7 +63,7 @@ describe('revoke permissions', () => {
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey
-                    },
+                    }
                 },
                 opts
             )
@@ -92,7 +87,7 @@ describe('revoke permissions', () => {
 
     async function testRevokeDuringSubscribe({
         maxMessages = 6,
-        revokeAfter = Math.round(maxMessages / 2),
+        revokeAfter = Math.round(maxMessages / 2)
     }: {
         maxMessages?: number
         revokeAfter?: number
@@ -106,7 +101,7 @@ describe('revoke permissions', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const sub = await subscriber.subscribe({
-            stream: stream.id,
+            stream: stream.id
         })
         const errs: Error[] = []
         const onSubError = jest.fn((err: Error) => {
@@ -170,16 +165,14 @@ describe('revoke permissions', () => {
 
             expect(timedOut).toHaveBeenCalledTimes(0)
             expect(onSubError).toHaveBeenCalledTimes(1)
-            expect(received.map((m) => m.signature)).toEqual([
-                ...published.slice(0, revokeAfter),
-            ].map((m) => m.signature))
+            expect(received.map((m) => m.signature)).toEqual([...published.slice(0, revokeAfter)].map((m) => m.signature))
         }
     }
     describe('very low cache maxAge', () => {
         beforeEach(async () => {
             await setupPublisherSubscriberClients({
                 cache: {
-                    maxAge: 100,
+                    maxAge: 100
                 }
             })
             await setupStream()
@@ -196,7 +189,7 @@ describe('revoke permissions', () => {
         beforeEach(async () => {
             await setupPublisherSubscriberClients({
                 cache: {
-                    maxAge: 2000,
+                    maxAge: 2000
                 }
             })
             await setupStream()
@@ -213,7 +206,7 @@ describe('revoke permissions', () => {
         beforeEach(async () => {
             await setupPublisherSubscriberClients({
                 cache: {
-                    maxAge: 9999999,
+                    maxAge: 9999999
                 }
             })
             await setupStream()

@@ -7,17 +7,13 @@ export interface Events<C> {
 }
 
 export class ContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
-
     protected contactsById: Map<DhtAddress, C> = new Map()
     // TODO move this to SortedContactList
     protected contactIds: DhtAddress[] = []
     protected localNodeId: DhtAddress
     protected maxSize: number
 
-    constructor(
-        localNodeId: DhtAddress,
-        maxSize: number
-    ) {
+    constructor(localNodeId: DhtAddress, maxSize: number) {
         super()
         this.localNodeId = localNodeId
         this.maxSize = maxSize

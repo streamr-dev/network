@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { 
+import {
     acceptHandshake,
     createHandshakeRequest,
     createHandshakeResponse,
@@ -14,7 +14,6 @@ import { HandshakeError, Message } from '../../generated/packages/dht/protos/Dht
 import { PendingConnection } from '../../src/connection/PendingConnection'
 
 describe('Handshaker', () => {
-
     let handshaker: Handshaker
     let pendingConnection: PendingConnection
     let connection: IConnection
@@ -31,9 +30,9 @@ describe('Handshaker', () => {
         mockPendingConnectionClose = jest.fn()
         mockPendingConnectionDestroy = jest.fn()
         mockConnectionDestroy = jest.fn()
-        pendingConnection = new class extends EventEmitter {
+        pendingConnection = new (class extends EventEmitter {
             // eslint-disable-next-line class-methods-use-this
-            attachConnection() { 
+            attachConnection() {
                 mockOnHandshakeCompleted()
             }
             // eslint-disable-next-line class-methods-use-this
@@ -50,11 +49,11 @@ describe('Handshaker', () => {
             onHandshakeCompleted(_connection: IConnection) {
                 mockOnHandshakeCompleted()
             }
-        } as any
+        })() as any
 
         mockSend = jest.fn()
         mockConnectionClose = jest.fn()
-        connection = new class extends EventEmitter<ConnectionEvents> {
+        connection = new (class extends EventEmitter<ConnectionEvents> {
             // eslint-disable-next-line class-methods-use-this
             send(_message: any) {
                 mockSend()
@@ -68,18 +67,12 @@ describe('Handshaker', () => {
             destroy() {
                 mockConnectionDestroy()
             }
-        } as any    
+        })() as any
     })
 
     describe('Outgoing', () => {
-
         beforeEach(() => {
-            handshaker = createOutgoingHandshaker(
-                createMockPeerDescriptor(),
-                pendingConnection,
-                connection,
-                createMockPeerDescriptor()
-            )
+            handshaker = createOutgoingHandshaker(createMockPeerDescriptor(), pendingConnection, connection, createMockPeerDescriptor())
         })
 
         afterEach(() => {
@@ -87,13 +80,13 @@ describe('Handshaker', () => {
         })
 
         it('sends request after connected', () => {
-            (connection as any).emit('connected')
+            ;(connection as any).emit('connected')
             expect(mockSend).toHaveBeenCalledTimes(1)
         })
 
         it('onHandshakeCompleted', () => {
-            const message = createHandshakeResponse(createMockPeerDescriptor());
-            (connection as any).emit('data', Message.toBinary(message))
+            const message = createHandshakeResponse(createMockPeerDescriptor())
+            ;(connection as any).emit('data', Message.toBinary(message))
             handshaker.emit('handshakeCompleted', createMockPeerDescriptor())
             expect(mockOnHandshakeCompleted).toHaveBeenCalledTimes(1)
         })
@@ -116,19 +109,17 @@ describe('Handshaker', () => {
         })
 
         it('calls pending connection close if connection closes', () => {
-            (connection as any).emit('disconnected')
+            ;(connection as any).emit('disconnected')
             expect(mockPendingConnectionClose).toHaveBeenCalledTimes(1)
         })
 
         it('closes connection if managed connection closes', () => {
-            (pendingConnection as any).emit('disconnected')
+            ;(pendingConnection as any).emit('disconnected')
             expect(mockConnectionClose).toHaveBeenCalledTimes(1)
         })
-
     })
 
     describe('Incoming', () => {
-
         beforeEach(() => {
             handshaker = createIncomingHandshaker(createMockPeerDescriptor(), pendingConnection, connection)
         })
@@ -138,18 +129,18 @@ describe('Handshaker', () => {
         })
 
         it('onHandshakeRequest', () => {
-            const message = createHandshakeRequest(createMockPeerDescriptor(), createMockPeerDescriptor());
-            (connection as any).emit('data', Message.toBinary(message))
+            const message = createHandshakeRequest(createMockPeerDescriptor(), createMockPeerDescriptor())
+            ;(connection as any).emit('data', Message.toBinary(message))
             handshaker.emit('handshakeRequest', createMockPeerDescriptor(), '1.0')
         })
 
         it('calls pending connection onDisconnected if connection closes', () => {
-            (connection as any).emit('disconnected')
+            ;(connection as any).emit('disconnected')
             expect(mockPendingConnectionClose).toHaveBeenCalledTimes(1)
         })
 
         it('closes connection if managed connection closes', () => {
-            (pendingConnection as any).emit('disconnected')
+            ;(pendingConnection as any).emit('disconnected')
             expect(mockConnectionClose).toHaveBeenCalledTimes(1)
         })
 
@@ -163,7 +154,5 @@ describe('Handshaker', () => {
             acceptHandshake(handshaker, pendingConnection, connection)
             expect(mockOnHandshakeCompleted).toHaveBeenCalled()
         })
-
     })
-
 })

@@ -9,10 +9,10 @@ import { createTestTopology } from '../utils/topology'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 
 const NODE_COUNT = 40
-const MIN_NEIGHBOR_COUNT = 2  // nodes can get more neighbors when we merge network partitions
+const MIN_NEIGHBOR_COUNT = 2 // nodes can get more neighbors when we merge network partitions
 const PARALLELISM = 1
 const NO_PROGRESS_LIMIT = 1
-const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's options, not relevant in this test
+const QUERY_BATCH_SIZE = 5 // the default value in DhtNode's options, not relevant in this test
 
 const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
     return {
@@ -22,7 +22,6 @@ const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
 }
 
 describe('DiscoverySession', () => {
-
     let topology: Multimap<DhtAddress, DhtAddress>
     const queriedNodes: DhtAddress[] = []
 
@@ -54,7 +53,11 @@ describe('DiscoverySession', () => {
                 queriedNodes.push(nodeId)
                 await wait(10)
                 const peerManager = createPeerManager(nodeId)
-                return getClosestNodes(referenceId, peerManager.getNeighbors().map((n) => n.getPeerDescriptor()), { maxCount: QUERY_BATCH_SIZE })
+                return getClosestNodes(
+                    referenceId,
+                    peerManager.getNeighbors().map((n) => n.getPeerDescriptor()),
+                    { maxCount: QUERY_BATCH_SIZE }
+                )
             },
             ping: async () => true
         }
@@ -78,9 +81,8 @@ describe('DiscoverySession', () => {
         expect(queriedNodes.length).toBeGreaterThanOrEqual(1)
         // Each queried node should closer to the target than the previous queried node, because we
         // use parallelism=1 and noProgressLimit=1
-        const distancesToTarget = queriedNodes
-            .map((nodeId) => getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
-        for (let i = 1; i < distancesToTarget.length ; i++) {
+        const distancesToTarget = queriedNodes.map((nodeId) => getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
+        for (let i = 1; i < distancesToTarget.length; i++) {
             expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
         }
     })

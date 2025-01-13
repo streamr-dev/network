@@ -41,7 +41,7 @@ const getClosestNodes = (referenceId: DhtAddress, nodeIds: DhtAddress[], count: 
     return list.getClosestContacts().map((c) => c.getNodeId())
 }
 
-/* 
+/*
  * There are no network splits, and each node has only neighbors which are globally closest
  * to the node's ID.
  */

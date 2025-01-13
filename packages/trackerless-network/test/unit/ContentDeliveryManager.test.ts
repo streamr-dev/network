@@ -8,7 +8,6 @@ import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } f
 import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryManager', () => {
-
     let manager: ContentDeliveryManager
     const peerDescriptor = createMockPeerDescriptor()
 
@@ -28,13 +27,8 @@ describe('ContentDeliveryManager', () => {
     })
 
     describe('join and leave', () => {
-
         const streamPartId = StreamPartIDUtils.parse('stream#0')
-        const message = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            streamPartId,
-            randomUserId()
-        )
+        const message = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomUserId())
 
         beforeEach(async () => {
             manager.setStreamPartEntryPoints(streamPartId, [manager.getPeerDescriptor()])

@@ -10,9 +10,7 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
  * aforementioned instance of AbortSignal will have more and more listeners added
  * but never cleaned.
  */
-export function composeAbortSignals(
-    ...signals: (AbortSignal | undefined)[]
-): ComposedAbortSignal {
+export function composeAbortSignals(...signals: (AbortSignal | undefined)[]): ComposedAbortSignal {
     const abortController = new AbortController()
 
     for (const signal of signals) {

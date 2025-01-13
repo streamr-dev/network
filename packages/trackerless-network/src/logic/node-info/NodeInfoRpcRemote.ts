@@ -3,9 +3,7 @@ import { NodeInfoRpcClient } from '../../../generated/packages/trackerless-netwo
 import { RpcRemote } from '@streamr/dht'
 
 export class NodeInfoRpcRemote extends RpcRemote<NodeInfoRpcClient> {
-
     async getInfo(): Promise<NodeInfoResponse> {
         return this.getClient().getInfo({}, this.formDhtRpcOptions())
     }
-
 }

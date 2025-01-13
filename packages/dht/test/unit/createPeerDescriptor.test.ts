@@ -8,7 +8,6 @@ import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 const IP_ADDRESS = '1.2.3.4'
 
 describe('createPeerDescriptor', () => {
-
     const region = getRandomRegion()
 
     it('without websocket', () => {

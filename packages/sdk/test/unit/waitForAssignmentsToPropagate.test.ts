@@ -14,24 +14,26 @@ const authentication = createRandomAuthentication()
 const messageSigner = new MessageSigner(authentication)
 
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-    return messageSigner.createSignedMessage({
-        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
-        messageType: StreamMessageType.MESSAGE,
-        content: utf8ToBinary(JSON.stringify(content)),
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    return messageSigner.createSignedMessage(
+        {
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
+            messageType: StreamMessageType.MESSAGE,
+            content: utf8ToBinary(JSON.stringify(content)),
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
+        },
+        SignatureType.SECP256K1
+    )
 }
 
-async function createAssignmentMessagesFor(stream: {
-    id: StreamID
-    partitions: number
-}): Promise<StreamMessage[]> {
-    return Promise.all(range(0, stream.partitions).map((partition) => (
-        makeMsg(partition * 1000, {
-            streamPart: toStreamPartID(stream.id, partition)
-        })
-    )))
+async function createAssignmentMessagesFor(stream: { id: StreamID; partitions: number }): Promise<StreamMessage[]> {
+    return Promise.all(
+        range(0, stream.partitions).map((partition) =>
+            makeMsg(partition * 1000, {
+                streamPart: toStreamPartID(stream.id, partition)
+            })
+        )
+    )
 }
 
 const RACE_TIMEOUT_IN_MS = 20
@@ -61,9 +63,11 @@ describe(waitForAssignmentsToPropagate, () => {
 
     describe('ignore cases', () => {
         it('invalid payloads are ignored', async () => {
-            await messageStream.push(await makeMsg(1000, {
-                something: 'unexpected'
-            }))
+            await messageStream.push(
+                await makeMsg(1000, {
+                    something: 'unexpected'
+                })
+            )
             await messageStream.push(await makeMsg(1200, {}))
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be rejected if error instead of ignore
@@ -98,12 +102,16 @@ describe(waitForAssignmentsToPropagate, () => {
             for (const message of messagesButMissingOne) {
                 await messageStream.push(message)
             }
-            await messageStream.push(await makeMsg(8000, {
-                streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions)
-            }))
-            await messageStream.push(await makeMsg(9000, {
-                streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions + 1)
-            }))
+            await messageStream.push(
+                await makeMsg(8000, {
+                    streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions)
+                })
+            )
+            await messageStream.push(
+                await makeMsg(9000, {
+                    streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions + 1)
+                })
+            )
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be resolved if counted towards valid
         })

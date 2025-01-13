@@ -5,10 +5,9 @@ import { Signal } from './../utils/Signal'
 
 type ProcessMessageFn = (streamMessage: StreamMessage) => Promise<StreamMessage>
 
-type OnError = Signal<[Error, StreamMessage?]>  // TODO could remove the StreamMessage parameter or use it?
+type OnError = Signal<[Error, StreamMessage?]> // TODO could remove the StreamMessage parameter or use it?
 
 class MsgChainProcessor {
-
     readonly busy: Gate = new Gate(true)
     private readonly inputBuffer: StreamMessage[] = []
     private readonly outputBuffer: PushBuffer<StreamMessage>
@@ -40,7 +39,6 @@ class MsgChainProcessor {
 }
 
 export class MsgChainUtil implements AsyncIterable<StreamMessage> {
-
     private readonly outputBuffer: PushBuffer<StreamMessage> = new PushBuffer()
     private readonly processors: Map<string, MsgChainProcessor> = new Map()
     private readonly processMessageFn: ProcessMessageFn

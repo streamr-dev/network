@@ -40,11 +40,7 @@ export class SignatureValidator {
                     streamMessage.signature
                 )
             case SignatureType.SECP256K1:
-                return verifySignature(
-                    toUserIdRaw(streamMessage.getPublisherId()),
-                    createSignaturePayload(streamMessage),
-                    streamMessage.signature
-                )
+                return verifySignature(toUserIdRaw(streamMessage.getPublisherId()), createSignaturePayload(streamMessage), streamMessage.signature)
             case SignatureType.ERC_1271:
                 return this.erc1271ContractFacade.isValidSignature(
                     toEthereumAddress(streamMessage.getPublisherId()),

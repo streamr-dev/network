@@ -6,7 +6,6 @@ import { ConnectionsView } from '../../src/exports'
 
 // TODO extract ConnectionsView functionality to FakeConnectionsView
 class FakeTransport extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView {
-
     private onSend: (msg: Message) => void
     private readonly localPeerDescriptor: PeerDescriptor
     // currently adds a peerDescription to the connections array when a "connect" option is seen in
@@ -52,8 +51,7 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop(): void | Promise<void> {
-    }
+    stop(): void | Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
@@ -62,7 +60,6 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
 }
 
 export class FakeEnvironment {
-
     private transports: FakeTransport[] = []
 
     createTransport(peerDescriptor: PeerDescriptor): FakeTransport {

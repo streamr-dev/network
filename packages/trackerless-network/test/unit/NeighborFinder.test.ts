@@ -7,7 +7,6 @@ import { createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { DhtAddress, randomDhtAddress, toNodeId } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
-
     const nodeId = randomDhtAddress()
     let neighbors: NodeList
     let nearbyNodeView: NodeList

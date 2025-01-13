@@ -19,7 +19,6 @@ const logger = new Logger(module)
 
 // TODO: refactor this test file to use beforeEach and AfterEach for proper teardown
 describe('ConnectionManager', () => {
-
     const mockPeerDescriptor1 = createMockPeerDescriptor()
     const mockPeerDescriptor2 = createMockPeerDescriptor()
     const mockPeerDescriptor3 = createMockPeerDescriptor()
@@ -32,11 +31,12 @@ describe('ConnectionManager', () => {
 
     const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
-            createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
-                websocketServerEnableTls: false,
-                ...opts
-            }),
+            createConnectorFacade: () =>
+                new DefaultConnectorFacade({
+                    createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
+                    websocketServerEnableTls: false,
+                    ...opts
+                }),
             metricsContext: new MetricsContext(),
             allowIncomingPrivateConnections: true
         })
@@ -59,7 +59,6 @@ describe('ConnectionManager', () => {
     })
 
     it('Can start alone', async () => {
-
         const connectionManager = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
@@ -73,7 +72,6 @@ describe('ConnectionManager', () => {
     })
 
     it('Throws an async exception if fails to connect to entrypoints', async () => {
-
         const entryPoint = createMockPeerDescriptor({
             websocket: { host: '127.0.0.1', port: 12345, tls: false }
         })
@@ -95,9 +93,11 @@ describe('ConnectionManager', () => {
                 websocket: { host: '127.0.0.1', port: 12345 + i, tls: false }
             })
         })
-        entryPoints.push(createMockPeerDescriptor({
-            websocket: { host: '127.0.0.1', port: 9998, tls: false }
-        }))
+        entryPoints.push(
+            createMockPeerDescriptor({
+                websocket: { host: '127.0.0.1', port: 9998, tls: false }
+            })
+        )
         const connectionManager = createConnectionManager({
             transport: mockTransport,
             websocketPortRange: { min: 9998, max: 9998 },
@@ -120,7 +120,7 @@ describe('ConnectionManager', () => {
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
 
         const entryPoint = createMockPeerDescriptor({
-            websocket: { host: '127.0.0.1', port: 9993, tls: false } 
+            websocket: { host: '127.0.0.1', port: 9993, tls: false }
         })
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
@@ -148,9 +148,7 @@ describe('ConnectionManager', () => {
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9996, max: 9996 },
-            entryPoints: [
-                connectionManager1.getLocalPeerDescriptor()
-            ]
+            entryPoints: [connectionManager1.getLocalPeerDescriptor()]
         })
 
         await connectionManager2.start()
@@ -162,7 +160,7 @@ describe('ConnectionManager', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            } 
+            }
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
@@ -194,10 +192,10 @@ describe('ConnectionManager', () => {
     })
 
     it('Can disconnect websockets', async () => {
-        const connectionManager1 = createConnectionManager({ 
+        const connectionManager1 = createConnectionManager({
             transport: mockConnectorTransport1,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 9997, max: 9997 },
+            websocketPortRange: { min: 9997, max: 9997 }
         })
 
         await connectionManager1.start()
@@ -207,9 +205,7 @@ describe('ConnectionManager', () => {
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
             websocketServerEnableTls: false,
-            entryPoints: [
-                connectionManager1.getLocalPeerDescriptor()
-            ]
+            entryPoints: [connectionManager1.getLocalPeerDescriptor()]
         })
 
         await connectionManager2.start()
@@ -220,7 +216,7 @@ describe('ConnectionManager', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            } 
+            }
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
@@ -270,7 +266,7 @@ describe('ConnectionManager', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            } 
+            }
         }
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
@@ -326,7 +322,7 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        
+
         const peerDescriptor = connectionManager1.getLocalPeerDescriptor()
         peerDescriptor.nodeId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
@@ -336,17 +332,14 @@ describe('ConnectionManager', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            } 
+            }
         }
-        await expect(connectionManager1.send(msg))
-            .rejects
-            .toThrow('Cannot send to self')
-        
+        await expect(connectionManager1.send(msg)).rejects.toThrow('Cannot send to self')
+
         await connectionManager1.stop()
     })
 
     it('Cannot send to a WebSocketServer if nodeIds do not match', async () => {
-
         const peerDescriptor1 = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
@@ -365,7 +358,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10002, max: 10002 },
-            createLocalPeerDescriptor: async () => peerDescriptor1 
+            createLocalPeerDescriptor: async () => peerDescriptor1
         })
 
         await connectionManager1.start()
@@ -391,15 +384,13 @@ describe('ConnectionManager', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
-            } 
+            }
         }
         await Promise.all([
             waitForEvent3<TransportEvents>(connectionManager1, 'disconnected'),
-            expect(connectionManager1.send(msg))      
-                .rejects
-                .toThrow()
+            expect(connectionManager1.send(msg)).rejects.toThrow()
         ])
-        
+
         await connectionManager1.stop()
         await connectionManager2.stop()
     }, 10000)
@@ -522,7 +513,5 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.stop()
         await connectionManager2.stop()
- 
     })
-
 })

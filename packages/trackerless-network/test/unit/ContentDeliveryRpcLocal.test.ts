@@ -7,17 +7,12 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcLocal', () => {
-
     let rpcLocal: ContentDeliveryRpcLocal
     const peerDescriptor = createMockPeerDescriptor()
 
     const mockSender = createMockPeerDescriptor()
 
-    const message = createStreamMessage(
-        JSON.stringify({ hello: 'WORLD' }),
-        StreamPartIDUtils.parse('random-graph#0'),
-        randomUserId()
-    )
+    const message = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), StreamPartIDUtils.parse('random-graph#0'), randomUserId())
 
     let mockBroadcast: jest.Mock
     let mockDuplicateCheck: jest.Mock
@@ -40,7 +35,7 @@ describe('ContentDeliveryRpcLocal', () => {
             rpcCommunicator: new ListeningRpcCommunicator('random-graph-node', new MockTransport())
         })
     })
-    
+
     it('Server sendStreamMessage()', async () => {
         await rpcLocal.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
@@ -56,5 +51,4 @@ describe('ContentDeliveryRpcLocal', () => {
         await rpcLocal.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
     })
-
 })

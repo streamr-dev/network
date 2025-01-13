@@ -2,7 +2,6 @@ import { binaryToHex } from '../src/binaryUtils'
 import { LengthPrefixedFrameDecoder, toLengthPrefixedFrame } from '../src/lengthPrefixedFrameUtils'
 
 describe('LengthPrefixedFrameUtils', () => {
-
     describe('toLengthPrefixedFrame', () => {
         it('prefixes length to payload', () => {
             const payload = Buffer.from('Hello, world!')
@@ -41,10 +40,7 @@ describe('LengthPrefixedFrameUtils', () => {
         it('can decode multiple frames in one chunk', (done) => {
             const payload1 = Buffer.from('Hello, world!')
             const payload2 = Buffer.from('Goodbye, world!')
-            const chunk = Buffer.concat([
-                toLengthPrefixedFrame(payload1),
-                toLengthPrefixedFrame(payload2)
-            ])
+            const chunk = Buffer.concat([toLengthPrefixedFrame(payload1), toLengthPrefixedFrame(payload2)])
 
             let count = 0
             decoder.on('data', (data: Buffer) => {

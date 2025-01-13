@@ -6,7 +6,6 @@ import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFra
 import { nextValue } from './../../src/utils/iterators'
 
 describe('utils', () => {
-
     describe('getEndpointUrl', () => {
         it('works', () => {
             const streamId = 'x/y'
@@ -27,7 +26,6 @@ describe('utils', () => {
     })
 
     describe('fetchLengthPrefixedFrameHttpBinaryStream', () => {
-
         it('happy path', async () => {
             const LINE_COUNT = 5
             const server = await startTestServer('/', async (_req: express.Request, res: express.Response) => {

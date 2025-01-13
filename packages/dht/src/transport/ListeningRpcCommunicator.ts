@@ -1,4 +1,4 @@
-import { ITransport } from './ITransport' 
+import { ITransport } from './ITransport'
 import { RoutingRpcCommunicator } from './RoutingRpcCommunicator'
 import { RpcCommunicatorOptions, RpcError } from '@streamr/proto-rpc'
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
@@ -20,7 +20,7 @@ export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
             requests.forEach((id) => this.handleClientError(id, new RpcError.Disconnected('Peer disconnected')))
         }
         this.transport = transport
-        transport.on('message', this.messageListener) 
+        transport.on('message', this.messageListener)
         transport.on('disconnected', this.disconnectedListener)
     }
 

@@ -28,35 +28,32 @@ const CONTENT = {
 }
 
 describe('messagePipeline', () => {
-
     let pipeline: PushPipeline<StreamMessage, StreamMessage>
     let streamRegistry: Partial<StreamRegistry>
     let streamPartId: StreamPartID
     let publisher: Wallet
 
-    const createMessage = async (opts: {
-        content?: Uint8Array
-        encryptionType?: EncryptionType
-        groupKeyId?: string
-        contentType?: ContentType
-    } = {}): Promise<StreamMessage> => {
+    const createMessage = async (
+        opts: {
+            content?: Uint8Array
+            encryptionType?: EncryptionType
+            groupKeyId?: string
+            contentType?: ContentType
+        } = {}
+    ): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         const messageSigner = new MessageSigner(createPrivateKeyAuthentication(publisher.privateKey))
-        return messageSigner.createSignedMessage({
-            messageId: new MessageID(
-                streamId,
-                partition,
-                Date.now(),
-                0,
-                toUserId(publisher.address),
-                'mock-msgChainId'
-            ),
-            messageType: StreamMessageType.MESSAGE,
-            content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
-            contentType: opts.contentType ?? ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-            ...opts
-        }, SignatureType.SECP256K1)
+        return messageSigner.createSignedMessage(
+            {
+                messageId: new MessageID(streamId, partition, Date.now(), 0, toUserId(publisher.address), 'mock-msgChainId'),
+                messageType: StreamMessageType.MESSAGE,
+                content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
+                contentType: opts.contentType ?? ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
+                ...opts
+            },
+            SignatureType.SECP256K1
+        )
     }
 
     beforeEach(async () => {
@@ -96,7 +93,7 @@ describe('messagePipeline', () => {
             ),
             config: config as any,
             destroySignal,
-            loggerFactory: mockLoggerFactory(),
+            loggerFactory: mockLoggerFactory()
         })
     })
 
@@ -144,7 +141,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid content', async () => {
         const msg = await createMessage({
-            content: utf8ToBinary('{ invalid-json'),
+            content: utf8ToBinary('{ invalid-json')
         })
         await pipeline.push(msg)
         pipeline.endWrite()
@@ -163,11 +160,13 @@ describe('messagePipeline', () => {
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
         const content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
-        await pipeline.push(await createMessage({
-            content,
-            encryptionType: EncryptionType.AES,
-            groupKeyId: encryptionKey.id
-        }))
+        await pipeline.push(
+            await createMessage({
+                content,
+                encryptionType: EncryptionType.AES,
+                groupKeyId: encryptionKey.id
+            })
+        )
         pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)

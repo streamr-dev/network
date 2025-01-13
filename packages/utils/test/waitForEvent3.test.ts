@@ -55,8 +55,6 @@ describe('waitForEvent', () => {
             correctEvent: (id: number, name: string) => any
         }
         const emitter = new EventEmitter<Events>()
-        return expect(waitForEvent3(emitter, 'correctEvent', 20))
-            .rejects
-            .toEqual(new TimeoutError(20, 'waitForEvent3'))
+        return expect(waitForEvent3(emitter, 'correctEvent', 20)).rejects.toEqual(new TimeoutError(20, 'waitForEvent3'))
     })
 })

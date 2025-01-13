@@ -39,12 +39,14 @@ interface RecursiveOperationManagerOptions {
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
-export interface RecursiveOperationResult { closestNodes: PeerDescriptor[], dataEntries?: DataEntry[] }
+export interface RecursiveOperationResult {
+    closestNodes: PeerDescriptor[]
+    dataEntries?: DataEntry[]
+}
 
 const logger = new Logger(module)
 
 export class RecursiveOperationManager {
-
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
     private readonly options: RecursiveOperationManagerOptions
@@ -148,21 +150,14 @@ export class RecursiveOperationManager {
     ): void {
         const isOwnNode = areEqualPeerDescriptors(this.options.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
-            this.ongoingSessions.get(serviceId)!
-                .onResponseReceived(
-                    toNodeId(this.options.localPeerDescriptor),
-                    routingPath,
-                    closestConnectedNodes,
-                    dataEntries,
-                    noCloserNodesFound
-                )
+            this.ongoingSessions
+                .get(serviceId)!
+                .onResponseReceived(toNodeId(this.options.localPeerDescriptor), routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
         } else {
             // TODO use options option or named constant?
-            const remoteCommunicator = new ListeningRpcCommunicator(
-                serviceId,
-                this.options.sessionTransport,
-                { rpcRequestTimeout: RECURSIVE_OPERATION_TIMEOUT }
-            )
+            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.options.sessionTransport, {
+                rpcRequestTimeout: RECURSIVE_OPERATION_TIMEOUT
+            })
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.options.localPeerDescriptor,
                 targetPeerDescriptor,
@@ -184,32 +179,22 @@ export class RecursiveOperationManager {
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use options option or named constant?
         const closestConnectedNodes = this.getClosestConnectedNodes(targetId, 5)
-        const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
-            ? Array.from(this.options.localDataStore.values(targetId))
-            : []
+        const dataEntries = request.operation === RecursiveOperation.FETCH_DATA ? Array.from(this.options.localDataStore.values(targetId)) : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
             this.options.localDataStore.markAsDeleted(targetId, toNodeId(routedMessage.sourcePeer!))
         }
         if (areEqualBinaries(this.options.localPeerDescriptor.nodeId, routedMessage.target)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
-            this.sendResponse(
-                routedMessage.routingPath,
-                routedMessage.sourcePeer!,
-                request.sessionId,
-                closestConnectedNodes,
-                dataEntries,
-                true
-            )
+            this.sendResponse(routedMessage.routingPath, routedMessage.sourcePeer!, request.sessionId, closestConnectedNodes, dataEntries, true)
             return createRouteMessageAck(routedMessage)
         } else {
             const ack = this.options.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
-            if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
-                const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
-                    (
-                        closestConnectedNodes.length > 0 
-                        && getPreviousPeer(routedMessage) 
-                        && !this.isPeerCloserToIdThanSelf(closestConnectedNodes[0], targetId)
-                    )
+            if (ack.error === undefined || ack.error === RouteMessageError.NO_TARGETS) {
+                const noCloserContactsFound =
+                    ack.error === RouteMessageError.NO_TARGETS ||
+                    (closestConnectedNodes.length > 0 &&
+                        getPreviousPeer(routedMessage) &&
+                        !this.isPeerCloserToIdThanSelf(closestConnectedNodes[0], targetId))
                 this.sendResponse(
                     routedMessage.routingPath,
                     routedMessage.sourcePeer!,
@@ -220,7 +205,7 @@ export class RecursiveOperationManager {
                 )
             }
             return ack
-        }    
+        }
     }
 
     private getClosestConnectedNodes(referenceId: DhtAddress, limit: number): PeerDescriptor[] {

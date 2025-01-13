@@ -6,7 +6,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { areEqualPeerDescriptors } from '../../src/identifiers'
 
 describe('Websocket IConnection Requests', () => {
-
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10021, tls: false }
     })
@@ -15,18 +14,17 @@ describe('Websocket IConnection Requests', () => {
     let node2: DhtNode
 
     beforeEach(async () => {
-
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ 
+        node1 = new DhtNode({
             websocketPortRange: { min: 10022, max: 10022 },
             entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
         })
-        node2 = new DhtNode({ 
+        node2 = new DhtNode({
             entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
         })
@@ -42,7 +40,6 @@ describe('Websocket IConnection Requests', () => {
     })
 
     it('Happy Path', async () => {
-
         let connected1 = false
         let connected2 = false
 
@@ -60,10 +57,11 @@ describe('Websocket IConnection Requests', () => {
         await node2.joinDht([epPeerDescriptor])
         await node1.joinDht([epPeerDescriptor])
 
-        await until(() => { return (connected1 && connected2) })
+        await until(() => {
+            return connected1 && connected2
+        })
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)
-
     }, 10000)
 })

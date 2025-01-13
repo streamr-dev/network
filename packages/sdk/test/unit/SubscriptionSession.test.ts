@@ -45,7 +45,6 @@ describe('SubscriptionSession', () => {
             await session.add(createSubscription(ADDRESS_ONE))
             expect(session.getERC1271ContractAddress()).toEqual(ADDRESS_ONE)
         })
-
     })
 
     it('can add multiple subscriptions without erc1271contractAddress', async () => {

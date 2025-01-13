@@ -1,13 +1,5 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import {
-    EthereumAddress,
-    StreamID,
-    StreamPartID,
-    StreamPartIDUtils,
-    collect, hexToBinary,
-    toStreamID,
-    until
-} from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, collect, hexToBinary, toStreamID, until } from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
 import without from 'lodash/without'
@@ -86,7 +78,7 @@ const createResend = (availableMessages: StreamMessage[], isError: (from: number
         const to = new MessageRef(options.to.timestamp as number, options.to.sequenceNumber!)
         if (!isError(from.timestamp)) {
             return createMessageStream(
-                ...availableMessages.filter((msg) => (msg.getMessageRef().compareTo(from) >= 0) && (msg.getMessageRef().compareTo(to) <= 0))
+                ...availableMessages.filter((msg) => msg.getMessageRef().compareTo(from) >= 0 && msg.getMessageRef().compareTo(to) <= 0)
             )
         } else {
             throw new Error('mock-error')
@@ -95,7 +87,6 @@ const createResend = (availableMessages: StreamMessage[], isError: (from: number
 }
 
 describe('OrderMessages', () => {
-
     it('no messages', async () => {
         const orderMessages = createOrderMessages(undefined as any)
         await orderMessages.addMessages(fromArray([]))
@@ -134,7 +125,7 @@ describe('OrderMessages', () => {
 
     it('gap of multiple messages', async () => {
         const msgs = await createMessages(5)
-        const missing = msgs.filter((m) => (m.getTimestamp() === 3000) || (m.getTimestamp() === 4000))
+        const missing = msgs.filter((m) => m.getTimestamp() === 3000 || m.getTimestamp() === 4000)
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
@@ -160,14 +151,16 @@ describe('OrderMessages', () => {
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const resends = {
-            resend: jest.fn()
+            resend: jest
+                .fn()
                 .mockResolvedValueOnce(createMessageStream(...missing1))
                 .mockResolvedValueOnce(createMessageStream(...missing2))
         }
         const orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing1.concat(missing2))))
         expect(await collect(orderMessages)).toEqual(msgs)
-        expect(resends.resend).toHaveBeenNthCalledWith(1,
+        expect(resends.resend).toHaveBeenNthCalledWith(
+            1,
             STREAM_PART_ID,
             {
                 from: new MessageRef(1000, 1),
@@ -179,7 +172,8 @@ describe('OrderMessages', () => {
             expect.toBeFunction(),
             expect.anything()
         )
-        expect(resends.resend).toHaveBeenNthCalledWith(2,
+        expect(resends.resend).toHaveBeenNthCalledWith(
+            2,
             STREAM_PART_ID,
             {
                 from: new MessageRef(3000, 1),
@@ -225,16 +219,20 @@ describe('OrderMessages', () => {
         let orderMessages: OrderMessages | undefined = undefined
         let resendAborted = false
         const resends = {
-            resend: jest.fn().mockImplementation((
-                _streamPartId: StreamPartID,
-                _options: ResendOptions & { raw?: boolean },
-                _getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
-                abortSignal?: AbortSignal
-            ) => {
-                abortSignal!.addEventListener('abort', () => resendAborted = true)
-                orderMessages!.destroy()
-                return createMessageStream(...missing)
-            })
+            resend: jest
+                .fn()
+                .mockImplementation(
+                    (
+                        _streamPartId: StreamPartID,
+                        _options: ResendOptions & { raw?: boolean },
+                        _getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+                        abortSignal?: AbortSignal
+                    ) => {
+                        abortSignal!.addEventListener('abort', () => (resendAborted = true))
+                        orderMessages!.destroy()
+                        return createMessageStream(...missing)
+                    }
+                )
         }
         orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
@@ -243,7 +241,6 @@ describe('OrderMessages', () => {
     })
 
     describe('strategy', () => {
-
         const CHUNK1 = [1000, 3000, 8000, 10000]
         const CHUNK2 = [11000, 12000, 14000]
 
@@ -264,17 +261,18 @@ describe('OrderMessages', () => {
         }
 
         const addMessages = async (orderMessages: OrderMessages) => {
-            await orderMessages.addMessages(async function* () {
-                yield* allMessages.filter((m) => CHUNK1.includes(m.getTimestamp()))
-                await until(() => {
-                    return outputMessages.some((m) => (m.getTimestamp() === last(CHUNK1)))
-                })
-                yield* allMessages.filter((m) => CHUNK2.includes(m.getTimestamp()))
-            }())
+            await orderMessages.addMessages(
+                (async function* () {
+                    yield* allMessages.filter((m) => CHUNK1.includes(m.getTimestamp()))
+                    await until(() => {
+                        return outputMessages.some((m) => m.getTimestamp() === last(CHUNK1))
+                    })
+                    yield* allMessages.filter((m) => CHUNK2.includes(m.getTimestamp()))
+                })()
+            )
         }
 
         describe('full', () => {
-
             it('happy path', async () => {
                 const UNAVAILABLE = [5000, 6000]
                 const onUnfillableGap = jest.fn()
@@ -282,9 +280,14 @@ describe('OrderMessages', () => {
                 const resends = {
                     resend: createResend(availableMessages)
                 }
-                const orderMessages = createOrderMessages(resends, {
-                    gapFillStrategy: 'full'
-                }, undefined, onUnfillableGap)
+                const orderMessages = createOrderMessages(
+                    resends,
+                    {
+                        gapFillStrategy: 'full'
+                    },
+                    undefined,
+                    onUnfillableGap
+                )
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 expect(outputMessages).toEqual(availableMessages)
@@ -301,9 +304,14 @@ describe('OrderMessages', () => {
                 const resends = {
                     resend: createResend(availableMessages, (from) => ERROR.includes(from))
                 }
-                const orderMessages = createOrderMessages(resends, {
-                    gapFillStrategy: 'full'
-                }, undefined, onUnfillableGap)
+                const orderMessages = createOrderMessages(
+                    resends,
+                    {
+                        gapFillStrategy: 'full'
+                    },
+                    undefined,
+                    onUnfillableGap
+                )
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 expect(outputMessages).toEqual(availableMessages)
@@ -315,7 +323,6 @@ describe('OrderMessages', () => {
         })
 
         describe('light', () => {
-
             it('happy path', async () => {
                 const UNAVAILABLE = [5000, 6000]
                 const onUnfillableGap = jest.fn()
@@ -323,15 +330,20 @@ describe('OrderMessages', () => {
                 const resends = {
                     resend: createResend(availableMessages)
                 }
-                const orderMessages = createOrderMessages(resends, {
-                    gapFillStrategy: 'light'
-                }, undefined, onUnfillableGap)
+                const orderMessages = createOrderMessages(
+                    resends,
+                    {
+                        gapFillStrategy: 'light'
+                    },
+                    undefined,
+                    onUnfillableGap
+                )
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 const expectedMessages = allMessages.filter(
                     // ignore the gap 8000-10000 as it has accumulated while we process the unfillable
                     // gap of 3000-8000
-                    (m) => !UNAVAILABLE.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
+                    (m) => !UNAVAILABLE.includes(m.getTimestamp()) && m.getTimestamp() !== 9000
                 )
                 expect(outputMessages).toEqual(expectedMessages)
                 expect(resends.resend).toHaveBeenCalledTimes(2 + CONFIG.maxGapRequests)
@@ -349,15 +361,20 @@ describe('OrderMessages', () => {
                 const resends = {
                     resend: createResend(availableMessages)
                 }
-                const orderMessages = createOrderMessages(resends, {
-                    gapFillStrategy: 'light'
-                }, undefined, onUnfillableGap)
+                const orderMessages = createOrderMessages(
+                    resends,
+                    {
+                        gapFillStrategy: 'light'
+                    },
+                    undefined,
+                    onUnfillableGap
+                )
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 const expectedMessages = allMessages.filter(
                     // ignore the gap 8000-10000 as it has accumulated while we process the unfillable
                     // gap of 3000-8000
-                    (m) => !ERROR.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
+                    (m) => !ERROR.includes(m.getTimestamp()) && m.getTimestamp() !== 9000
                 )
                 expect(outputMessages).toEqual(expectedMessages)
                 expect(resends.resend).toHaveBeenCalledTimes(2 + CONFIG.maxGapRequests)
@@ -371,7 +388,6 @@ describe('OrderMessages', () => {
     })
 
     describe('storage node caching', () => {
-
         it('no gaps', async () => {
             const getStorageNodes = jest.fn()
             const orderMessages = createOrderMessages(undefined as any, undefined, getStorageNodes)
@@ -386,9 +402,7 @@ describe('OrderMessages', () => {
                 resend: jest.fn().mockImplementation(() => createMessageStream())
             }
             const orderMessages = createOrderMessages(resends, undefined, getStorageNodes)
-            const messages = (await createMessages(5)).filter(
-                (m) => (m.getTimestamp() !== 2000) && (m.getTimestamp() !== 4000)
-            )
+            const messages = (await createMessages(5)).filter((m) => m.getTimestamp() !== 2000 && m.getTimestamp() !== 4000)
             await orderMessages.addMessages(fromArray(messages))
             await collect(orderMessages)
             expect(getStorageNodes).toHaveBeenCalledTimes(1)

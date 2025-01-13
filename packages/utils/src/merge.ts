@@ -11,7 +11,7 @@ export const merge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TT
         if (isArray(srcValue)) {
             return [...srcValue]
         } else {
-            return undefined  // no customization: does the default merging for this field
+            return undefined // no customization: does the default merging for this field
         }
     })
     return result as TTarget

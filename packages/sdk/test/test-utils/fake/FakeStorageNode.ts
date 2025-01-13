@@ -1,9 +1,11 @@
 import { fastWallet } from '@streamr/test-utils'
 import {
-    EthereumAddress, Multimap,
+    EthereumAddress,
+    Multimap,
     StreamID,
     StreamPartID,
-    toEthereumAddress, toLengthPrefixedFrame,
+    toEthereumAddress,
+    toLengthPrefixedFrame,
     toStreamID,
     toStreamPartID,
     toUserId,
@@ -60,11 +62,10 @@ const isStorableMessage = (msg: StreamMessage): boolean => {
 }
 
 const parseNumberQueryParameter = (str: string | undefined): number | undefined => {
-    return (str !== undefined) ? Number(str) : undefined
+    return str !== undefined ? Number(str) : undefined
 }
 
 export class FakeStorageNode {
-
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private server?: Server
     private readonly wallet: Wallet
@@ -142,7 +143,7 @@ export class FakeStorageNode {
         streamParts.forEach(async (streamPartId) => {
             if (!(await this.node.getStreamParts()).includes(streamPartId)) {
                 this.node.addMessageListener((msg: StreamMessage) => {
-                    if ((msg.getStreamPartID() === streamPartId) && isStorableMessage(msg)) {
+                    if (msg.getStreamPartID() === streamPartId && isStorableMessage(msg)) {
                         this.storeMessage(msg)
                     }
                 })
@@ -151,7 +152,7 @@ export class FakeStorageNode {
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
                     content: {
-                        streamPart: streamPartId,
+                        streamPart: streamPartId
                     }
                 })
                 await this.node.broadcast(assignmentMessage)
@@ -164,9 +165,12 @@ export class FakeStorageNode {
         this.streamPartMessages.add(streamPartId, msg)
     }
 
-    async* getLast(streamPartId: StreamPartID, opts: {
-        count: number
-    }): AsyncIterable<StreamMessage> {
+    async *getLast(
+        streamPartId: StreamPartID,
+        opts: {
+            count: number
+        }
+    ): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
             const firstIndex = Math.max(messages.length - opts.count, 0)
@@ -177,26 +181,29 @@ export class FakeStorageNode {
         }
     }
 
-    async* getRange(streamPartId: StreamPartID, opts: {
-        fromTimestamp: number
-        fromSequenceNumber?: number
-        toTimestamp: number
-        toSequenceNumber?: number
-        publisherId?: string
-        msgChainId?: string
-    }): AsyncIterable<StreamMessage> {
+    async *getRange(
+        streamPartId: StreamPartID,
+        opts: {
+            fromTimestamp: number
+            fromSequenceNumber?: number
+            toTimestamp: number
+            toSequenceNumber?: number
+            publisherId?: string
+            msgChainId?: string
+        }
+    ): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
             const minSequenceNumber = opts.fromSequenceNumber ?? MIN_SEQUENCE_NUMBER
             const maxSequenceNumber = opts.toSequenceNumber ?? MAX_SEQUENCE_NUMBER
             yield* messages.filter((msg) => {
-                return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
-                    && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
-                    && (
-                        ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))
-                        || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= minSequenceNumber))
-                        || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= maxSequenceNumber))
-                    )
+                return (
+                    (opts.publisherId === undefined || msg.getPublisherId() === opts.publisherId) &&
+                    (opts.msgChainId === undefined || msg.getMsgChainId() === opts.msgChainId) &&
+                    ((msg.getTimestamp() > opts.fromTimestamp && msg.getTimestamp() < opts.toTimestamp) ||
+                        (msg.getTimestamp() === opts.fromTimestamp && msg.getSequenceNumber() >= minSequenceNumber) ||
+                        (msg.getTimestamp() === opts.toTimestamp && msg.getSequenceNumber() <= maxSequenceNumber))
+                )
             })
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?

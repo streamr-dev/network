@@ -1,17 +1,9 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "noEmit": true,
-        "noImplicitOverride": false
-    },
-    "include": [
-        "src/**/*",
-        "generated/**/*",
-        "test/**/*",
-        "package.json"
-    ],
-    "references": [
-        { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../dht/tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noImplicitOverride": false
+  },
+  "include": ["src/**/*", "generated/**/*", "test/**/*", "package.json"],
+  "references": [{ "path": "../proto-rpc/tsconfig.node.json" }, { "path": "../dht/tsconfig.node.json" }]
 }

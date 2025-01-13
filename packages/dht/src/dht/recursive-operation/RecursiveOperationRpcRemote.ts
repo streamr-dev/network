@@ -9,7 +9,6 @@ import { toNodeId } from '../../identifiers'
 const logger = new Logger(module)
 
 export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpcClient> {
-
     async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
             target: params.target,
@@ -31,9 +30,7 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
             }
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
-            const fromNode = previousPeer
-                ? toNodeId(previousPeer)
-                : toNodeId(params.sourcePeer!)
+            const fromNode = previousPeer ? toNodeId(previousPeer) : toNodeId(params.sourcePeer!)
             const toNode = toNodeId(this.getPeerDescriptor())
             logger.debug(`Failed to send routeRequest message from ${fromNode} to ${toNode}`, { err })
             return false

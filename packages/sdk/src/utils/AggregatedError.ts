@@ -13,17 +13,17 @@ function joinMessages(msgs: (string | undefined)[]): string {
 
 function getStacks(err: Error | AggregatedError): (string | undefined)[] {
     if (err instanceof AggregatedError) {
-        return [
-            err.ownStack,
-            ...[...err.errors].map(({ stack }) => stack)
-        ]
+        return [err.ownStack, ...[...err.errors].map(({ stack }) => stack)]
     }
 
     return [err.stack]
 }
 
 function joinStackTraces(errs: Error[]): string {
-    return errs.flatMap((err) => getStacks(err)).filter(Boolean).join('\n')
+    return errs
+        .flatMap((err) => getStacks(err))
+        .filter(Boolean)
+        .join('\n')
 }
 
 export class AggregatedError extends Error {
@@ -32,10 +32,7 @@ export class AggregatedError extends Error {
     public ownStack?: string
 
     constructor(errors: Error[] = [], errorMessage = '') {
-        const message = joinMessages([
-            errorMessage,
-            ...errors.map((err) => err.message)
-        ])
+        const message = joinMessages([errorMessage, ...errors.map((err) => err.message)])
         super(message)
         errors.forEach((err) => {
             Object.assign(this, err)

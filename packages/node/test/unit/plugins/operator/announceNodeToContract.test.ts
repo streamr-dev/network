@@ -15,7 +15,6 @@ const createOperator = (timestampOfLastHeartbeat: number | undefined): MockProxy
 }
 
 describe('announceNodeToContract', () => {
-
     let streamrClient: MockProxy<StreamrClient>
 
     beforeAll(() => {

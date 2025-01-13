@@ -1,5 +1,4 @@
 export class EncryptedGroupKey {
-
     readonly id: string
     readonly data: Uint8Array
 

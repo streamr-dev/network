@@ -18,7 +18,6 @@ const MOCK_EVENT_PAYLOAD = {
 const OTHER_EVENT_NAME = 'bar'
 
 describe('ObservableEventEmitter', () => {
-
     it('happy path', () => {
         const emitter = new ObservableEventEmitter<MockEvents>()
         const listenerCounts: number[] = []

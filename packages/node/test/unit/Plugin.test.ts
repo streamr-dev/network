@@ -5,20 +5,16 @@ import { ApiPluginConfig, Plugin } from '../../src/Plugin'
 const PLUGIN_NAME = 'mock-plugin'
 
 const createPlugin = (brokerConfig: StrictConfig) => {
-    return new class extends Plugin<ApiPluginConfig> {
+    return new (class extends Plugin<ApiPluginConfig> {
         // eslint-disable-next-line class-methods-use-this
-        async start(): Promise<void> {
-        }
+        async start(): Promise<void> {}
         // eslint-disable-next-line class-methods-use-this
-        async stop(): Promise<void> {
-        }
-    }(PLUGIN_NAME, brokerConfig)
+        async stop(): Promise<void> {}
+    })(PLUGIN_NAME, brokerConfig)
 }
 
 describe('Plugin', () => {
-
     describe('API authentication', () => {
-
         it('no config', () => {
             const plugin = createPlugin({
                 plugins: {

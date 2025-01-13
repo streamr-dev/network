@@ -15,11 +15,7 @@ const isHexadecimal = (str: string): boolean => {
     return /^[0-9a-fA-F]+$/.test(str)
 }
 
-const publishStream = (
-    stream: string,
-    partitionKeyField: string | undefined,
-    client: StreamrClient
-): Writable => {
+const publishStream = (stream: string, partitionKeyField: string | undefined, client: StreamrClient): Writable => {
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
@@ -41,7 +37,7 @@ const publishStream = (
                     return
                 }
             }
-            const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
+            const partitionKey = partitionKeyField !== undefined && typeof message === 'object' ? message[partitionKeyField] : undefined
             client.publish(stream, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
@@ -68,11 +64,14 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
                 resolve(undefined)
             })
             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-            .once('error', (err: any) => reject(err) )
+            .once('error', (err: any) => reject(err))
     })
 })
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
     // eslint-disable-next-line max-len
-    .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
+    .option(
+        '-k, --partition-key-field <string>',
+        'field name in each message to use for assigning the message to a stream partition (only for JSON data)'
+    )
     .parseAsync()

@@ -13,12 +13,10 @@ const getValuesOfIncludedKeys = (
     exclude: DhtAddress[],
     wsOnly = false
 ): ContentDeliveryRpcRemote[] => {
-    const values = wsOnly 
+    const values = wsOnly
         ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined)
         : Array.from(nodes.entries())
-    return values
-        .filter(([id]) => !exclude.includes(id))
-        .map(([_id, node]) => node)
+    return values.filter(([id]) => !exclude.includes(id)).map(([_id, node]) => node)
 }
 
 // The items in the list are in the insertion order
@@ -37,10 +35,10 @@ export class NodeList extends EventEmitter<Events> {
 
     add(remote: ContentDeliveryRpcRemote): void {
         const nodeId = toNodeId(remote.getPeerDescriptor())
-        if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
+        if (this.ownId !== nodeId && this.nodes.size < this.limit) {
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
-            
+
             if (!isExistingNode) {
                 this.emit('nodeAdded', nodeId, remote)
             }
@@ -52,7 +50,7 @@ export class NodeList extends EventEmitter<Events> {
             const remote = this.nodes.get(nodeId)!
             this.nodes.delete(nodeId)
             this.emit('nodeRemoved', nodeId, remote)
-        }   
+        }
     }
 
     has(nodeId: DhtAddress): boolean {
@@ -110,5 +108,4 @@ export class NodeList extends EventEmitter<Events> {
         this.nodes.forEach((node) => this.remove(toNodeId(node.getPeerDescriptor())))
         this.removeAllListeners()
     }
-
 }

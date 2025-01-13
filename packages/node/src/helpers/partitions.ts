@@ -23,9 +23,5 @@ export const parsePublishPartitionDefinition = (queryParams: ParsedQs): PublishP
 }
 
 export const getPartitionKey = (content: Record<string, unknown>, definition: PublishPartitionDefinition): string | undefined => {
-    return definition.partitionKey ?? (
-        definition.partitionKeyField 
-            ? (content[definition.partitionKeyField] as string) 
-            : undefined
-    )
+    return definition.partitionKey ?? (definition.partitionKeyField ? (content[definition.partitionKeyField] as string) : undefined)
 }

@@ -1,16 +1,9 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "noEmit": true,
-        "noImplicitOverride": false
-    },
-    "include": [
-        "src/**/*",
-        "generated/**/*",
-        "test/**/*",
-    ],
-    "references": [
-        { "path": "../utils/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noImplicitOverride": false
+  },
+  "include": ["src/**/*", "generated/**/*", "test/**/*"],
+  "references": [{ "path": "../utils/tsconfig.node.json" }, { "path": "../test-utils/tsconfig.node.json" }]
 }

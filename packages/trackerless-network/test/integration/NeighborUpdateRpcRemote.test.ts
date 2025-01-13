@@ -1,16 +1,8 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
-import {
-    NeighborUpdateRpcClient,
-} from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { NeighborUpdateRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -40,31 +32,19 @@ describe('NeighborUpdateRpcRemote', () => {
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
 
-        mockServerRpc.registerRpcMethod(
-            NeighborUpdate,
-            NeighborUpdate,
-            'neighborUpdate',
-            async (): Promise<NeighborUpdate> => {
-                const node: PeerDescriptor = {
-                    nodeId: new Uint8Array([4, 2, 4]),
-                    type: NodeType.NODEJS
-                }
-                const update: NeighborUpdate = {
-                    streamPartId: StreamPartIDUtils.parse('stream#0'),
-                    neighborDescriptors: [
-                        node
-                    ],
-                    removeMe: false
-                }
-                return update
+        mockServerRpc.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', async (): Promise<NeighborUpdate> => {
+            const node: PeerDescriptor = {
+                nodeId: new Uint8Array([4, 2, 4]),
+                type: NodeType.NODEJS
             }
-        )
-        rpcRemote = new NeighborUpdateRpcRemote(
-            clientNode,
-            serverNode,
-            clientRpc,
-            NeighborUpdateRpcClient
-        )
+            const update: NeighborUpdate = {
+                streamPartId: StreamPartIDUtils.parse('stream#0'),
+                neighborDescriptors: [node],
+                removeMe: false
+            }
+            return update
+        })
+        rpcRemote = new NeighborUpdateRpcRemote(clientNode, serverNode, clientRpc, NeighborUpdateRpcClient)
     })
 
     afterEach(async () => {

@@ -18,16 +18,15 @@ type StepUp = MaybeAsync<() => StepDown>
 type StepDown = MaybeAsync<() => void>
 
 interface ScaffoldOptions {
- onError?: (error: Error) => void
- onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
- onChange?: MaybeAsync<(shouldUp: boolean) => void>
- id?: string
+    onError?: (error: Error) => void
+    onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
+    onChange?: MaybeAsync<(shouldUp: boolean) => void>
+    id?: string
 }
 
 const noop = () => {}
 
-type ScaffoldReturnType = (() => Promise<void>) & 
-{ 
+type ScaffoldReturnType = (() => Promise<void>) & {
     readonly activeCount: number
     readonly pendingCount: number
     next: () => Promise<void>
@@ -47,16 +46,13 @@ export function Scaffold(
     let error: Error | undefined
     // ignore error if check fails
 
-    const nextSteps: StepUp[] = sequence.slice().reverse().map((fn) => (
-        async () => {
+    const nextSteps: StepUp[] = sequence
+        .slice()
+        .reverse()
+        .map((fn) => async () => {
             const downFn = await fn()
-            return (
-                typeof downFn === 'function'
-                    ? downFn
-                    : noop
-            )
-        }
-    ))
+            return typeof downFn === 'function' ? downFn : noop
+        })
 
     const prevSteps: StepUp[] = []
     const onDownSteps: StepDown[] = []
@@ -78,7 +74,9 @@ export function Scaffold(
     }
 
     const checkShouldUp = async () => {
-        if (error) { return false }
+        if (error) {
+            return false
+        }
         try {
             return await _checkFn()
         } catch (err) {
@@ -145,12 +143,7 @@ export function Scaffold(
     }
 
     function isActive(): boolean {
-        return !(
-            didStart
-            && isDone
-            && !queue.activeCount
-            && !queue.pendingCount
-        )
+        return !(didStart && isDone && !queue.activeCount && !queue.pendingCount)
     }
 
     const nextDone = async () => {

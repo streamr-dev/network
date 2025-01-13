@@ -16,7 +16,6 @@ const createMessageKey = (messageId: MessageID): string => {
 }
 
 export class InspectSession extends EventEmitter<Events> {
-    
     // Boolean indicates if the message has been received by the inspected node
     private readonly inspectionMessages: Map<string, boolean> = new Map()
     private readonly inspectedNode: DhtAddress
@@ -30,13 +29,13 @@ export class InspectSession extends EventEmitter<Events> {
         const messageKey = createMessageKey(messageId)
         if (!this.inspectionMessages.has(messageKey)) {
             this.inspectionMessages.set(messageKey, remoteNodeId === this.inspectedNode)
-        } else if (this.inspectionMessages.has(messageKey)
-            && this.inspectionMessages.get(messageKey) === false
-            && remoteNodeId === this.inspectedNode
+        } else if (
+            this.inspectionMessages.has(messageKey) &&
+            this.inspectionMessages.get(messageKey) === false &&
+            remoteNodeId === this.inspectedNode
         ) {
             this.emit('done')
-        } else if (this.inspectionMessages.has(messageKey)
-            && this.inspectionMessages.get(messageKey) === true) {
+        } else if (this.inspectionMessages.has(messageKey) && this.inspectionMessages.get(messageKey) === true) {
             this.emit('done')
         }
     }

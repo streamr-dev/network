@@ -15,7 +15,6 @@ interface RecursiveOperationRpcLocalOptions {
 }
 
 export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
-
     private readonly options: RecursiveOperationRpcLocalOptions
 
     constructor(options: RecursiveOperationRpcLocalOptions) {

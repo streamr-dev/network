@@ -1,17 +1,9 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "noImplicitOverride": false
-    },
-    "include": [
-        "src/**/*",
-        "generated/**/*",
-        "test/benchmark/first-message.ts",
-        "test/utils/utils.ts",
-        "package.json"
-    ],
-    "references": [
-        { "path": "../dht/tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitOverride": false
+  },
+  "include": ["src/**/*", "generated/**/*", "test/benchmark/first-message.ts", "test/utils/utils.ts", "package.json"],
+  "references": [{ "path": "../dht/tsconfig.node.json" }]
 }

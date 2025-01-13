@@ -7,7 +7,6 @@ import { randomDhtAddress } from '../../src/identifiers'
 const logger = new Logger(module)
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
-
     const simulator = new Simulator()
     let layer0EntryPoint: DhtNode
     let layer1Node1: DhtNode
@@ -21,7 +20,6 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     let layer1Node4: DhtNode
 
     beforeEach(async () => {
-
         layer0EntryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         layer0Node1 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         layer0Node2 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
@@ -80,6 +78,5 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         expect(layer1Node2.getNeighbors()).toContainValues(layer0Node2.getNeighbors())
         expect(layer1Node3.getNeighbors()).toContainValues(layer0Node3.getNeighbors())
         expect(layer1Node4.getNeighbors()).toContainValues(layer0Node4.getNeighbors())
-
     }, 60000)
 })

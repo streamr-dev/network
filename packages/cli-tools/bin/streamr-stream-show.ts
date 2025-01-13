@@ -19,7 +19,7 @@ const withRenamedField = (obj: any, from: string, to: string) => {
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     const stream = await client.getStream(streamId)
-    const obj: any = { id: stream.id, ...await stream.getMetadata() }
+    const obj: any = { id: stream.id, ...(await stream.getMetadata()) }
     if (options.includePermissions) {
         const assigments = await stream.getPermissions()
         obj.permissions = assigments.map((assignment) => {

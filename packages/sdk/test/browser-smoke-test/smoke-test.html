@@ -1,122 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <title>Smoke Test</title>
-    <link rel="icon" href="data:,">
-    <script src='/static/streamr-sdk.web.min.js'></script>
-    <script>
-        const SUBSCRIBER_KEY = '0000000000000000000000000000000000000000000000000000000000000055'
-        const PUBLISHER_KEY = '0000000000000000000000000000000000000000000000000000000000000056'
-        const STORAGE_NODE_ADDRESS = '0xde1112f631486CfC759A50196853011528bC5FA0'
-        const PUBLISH_RATE_IN_MS = 300
-        let publishMsgCounter = 0
-        let subscribeMsgCounter = 0
-        let resendMsgCounter = 0
+    <head>
+        <title>Smoke Test</title>
+        <link rel="icon" href="data:," />
+        <script src="/static/streamr-sdk.web.min.js"></script>
+        <script>
+            const SUBSCRIBER_KEY = '0000000000000000000000000000000000000000000000000000000000000055'
+            const PUBLISHER_KEY = '0000000000000000000000000000000000000000000000000000000000000056'
+            const STORAGE_NODE_ADDRESS = '0xde1112f631486CfC759A50196853011528bC5FA0'
+            const PUBLISH_RATE_IN_MS = 300
+            let publishMsgCounter = 0
+            let subscribeMsgCounter = 0
+            let resendMsgCounter = 0
 
-        const publisherClient = new StreamrClient({
-            environment: 'dev2',
-            auth: {
-                privateKey: PUBLISHER_KEY
-            }
-        })
-        const subscriberClient = new StreamrClient({
-            environment: 'dev2',
-            auth: {
-                privateKey: SUBSCRIBER_KEY
-            }
-        })
-        let streamId = undefined
-        let publishIntervalRef = undefined
-
-        ;(async () => {
-            // 1. Create stream
-            const stream = await publisherClient.createStream({ id: '/browser-smoke-test-' + Date.now() })
-            streamId = stream.id
-            document.getElementById('streamCreated').checked = true
-            document.getElementById('streamCreatedValue').value = stream.id
-
-            // 2. Grant permissions
-            await stream.grantPermissions({
-                permissions: ['subscribe'],
-                userId: await subscriberClient.getUserId()
+            const publisherClient = new StreamrClient({
+                environment: 'dev2',
+                auth: {
+                    privateKey: PUBLISHER_KEY
+                }
             })
-            document.getElementById('permissionGranted').checked = true
-            document.getElementById('permissionGrantedValue').value = await subscriberClient.getAddress()
+            const subscriberClient = new StreamrClient({
+                environment: 'dev2',
+                auth: {
+                    privateKey: SUBSCRIBER_KEY
+                }
+            })
+            let streamId = undefined
+            let publishIntervalRef = undefined
 
-            // 3. Assign to storage node
-            await stream.addToStorageNode(STORAGE_NODE_ADDRESS)
-            document.getElementById('assignedToStorage').checked = true
-            document.getElementById('assignedToStorageValue').value = STORAGE_NODE_ADDRESS
+            ;(async () => {
+                // 1. Create stream
+                const stream = await publisherClient.createStream({ id: '/browser-smoke-test-' + Date.now() })
+                streamId = stream.id
+                document.getElementById('streamCreated').checked = true
+                document.getElementById('streamCreatedValue').value = stream.id
 
-            // 4. Start publishing
-            publishIntervalRef = setInterval(() => {
-                stream.publish({
-                    msg: 'hello world',
-                    time: Date.now()
-                }).then(() => {
-                    publishMsgCounter += 1
-                    document.getElementById('publisherMsgCount').value = publishMsgCounter
-                }).catch((err) => {
-                    console.error('publish error', err)
+                // 2. Grant permissions
+                await stream.grantPermissions({
+                    permissions: ['subscribe'],
+                    userId: await subscriberClient.getUserId()
                 })
-            }, PUBLISH_RATE_IN_MS)
-            document.getElementById('publishStarted').checked = true
+                document.getElementById('permissionGranted').checked = true
+                document.getElementById('permissionGrantedValue').value = await subscriberClient.getAddress()
 
-            // 5. Subscribe to stream
-            await subscriberClient.subscribe(stream.id, (_msg) => {
-                subscribeMsgCounter += 1
-                document.getElementById('subscriberMsgCount').value = subscribeMsgCounter
-            })
-            document.getElementById('subscribeStarted').checked = true
-        })()
+                // 3. Assign to storage node
+                await stream.addToStorageNode(STORAGE_NODE_ADDRESS)
+                document.getElementById('assignedToStorage').checked = true
+                document.getElementById('assignedToStorageValue').value = STORAGE_NODE_ADDRESS
 
-        // 6. Resend messages after which end pub/sub
-        async function resend() {
-            document.getElementById('resendStarted').checked = true
-            await subscriberClient.resend(streamId, { last: 1000 }, () => {
-                resendMsgCounter += 1
-                document.getElementById('resendMsgCount').value = resendMsgCounter
-            })
-        }
-    </script>
-</head>
-<body>
-<h1>Smoke test</h1>
-<p>
-    Simple smoke test to ensure that the browser build works on a general level.
-</p>
-<table>
-    <tr>
-        <td>Created stream</td>
-        <td><input id='streamCreated' type='checkbox' disabled></td>
-        <td><input id='streamCreatedValue' type='text' disabled value=''></td>
-    </tr>
-    <tr>
-        <td>Permission granted</td>
-        <td><input id='permissionGranted' type='checkbox' disabled></td>
-        <td><input id='permissionGrantedValue' type='text' disabled value=''></td>
-    </tr>
-    <tr>
-        <td>Assigned to storage</td>
-        <td><input id='assignedToStorage' type='checkbox' disabled></td>
-        <td><input id='assignedToStorageValue' type='text' disabled value=''></td>
-    </tr>
-    <tr>
-        <td>Published messages</td>
-        <td><input id='publishStarted' type='checkbox' disabled></td>
-        <td><input id='publisherMsgCount' type='number' disabled value='0'></td>
-    </tr>
-    <tr>
-        <td>Received messages</td>
-        <td><input id='subscribeStarted' type='checkbox' disabled></td>
-        <td><input id='subscriberMsgCount' type='number' disabled value='0'></td>
-    </tr>
-    <tr>
-        <td>Resent messages</td>
-        <td><input id='resendStarted' type='checkbox' disabled></td>
-        <td><input id='resendMsgCount' type='number' disabled value='0'></td>
-        <td><button id="executeResend" type='button' onclick='resend()'>Execute</button></td>
-    </tr>
-</table>
-</body>
+                // 4. Start publishing
+                publishIntervalRef = setInterval(() => {
+                    stream
+                        .publish({
+                            msg: 'hello world',
+                            time: Date.now()
+                        })
+                        .then(() => {
+                            publishMsgCounter += 1
+                            document.getElementById('publisherMsgCount').value = publishMsgCounter
+                        })
+                        .catch((err) => {
+                            console.error('publish error', err)
+                        })
+                }, PUBLISH_RATE_IN_MS)
+                document.getElementById('publishStarted').checked = true
+
+                // 5. Subscribe to stream
+                await subscriberClient.subscribe(stream.id, (_msg) => {
+                    subscribeMsgCounter += 1
+                    document.getElementById('subscriberMsgCount').value = subscribeMsgCounter
+                })
+                document.getElementById('subscribeStarted').checked = true
+            })()
+
+            // 6. Resend messages after which end pub/sub
+            async function resend() {
+                document.getElementById('resendStarted').checked = true
+                await subscriberClient.resend(streamId, { last: 1000 }, () => {
+                    resendMsgCounter += 1
+                    document.getElementById('resendMsgCount').value = resendMsgCounter
+                })
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Smoke test</h1>
+        <p>Simple smoke test to ensure that the browser build works on a general level.</p>
+        <table>
+            <tr>
+                <td>Created stream</td>
+                <td><input id="streamCreated" type="checkbox" disabled /></td>
+                <td><input id="streamCreatedValue" type="text" disabled value="" /></td>
+            </tr>
+            <tr>
+                <td>Permission granted</td>
+                <td><input id="permissionGranted" type="checkbox" disabled /></td>
+                <td><input id="permissionGrantedValue" type="text" disabled value="" /></td>
+            </tr>
+            <tr>
+                <td>Assigned to storage</td>
+                <td><input id="assignedToStorage" type="checkbox" disabled /></td>
+                <td><input id="assignedToStorageValue" type="text" disabled value="" /></td>
+            </tr>
+            <tr>
+                <td>Published messages</td>
+                <td><input id="publishStarted" type="checkbox" disabled /></td>
+                <td><input id="publisherMsgCount" type="number" disabled value="0" /></td>
+            </tr>
+            <tr>
+                <td>Received messages</td>
+                <td><input id="subscribeStarted" type="checkbox" disabled /></td>
+                <td><input id="subscriberMsgCount" type="number" disabled value="0" /></td>
+            </tr>
+            <tr>
+                <td>Resent messages</td>
+                <td><input id="resendStarted" type="checkbox" disabled /></td>
+                <td><input id="resendMsgCount" type="number" disabled value="0" /></td>
+                <td><button id="executeResend" type="button" onclick="resend()">Execute</button></td>
+            </tr>
+        </table>
+    </body>
 </html>

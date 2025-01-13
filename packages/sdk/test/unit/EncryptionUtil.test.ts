@@ -37,7 +37,7 @@ describe('EncryptionUtil', () => {
     it('StreamMessage decryption: happy path', async () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
-        const streamMessage = await createMockMessage({
+        const streamMessage = (await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             publisher: fastWallet(),
             content: {
@@ -45,7 +45,7 @@ describe('EncryptionUtil', () => {
             },
             encryptionKey: key,
             nextEncryptionKey: nextKey
-        }) as StreamMessageAESEncrypted
+        })) as StreamMessageAESEncrypted
         const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(content).toEqualBinary(utf8ToBinary('{"foo":"bar"}'))
         expect(newGroupKey).toEqual(nextKey)

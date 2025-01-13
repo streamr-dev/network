@@ -39,44 +39,45 @@ describe('NodeMetrics', () => {
     }, 30 * 1000)
 
     afterAll(async () => {
-        await Promise.allSettled([
-            generatorClient.destroy(),
-            subscriberClient.destroy()
-        ])
+        await Promise.allSettled([generatorClient.destroy(), subscriberClient.destroy()])
     })
 
-    it('should retrieve a metrics report', async () => {
-        let report: MetricsReport | undefined
+    it(
+        'should retrieve a metrics report',
+        async () => {
+            let report: MetricsReport | undefined
 
-        const partition = keyToArrayIndex(NUM_OF_PARTITIONS, await generatorClient.getNodeId())
-        await subscriberClient.subscribe({ id: stream.id, partition }, (content: any) => {
-            const isReady = content.node.connectionAverageCount > 0
-            if (isReady && (report === undefined)) {
-                report = content
-            }
-        })
+            const partition = keyToArrayIndex(NUM_OF_PARTITIONS, await generatorClient.getNodeId())
+            await subscriberClient.subscribe({ id: stream.id, partition }, (content: any) => {
+                const isReady = content.node.connectionAverageCount > 0
+                if (isReady && report === undefined) {
+                    report = content
+                }
+            })
 
-        // trigger metrics generation start by subscribing to some stream
-        const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
-        await generatorClient.subscribe(dummyStream, () => {})
+            // trigger metrics generation start by subscribing to some stream
+            const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
+            await generatorClient.subscribe(dummyStream, () => {})
 
-        await until(() => report !== undefined, 10000)
-        expect(report!).toMatchObject({
-            node: {
-                id: await generatorClient.getNodeId(),
-                broadcastMessagesPerSecond: expect.any(Number),
-                broadcastBytesPerSecond: expect.any(Number),
-                sendMessagesPerSecond: expect.any(Number),
-                sendBytesPerSecond: expect.any(Number),
-                receiveMessagesPerSecond: expect.any(Number),
-                receiveBytesPerSecond: expect.any(Number),
-                connectionAverageCount: expect.any(Number),
-                connectionTotalFailureCount: expect.any(Number)
-            },
-            period: {
-                start: expect.any(Number),
-                end: expect.any(Number)
-            }
-        })
-    }, 30 * 1000)
+            await until(() => report !== undefined, 10000)
+            expect(report!).toMatchObject({
+                node: {
+                    id: await generatorClient.getNodeId(),
+                    broadcastMessagesPerSecond: expect.any(Number),
+                    broadcastBytesPerSecond: expect.any(Number),
+                    sendMessagesPerSecond: expect.any(Number),
+                    sendBytesPerSecond: expect.any(Number),
+                    receiveMessagesPerSecond: expect.any(Number),
+                    receiveBytesPerSecond: expect.any(Number),
+                    connectionAverageCount: expect.any(Number),
+                    connectionTotalFailureCount: expect.any(Number)
+                },
+                period: {
+                    start: expect.any(Number),
+                    end: expect.any(Number)
+                }
+            })
+        },
+        30 * 1000
+    )
 })

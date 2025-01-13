@@ -4,7 +4,6 @@ import { MockConnection } from '../utils/mock/MockConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('ManagedConnection', () => {
-
     let managedConnection: ManagedConnection
     let connection: MockConnection
     beforeEach(() => {
@@ -54,5 +53,4 @@ describe('ManagedConnection', () => {
         managedConnection.close(true)
         await wait(50)
     })
-
 })
