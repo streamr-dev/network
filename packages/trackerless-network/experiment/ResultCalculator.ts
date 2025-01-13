@@ -116,7 +116,9 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
             sumPropagationTime += results.time
             sumHops += results.hops
             sumMessagesReceived += results.numOfMessages
-            results.times.forEach((t: number) => times.push(t))
+            if (results.times) {
+                results.times.forEach((t: number) => times.push(t))
+            }
             if (results.hops > maxHops) {
                 maxHops = results.hops
             }
