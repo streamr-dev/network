@@ -3,7 +3,7 @@ import type { Config } from '@jest/types'
 const config = {
     preset: 'ts-jest',
     transform: {
-        '^.+.ts$': ['ts-jest', {
+        '^.+\\.ts$': ['ts-jest', {
             tsconfig: 'tsconfig.jest.json'
         }],
     },
