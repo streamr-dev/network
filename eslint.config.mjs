@@ -65,7 +65,8 @@ export default [
                 'error',
                 'single',
                 {
-                    allowTemplateLiterals: true
+                    allowTemplateLiterals: true,
+                    avoidEscape: true
                 }
             ],
             '@typescript-eslint/default-param-last': 'error',
@@ -125,7 +126,7 @@ export default [
             '@stylistic/member-delimiter-style': [
                 'error',
                 {
-                    singleline: { delimiter: 'comma' },
+                    singleline: { delimiter: 'semi' },
                     multiline: { delimiter: 'none' }
                 }
             ],

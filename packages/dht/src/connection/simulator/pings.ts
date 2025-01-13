@@ -1,4 +1,4 @@
-/* eslint-disable max-len, @typescript-eslint/prefer-for-of */
+/* eslint-disable @typescript-eslint/prefer-for-of */
 
 // This file contains a 16x16 matrix of ping times measured between
 // amazon regions. Converted to typescript from the file pings.csv

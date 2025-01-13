@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export enum ErrorCode {
     RPC_TIMEOUT = 'RPC_TIMEOUT',
     RPC_REQUEST = 'RPC_REQUEST',

@@ -367,8 +367,8 @@ describe('Pipeline', () => {
             it('handles immediate errors in source', async () => {
                 const err = new Error('expected')
 
-                // eslint-disable-next-line require-yield
                 const p = new Pipeline(
+                    // eslint-disable-next-line require-yield
                     (async function* generateError() {
                         throw err
                     })()
@@ -675,8 +675,8 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-                // eslint-disable-next-line require-yield
                 pull(
+                    // eslint-disable-next-line require-yield
                     (async function* generateError() {
                         throw err
                     })(),

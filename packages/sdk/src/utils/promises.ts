@@ -46,8 +46,8 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
     let currentCall: CallStatus = { status: 'init' }
 
     return Object.assign(
+        // eslint-disable-next-line prefer-arrow-callback
         async function pOnceWrap(...args: ArgsType): Promise<ReturnType> {
-            // eslint-disable-line prefer-arrow-callback
             // capture currentCall so can assign to it, even after reset
             const thisCall = currentCall
             if (thisCall.status === 'pending') {

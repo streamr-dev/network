@@ -1,0 +1,203 @@
+
+> eslint
+> npm run eslint --workspaces --if-present
+
+
+> @streamr/browser-test-runner@0.0.1 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'
+
+
+> @streamr/utils@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/utils/src/Logger.ts
+  46:1  error  Expected indentation of 12 spaces but found 14  indent
+  47:1  error  Expected indentation of 12 spaces but found 14  indent
+  48:1  error  Expected indentation of 16 spaces but found 18  indent
+  49:1  error  Expected indentation of 16 spaces but found 18  indent
+  50:1  error  Expected indentation of 16 spaces but found 18  indent
+  51:1  error  Expected indentation of 16 spaces but found 18  indent
+  52:1  error  Expected indentation of 16 spaces but found 18  indent
+  53:1  error  Expected indentation of 16 spaces but found 18  indent
+  54:1  error  Expected indentation of 12 spaces but found 14  indent
+  55:1  error  Expected indentation of 8 spaces but found 10   indent
+
+/Users/mariusz/Dev/streamr/network/packages/utils/test/TheGraphClient.test.ts
+  87:1  error  Expected indentation of 32 spaces but found 34  indent
+  88:1  error  Expected indentation of 36 spaces but found 38  indent
+  89:1  error  Expected indentation of 40 spaces but found 42  indent
+  90:1  error  Expected indentation of 36 spaces but found 38  indent
+  91:1  error  Expected indentation of 32 spaces but found 34  indent
+  92:1  error  Expected indentation of 28 spaces but found 30  indent
+
+✖ 16 problems (16 errors, 0 warnings)
+  16 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/utils
+npm error workspace @streamr/utils@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/utils
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/test-utils@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/cdn-location@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/geoip-location@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/proto-rpc@102.0.0-beta.0 eslint
+> ./test-proto.sh && eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/autocertifier-client@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/dht@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/dht/src/connection/websocket/WebsocketServerConnector.ts
+  66:1  error  Expected indentation of 16 spaces but found 18  indent
+  67:1  error  Expected indentation of 16 spaces but found 18  indent
+  68:1  error  Expected indentation of 16 spaces but found 18  indent
+  69:1  error  Expected indentation of 16 spaces but found 18  indent
+  70:1  error  Expected indentation of 12 spaces but found 14  indent
+
+/Users/mariusz/Dev/streamr/network/packages/dht/src/transport/RoutingRpcCommunicator.ts
+  42:1  error  Expected indentation of 24 spaces but found 26  indent
+  43:1  error  Expected indentation of 24 spaces but found 26  indent
+  44:1  error  Expected indentation of 24 spaces but found 26  indent
+  45:1  error  Expected indentation of 24 spaces but found 26  indent
+  46:1  error  Expected indentation of 24 spaces but found 26  indent
+  47:1  error  Expected indentation of 24 spaces but found 26  indent
+  48:1  error  Expected indentation of 20 spaces but found 22  indent
+  50:1  error  Expected indentation of 24 spaces but found 26  indent
+  51:1  error  Expected indentation of 24 spaces but found 26  indent
+  52:1  error  Expected indentation of 20 spaces but found 22  indent
+
+✖ 15 problems (15 errors, 0 warnings)
+  15 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/dht
+npm error workspace @streamr/dht@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/dht
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/autocertifier-server@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/trackerless-network@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/trackerless-network/src/logic/createContentDeliveryLayerNode.ts
+  62:1  error  Expected indentation of 12 spaces but found 14  indent
+  63:1  error  Expected indentation of 12 spaces but found 14  indent
+  64:1  error  Expected indentation of 12 spaces but found 14  indent
+  65:1  error  Expected indentation of 8 spaces but found 10   indent
+
+✖ 4 problems (4 errors, 0 warnings)
+  4 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/trackerless-network
+npm error workspace @streamr/trackerless-network@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/trackerless-network
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/sdk@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/sdk/src/NetworkNodeFacade.ts
+  345:1  error  Expected indentation of 12 spaces but found 14  indent
+
+/Users/mariusz/Dev/streamr/network/packages/sdk/src/publish/Publisher.ts
+  38:1  error  Expected indentation of 16 spaces but found 14  indent
+  39:1  error  Expected indentation of 16 spaces but found 14  indent
+
+/Users/mariusz/Dev/streamr/network/packages/sdk/test/end-to-end/Operator.test.ts
+  29:1  error  Expected indentation of 20 spaces but found 22  indent
+  30:1  error  Expected indentation of 16 spaces but found 18  indent
+
+✖ 5 problems (5 errors, 0 warnings)
+  5 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/sdk
+npm error workspace @streamr/sdk@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/sdk
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/node@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/node/src/config/ConfigWizard.ts
+  45:1  error  Expected indentation of 16 spaces but found 18  indent
+  46:1  error  Expected indentation of 20 spaces but found 22  indent
+  47:1  error  Expected indentation of 16 spaces but found 18  indent
+  48:1  error  Expected indentation of 12 spaces but found 14  indent
+
+/Users/mariusz/Dev/streamr/network/packages/node/src/plugins/websocket/WebsocketServer.ts
+  57:1  error  Expected indentation of 20 spaces but found 22  indent
+  58:1  error  Expected indentation of 20 spaces but found 22  indent
+  59:1  error  Expected indentation of 16 spaces but found 18  indent
+
+/Users/mariusz/Dev/streamr/network/packages/node/test/integration/plugins/mqtt/MqttPlugin.test.ts
+  17:1  error  Expected indentation of 24 spaces but found 26  indent
+  18:1  error  Expected indentation of 24 spaces but found 26  indent
+  19:1  error  Expected indentation of 20 spaces but found 22  indent
+
+✖ 10 problems (10 errors, 0 warnings)
+  10 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/node
+npm error workspace @streamr/node@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/node
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+> @streamr/cli-tools@102.0.0-beta.0 eslint
+> eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'
+
+
+/Users/mariusz/Dev/streamr/network/packages/cli-tools/bin/streamr-internal-node-info.ts
+  24:1  error  Expected indentation of 20 spaces but found 22  indent
+  25:1  error  Expected indentation of 16 spaces but found 18  indent
+
+✖ 2 problems (2 errors, 0 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `eslint` failed with error:
+npm error code 1
+npm error path /Users/mariusz/Dev/streamr/network/packages/cli-tools
+npm error workspace @streamr/cli-tools@102.0.0-beta.0
+npm error location /Users/mariusz/Dev/streamr/network/packages/cli-tools
+npm error command failed
+npm error command sh -c eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'

@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { hexToBinary } from '../src/binaryUtils'
 import { createSignature, recoverSignerUserId, verifySignature } from '../src/signingUtils'
 import { toUserId, toUserIdRaw } from '../src/UserID'

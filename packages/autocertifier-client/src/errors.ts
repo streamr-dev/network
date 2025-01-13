@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import { ApiError } from './data/ApiError'
 import { HttpStatus } from './data/HttpStatus'
 

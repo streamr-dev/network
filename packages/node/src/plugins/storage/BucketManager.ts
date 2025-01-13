@@ -236,7 +236,6 @@ export class BucketManager {
         }
 
         const getRest = () => {
-            /* eslint-disable max-len */
             const GET_LAST_BUCKETS_RANGE_TIMESTAMP =
                 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create > ? AND date_create <= ? ORDER BY date_create DESC'
             const GET_LAST_BUCKETS_FROM_TIMESTAMP =

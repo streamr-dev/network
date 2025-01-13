@@ -112,8 +112,8 @@ describe('PushPipeline', () => {
         s.onError.listen((error) => {
             throw error
         })
-        // eslint-disable-next-line require-yield
         pull(
+            // eslint-disable-next-line require-yield
             (async function* g() {
                 throw err
             })(),

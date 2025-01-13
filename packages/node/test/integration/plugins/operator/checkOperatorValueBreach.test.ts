@@ -37,7 +37,6 @@ describe('checkOperatorValueBreach', () => {
     it(
         'withdraws the other Operators earnings when they are above the limit',
         async () => {
-            // eslint-disable-next-line max-len
             const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({
                 nodeCount: 1,
                 ...deployConfig,

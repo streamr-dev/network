@@ -205,8 +205,8 @@ describe('toProtoRpcClient', () => {
         try {
             helloClient.sayHello({ myName: 'Alice' })
         } catch (e) {
-            // eslint-disable-next-line max-len
             expect(e.message).toEqual(
+                // eslint-disable-next-line max-len
                 'ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).'
             )
             communicator1.stop()
@@ -242,8 +242,8 @@ describe('toProtoRpcClient', () => {
         try {
             wakeUpClient.wakeUp({ reason: 'School' })
         } catch (e) {
-            // eslint-disable-next-line max-len
             expect(e.message).toEqual(
+                // eslint-disable-next-line max-len
                 'ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).'
             )
             communicator1.stop()

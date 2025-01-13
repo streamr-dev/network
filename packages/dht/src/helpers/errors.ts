@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export enum ErrorCode {
     CONNECTION_FAILED = 'CONNECTION_FAILED',
     COULD_NOT_ROUTE = 'COULD_NOT_ROUTE',

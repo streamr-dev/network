@@ -187,8 +187,8 @@ const handleRange = (
         return
     }
     if (toTimestamp === undefined) {
-        // eslint-disable-next-line max-len
         sendError(
+            // eslint-disable-next-line max-len
             'Query parameter "toTimestamp" required as well. To request all messages since a timestamp, use the endpoint /streams/:id/data/partitions/:partition/from',
             res
         )

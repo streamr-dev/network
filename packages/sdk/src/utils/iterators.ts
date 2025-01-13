@@ -105,8 +105,8 @@ export function iteratorFinally<T>(
             // if ended before started
             if (ended && !started) {
                 // return a generator that simply runs finally script (once)
+                // eslint-disable-next-line require-yield
                 return (async function* generatorRunFinally() {
-                    // eslint-disable-line require-yield
                     try {
                         // NOTE: native generators do not throw if gen.throw(err) called before started
                         // so we should do the same here

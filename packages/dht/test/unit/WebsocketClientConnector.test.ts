@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { WebsocketClientConnector } from '../../src/connection/websocket/WebsocketClientConnector'
 import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockConnection } from '../utils/mock/MockConnection'

@@ -1,5 +1,3 @@
-/* eslint-disable quotes */
-
 import sqlite3 from 'sqlite3'
 import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger, filePathToNodeFormat } from '@streamr/utils'

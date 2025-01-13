@@ -42,14 +42,13 @@ describe('custom matchers', () => {
                 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
                 class TestClass {}
                 expect(() => {
-                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     expect(() => {
+                        // eslint-disable-next-line @typescript-eslint/only-throw-error
                         throw new TestClass()
                     }).toThrowStreamrClientError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                    // eslint-disable-next-line max-len
                 }).toThrow(
                     new RegExp(
                         `Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"TestClass"${ESCAPED_ANSI_COLOR_REGEXP}`
@@ -59,14 +58,13 @@ describe('custom matchers', () => {
 
             it('unexpected primitive', () => {
                 expect(() => {
-                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     expect(() => {
+                        // eslint-disable-next-line @typescript-eslint/only-throw-error
                         throw 'mock-error'
                     }).toThrowStreamrClientError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
-                    // eslint-disable-next-line max-len
                 }).toThrow(
                     new RegExp(
                         `Not an instance of StreamrClientError:\nReceived: ${ESCAPED_ANSI_COLOR_REGEXP}"mock-error"${ESCAPED_ANSI_COLOR_REGEXP}`

@@ -19,7 +19,6 @@ export class PersistenceManager {
     private readonly authentication: Authentication
     private readonly loggerFactory: LoggerFactory
 
-    /* eslint-disable indent */
     constructor(@inject(AuthenticationInjectionToken) authentication: Authentication, destroySignal: DestroySignal, loggerFactory: LoggerFactory) {
         this.authentication = authentication
         this.loggerFactory = loggerFactory

@@ -4,7 +4,6 @@ import { Database, Subdomain } from '../src/Database'
 import { Route53Api } from '../src/Route53Api'
 import { chunk } from 'lodash'
 import { ChangeAction } from '@aws-sdk/client-route-53'
-
 ;(async () => {
     const logger = new Logger(module)
 
