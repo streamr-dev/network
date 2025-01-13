@@ -4,7 +4,6 @@ import defaultConfig from '../../jest.config'
 const config: Config.InitialOptions = {
     ...defaultConfig,
     globalSetup: './jest.setup.ts',
-    globalTeardown: './jest.teardown.ts',
     setupFilesAfterEnv: [
         ...defaultConfig.setupFilesAfterEnv,
         './test/test-utils/customMatchers.ts',
