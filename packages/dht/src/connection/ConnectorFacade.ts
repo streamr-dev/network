@@ -117,7 +117,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             try {
                 await this.websocketServerConnector.autoCertify()
                 const connectivityResponse = await this.websocketServerConnector.checkConnectivity(false)
-                const autocertifiedLocalPeerDescriptor = await this.options.createLocalPeerDescriptor(connectivityResponse)
+                const autocertifiedLocalPeerDescriptor =
+                    await this.options.createLocalPeerDescriptor(connectivityResponse)
                 if (autocertifiedLocalPeerDescriptor.websocket !== undefined) {
                     this.setLocalPeerDescriptor(autocertifiedLocalPeerDescriptor)
                 } else {

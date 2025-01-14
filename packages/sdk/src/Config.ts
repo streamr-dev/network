@@ -427,7 +427,10 @@ export interface StreamrClientConfig {
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'environment' | 'auth' | 'metrics'> & {
+export type StrictStreamrClientConfig = MarkOptional<
+    Required<StreamrClientConfig>,
+    'environment' | 'auth' | 'metrics'
+> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>

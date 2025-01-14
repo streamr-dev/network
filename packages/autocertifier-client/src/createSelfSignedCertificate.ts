@@ -38,7 +38,14 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     caCert.setIssuer(attrs)
     caCert.setExtensions([
         { name: 'basicConstraints', cA: true },
-        { name: 'keyUsage', keyCertSign: true, digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
+        {
+            name: 'keyUsage',
+            keyCertSign: true,
+            digitalSignature: true,
+            nonRepudiation: true,
+            keyEncipherment: true,
+            dataEncipherment: true
+        },
         { name: 'subjectKeyIdentifier' }
     ])
     caCert.sign(caKeys.privateKey, forge.md.sha256.create())
@@ -57,7 +64,13 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     serverCert.setIssuer(caCert.subject.attributes)
     serverCert.setExtensions([
         { name: 'basicConstraints', cA: false },
-        { name: 'keyUsage', digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
+        {
+            name: 'keyUsage',
+            digitalSignature: true,
+            nonRepudiation: true,
+            keyEncipherment: true,
+            dataEncipherment: true
+        },
         { name: 'subjectAltName', altNames: [{ type: SAN_TYPE_DNS, value: fqdn }] },
         { name: 'subjectKeyIdentifier' }
     ])

@@ -1,5 +1,10 @@
 import merge from 'lodash/merge'
-import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
+import {
+    createMigratedConfig,
+    CURRENT_CONFIGURATION_VERSION,
+    formSchemaUrl,
+    needsMigration
+} from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
 import { createPlugin } from '../../src/pluginRegistry'
@@ -228,7 +233,9 @@ describe('Config migration', () => {
                     }
                 }
             })
-            return expect(async () => testMigration(v1, () => {})).rejects.toThrow('websocket plugin: must NOT have additional properties (foobar)')
+            return expect(async () => testMigration(v1, () => {})).rejects.toThrow(
+                'websocket plugin: must NOT have additional properties (foobar)'
+            )
         })
     })
 })

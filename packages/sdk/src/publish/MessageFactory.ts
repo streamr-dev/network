@@ -20,7 +20,10 @@ import { createMessageRef, createRandomMsgChainId } from './messageChain'
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
+    streamRegistry: Pick<
+        StreamRegistry,
+        'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'
+    >
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
@@ -55,12 +58,19 @@ export class MessageFactory {
         })
     }
 
-    async createMessage(content: unknown, metadata: PublishMetadata & { timestamp: number }, explicitPartition?: number): Promise<StreamMessage> {
+    async createMessage(
+        content: unknown,
+        metadata: PublishMetadata & { timestamp: number },
+        explicitPartition?: number
+    ): Promise<StreamMessage> {
         const publisherId = await this.getPublisherId(metadata)
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             this.streamRegistry.invalidatePermissionCaches(this.streamId)
-            throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
+            throw new StreamrClientError(
+                `You don't have permission to publish to this stream. Using address: ${publisherId}`,
+                'MISSING_PERMISSION'
+            )
         }
 
         const streamMetadata = await this.streamRegistry.getStreamMetadata(this.streamId)
@@ -86,9 +96,18 @@ export class MessageFactory {
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)
-        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
+        const messageId = new MessageID(
+            this.streamId,
+            partition,
+            msgRef.timestamp,
+            msgRef.sequenceNumber,
+            publisherId,
+            msgChainId
+        )
 
-        const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId))
+            ? EncryptionType.NONE
+            : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let rawContent: Uint8Array

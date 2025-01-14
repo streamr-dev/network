@@ -18,9 +18,14 @@ const defaultAutoCertifierClientFactory = (
     autoCertifierRpcCommunicator: ListeningRpcCommunicator,
     wsServerPort: number
 ) =>
-    new AutoCertifierClient(configFile, wsServerPort, autoCertifierUrl, (_serviceId: string, rpcMethodName: string, method: HasSession) => {
-        autoCertifierRpcCommunicator.registerRpcMethod(HasSessionRequest, HasSessionResponse, rpcMethodName, method)
-    })
+    new AutoCertifierClient(
+        configFile,
+        wsServerPort,
+        autoCertifierUrl,
+        (_serviceId: string, rpcMethodName: string, method: HasSession) => {
+            autoCertifierRpcCommunicator.registerRpcMethod(HasSessionRequest, HasSessionResponse, rpcMethodName, method)
+        }
+    )
 
 export interface IAutoCertifierClient {
     start(): Promise<void>
@@ -52,7 +57,12 @@ export class AutoCertifierClientFacade {
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, options.transport)
         this.autoCertifierClient = options.createClientFactory
             ? options.createClientFactory()
-            : defaultAutoCertifierClientFactory(options.configFile, options.url, this.rpcCommunicator, options.wsServerPort)
+            : defaultAutoCertifierClientFactory(
+                  options.configFile,
+                  options.url,
+                  this.rpcCommunicator,
+                  options.wsServerPort
+              )
     }
 
     async start(): Promise<void> {
@@ -61,7 +71,10 @@ export class AutoCertifierClientFacade {
             this.options.updateCertificate(subdomain.certificate, subdomain.privateKey)
             logger.trace(`Updated certificate`)
         })
-        await Promise.all([waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT), this.autoCertifierClient.start()])
+        await Promise.all([
+            waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT),
+            this.autoCertifierClient.start()
+        ])
     }
 
     stop(): void {

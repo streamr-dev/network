@@ -25,7 +25,11 @@ const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
 }
 
 // TODO: use async/await
-export const runStreamrChallenge = (streamrWebSocketIp: string, streamrWebSocketPort: string, sessionId: string): Promise<void> => {
+export const runStreamrChallenge = (
+    streamrWebSocketIp: string,
+    streamrWebSocketPort: string,
+    sessionId: string
+): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
             nodeId: toDhtAddressRaw(randomDhtAddress()),
@@ -75,7 +79,9 @@ export const runStreamrChallenge = (streamrWebSocketIp: string, streamrWebSocket
         const onDisconnected = () => {
             reject(
                 new FailedToConnectToStreamrWebSocket(
-                    'Autocertifier failed to connect to ' + address + '. Please chack that the IP address is not behind a NAT.'
+                    'Autocertifier failed to connect to ' +
+                        address +
+                        '. Please chack that the IP address is not behind a NAT.'
                 )
             )
         }

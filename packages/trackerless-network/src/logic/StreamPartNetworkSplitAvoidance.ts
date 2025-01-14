@@ -64,12 +64,19 @@ export class StreamPartNetworkSplitAvoidance {
         await exponentialRunOff(
             async () => {
                 const discoveredEntrypoints = await this.options.discoverEntryPoints()
-                const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(toNodeId(peer)))
+                const filteredEntryPoints = discoveredEntrypoints.filter(
+                    (peer) => !this.excludedNodes.has(toNodeId(peer))
+                )
                 await this.options.discoveryLayerNode.joinDht(filteredEntryPoints, false, false)
                 if (this.options.discoveryLayerNode.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                     // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                     const newExcludes = filteredEntryPoints
-                        .filter((peer) => !this.options.discoveryLayerNode.getNeighbors().some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
+                        .filter(
+                            (peer) =>
+                                !this.options.discoveryLayerNode
+                                    .getNeighbors()
+                                    .some((neighbor) => areEqualPeerDescriptors(neighbor, peer))
+                        )
                         .map((peer) => toNodeId(peer))
                     newExcludes.forEach((node) => this.excludedNodes.add(node))
                     throw new Error(`Network split is still possible`)

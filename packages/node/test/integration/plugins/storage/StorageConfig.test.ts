@@ -53,10 +53,15 @@ describe('StorageConfig', () => {
             foo: 'bar'
         })
         await until(async () => {
-            const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
+            const result = await cassandraClient.execute(
+                'SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING',
+                [stream.id]
+            )
             return result.first().count > 0
         })
-        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
+        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [
+            stream.id
+        ])
         const storeMessage = convertBytesToStreamMessage(result.first().payload)
         expect(storeMessage.signature).toEqual(publishMessage.signature)
     })

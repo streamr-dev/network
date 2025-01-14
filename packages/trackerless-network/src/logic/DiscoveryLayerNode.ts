@@ -13,9 +13,15 @@ export interface DiscoveryLayerNodeEvents {
 export interface DiscoveryLayerNode {
     on<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     on<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: () => void): void
-    off<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
+    off<T extends keyof DiscoveryLayerNodeEvents>(
+        eventName: T,
+        listener: (peerDescriptor: PeerDescriptor) => void
+    ): void
     off<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: () => void): void
-    once<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
+    once<T extends keyof DiscoveryLayerNodeEvents>(
+        eventName: T,
+        listener: (peerDescriptor: PeerDescriptor) => void
+    ): void
     once<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: () => void): void
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]

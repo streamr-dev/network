@@ -11,7 +11,11 @@ const runTest = async (latencyType: LatencyType) => {
     const entrypointDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
-    const entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(entrypointDescriptor.nodeId), NUM_OF_NODES_PER_KBUCKET)
+    const entryPoint = await createMockConnectionDhtNode(
+        simulator,
+        toDhtAddress(entrypointDescriptor.nodeId),
+        NUM_OF_NODES_PER_KBUCKET
+    )
     const nodes: DhtNode[] = []
     for (let i = 1; i < 100; i++) {
         const node = await createMockConnectionDhtNode(simulator, undefined, NUM_OF_NODES_PER_KBUCKET)

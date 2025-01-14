@@ -71,7 +71,9 @@ export class PeerDescriptorStoreManager {
                     const discovered = await this.fetchNodes()
                     if (
                         discovered.length < MAX_NODE_COUNT ||
-                        discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor))
+                        discovered.some((peerDescriptor) =>
+                            areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor)
+                        )
                     ) {
                         await this.storeLocalNode()
                     }

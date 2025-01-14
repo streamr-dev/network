@@ -30,7 +30,12 @@ export class Bridge implements MqttServerListener {
     private subscriptions: StreamSubscription[] = []
     private publishMessageChains = new Set<MessageChainKey>()
 
-    constructor(streamrClient: StreamrClient, mqttServer: MqttServer, payloadFormat: PayloadFormat, streamIdDomain?: string) {
+    constructor(
+        streamrClient: StreamrClient,
+        mqttServer: MqttServer,
+        payloadFormat: PayloadFormat,
+        streamIdDomain?: string
+    ) {
         this.streamrClient = streamrClient
         this.mqttServer = mqttServer
         this.payloadFormat = payloadFormat
@@ -72,12 +77,15 @@ export class Bridge implements MqttServerListener {
         const streamPart = this.getSubscribeStreamPart(topic)
         const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription === undefined) {
-            const streamrClientSubscription = await this.streamrClient.subscribe(streamPart, (content: any, metadata: MessageMetadata) => {
-                if (!this.isSelfPublishedMessage(metadata)) {
-                    const payload = this.payloadFormat.createPayload(content, metadata)
-                    this.mqttServer.publish(topic, payload)
+            const streamrClientSubscription = await this.streamrClient.subscribe(
+                streamPart,
+                (content: any, metadata: MessageMetadata) => {
+                    if (!this.isSelfPublishedMessage(metadata)) {
+                        const payload = this.payloadFormat.createPayload(content, metadata)
+                        this.mqttServer.publish(topic, payload)
+                    }
                 }
-            })
+            )
             this.subscriptions.push({
                 streamrClientSubscription,
                 clientIds: [clientId]

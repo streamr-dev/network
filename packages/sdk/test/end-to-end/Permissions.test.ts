@@ -238,11 +238,33 @@ describe('Stream permissions', () => {
                     ]
                 }
             )
-            expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, userId: user1 })).toBe(false)
-            expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, userId: user1 })).toBe(true)
-            expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, userId: user2 })).toBe(false)
-            expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, userId: user2 })).toBe(false)
-            expect(await otherStream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: true, userId: randomUserId() })).toBe(true)
+            expect(
+                await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, userId: user1 })
+            ).toBe(false)
+            expect(
+                await stream.hasPermission({
+                    permission: StreamPermission.SUBSCRIBE,
+                    allowPublic: false,
+                    userId: user1
+                })
+            ).toBe(true)
+            expect(
+                await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, userId: user2 })
+            ).toBe(false)
+            expect(
+                await stream.hasPermission({
+                    permission: StreamPermission.SUBSCRIBE,
+                    allowPublic: false,
+                    userId: user2
+                })
+            ).toBe(false)
+            expect(
+                await otherStream.hasPermission({
+                    permission: StreamPermission.PUBLISH,
+                    allowPublic: true,
+                    userId: randomUserId()
+                })
+            ).toBe(true)
         },
         TIMEOUT
     )

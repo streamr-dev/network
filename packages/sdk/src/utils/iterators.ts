@@ -43,7 +43,9 @@ export function iteratorFinally<T>(
     }
 
     // wraps return/throw to call onFinally even if generator was never started
-    function handleFinally<ArgsType extends any[], ReturnType>(originalFn: (...args: ArgsType) => PromiseLike<ReturnType>) {
+    function handleFinally<ArgsType extends any[], ReturnType>(
+        originalFn: (...args: ArgsType) => PromiseLike<ReturnType>
+    ) {
         return async (...args: ArgsType) => {
             // * only await onFinally if not started
             // * call original return/throw *immediately* in either case

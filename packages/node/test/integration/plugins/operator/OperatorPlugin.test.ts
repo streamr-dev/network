@@ -98,7 +98,9 @@ describe('OperatorPlugin', () => {
             config = cloneDeep(config)
             set(config, 'client.network.node.acceptProxyConnections', false)
             await createBroker(config)
-        }).rejects.toThrow('Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections')
+        }).rejects.toThrow(
+            'Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections'
+        )
     })
 
     it('operator discovery', async () => {
@@ -127,7 +129,9 @@ describe('OperatorPlugin', () => {
         await until(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
         await waitForHeartbeatMessage(toEthereumAddress(operatorContractAddress))
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
-        const operators = await client.getNode().discoverOperators(brokerDescriptor, toStreamPartID(stream.id, DEFAULT_STREAM_PARTITION))
+        const operators = await client
+            .getNode()
+            .discoverOperators(brokerDescriptor, toStreamPartID(stream.id, DEFAULT_STREAM_PARTITION))
         expect(operators[0].nodeId).toEqual(brokerDescriptor.nodeId)
     })
 })

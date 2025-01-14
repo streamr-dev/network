@@ -17,7 +17,11 @@ export class SimulatorConnector {
     private simulator: Simulator
     private onNewConnection: (connection: PendingConnection) => boolean
 
-    constructor(localPeerDescriptor: PeerDescriptor, simulator: Simulator, onNewConnection: (connection: PendingConnection) => boolean) {
+    constructor(
+        localPeerDescriptor: PeerDescriptor,
+        simulator: Simulator,
+        onNewConnection: (connection: PendingConnection) => boolean
+    ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onNewConnection = onNewConnection
@@ -31,7 +35,12 @@ export class SimulatorConnector {
             return existingConnection
         }
 
-        const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
+        const connection = new SimulatorConnection(
+            this.localPeerDescriptor,
+            targetPeerDescriptor,
+            ConnectionType.SIMULATOR_CLIENT,
+            this.simulator
+        )
 
         const pendingConnection = new PendingConnection(targetPeerDescriptor)
         createOutgoingHandshaker(this.localPeerDescriptor, pendingConnection, connection, targetPeerDescriptor)
@@ -62,7 +71,12 @@ export class SimulatorConnector {
         if (this.stopped) {
             return
         }
-        const connection = new SimulatorConnection(this.localPeerDescriptor, remotePeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
+        const connection = new SimulatorConnection(
+            this.localPeerDescriptor,
+            remotePeerDescriptor,
+            ConnectionType.SIMULATOR_SERVER,
+            this.simulator
+        )
 
         const pendingConnection = new PendingConnection(remotePeerDescriptor)
         const handshaker = createIncomingHandshaker(this.localPeerDescriptor, pendingConnection, connection)

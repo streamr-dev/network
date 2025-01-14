@@ -1,4 +1,10 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import {
+    Message,
+    PeerDescriptor,
+    RouteMessageAck,
+    RouteMessageError,
+    RouteMessageWrapper
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
@@ -40,7 +46,8 @@ export class Router {
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RouterRpcLocal({
-            doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
+            doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) =>
+                this.doRouteMessage(routedMessage, mode),
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
             localPeerDescriptor: this.options.localPeerDescriptor,
@@ -110,12 +117,17 @@ export class Router {
         this.messagesSent += 1
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: DhtAddress): RouteMessageAck {
+    public doRouteMessage(
+        routedMessage: RouteMessageWrapper,
+        mode = RoutingMode.ROUTE,
+        excludedPeer?: DhtAddress
+    ): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(
-            `Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} ` + `to ${toDhtAddress(routedMessage.target)}`
+            `Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} ` +
+                `to ${toDhtAddress(routedMessage.target)}`
         )
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
@@ -124,7 +136,11 @@ export class Router {
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
-                eventReceived = raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'], null)
+                eventReceived = raceEvents3<RoutingSessionEvents>(
+                    session,
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
+                    null
+                )
             })
             setImmediate(async () => {
                 try {
@@ -146,7 +162,11 @@ export class Router {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: DhtAddress): RoutingSession {
+    private createRoutingSession(
+        routedMessage: RouteMessageWrapper,
+        mode: RoutingMode,
+        excludedNode?: DhtAddress
+    ): RoutingSession {
         const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => toNodeId(descriptor)))
         if (excludedNode) {
             excludedNodeIds.add(excludedNode)
@@ -184,7 +204,11 @@ export class Router {
     }
 
     onNodeConnected(peerDescriptor: PeerDescriptor): void {
-        const remote = new RoutingRemoteContact(peerDescriptor, this.options.localPeerDescriptor, this.options.rpcCommunicator)
+        const remote = new RoutingRemoteContact(
+            peerDescriptor,
+            this.options.localPeerDescriptor,
+            this.options.rpcCommunicator
+        )
         this.routingTablesCache.onNodeConnected(remote)
     }
 

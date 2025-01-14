@@ -96,7 +96,9 @@ export async function start(): Promise<void> {
         `)
 
         if (operator) {
-            const resume = animateLine((spinner) => style(`> Your node address has *${spinner} MATIC* _– checking balance…_`))
+            const resume = animateLine((spinner) =>
+                style(`> Your node address has *${spinner} MATIC* _– checking balance…_`)
+            )
 
             try {
                 const balance = await getNativeBalance(environmentId, nodeAddress)
@@ -322,7 +324,8 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                             .superRefine((value, ctx) => {
                                 const [pluginKey] =
                                     Object.entries(pubsubPlugins).find(
-                                        ([pluginKey, plugin]) => value === (plugin.port ?? DEFAULT_PORTS[pluginKey as PubsubPluginKey])
+                                        ([pluginKey, plugin]) =>
+                                            value === (plugin.port ?? DEFAULT_PORTS[pluginKey as PubsubPluginKey])
                                     ) ?? []
 
                                 if (pluginKey) {
@@ -406,7 +409,10 @@ async function getNativeBalance(environmentId: EnvironmentId, address: string): 
  * Gets an array of node addresses associated with the given operator
  * contract address on the given network.
  */
-async function getOperatorNodeAddresses(environmentId: EnvironmentId, operatorAddress: string): Promise<string[] | undefined> {
+async function getOperatorNodeAddresses(
+    environmentId: EnvironmentId,
+    operatorAddress: string
+): Promise<string[] | undefined> {
     const url = streamrConfig[environmentId].theGraphUrl
 
     const resp = await fetch(url, {

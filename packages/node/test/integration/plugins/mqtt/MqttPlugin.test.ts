@@ -10,7 +10,11 @@ jest.setTimeout(30000)
 createMessagingPluginTest(
     'mqtt',
     {
-        createClient: async (_action: 'publish' | 'subscribe', _streamId: string, apiKey?: string): Promise<AsyncMqttClient> => {
+        createClient: async (
+            _action: 'publish' | 'subscribe',
+            _streamId: string,
+            apiKey?: string
+        ): Promise<AsyncMqttClient> => {
             const opts =
                 apiKey !== undefined
                     ? {

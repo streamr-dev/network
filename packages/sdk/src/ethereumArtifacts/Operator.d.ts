@@ -169,7 +169,15 @@ export interface OperatorInterface extends Interface {
     encodeFunctionData(functionFragment: 'indexOfSponsorships', values: [AddressLike]): string
     encodeFunctionData(
         functionFragment: 'initialize',
-        values: [AddressLike, AddressLike, AddressLike, string, string, BigNumberish, [AddressLike, AddressLike, AddressLike]]
+        values: [
+            AddressLike,
+            AddressLike,
+            AddressLike,
+            string,
+            string,
+            BigNumberish,
+            [AddressLike, AddressLike, AddressLike]
+        ]
     ): string
     encodeFunctionData(functionFragment: 'latestDelegationTimestamp', values: [AddressLike]): string
     encodeFunctionData(functionFragment: 'metadata', values?: undefined): string
@@ -228,7 +236,10 @@ export interface OperatorInterface extends Interface {
     encodeFunctionData(functionFragment: 'version', values?: undefined): string
     encodeFunctionData(functionFragment: 'voteOnFlag', values: [AddressLike, AddressLike, BytesLike]): string
     encodeFunctionData(functionFragment: 'withdrawEarningsFromSponsorships', values: [AddressLike[]]): string
-    encodeFunctionData(functionFragment: 'withdrawEarningsFromSponsorshipsWithoutQueue', values: [AddressLike[]]): string
+    encodeFunctionData(
+        functionFragment: 'withdrawEarningsFromSponsorshipsWithoutQueue',
+        values: [AddressLike[]]
+    ): string
     decodeFunctionResult(functionFragment: 'CONTROLLER_ROLE', data: BytesLike): Result
     decodeFunctionResult(functionFragment: 'DEFAULT_ADMIN_ROLE', data: BytesLike): Result
     decodeFunctionResult(functionFragment: 'OWNER_ROLE', data: BytesLike): Result
@@ -326,7 +337,12 @@ export declare namespace ApprovalEvent {
     type LogDescription = TypedLogDescription<Event>
 }
 export declare namespace BalanceUpdateEvent {
-    type InputTuple = [delegator: AddressLike, balanceWei: BigNumberish, totalSupplyWei: BigNumberish, dataValueWithoutEarnings: BigNumberish]
+    type InputTuple = [
+        delegator: AddressLike,
+        balanceWei: BigNumberish,
+        totalSupplyWei: BigNumberish,
+        dataValueWithoutEarnings: BigNumberish
+    ]
     type OutputTuple = [delegator: string, balanceWei: bigint, totalSupplyWei: bigint, dataValueWithoutEarnings: bigint]
     interface OutputObject {
         delegator: string
@@ -415,7 +431,11 @@ export declare namespace OperatorSlashedEvent {
         slashingAmountInOperatorTokensWei: BigNumberish,
         actuallySlashedInOperatorTokensWei: BigNumberish
     ]
-    type OutputTuple = [slashingAmountDataWei: bigint, slashingAmountInOperatorTokensWei: bigint, actuallySlashedInOperatorTokensWei: bigint]
+    type OutputTuple = [
+        slashingAmountDataWei: bigint,
+        slashingAmountInOperatorTokensWei: bigint,
+        actuallySlashedInOperatorTokensWei: bigint
+    ]
     interface OutputObject {
         slashingAmountDataWei: bigint
         slashingAmountInOperatorTokensWei: bigint
@@ -439,7 +459,11 @@ export declare namespace OperatorValueUpdateEvent {
     type LogDescription = TypedLogDescription<Event>
 }
 export declare namespace ProfitEvent {
-    type InputTuple = [valueIncreaseWei: BigNumberish, operatorsCutDataWei: BigNumberish, protocolFeeDataWei: BigNumberish]
+    type InputTuple = [
+        valueIncreaseWei: BigNumberish,
+        operatorsCutDataWei: BigNumberish,
+        protocolFeeDataWei: BigNumberish
+    ]
     type OutputTuple = [valueIncreaseWei: bigint, operatorsCutDataWei: bigint, protocolFeeDataWei: bigint]
     interface OutputObject {
         valueIncreaseWei: bigint
@@ -485,7 +509,13 @@ export declare namespace ReviewRequestEvent {
         voteEndTimestamp: BigNumberish,
         flagMetadata: string
     ]
-    type OutputTuple = [sponsorship: string, targetOperator: string, voteStartTimestamp: bigint, voteEndTimestamp: bigint, flagMetadata: string]
+    type OutputTuple = [
+        sponsorship: string,
+        targetOperator: string,
+        voteStartTimestamp: bigint,
+        voteEndTimestamp: bigint,
+        flagMetadata: string
+    ]
     interface OutputObject {
         sponsorship: string
         targetOperator: string
@@ -611,9 +641,15 @@ export interface Operator extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
@@ -625,12 +661,24 @@ export interface Operator extends BaseContract {
     balanceInData: TypedContractMethod<[delegator: AddressLike], [bigint], 'view'>
     balanceOf: TypedContractMethod<[account: AddressLike], [bigint], 'view'>
     decimals: TypedContractMethod<[], [bigint], 'view'>
-    decreaseAllowance: TypedContractMethod<[spender: AddressLike, subtractedValue: BigNumberish], [boolean], 'nonpayable'>
+    decreaseAllowance: TypedContractMethod<
+        [spender: AddressLike, subtractedValue: BigNumberish],
+        [boolean],
+        'nonpayable'
+    >
     delegate: TypedContractMethod<[amountWei: BigNumberish], [void], 'nonpayable'>
     delegationPolicy: TypedContractMethod<[], [string], 'view'>
     exchangeRatePolicy: TypedContractMethod<[], [string], 'view'>
-    flag: TypedContractMethod<[sponsorship: AddressLike, targetOperator: AddressLike, flagMetadata: string], [void], 'nonpayable'>
-    forceUnstake: TypedContractMethod<[sponsorship: AddressLike, maxQueuePayoutIterations: BigNumberish], [void], 'nonpayable'>
+    flag: TypedContractMethod<
+        [sponsorship: AddressLike, targetOperator: AddressLike, flagMetadata: string],
+        [void],
+        'nonpayable'
+    >
+    forceUnstake: TypedContractMethod<
+        [sponsorship: AddressLike, maxQueuePayoutIterations: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     getNodeAddresses: TypedContractMethod<[], [string[]], 'view'>
     getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], 'view'>
     getSponsorshipsAndEarnings: TypedContractMethod<
@@ -669,10 +717,18 @@ export interface Operator extends BaseContract {
     nodeIndex: TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     nodeModule: TypedContractMethod<[], [string], 'view'>
     nodes: TypedContractMethod<[arg0: BigNumberish], [string], 'view'>
-    onKick: TypedContractMethod<[amountSlashedDataWei: BigNumberish, receivedPayoutWei: BigNumberish], [void], 'nonpayable'>
+    onKick: TypedContractMethod<
+        [amountSlashedDataWei: BigNumberish, receivedPayoutWei: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     onReviewRequest: TypedContractMethod<[targetOperator: AddressLike], [void], 'nonpayable'>
     onSlash: TypedContractMethod<[amountSlashed: BigNumberish], [void], 'nonpayable'>
-    onTokenTransfer: TypedContractMethod<[sender: AddressLike, amount: BigNumberish, data: BytesLike], [void], 'nonpayable'>
+    onTokenTransfer: TypedContractMethod<
+        [sender: AddressLike, amount: BigNumberish, data: BytesLike],
+        [void],
+        'nonpayable'
+    >
     operatorsCutFraction: TypedContractMethod<[], [bigint], 'view'>
     owner: TypedContractMethod<[], [string], 'view'>
     payOutFirstInQueue: TypedContractMethod<[], [boolean], 'nonpayable'>
@@ -693,7 +749,11 @@ export interface Operator extends BaseContract {
     queueLastIndex: TypedContractMethod<[], [bigint], 'view'>
     queueModule: TypedContractMethod<[], [string], 'view'>
     reduceStakeTo: TypedContractMethod<[sponsorship: AddressLike, targetStakeWei: BigNumberish], [void], 'nonpayable'>
-    reduceStakeWithoutQueue: TypedContractMethod<[sponsorship: AddressLike, targetStakeWei: BigNumberish], [void], 'nonpayable'>
+    reduceStakeWithoutQueue: TypedContractMethod<
+        [sponsorship: AddressLike, targetStakeWei: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     renounceRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     revokeRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     setDelegationPolicy: TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
@@ -715,28 +775,52 @@ export interface Operator extends BaseContract {
     totalStakedIntoSponsorshipsWei: TypedContractMethod<[], [bigint], 'view'>
     totalSupply: TypedContractMethod<[], [bigint], 'view'>
     transfer: TypedContractMethod<[to: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
-    transferFrom: TypedContractMethod<[from: AddressLike, to: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
-    triggerAnotherOperatorWithdraw: TypedContractMethod<[other: AddressLike, sponsorshipAddresses: AddressLike[]], [void], 'nonpayable'>
+    transferFrom: TypedContractMethod<
+        [from: AddressLike, to: AddressLike, amount: BigNumberish],
+        [boolean],
+        'nonpayable'
+    >
+    triggerAnotherOperatorWithdraw: TypedContractMethod<
+        [other: AddressLike, sponsorshipAddresses: AddressLike[]],
+        [void],
+        'nonpayable'
+    >
     undelegate: TypedContractMethod<[amountDataWei: BigNumberish], [void], 'nonpayable'>
     undelegationPolicy: TypedContractMethod<[], [string], 'view'>
     undelegationQueue: TypedContractMethod<[], [Operator.UndelegationQueueEntryStructOutput[]], 'view'>
     unstake: TypedContractMethod<[sponsorship: AddressLike], [void], 'nonpayable'>
     unstakeWithoutQueue: TypedContractMethod<[sponsorship: AddressLike], [void], 'nonpayable'>
     updateMetadata: TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
-    updateNodeAddresses: TypedContractMethod<[addNodes: AddressLike[], removeNodes: AddressLike[]], [void], 'nonpayable'>
+    updateNodeAddresses: TypedContractMethod<
+        [addNodes: AddressLike[], removeNodes: AddressLike[]],
+        [void],
+        'nonpayable'
+    >
     updateOperatorsCutFraction: TypedContractMethod<[newOperatorsCutFraction: BigNumberish], [void], 'nonpayable'>
     updateStreamMetadata: TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
     valueWithoutEarnings: TypedContractMethod<[], [bigint], 'view'>
     version: TypedContractMethod<[], [bigint], 'view'>
-    voteOnFlag: TypedContractMethod<[sponsorship: AddressLike, targetOperator: AddressLike, voteData: BytesLike], [void], 'nonpayable'>
+    voteOnFlag: TypedContractMethod<
+        [sponsorship: AddressLike, targetOperator: AddressLike, voteData: BytesLike],
+        [void],
+        'nonpayable'
+    >
     withdrawEarningsFromSponsorships: TypedContractMethod<[sponsorshipAddresses: AddressLike[]], [void], 'nonpayable'>
-    withdrawEarningsFromSponsorshipsWithoutQueue: TypedContractMethod<[sponsorshipAddresses: AddressLike[]], [bigint], 'nonpayable'>
+    withdrawEarningsFromSponsorshipsWithoutQueue: TypedContractMethod<
+        [sponsorshipAddresses: AddressLike[]],
+        [bigint],
+        'nonpayable'
+    >
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T
     getFunction(nameOrSignature: 'CONTROLLER_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'DEFAULT_ADMIN_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'OWNER_ROLE'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'allowance'): TypedContractMethod<[owner: AddressLike, spender: AddressLike], [bigint], 'view'>
-    getFunction(nameOrSignature: 'approve'): TypedContractMethod<[spender: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'allowance'
+    ): TypedContractMethod<[owner: AddressLike, spender: AddressLike], [bigint], 'view'>
+    getFunction(
+        nameOrSignature: 'approve'
+    ): TypedContractMethod<[spender: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
     getFunction(nameOrSignature: 'balanceInData'): TypedContractMethod<[delegator: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'balanceOf'): TypedContractMethod<[account: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'decimals'): TypedContractMethod<[], [bigint], 'view'>
@@ -748,7 +832,11 @@ export interface Operator extends BaseContract {
     getFunction(nameOrSignature: 'exchangeRatePolicy'): TypedContractMethod<[], [string], 'view'>
     getFunction(
         nameOrSignature: 'flag'
-    ): TypedContractMethod<[sponsorship: AddressLike, targetOperator: AddressLike, flagMetadata: string], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [sponsorship: AddressLike, targetOperator: AddressLike, flagMetadata: string],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'forceUnstake'
     ): TypedContractMethod<[sponsorship: AddressLike, maxQueuePayoutIterations: BigNumberish], [void], 'nonpayable'>
@@ -766,10 +854,16 @@ export interface Operator extends BaseContract {
         'view'
     >
     getFunction(nameOrSignature: 'getStreamMetadata'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'grantRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'hasRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
+    getFunction(
+        nameOrSignature: 'grantRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'hasRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
     getFunction(nameOrSignature: 'heartbeat'): TypedContractMethod<[jsonData: string], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'increaseAllowance'): TypedContractMethod<[spender: AddressLike, addedValue: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'increaseAllowance'
+    ): TypedContractMethod<[spender: AddressLike, addedValue: BigNumberish], [boolean], 'nonpayable'>
     getFunction(nameOrSignature: 'indexOfSponsorships'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     getFunction(
         nameOrSignature: 'initialize'
@@ -786,7 +880,9 @@ export interface Operator extends BaseContract {
         [void],
         'nonpayable'
     >
-    getFunction(nameOrSignature: 'latestDelegationTimestamp'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
+    getFunction(
+        nameOrSignature: 'latestDelegationTimestamp'
+    ): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'metadata'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'name'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'nodeIndex'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
@@ -795,7 +891,9 @@ export interface Operator extends BaseContract {
     getFunction(
         nameOrSignature: 'onKick'
     ): TypedContractMethod<[amountSlashedDataWei: BigNumberish, receivedPayoutWei: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'onReviewRequest'): TypedContractMethod<[targetOperator: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'onReviewRequest'
+    ): TypedContractMethod<[targetOperator: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'onSlash'): TypedContractMethod<[amountSlashed: BigNumberish], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'onTokenTransfer'
@@ -803,7 +901,9 @@ export interface Operator extends BaseContract {
     getFunction(nameOrSignature: 'operatorsCutFraction'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'owner'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'payOutFirstInQueue'): TypedContractMethod<[], [boolean], 'nonpayable'>
-    getFunction(nameOrSignature: 'payOutQueue'): TypedContractMethod<[maxIterations: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'payOutQueue'
+    ): TypedContractMethod<[maxIterations: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'queueCurrentIndex'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'queueEntryAt'): TypedContractMethod<
         [arg0: BigNumberish],
@@ -819,19 +919,35 @@ export interface Operator extends BaseContract {
     getFunction(nameOrSignature: 'queueIsEmpty'): TypedContractMethod<[], [boolean], 'view'>
     getFunction(nameOrSignature: 'queueLastIndex'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'queueModule'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'reduceStakeTo'): TypedContractMethod<[sponsorship: AddressLike, targetStakeWei: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'reduceStakeTo'
+    ): TypedContractMethod<[sponsorship: AddressLike, targetStakeWei: BigNumberish], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'reduceStakeWithoutQueue'
     ): TypedContractMethod<[sponsorship: AddressLike, targetStakeWei: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'renounceRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setDelegationPolicy'): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setExchangeRatePolicy'): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setNodeAddresses'): TypedContractMethod<[newNodes: AddressLike[]], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setUndelegationPolicy'): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'renounceRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'setDelegationPolicy'
+    ): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'setExchangeRatePolicy'
+    ): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'setNodeAddresses'
+    ): TypedContractMethod<[newNodes: AddressLike[]], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'setUndelegationPolicy'
+    ): TypedContractMethod<[policy: AddressLike, param: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'slashedIn'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'sponsorships'): TypedContractMethod<[arg0: BigNumberish], [string], 'view'>
-    getFunction(nameOrSignature: 'stake'): TypedContractMethod<[sponsorship: AddressLike, amountWei: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'stake'
+    ): TypedContractMethod<[sponsorship: AddressLike, amountWei: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'stakeModule'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'stakedInto'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'streamId'): TypedContractMethod<[], [string], 'view'>
@@ -843,7 +959,9 @@ export interface Operator extends BaseContract {
     getFunction(nameOrSignature: 'totalSlashedInSponsorshipsWei'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'totalStakedIntoSponsorshipsWei'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'totalSupply'): TypedContractMethod<[], [bigint], 'view'>
-    getFunction(nameOrSignature: 'transfer'): TypedContractMethod<[to: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'transfer'
+    ): TypedContractMethod<[to: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
     getFunction(
         nameOrSignature: 'transferFrom'
     ): TypedContractMethod<[from: AddressLike, to: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
@@ -852,71 +970,179 @@ export interface Operator extends BaseContract {
     ): TypedContractMethod<[other: AddressLike, sponsorshipAddresses: AddressLike[]], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'undelegate'): TypedContractMethod<[amountDataWei: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'undelegationPolicy'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'undelegationQueue'): TypedContractMethod<[], [Operator.UndelegationQueueEntryStructOutput[]], 'view'>
+    getFunction(
+        nameOrSignature: 'undelegationQueue'
+    ): TypedContractMethod<[], [Operator.UndelegationQueueEntryStructOutput[]], 'view'>
     getFunction(nameOrSignature: 'unstake'): TypedContractMethod<[sponsorship: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'unstakeWithoutQueue'): TypedContractMethod<[sponsorship: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'updateMetadata'): TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'unstakeWithoutQueue'
+    ): TypedContractMethod<[sponsorship: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'updateMetadata'
+    ): TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'updateNodeAddresses'
     ): TypedContractMethod<[addNodes: AddressLike[], removeNodes: AddressLike[]], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'updateOperatorsCutFraction'): TypedContractMethod<[newOperatorsCutFraction: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'updateStreamMetadata'): TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'updateOperatorsCutFraction'
+    ): TypedContractMethod<[newOperatorsCutFraction: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'updateStreamMetadata'
+    ): TypedContractMethod<[metadataJsonString: string], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'valueWithoutEarnings'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'version'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(
         nameOrSignature: 'voteOnFlag'
-    ): TypedContractMethod<[sponsorship: AddressLike, targetOperator: AddressLike, voteData: BytesLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'withdrawEarningsFromSponsorships'): TypedContractMethod<[sponsorshipAddresses: AddressLike[]], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [sponsorship: AddressLike, targetOperator: AddressLike, voteData: BytesLike],
+        [void],
+        'nonpayable'
+    >
+    getFunction(
+        nameOrSignature: 'withdrawEarningsFromSponsorships'
+    ): TypedContractMethod<[sponsorshipAddresses: AddressLike[]], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'withdrawEarningsFromSponsorshipsWithoutQueue'
     ): TypedContractMethod<[sponsorshipAddresses: AddressLike[]], [bigint], 'nonpayable'>
-    getEvent(key: 'Approval'): TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
-    getEvent(key: 'BalanceUpdate'): TypedContractEvent<BalanceUpdateEvent.InputTuple, BalanceUpdateEvent.OutputTuple, BalanceUpdateEvent.OutputObject>
-    getEvent(key: 'Delegated'): TypedContractEvent<DelegatedEvent.InputTuple, DelegatedEvent.OutputTuple, DelegatedEvent.OutputObject>
-    getEvent(key: 'Heartbeat'): TypedContractEvent<HeartbeatEvent.InputTuple, HeartbeatEvent.OutputTuple, HeartbeatEvent.OutputObject>
-    getEvent(key: 'Initialized'): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+    getEvent(
+        key: 'Approval'
+    ): TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
+    getEvent(
+        key: 'BalanceUpdate'
+    ): TypedContractEvent<
+        BalanceUpdateEvent.InputTuple,
+        BalanceUpdateEvent.OutputTuple,
+        BalanceUpdateEvent.OutputObject
+    >
+    getEvent(
+        key: 'Delegated'
+    ): TypedContractEvent<DelegatedEvent.InputTuple, DelegatedEvent.OutputTuple, DelegatedEvent.OutputObject>
+    getEvent(
+        key: 'Heartbeat'
+    ): TypedContractEvent<HeartbeatEvent.InputTuple, HeartbeatEvent.OutputTuple, HeartbeatEvent.OutputObject>
+    getEvent(
+        key: 'Initialized'
+    ): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
     getEvent(key: 'Loss'): TypedContractEvent<LossEvent.InputTuple, LossEvent.OutputTuple, LossEvent.OutputObject>
     getEvent(
         key: 'MetadataUpdated'
-    ): TypedContractEvent<MetadataUpdatedEvent.InputTuple, MetadataUpdatedEvent.OutputTuple, MetadataUpdatedEvent.OutputObject>
-    getEvent(key: 'NodesSet'): TypedContractEvent<NodesSetEvent.InputTuple, NodesSetEvent.OutputTuple, NodesSetEvent.OutputObject>
+    ): TypedContractEvent<
+        MetadataUpdatedEvent.InputTuple,
+        MetadataUpdatedEvent.OutputTuple,
+        MetadataUpdatedEvent.OutputObject
+    >
+    getEvent(
+        key: 'NodesSet'
+    ): TypedContractEvent<NodesSetEvent.InputTuple, NodesSetEvent.OutputTuple, NodesSetEvent.OutputObject>
     getEvent(
         key: 'OperatorSlashed'
-    ): TypedContractEvent<OperatorSlashedEvent.InputTuple, OperatorSlashedEvent.OutputTuple, OperatorSlashedEvent.OutputObject>
+    ): TypedContractEvent<
+        OperatorSlashedEvent.InputTuple,
+        OperatorSlashedEvent.OutputTuple,
+        OperatorSlashedEvent.OutputObject
+    >
     getEvent(
         key: 'OperatorValueUpdate'
-    ): TypedContractEvent<OperatorValueUpdateEvent.InputTuple, OperatorValueUpdateEvent.OutputTuple, OperatorValueUpdateEvent.OutputObject>
-    getEvent(key: 'Profit'): TypedContractEvent<ProfitEvent.InputTuple, ProfitEvent.OutputTuple, ProfitEvent.OutputObject>
-    getEvent(key: 'QueueUpdated'): TypedContractEvent<QueueUpdatedEvent.InputTuple, QueueUpdatedEvent.OutputTuple, QueueUpdatedEvent.OutputObject>
+    ): TypedContractEvent<
+        OperatorValueUpdateEvent.InputTuple,
+        OperatorValueUpdateEvent.OutputTuple,
+        OperatorValueUpdateEvent.OutputObject
+    >
+    getEvent(
+        key: 'Profit'
+    ): TypedContractEvent<ProfitEvent.InputTuple, ProfitEvent.OutputTuple, ProfitEvent.OutputObject>
+    getEvent(
+        key: 'QueueUpdated'
+    ): TypedContractEvent<QueueUpdatedEvent.InputTuple, QueueUpdatedEvent.OutputTuple, QueueUpdatedEvent.OutputObject>
     getEvent(
         key: 'QueuedDataPayout'
-    ): TypedContractEvent<QueuedDataPayoutEvent.InputTuple, QueuedDataPayoutEvent.OutputTuple, QueuedDataPayoutEvent.OutputObject>
-    getEvent(key: 'ReviewRequest'): TypedContractEvent<ReviewRequestEvent.InputTuple, ReviewRequestEvent.OutputTuple, ReviewRequestEvent.OutputObject>
+    ): TypedContractEvent<
+        QueuedDataPayoutEvent.InputTuple,
+        QueuedDataPayoutEvent.OutputTuple,
+        QueuedDataPayoutEvent.OutputObject
+    >
+    getEvent(
+        key: 'ReviewRequest'
+    ): TypedContractEvent<
+        ReviewRequestEvent.InputTuple,
+        ReviewRequestEvent.OutputTuple,
+        ReviewRequestEvent.OutputObject
+    >
     getEvent(
         key: 'RoleAdminChanged'
-    ): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
-    getEvent(key: 'RoleGranted'): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
-    getEvent(key: 'RoleRevoked'): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
-    getEvent(key: 'StakeUpdate'): TypedContractEvent<StakeUpdateEvent.InputTuple, StakeUpdateEvent.OutputTuple, StakeUpdateEvent.OutputObject>
-    getEvent(key: 'Staked'): TypedContractEvent<StakedEvent.InputTuple, StakedEvent.OutputTuple, StakedEvent.OutputObject>
-    getEvent(key: 'Transfer'): TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>
-    getEvent(key: 'Undelegated'): TypedContractEvent<UndelegatedEvent.InputTuple, UndelegatedEvent.OutputTuple, UndelegatedEvent.OutputObject>
-    getEvent(key: 'Unstaked'): TypedContractEvent<UnstakedEvent.InputTuple, UnstakedEvent.OutputTuple, UnstakedEvent.OutputObject>
+    ): TypedContractEvent<
+        RoleAdminChangedEvent.InputTuple,
+        RoleAdminChangedEvent.OutputTuple,
+        RoleAdminChangedEvent.OutputObject
+    >
+    getEvent(
+        key: 'RoleGranted'
+    ): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+    getEvent(
+        key: 'RoleRevoked'
+    ): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+    getEvent(
+        key: 'StakeUpdate'
+    ): TypedContractEvent<StakeUpdateEvent.InputTuple, StakeUpdateEvent.OutputTuple, StakeUpdateEvent.OutputObject>
+    getEvent(
+        key: 'Staked'
+    ): TypedContractEvent<StakedEvent.InputTuple, StakedEvent.OutputTuple, StakedEvent.OutputObject>
+    getEvent(
+        key: 'Transfer'
+    ): TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>
+    getEvent(
+        key: 'Undelegated'
+    ): TypedContractEvent<UndelegatedEvent.InputTuple, UndelegatedEvent.OutputTuple, UndelegatedEvent.OutputObject>
+    getEvent(
+        key: 'Unstaked'
+    ): TypedContractEvent<UnstakedEvent.InputTuple, UnstakedEvent.OutputTuple, UnstakedEvent.OutputObject>
     filters: {
-        'Approval(address,address,uint256)': TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
+        'Approval(address,address,uint256)': TypedContractEvent<
+            ApprovalEvent.InputTuple,
+            ApprovalEvent.OutputTuple,
+            ApprovalEvent.OutputObject
+        >
         Approval: TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
         'BalanceUpdate(address,uint256,uint256,uint256)': TypedContractEvent<
             BalanceUpdateEvent.InputTuple,
             BalanceUpdateEvent.OutputTuple,
             BalanceUpdateEvent.OutputObject
         >
-        BalanceUpdate: TypedContractEvent<BalanceUpdateEvent.InputTuple, BalanceUpdateEvent.OutputTuple, BalanceUpdateEvent.OutputObject>
-        'Delegated(address,uint256)': TypedContractEvent<DelegatedEvent.InputTuple, DelegatedEvent.OutputTuple, DelegatedEvent.OutputObject>
-        Delegated: TypedContractEvent<DelegatedEvent.InputTuple, DelegatedEvent.OutputTuple, DelegatedEvent.OutputObject>
-        'Heartbeat(address,string)': TypedContractEvent<HeartbeatEvent.InputTuple, HeartbeatEvent.OutputTuple, HeartbeatEvent.OutputObject>
-        Heartbeat: TypedContractEvent<HeartbeatEvent.InputTuple, HeartbeatEvent.OutputTuple, HeartbeatEvent.OutputObject>
-        'Initialized(uint8)': TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        Initialized: TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+        BalanceUpdate: TypedContractEvent<
+            BalanceUpdateEvent.InputTuple,
+            BalanceUpdateEvent.OutputTuple,
+            BalanceUpdateEvent.OutputObject
+        >
+        'Delegated(address,uint256)': TypedContractEvent<
+            DelegatedEvent.InputTuple,
+            DelegatedEvent.OutputTuple,
+            DelegatedEvent.OutputObject
+        >
+        Delegated: TypedContractEvent<
+            DelegatedEvent.InputTuple,
+            DelegatedEvent.OutputTuple,
+            DelegatedEvent.OutputObject
+        >
+        'Heartbeat(address,string)': TypedContractEvent<
+            HeartbeatEvent.InputTuple,
+            HeartbeatEvent.OutputTuple,
+            HeartbeatEvent.OutputObject
+        >
+        Heartbeat: TypedContractEvent<
+            HeartbeatEvent.InputTuple,
+            HeartbeatEvent.OutputTuple,
+            HeartbeatEvent.OutputObject
+        >
+        'Initialized(uint8)': TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        Initialized: TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
         'Loss(uint256)': TypedContractEvent<LossEvent.InputTuple, LossEvent.OutputTuple, LossEvent.OutputObject>
         Loss: TypedContractEvent<LossEvent.InputTuple, LossEvent.OutputTuple, LossEvent.OutputObject>
         'MetadataUpdated(string,address,uint256)': TypedContractEvent<
@@ -924,15 +1150,27 @@ export interface Operator extends BaseContract {
             MetadataUpdatedEvent.OutputTuple,
             MetadataUpdatedEvent.OutputObject
         >
-        MetadataUpdated: TypedContractEvent<MetadataUpdatedEvent.InputTuple, MetadataUpdatedEvent.OutputTuple, MetadataUpdatedEvent.OutputObject>
-        'NodesSet(address[])': TypedContractEvent<NodesSetEvent.InputTuple, NodesSetEvent.OutputTuple, NodesSetEvent.OutputObject>
+        MetadataUpdated: TypedContractEvent<
+            MetadataUpdatedEvent.InputTuple,
+            MetadataUpdatedEvent.OutputTuple,
+            MetadataUpdatedEvent.OutputObject
+        >
+        'NodesSet(address[])': TypedContractEvent<
+            NodesSetEvent.InputTuple,
+            NodesSetEvent.OutputTuple,
+            NodesSetEvent.OutputObject
+        >
         NodesSet: TypedContractEvent<NodesSetEvent.InputTuple, NodesSetEvent.OutputTuple, NodesSetEvent.OutputObject>
         'OperatorSlashed(uint256,uint256,uint256)': TypedContractEvent<
             OperatorSlashedEvent.InputTuple,
             OperatorSlashedEvent.OutputTuple,
             OperatorSlashedEvent.OutputObject
         >
-        OperatorSlashed: TypedContractEvent<OperatorSlashedEvent.InputTuple, OperatorSlashedEvent.OutputTuple, OperatorSlashedEvent.OutputObject>
+        OperatorSlashed: TypedContractEvent<
+            OperatorSlashedEvent.InputTuple,
+            OperatorSlashedEvent.OutputTuple,
+            OperatorSlashedEvent.OutputObject
+        >
         'OperatorValueUpdate(uint256,uint256)': TypedContractEvent<
             OperatorValueUpdateEvent.InputTuple,
             OperatorValueUpdateEvent.OutputTuple,
@@ -943,53 +1181,105 @@ export interface Operator extends BaseContract {
             OperatorValueUpdateEvent.OutputTuple,
             OperatorValueUpdateEvent.OutputObject
         >
-        'Profit(uint256,uint256,uint256)': TypedContractEvent<ProfitEvent.InputTuple, ProfitEvent.OutputTuple, ProfitEvent.OutputObject>
+        'Profit(uint256,uint256,uint256)': TypedContractEvent<
+            ProfitEvent.InputTuple,
+            ProfitEvent.OutputTuple,
+            ProfitEvent.OutputObject
+        >
         Profit: TypedContractEvent<ProfitEvent.InputTuple, ProfitEvent.OutputTuple, ProfitEvent.OutputObject>
         'QueueUpdated(address,uint256,uint256)': TypedContractEvent<
             QueueUpdatedEvent.InputTuple,
             QueueUpdatedEvent.OutputTuple,
             QueueUpdatedEvent.OutputObject
         >
-        QueueUpdated: TypedContractEvent<QueueUpdatedEvent.InputTuple, QueueUpdatedEvent.OutputTuple, QueueUpdatedEvent.OutputObject>
+        QueueUpdated: TypedContractEvent<
+            QueueUpdatedEvent.InputTuple,
+            QueueUpdatedEvent.OutputTuple,
+            QueueUpdatedEvent.OutputObject
+        >
         'QueuedDataPayout(address,uint256,uint256)': TypedContractEvent<
             QueuedDataPayoutEvent.InputTuple,
             QueuedDataPayoutEvent.OutputTuple,
             QueuedDataPayoutEvent.OutputObject
         >
-        QueuedDataPayout: TypedContractEvent<QueuedDataPayoutEvent.InputTuple, QueuedDataPayoutEvent.OutputTuple, QueuedDataPayoutEvent.OutputObject>
+        QueuedDataPayout: TypedContractEvent<
+            QueuedDataPayoutEvent.InputTuple,
+            QueuedDataPayoutEvent.OutputTuple,
+            QueuedDataPayoutEvent.OutputObject
+        >
         'ReviewRequest(address,address,uint256,uint256,string)': TypedContractEvent<
             ReviewRequestEvent.InputTuple,
             ReviewRequestEvent.OutputTuple,
             ReviewRequestEvent.OutputObject
         >
-        ReviewRequest: TypedContractEvent<ReviewRequestEvent.InputTuple, ReviewRequestEvent.OutputTuple, ReviewRequestEvent.OutputObject>
+        ReviewRequest: TypedContractEvent<
+            ReviewRequestEvent.InputTuple,
+            ReviewRequestEvent.OutputTuple,
+            ReviewRequestEvent.OutputObject
+        >
         'RoleAdminChanged(bytes32,bytes32,bytes32)': TypedContractEvent<
             RoleAdminChangedEvent.InputTuple,
             RoleAdminChangedEvent.OutputTuple,
             RoleAdminChangedEvent.OutputObject
         >
-        RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
+        RoleAdminChanged: TypedContractEvent<
+            RoleAdminChangedEvent.InputTuple,
+            RoleAdminChangedEvent.OutputTuple,
+            RoleAdminChangedEvent.OutputObject
+        >
         'RoleGranted(bytes32,address,address)': TypedContractEvent<
             RoleGrantedEvent.InputTuple,
             RoleGrantedEvent.OutputTuple,
             RoleGrantedEvent.OutputObject
         >
-        RoleGranted: TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+        RoleGranted: TypedContractEvent<
+            RoleGrantedEvent.InputTuple,
+            RoleGrantedEvent.OutputTuple,
+            RoleGrantedEvent.OutputObject
+        >
         'RoleRevoked(bytes32,address,address)': TypedContractEvent<
             RoleRevokedEvent.InputTuple,
             RoleRevokedEvent.OutputTuple,
             RoleRevokedEvent.OutputObject
         >
-        RoleRevoked: TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
-        'StakeUpdate(address,uint256)': TypedContractEvent<StakeUpdateEvent.InputTuple, StakeUpdateEvent.OutputTuple, StakeUpdateEvent.OutputObject>
-        StakeUpdate: TypedContractEvent<StakeUpdateEvent.InputTuple, StakeUpdateEvent.OutputTuple, StakeUpdateEvent.OutputObject>
+        RoleRevoked: TypedContractEvent<
+            RoleRevokedEvent.InputTuple,
+            RoleRevokedEvent.OutputTuple,
+            RoleRevokedEvent.OutputObject
+        >
+        'StakeUpdate(address,uint256)': TypedContractEvent<
+            StakeUpdateEvent.InputTuple,
+            StakeUpdateEvent.OutputTuple,
+            StakeUpdateEvent.OutputObject
+        >
+        StakeUpdate: TypedContractEvent<
+            StakeUpdateEvent.InputTuple,
+            StakeUpdateEvent.OutputTuple,
+            StakeUpdateEvent.OutputObject
+        >
         'Staked(address)': TypedContractEvent<StakedEvent.InputTuple, StakedEvent.OutputTuple, StakedEvent.OutputObject>
         Staked: TypedContractEvent<StakedEvent.InputTuple, StakedEvent.OutputTuple, StakedEvent.OutputObject>
-        'Transfer(address,address,uint256)': TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>
+        'Transfer(address,address,uint256)': TypedContractEvent<
+            TransferEvent.InputTuple,
+            TransferEvent.OutputTuple,
+            TransferEvent.OutputObject
+        >
         Transfer: TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>
-        'Undelegated(address,uint256)': TypedContractEvent<UndelegatedEvent.InputTuple, UndelegatedEvent.OutputTuple, UndelegatedEvent.OutputObject>
-        Undelegated: TypedContractEvent<UndelegatedEvent.InputTuple, UndelegatedEvent.OutputTuple, UndelegatedEvent.OutputObject>
-        'Unstaked(address)': TypedContractEvent<UnstakedEvent.InputTuple, UnstakedEvent.OutputTuple, UnstakedEvent.OutputObject>
+        'Undelegated(address,uint256)': TypedContractEvent<
+            UndelegatedEvent.InputTuple,
+            UndelegatedEvent.OutputTuple,
+            UndelegatedEvent.OutputObject
+        >
+        Undelegated: TypedContractEvent<
+            UndelegatedEvent.InputTuple,
+            UndelegatedEvent.OutputTuple,
+            UndelegatedEvent.OutputObject
+        >
+        'Unstaked(address)': TypedContractEvent<
+            UnstakedEvent.InputTuple,
+            UnstakedEvent.OutputTuple,
+            UnstakedEvent.OutputObject
+        >
         Unstaked: TypedContractEvent<UnstakedEvent.InputTuple, UnstakedEvent.OutputTuple, UnstakedEvent.OutputObject>
     }
 }

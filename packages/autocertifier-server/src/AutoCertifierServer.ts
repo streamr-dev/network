@@ -67,7 +67,13 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         await this.dnsServer.start()
         logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
 
-        this.certificateCreator = new CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey, accountPrivateKeyPath, this)
+        this.certificateCreator = new CertificateCreator(
+            acmeDirectoryUrl,
+            hmacKid,
+            hmacKey,
+            accountPrivateKeyPath,
+            this
+        )
         logger.info('certificate creator is running')
 
         this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCertPath, restServerKeyPath, this)

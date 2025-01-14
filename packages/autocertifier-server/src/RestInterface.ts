@@ -5,7 +5,12 @@ import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 export interface RestInterface {
     createSession(): Promise<Session>
 
-    createNewSubdomainAndCertificate(ipAddress: string, port: string, streamrWebSocketPort: string, sessionId: string): Promise<CertifiedSubdomain>
+    createNewSubdomainAndCertificate(
+        ipAddress: string,
+        port: string,
+        streamrWebSocketPort: string,
+        sessionId: string
+    ): Promise<CertifiedSubdomain>
 
     createNewCertificateForSubdomain(
         subdomain: string,

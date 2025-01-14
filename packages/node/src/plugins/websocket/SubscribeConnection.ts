@@ -17,10 +17,17 @@ export class SubscribeConnection implements Connection {
         this.subscriptions = []
     }
 
-    async init(ws: WebSocket, socketId: string, streamrClient: StreamrClient, payloadFormat: PayloadFormat): Promise<void> {
+    async init(
+        ws: WebSocket,
+        socketId: string,
+        streamrClient: StreamrClient,
+        payloadFormat: PayloadFormat
+    ): Promise<void> {
         const logger = new Logger(module, { socketId })
         const streamPartDefinitions =
-            this.partitions !== undefined ? this.partitions.map((partition: number) => ({ id: this.streamId, partition })) : [{ id: this.streamId }]
+            this.partitions !== undefined
+                ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
+                : [{ id: this.streamId }]
 
         logger.debug('Subscribing to stream partitions', {
             streamId: this.streamId,

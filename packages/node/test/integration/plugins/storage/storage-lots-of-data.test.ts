@@ -16,7 +16,11 @@ const MESSAGE_SIZE = 1e3 // 1k
 
 const logger = new Logger(module)
 
-function retryFlakyTest(fn: () => Promise<unknown>, isFlakyError: (e: Error) => boolean, maxRuns: number): () => Promise<void> {
+function retryFlakyTest(
+    fn: () => Promise<unknown>,
+    isFlakyError: (e: Error) => boolean,
+    maxRuns: number
+): () => Promise<void> {
     return async () => {
         for (let i = 1; i <= maxRuns; ++i) {
             try {

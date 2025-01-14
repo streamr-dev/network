@@ -19,7 +19,10 @@ createClientCommand(
     async (client: StreamrClient, streamId: string, options: Options) => {
         const formContent = (content: unknown) => (content instanceof Uint8Array ? binaryToHex(content) : content)
         const formMessage = options.withMetadata
-            ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
+            ? (content: unknown, metadata: MessageMetadata) => ({
+                  content: formContent(content),
+                  metadata: omit(metadata, 'streamMessage')
+              })
             : (content: unknown) => formContent(content)
         await client.subscribe(
             {

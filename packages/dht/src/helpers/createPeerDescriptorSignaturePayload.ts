@@ -15,11 +15,15 @@ export const createPeerDescriptorSignaturePayload = (peerDescriptor: PeerDescrip
         separator,
         peerDescriptor.tcp !== undefined ? ConnectivityMethod.toBinary(peerDescriptor.tcp) : new Uint8Array(0),
         separator,
-        peerDescriptor.websocket !== undefined ? ConnectivityMethod.toBinary(peerDescriptor.websocket) : new Uint8Array(0),
+        peerDescriptor.websocket !== undefined
+            ? ConnectivityMethod.toBinary(peerDescriptor.websocket)
+            : new Uint8Array(0),
         separator,
         peerDescriptor.region !== undefined ? convertUnsignedIntegerToBuffer(peerDescriptor.region) : new Uint8Array(0),
         separator,
-        peerDescriptor.ipAddress !== undefined ? convertUnsignedIntegerToBuffer(peerDescriptor.ipAddress) : new Uint8Array(0),
+        peerDescriptor.ipAddress !== undefined
+            ? convertUnsignedIntegerToBuffer(peerDescriptor.ipAddress)
+            : new Uint8Array(0),
         separator,
         peerDescriptor.publicKey !== undefined ? Buffer.from(peerDescriptor.publicKey) : new Uint8Array(0)
     ]

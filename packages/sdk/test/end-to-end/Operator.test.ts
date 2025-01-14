@@ -47,7 +47,10 @@ async function createStream(): Promise<string> {
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (
+    wallet: Wallet | undefined,
+    operator: SetupOperatorContractReturnType
+): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     const contractAddress = toEthereumAddress(await operator.operatorContract.getAddress())
     return client.getOperator(contractAddress)
@@ -83,7 +86,11 @@ describe('Operator', () => {
     it(
         'getStakedOperators',
         async () => {
-            await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), parseEther('20000'))
+            await delegate(
+                deployedOperator.operatorWallet,
+                await deployedOperator.operatorContract.getAddress(),
+                parseEther('20000')
+            )
             await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
             const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
             const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
@@ -141,7 +148,9 @@ describe('Operator', () => {
                 }
             ])
 
-            const operators = await operator.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
+            const operators = await operator.getOperatorsInSponsorship(
+                toEthereumAddress(await sponsorship1.getAddress())
+            )
             expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
         },
         30 * 1000

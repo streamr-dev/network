@@ -14,7 +14,10 @@ import { IDhtRpcService } from './proto/TestProtos.server'
 interface IDhtRpcWithError extends IDhtRpcService {
     throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
-    throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
+    throwGetClosestPeersError: (
+        request: ClosestPeersRequest,
+        _context: ServerCallContext
+    ) => Promise<ClosestPeersResponse>
     throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
 }
 
@@ -60,10 +63,16 @@ export const MockDhtRpc: IDhtRpcWithError = {
             }, 2000)
         })
     },
-    async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+    async throwGetClosestPeersError(
+        _urequest: ClosestPeersRequest,
+        _context: ServerCallContext
+    ): Promise<ClosestPeersResponse> {
         throw new Error()
     },
-    async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    async throwRouteMessageError(
+        _urequest: RouteMessageWrapper,
+        _context: ServerCallContext
+    ): Promise<RouteMessageAck> {
         throw new Error()
     }
 }

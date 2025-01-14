@@ -17,7 +17,11 @@ import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNo
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { NetworkNode } from '../../src/NetworkNode'
-import { ContentType, EncryptionType, SignatureType } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000
@@ -111,7 +115,10 @@ const measureJoiningTime = async () => {
     const start = performance.now()
     await streamSubscriber.start()
 
-    await Promise.all([waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000), streamSubscriber.join(stream)])
+    await Promise.all([
+        waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000),
+        streamSubscriber.join(stream)
+    ])
 
     const end = performance.now()
 

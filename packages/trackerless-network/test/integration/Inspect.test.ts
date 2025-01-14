@@ -66,13 +66,21 @@ describe('inspect', () => {
 
     it('gets successful inspections from all suspects', async () => {
         publishInterval = setInterval(async () => {
-            const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomUserId(), 123123, sequenceNumber)
+            const msg = createStreamMessage(
+                JSON.stringify({ hello: 'WORLD' }),
+                streamPartId,
+                randomUserId(),
+                123123,
+                sequenceNumber
+            )
             publisherNode.getContentDeliveryManager().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getControlLayerNode().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode
+                .getContentDeliveryManager()
+                .inspect(node.getControlLayerNode().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

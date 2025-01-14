@@ -15,7 +15,10 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
 
-const waitMessagesReceived = async (received: Record<UserID, MessageMetadata[]>, published: Record<UserID, MessageMetadata[]>) => {
+const waitMessagesReceived = async (
+    received: Record<UserID, MessageMetadata[]>,
+    published: Record<UserID, MessageMetadata[]>
+) => {
     await until(() => {
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length

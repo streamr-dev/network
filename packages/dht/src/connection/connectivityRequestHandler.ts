@@ -13,7 +13,10 @@ export const DISABLE_CONNECTIVITY_PROBE = 0
 
 const logger = new Logger(module)
 
-export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection, geoIpLocator?: GeoIpLocator): void => {
+export const attachConnectivityRequestHandler = (
+    connectionToListenTo: WebsocketServerConnection,
+    geoIpLocator?: GeoIpLocator
+): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {
         logger.trace('server received data')
         try {
@@ -21,7 +24,11 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('ConnectivityRequest received: ' + JSON.stringify(Message.toJson(message)))
                 try {
-                    await handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest, geoIpLocator)
+                    await handleIncomingConnectivityRequest(
+                        connectionToListenTo,
+                        message.body.connectivityRequest,
+                        geoIpLocator
+                    )
                     logger.trace('handleIncomingConnectivityRequest ok')
                 } catch (err1) {
                     logger.error('handleIncomingConnectivityRequest', { err: err1 })
@@ -71,7 +78,11 @@ const handleIncomingConnectivityRequest = async (
     logger.trace('ConnectivityResponse sent: ' + JSON.stringify(Message.toJson(msg)))
 }
 
-const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAddress: string, host: string): Promise<ConnectivityResponse> => {
+const connectivityProbe = async (
+    connectivityRequest: ConnectivityRequest,
+    ipAddress: string,
+    host: string
+): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection | undefined
     let connectivityResponseMessage: ConnectivityResponse
     try {
@@ -86,7 +97,12 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             url,
             allowSelfSignedCertificate: connectivityRequest.allowSelfSignedCertificate
         })
-        logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
+        logger.trace(
+            'Connectivity test produced positive result, communicating reply to the requester ' +
+                host +
+                ':' +
+                connectivityRequest.port
+        )
         connectivityResponseMessage = {
             host,
             natType: NatType.OPEN_INTERNET,

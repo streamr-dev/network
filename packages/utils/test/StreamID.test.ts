@@ -68,7 +68,10 @@ describe('getDomainAndPath', () => {
     })
 
     it('returns domain and path for full stream id', () => {
-        expect(StreamIDUtils.getDomainAndPath(toStreamID('/foo/bar', toEthereumAddress(address)))).toEqual([address.toLowerCase(), '/foo/bar'])
+        expect(StreamIDUtils.getDomainAndPath(toStreamID('/foo/bar', toEthereumAddress(address)))).toEqual([
+            address.toLowerCase(),
+            '/foo/bar'
+        ])
     })
 })
 

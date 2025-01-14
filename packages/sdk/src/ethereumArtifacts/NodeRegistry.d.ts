@@ -253,9 +253,15 @@ export interface NodeRegistry extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
@@ -298,10 +304,18 @@ export interface NodeRegistry extends BaseContract {
     whitelistApproveNode: TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
     whitelistRejectNode: TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T
-    getFunction(nameOrSignature: 'createOrUpdateNode'): TypedContractMethod<[node: AddressLike, metadata_: string], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'createOrUpdateNodeSelf'): TypedContractMethod<[metadata_: string], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'getNode'): TypedContractMethod<[nodeAddress: AddressLike], [NodeRegistry.NodeStructOutput], 'view'>
-    getFunction(nameOrSignature: 'getNodeByNumber'): TypedContractMethod<[i: BigNumberish], [NodeRegistry.NodeStructOutput], 'view'>
+    getFunction(
+        nameOrSignature: 'createOrUpdateNode'
+    ): TypedContractMethod<[node: AddressLike, metadata_: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'createOrUpdateNodeSelf'
+    ): TypedContractMethod<[metadata_: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'getNode'
+    ): TypedContractMethod<[nodeAddress: AddressLike], [NodeRegistry.NodeStructOutput], 'view'>
+    getFunction(
+        nameOrSignature: 'getNodeByNumber'
+    ): TypedContractMethod<[i: BigNumberish], [NodeRegistry.NodeStructOutput], 'view'>
     getFunction(nameOrSignature: 'getNodes'): TypedContractMethod<[], [NodeRegistry.NodeStructOutput[]], 'view'>
     getFunction(nameOrSignature: 'headNode'): TypedContractMethod<[], [string], 'view'>
     getFunction(
@@ -332,28 +346,62 @@ export interface NodeRegistry extends BaseContract {
     getFunction(nameOrSignature: 'requiresWhitelist'): TypedContractMethod<[], [boolean], 'view'>
     getFunction(nameOrSignature: 'setRequiresWhitelist'): TypedContractMethod<[value: boolean], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'tailNode'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'transferOwnership'): TypedContractMethod<[newOwner: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeTo'): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeToAndCall'): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
+    getFunction(
+        nameOrSignature: 'transferOwnership'
+    ): TypedContractMethod<[newOwner: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeTo'
+    ): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeToAndCall'
+    ): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
     getFunction(nameOrSignature: 'whitelist'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
-    getFunction(nameOrSignature: 'whitelistApproveNode'): TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'whitelistRejectNode'): TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
-    getEvent(key: 'AdminChanged'): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+    getFunction(
+        nameOrSignature: 'whitelistApproveNode'
+    ): TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'whitelistRejectNode'
+    ): TypedContractMethod<[nodeAddress: AddressLike], [void], 'nonpayable'>
+    getEvent(
+        key: 'AdminChanged'
+    ): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
     getEvent(
         key: 'BeaconUpgraded'
-    ): TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-    getEvent(key: 'Initialized'): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-    getEvent(key: 'NodeRemoved'): TypedContractEvent<NodeRemovedEvent.InputTuple, NodeRemovedEvent.OutputTuple, NodeRemovedEvent.OutputObject>
-    getEvent(key: 'NodeUpdated'): TypedContractEvent<NodeUpdatedEvent.InputTuple, NodeUpdatedEvent.OutputTuple, NodeUpdatedEvent.OutputObject>
+    ): TypedContractEvent<
+        BeaconUpgradedEvent.InputTuple,
+        BeaconUpgradedEvent.OutputTuple,
+        BeaconUpgradedEvent.OutputObject
+    >
+    getEvent(
+        key: 'Initialized'
+    ): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+    getEvent(
+        key: 'NodeRemoved'
+    ): TypedContractEvent<NodeRemovedEvent.InputTuple, NodeRemovedEvent.OutputTuple, NodeRemovedEvent.OutputObject>
+    getEvent(
+        key: 'NodeUpdated'
+    ): TypedContractEvent<NodeUpdatedEvent.InputTuple, NodeUpdatedEvent.OutputTuple, NodeUpdatedEvent.OutputObject>
     getEvent(
         key: 'NodeWhitelistApproved'
-    ): TypedContractEvent<NodeWhitelistApprovedEvent.InputTuple, NodeWhitelistApprovedEvent.OutputTuple, NodeWhitelistApprovedEvent.OutputObject>
+    ): TypedContractEvent<
+        NodeWhitelistApprovedEvent.InputTuple,
+        NodeWhitelistApprovedEvent.OutputTuple,
+        NodeWhitelistApprovedEvent.OutputObject
+    >
     getEvent(
         key: 'NodeWhitelistRejected'
-    ): TypedContractEvent<NodeWhitelistRejectedEvent.InputTuple, NodeWhitelistRejectedEvent.OutputTuple, NodeWhitelistRejectedEvent.OutputObject>
+    ): TypedContractEvent<
+        NodeWhitelistRejectedEvent.InputTuple,
+        NodeWhitelistRejectedEvent.OutputTuple,
+        NodeWhitelistRejectedEvent.OutputObject
+    >
     getEvent(
         key: 'OwnershipTransferred'
-    ): TypedContractEvent<OwnershipTransferredEvent.InputTuple, OwnershipTransferredEvent.OutputTuple, OwnershipTransferredEvent.OutputObject>
+    ): TypedContractEvent<
+        OwnershipTransferredEvent.InputTuple,
+        OwnershipTransferredEvent.OutputTuple,
+        OwnershipTransferredEvent.OutputObject
+    >
     getEvent(
         key: 'RequiresWhitelistChanged'
     ): TypedContractEvent<
@@ -361,30 +409,60 @@ export interface NodeRegistry extends BaseContract {
         RequiresWhitelistChangedEvent.OutputTuple,
         RequiresWhitelistChangedEvent.OutputObject
     >
-    getEvent(key: 'Upgraded'): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+    getEvent(
+        key: 'Upgraded'
+    ): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     filters: {
         'AdminChanged(address,address)': TypedContractEvent<
             AdminChangedEvent.InputTuple,
             AdminChangedEvent.OutputTuple,
             AdminChangedEvent.OutputObject
         >
-        AdminChanged: TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+        AdminChanged: TypedContractEvent<
+            AdminChangedEvent.InputTuple,
+            AdminChangedEvent.OutputTuple,
+            AdminChangedEvent.OutputObject
+        >
         'BeaconUpgraded(address)': TypedContractEvent<
             BeaconUpgradedEvent.InputTuple,
             BeaconUpgradedEvent.OutputTuple,
             BeaconUpgradedEvent.OutputObject
         >
-        BeaconUpgraded: TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-        'Initialized(uint8)': TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        Initialized: TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        'NodeRemoved(address)': TypedContractEvent<NodeRemovedEvent.InputTuple, NodeRemovedEvent.OutputTuple, NodeRemovedEvent.OutputObject>
-        NodeRemoved: TypedContractEvent<NodeRemovedEvent.InputTuple, NodeRemovedEvent.OutputTuple, NodeRemovedEvent.OutputObject>
+        BeaconUpgraded: TypedContractEvent<
+            BeaconUpgradedEvent.InputTuple,
+            BeaconUpgradedEvent.OutputTuple,
+            BeaconUpgradedEvent.OutputObject
+        >
+        'Initialized(uint8)': TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        Initialized: TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        'NodeRemoved(address)': TypedContractEvent<
+            NodeRemovedEvent.InputTuple,
+            NodeRemovedEvent.OutputTuple,
+            NodeRemovedEvent.OutputObject
+        >
+        NodeRemoved: TypedContractEvent<
+            NodeRemovedEvent.InputTuple,
+            NodeRemovedEvent.OutputTuple,
+            NodeRemovedEvent.OutputObject
+        >
         'NodeUpdated(address,string,uint256,uint256)': TypedContractEvent<
             NodeUpdatedEvent.InputTuple,
             NodeUpdatedEvent.OutputTuple,
             NodeUpdatedEvent.OutputObject
         >
-        NodeUpdated: TypedContractEvent<NodeUpdatedEvent.InputTuple, NodeUpdatedEvent.OutputTuple, NodeUpdatedEvent.OutputObject>
+        NodeUpdated: TypedContractEvent<
+            NodeUpdatedEvent.InputTuple,
+            NodeUpdatedEvent.OutputTuple,
+            NodeUpdatedEvent.OutputObject
+        >
         'NodeWhitelistApproved(address)': TypedContractEvent<
             NodeWhitelistApprovedEvent.InputTuple,
             NodeWhitelistApprovedEvent.OutputTuple,
@@ -425,7 +503,11 @@ export interface NodeRegistry extends BaseContract {
             RequiresWhitelistChangedEvent.OutputTuple,
             RequiresWhitelistChangedEvent.OutputObject
         >
-        'Upgraded(address)': TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+        'Upgraded(address)': TypedContractEvent<
+            UpgradedEvent.InputTuple,
+            UpgradedEvent.OutputTuple,
+            UpgradedEvent.OutputObject
+        >
         Upgraded: TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     }
 }

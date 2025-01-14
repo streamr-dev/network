@@ -8,7 +8,11 @@ import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/Dh
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const createDhtNodeRpcRemote = (peerDescriptor: PeerDescriptor, localPeerDescriptor: PeerDescriptor, pingFailures: Set<DhtAddress>) => {
+const createDhtNodeRpcRemote = (
+    peerDescriptor: PeerDescriptor,
+    localPeerDescriptor: PeerDescriptor,
+    pingFailures: Set<DhtAddress>
+) => {
     const remote = new (class extends DhtNodeRpcRemote {
         // eslint-disable-next-line class-methods-use-this
         async ping(): Promise<boolean> {
@@ -18,12 +22,17 @@ const createDhtNodeRpcRemote = (peerDescriptor: PeerDescriptor, localPeerDescrip
     return remote
 }
 
-const createPeerManager = (nodeIds: DhtAddress[], localPeerDescriptor = createMockPeerDescriptor(), pingFailures: Set<DhtAddress> = new Set()) => {
+const createPeerManager = (
+    nodeIds: DhtAddress[],
+    localPeerDescriptor = createMockPeerDescriptor(),
+    pingFailures: Set<DhtAddress> = new Set()
+) => {
     const manager = new PeerManager({
         localNodeId: toNodeId(localPeerDescriptor),
         localPeerDescriptor: localPeerDescriptor,
         isLayer0: true,
-        createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createDhtNodeRpcRemote(peerDescriptor, localPeerDescriptor, pingFailures),
+        createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) =>
+            createDhtNodeRpcRemote(peerDescriptor, localPeerDescriptor, pingFailures),
         hasConnection: () => false
     } as any)
     const contacts = nodeIds.map((n) => ({ nodeId: toDhtAddressRaw(n), type: NodeType.NODEJS }))
@@ -76,7 +85,9 @@ describe('PeerManager', () => {
         expect(manager.getNeighborCount()).toBe(6)
         failureSet.add(toNodeId(failureContact))
         await manager.pruneOfflineNodes(
-            manager.getNeighbors().map((node) => createDhtNodeRpcRemote(node.getPeerDescriptor(), localPeerDescriptor, failureSet))
+            manager
+                .getNeighbors()
+                .map((node) => createDhtNodeRpcRemote(node.getPeerDescriptor(), localPeerDescriptor, failureSet))
         )
         expect(manager.getNeighborCount()).toBe(5)
     })

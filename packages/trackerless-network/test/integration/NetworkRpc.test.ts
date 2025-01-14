@@ -33,7 +33,11 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), StreamPartIDUtils.parse('testStream#0'), randomUserId())
+        const msg = createStreamMessage(
+            JSON.stringify({ hello: 'WORLD' }),
+            StreamPartIDUtils.parse('testStream#0'),
+            randomUserId()
+        )
         await client.sendStreamMessage(msg)
         await until(() => recvCounter === 1)
     })

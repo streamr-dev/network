@@ -15,12 +15,21 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 
-const collect2 = async (iterator: AsyncIterable<Message>, fn: (item: { msg: Message; received: Message[] }) => Promise<void>): Promise<Message[]> => {
+const collect2 = async (
+    iterator: AsyncIterable<Message>,
+    fn: (item: { msg: Message; received: Message[] }) => Promise<void>
+): Promise<Message[]> => {
     const received: Message[] = []
     for await (const msg of iterator) {
         received.push(msg)
@@ -48,7 +57,14 @@ describe('Subscriber', () => {
     const createMockMessage = async (content: Uint8Array, timestamp: number) => {
         return await messageSigner.createSignedMessage(
             {
-                messageId: new MessageID(streamId, 0, timestamp, 0, toUserId(await publisher.getUserId()), 'msgChainId'),
+                messageId: new MessageID(
+                    streamId,
+                    0,
+                    timestamp,
+                    0,
+                    toUserId(await publisher.getUserId()),
+                    'msgChainId'
+                ),
                 messageType: StreamMessageType.MESSAGE,
                 content,
                 contentType: ContentType.JSON,
@@ -639,7 +655,9 @@ describe('Subscriber', () => {
                     }
                 })
             ])
-            expect(received1.map((m) => m.signature)).toEqual(published.slice(0, sub1ReceivedAtUnsubscribe.length).map((m) => m.signature))
+            expect(received1.map((m) => m.signature)).toEqual(
+                published.slice(0, sub1ReceivedAtUnsubscribe.length).map((m) => m.signature)
+            )
             expect(received2.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
             expect(sub1ReceivedAtUnsubscribe).toEqual(sub1Received)
             expect(await getSubscriptionCount(streamId)).toBe(0)

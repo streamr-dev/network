@@ -30,13 +30,21 @@ export class NeighborUpdateManager {
         this.abortController = new AbortController()
         this.rpcLocal = new NeighborUpdateRpcLocal(options)
         this.options = options
-        this.options.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', (req: NeighborUpdate, context) =>
-            this.rpcLocal.neighborUpdate(req, context)
+        this.options.rpcCommunicator.registerRpcMethod(
+            NeighborUpdate,
+            NeighborUpdate,
+            'neighborUpdate',
+            (req: NeighborUpdate, context) => this.rpcLocal.neighborUpdate(req, context)
         )
     }
 
     async start(): Promise<void> {
-        await scheduleAtInterval(() => this.updateNeighborInfo(), this.options.neighborUpdateInterval, false, this.abortController.signal)
+        await scheduleAtInterval(
+            () => this.updateNeighborInfo(),
+            this.options.neighborUpdateInterval,
+            false,
+            this.abortController.signal
+        )
     }
 
     stop(): void {
@@ -49,7 +57,10 @@ export class NeighborUpdateManager {
         const startTime = Date.now()
         await Promise.allSettled(
             this.options.neighbors.getAll().map(async (neighbor) => {
-                const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
+                const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(
+                    this.options.streamPartId,
+                    neighborDescriptors
+                )
                 const nodeId = toNodeId(neighbor.getPeerDescriptor())
                 this.options.neighbors.get(nodeId)!.setRtt(Date.now() - startTime)
                 if (res.removeMe) {

@@ -118,7 +118,10 @@ export interface StreamRegistryV5Interface extends Interface {
             | 'Upgraded'
     ): EventFragment
     encodeFunctionData(functionFragment: 'DEFAULT_ADMIN_ROLE', values?: undefined): string
-    encodeFunctionData(functionFragment: 'ENScreateStreamCallback', values: [AddressLike, string, string, string]): string
+    encodeFunctionData(
+        functionFragment: 'ENScreateStreamCallback',
+        values: [AddressLike, string, string, string]
+    ): string
     encodeFunctionData(functionFragment: 'MAX_INT', values?: undefined): string
     encodeFunctionData(functionFragment: 'TRUSTED_ROLE', values?: undefined): string
     encodeFunctionData(functionFragment: 'addressToString', values: [AddressLike]): string
@@ -162,18 +165,30 @@ export interface StreamRegistryV5Interface extends Interface {
     encodeFunctionData(functionFragment: 'revokePublicPermission', values: [string, BigNumberish]): string
     encodeFunctionData(functionFragment: 'revokeRole', values: [BytesLike, AddressLike]): string
     encodeFunctionData(functionFragment: 'setEnsCache', values: [AddressLike]): string
-    encodeFunctionData(functionFragment: 'setExpirationTime', values: [string, AddressLike, BigNumberish, BigNumberish]): string
-    encodeFunctionData(functionFragment: 'setExpirationTimeForUserId', values: [string, BytesLike, BigNumberish, BigNumberish]): string
+    encodeFunctionData(
+        functionFragment: 'setExpirationTime',
+        values: [string, AddressLike, BigNumberish, BigNumberish]
+    ): string
+    encodeFunctionData(
+        functionFragment: 'setExpirationTimeForUserId',
+        values: [string, BytesLike, BigNumberish, BigNumberish]
+    ): string
     encodeFunctionData(
         functionFragment: 'setMultipleStreamPermissionsForUserIds',
         values: [string[], BytesLike[][], StreamRegistryV5.PermissionStruct[][]]
     ): string
-    encodeFunctionData(functionFragment: 'setPermissions', values: [string, AddressLike[], StreamRegistryV5.PermissionStruct[]]): string
+    encodeFunctionData(
+        functionFragment: 'setPermissions',
+        values: [string, AddressLike[], StreamRegistryV5.PermissionStruct[]]
+    ): string
     encodeFunctionData(
         functionFragment: 'setPermissionsForUser',
         values: [string, AddressLike, boolean, boolean, BigNumberish, BigNumberish, boolean]
     ): string
-    encodeFunctionData(functionFragment: 'setPermissionsForUserIds', values: [string, BytesLike[], StreamRegistryV5.PermissionStruct[]]): string
+    encodeFunctionData(
+        functionFragment: 'setPermissionsForUserIds',
+        values: [string, BytesLike[], StreamRegistryV5.PermissionStruct[]]
+    ): string
     encodeFunctionData(
         functionFragment: 'setPermissionsMultipleStreams',
         values: [string[], AddressLike[][], StreamRegistryV5.PermissionStruct[][]]
@@ -437,9 +452,15 @@ export interface StreamRegistryV5 extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
@@ -453,14 +474,28 @@ export interface StreamRegistryV5 extends BaseContract {
     TRUSTED_ROLE: TypedContractMethod<[], [string], 'view'>
     addressToString: TypedContractMethod<[_address: AddressLike], [string], 'view'>
     createMultipleStreamsWithPermissions: TypedContractMethod<
-        [streamIdPaths: string[], metadataJsonStrings: string[], users: AddressLike[][], permissions: StreamRegistryV5.PermissionStruct[][]],
+        [
+            streamIdPaths: string[],
+            metadataJsonStrings: string[],
+            users: AddressLike[][],
+            permissions: StreamRegistryV5.PermissionStruct[][]
+        ],
         [void],
         'nonpayable'
     >
     createStream: TypedContractMethod<[streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
-    createStreamWithENS: TypedContractMethod<[ensName: string, streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
+    createStreamWithENS: TypedContractMethod<
+        [ensName: string, streamIdPath: string, metadataJsonString: string],
+        [void],
+        'nonpayable'
+    >
     createStreamWithPermissions: TypedContractMethod<
-        [streamIdPath: string, metadataJsonString: string, users: AddressLike[], permissions: StreamRegistryV5.PermissionStruct[]],
+        [
+            streamIdPath: string,
+            metadataJsonString: string,
+            users: AddressLike[],
+            permissions: StreamRegistryV5.PermissionStruct[]
+        ],
         [void],
         'nonpayable'
     >
@@ -468,29 +503,73 @@ export interface StreamRegistryV5 extends BaseContract {
     ensCache: TypedContractMethod<[], [string], 'view'>
     exists: TypedContractMethod<[streamId: string], [boolean], 'view'>
     getAddressKey: TypedContractMethod<[streamId: string, user: AddressLike], [string], 'view'>
-    getDirectPermissionsForUser: TypedContractMethod<[streamId: string, user: AddressLike], [StreamRegistryV5.PermissionStructOutput], 'view'>
-    getDirectPermissionsForUserId: TypedContractMethod<[streamId: string, user: BytesLike], [StreamRegistryV5.PermissionStructOutput], 'view'>
-    getPermissionsForUser: TypedContractMethod<[streamId: string, user: AddressLike], [StreamRegistryV5.PermissionStructOutput], 'view'>
-    getPermissionsForUserId: TypedContractMethod<[streamId: string, user: BytesLike], [StreamRegistryV5.PermissionStructOutput], 'view'>
+    getDirectPermissionsForUser: TypedContractMethod<
+        [streamId: string, user: AddressLike],
+        [StreamRegistryV5.PermissionStructOutput],
+        'view'
+    >
+    getDirectPermissionsForUserId: TypedContractMethod<
+        [streamId: string, user: BytesLike],
+        [StreamRegistryV5.PermissionStructOutput],
+        'view'
+    >
+    getPermissionsForUser: TypedContractMethod<
+        [streamId: string, user: AddressLike],
+        [StreamRegistryV5.PermissionStructOutput],
+        'view'
+    >
+    getPermissionsForUserId: TypedContractMethod<
+        [streamId: string, user: BytesLike],
+        [StreamRegistryV5.PermissionStructOutput],
+        'view'
+    >
     getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], 'view'>
     getStreamMetadata: TypedContractMethod<[streamId: string], [string], 'view'>
     getTrustedRole: TypedContractMethod<[], [string], 'view'>
     getUserKeyForUserId: TypedContractMethod<[streamId: string, user: BytesLike], [string], 'view'>
-    grantPermission: TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [void], 'nonpayable'>
-    grantPermissionForUserId: TypedContractMethod<[streamId: string, user: BytesLike, permissionType: BigNumberish], [void], 'nonpayable'>
+    grantPermission: TypedContractMethod<
+        [streamId: string, user: AddressLike, permissionType: BigNumberish],
+        [void],
+        'nonpayable'
+    >
+    grantPermissionForUserId: TypedContractMethod<
+        [streamId: string, user: BytesLike, permissionType: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     grantPublicPermission: TypedContractMethod<[streamId: string, permissionType: BigNumberish], [void], 'nonpayable'>
     grantRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    hasDirectPermission: TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [boolean], 'view'>
-    hasPermission: TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [boolean], 'view'>
+    hasDirectPermission: TypedContractMethod<
+        [streamId: string, user: AddressLike, permissionType: BigNumberish],
+        [boolean],
+        'view'
+    >
+    hasPermission: TypedContractMethod<
+        [streamId: string, user: AddressLike, permissionType: BigNumberish],
+        [boolean],
+        'view'
+    >
     hasPublicPermission: TypedContractMethod<[streamId: string, permissionType: BigNumberish], [boolean], 'view'>
     hasRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
-    initialize: TypedContractMethod<[ensCacheAddr: AddressLike, trustedForwarderAddress: AddressLike], [void], 'nonpayable'>
+    initialize: TypedContractMethod<
+        [ensCacheAddr: AddressLike, trustedForwarderAddress: AddressLike],
+        [void],
+        'nonpayable'
+    >
     isTrustedForwarder: TypedContractMethod<[forwarder: AddressLike], [boolean], 'view'>
     renounceRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     revokeAllPermissionsForUser: TypedContractMethod<[streamId: string, user: AddressLike], [void], 'nonpayable'>
     revokeAllPermissionsForUserId: TypedContractMethod<[streamId: string, user: BytesLike], [void], 'nonpayable'>
-    revokePermission: TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [void], 'nonpayable'>
-    revokePermissionForUserId: TypedContractMethod<[streamId: string, user: BytesLike, permissionType: BigNumberish], [void], 'nonpayable'>
+    revokePermission: TypedContractMethod<
+        [streamId: string, user: AddressLike, permissionType: BigNumberish],
+        [void],
+        'nonpayable'
+    >
+    revokePermissionForUserId: TypedContractMethod<
+        [streamId: string, user: BytesLike, permissionType: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     revokePublicPermission: TypedContractMethod<[streamId: string, permissionType: BigNumberish], [void], 'nonpayable'>
     revokeRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     setEnsCache: TypedContractMethod<[ensCacheAddr: AddressLike], [void], 'nonpayable'>
@@ -579,32 +658,50 @@ export interface StreamRegistryV5 extends BaseContract {
     getFunction(nameOrSignature: 'DEFAULT_ADMIN_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(
         nameOrSignature: 'ENScreateStreamCallback'
-    ): TypedContractMethod<[ownerAddress: AddressLike, ensName: string, streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [ownerAddress: AddressLike, ensName: string, streamIdPath: string, metadataJsonString: string],
+        [void],
+        'nonpayable'
+    >
     getFunction(nameOrSignature: 'MAX_INT'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(nameOrSignature: 'TRUSTED_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'addressToString'): TypedContractMethod<[_address: AddressLike], [string], 'view'>
     getFunction(
         nameOrSignature: 'createMultipleStreamsWithPermissions'
     ): TypedContractMethod<
-        [streamIdPaths: string[], metadataJsonStrings: string[], users: AddressLike[][], permissions: StreamRegistryV5.PermissionStruct[][]],
+        [
+            streamIdPaths: string[],
+            metadataJsonStrings: string[],
+            users: AddressLike[][],
+            permissions: StreamRegistryV5.PermissionStruct[][]
+        ],
         [void],
         'nonpayable'
     >
-    getFunction(nameOrSignature: 'createStream'): TypedContractMethod<[streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'createStream'
+    ): TypedContractMethod<[streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'createStreamWithENS'
     ): TypedContractMethod<[ensName: string, streamIdPath: string, metadataJsonString: string], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'createStreamWithPermissions'
     ): TypedContractMethod<
-        [streamIdPath: string, metadataJsonString: string, users: AddressLike[], permissions: StreamRegistryV5.PermissionStruct[]],
+        [
+            streamIdPath: string,
+            metadataJsonString: string,
+            users: AddressLike[],
+            permissions: StreamRegistryV5.PermissionStruct[]
+        ],
         [void],
         'nonpayable'
     >
     getFunction(nameOrSignature: 'deleteStream'): TypedContractMethod<[streamId: string], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'ensCache'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'exists'): TypedContractMethod<[streamId: string], [boolean], 'view'>
-    getFunction(nameOrSignature: 'getAddressKey'): TypedContractMethod<[streamId: string, user: AddressLike], [string], 'view'>
+    getFunction(
+        nameOrSignature: 'getAddressKey'
+    ): TypedContractMethod<[streamId: string, user: AddressLike], [string], 'view'>
     getFunction(
         nameOrSignature: 'getDirectPermissionsForUser'
     ): TypedContractMethod<[streamId: string, user: AddressLike], [StreamRegistryV5.PermissionStructOutput], 'view'>
@@ -620,30 +717,46 @@ export interface StreamRegistryV5 extends BaseContract {
     getFunction(nameOrSignature: 'getRoleAdmin'): TypedContractMethod<[role: BytesLike], [string], 'view'>
     getFunction(nameOrSignature: 'getStreamMetadata'): TypedContractMethod<[streamId: string], [string], 'view'>
     getFunction(nameOrSignature: 'getTrustedRole'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'getUserKeyForUserId'): TypedContractMethod<[streamId: string, user: BytesLike], [string], 'view'>
+    getFunction(
+        nameOrSignature: 'getUserKeyForUserId'
+    ): TypedContractMethod<[streamId: string, user: BytesLike], [string], 'view'>
     getFunction(
         nameOrSignature: 'grantPermission'
     ): TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'grantPermissionForUserId'
     ): TypedContractMethod<[streamId: string, user: BytesLike, permissionType: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'grantPublicPermission'): TypedContractMethod<[streamId: string, permissionType: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'grantRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'grantPublicPermission'
+    ): TypedContractMethod<[streamId: string, permissionType: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'grantRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'hasDirectPermission'
     ): TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [boolean], 'view'>
     getFunction(
         nameOrSignature: 'hasPermission'
     ): TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [boolean], 'view'>
-    getFunction(nameOrSignature: 'hasPublicPermission'): TypedContractMethod<[streamId: string, permissionType: BigNumberish], [boolean], 'view'>
-    getFunction(nameOrSignature: 'hasRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
+    getFunction(
+        nameOrSignature: 'hasPublicPermission'
+    ): TypedContractMethod<[streamId: string, permissionType: BigNumberish], [boolean], 'view'>
+    getFunction(
+        nameOrSignature: 'hasRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
     getFunction(
         nameOrSignature: 'initialize'
     ): TypedContractMethod<[ensCacheAddr: AddressLike, trustedForwarderAddress: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'isTrustedForwarder'): TypedContractMethod<[forwarder: AddressLike], [boolean], 'view'>
-    getFunction(nameOrSignature: 'renounceRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeAllPermissionsForUser'): TypedContractMethod<[streamId: string, user: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeAllPermissionsForUserId'): TypedContractMethod<[streamId: string, user: BytesLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'renounceRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeAllPermissionsForUser'
+    ): TypedContractMethod<[streamId: string, user: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeAllPermissionsForUserId'
+    ): TypedContractMethod<[streamId: string, user: BytesLike], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'revokePermission'
     ): TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish], [void], 'nonpayable'>
@@ -653,20 +766,38 @@ export interface StreamRegistryV5 extends BaseContract {
     getFunction(
         nameOrSignature: 'revokePublicPermission'
     ): TypedContractMethod<[streamId: string, permissionType: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'setEnsCache'): TypedContractMethod<[ensCacheAddr: AddressLike], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'setExpirationTime'
-    ): TypedContractMethod<[streamId: string, user: AddressLike, permissionType: BigNumberish, expirationTime: BigNumberish], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, user: AddressLike, permissionType: BigNumberish, expirationTime: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setExpirationTimeForUserId'
-    ): TypedContractMethod<[streamId: string, user: BytesLike, permissionType: BigNumberish, expirationTime: BigNumberish], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, user: BytesLike, permissionType: BigNumberish, expirationTime: BigNumberish],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setMultipleStreamPermissionsForUserIds'
-    ): TypedContractMethod<[streamIds: string[], users: BytesLike[][], permissions: StreamRegistryV5.PermissionStruct[][]], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamIds: string[], users: BytesLike[][], permissions: StreamRegistryV5.PermissionStruct[][]],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setPermissions'
-    ): TypedContractMethod<[streamId: string, users: AddressLike[], permissions: StreamRegistryV5.PermissionStruct[]], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, users: AddressLike[], permissions: StreamRegistryV5.PermissionStruct[]],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setPermissionsForUser'
     ): TypedContractMethod<
@@ -684,14 +815,28 @@ export interface StreamRegistryV5 extends BaseContract {
     >
     getFunction(
         nameOrSignature: 'setPermissionsForUserIds'
-    ): TypedContractMethod<[streamId: string, users: BytesLike[], permissions: StreamRegistryV5.PermissionStruct[]], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, users: BytesLike[], permissions: StreamRegistryV5.PermissionStruct[]],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setPermissionsMultipleStreams'
-    ): TypedContractMethod<[streamIds: string[], users: AddressLike[][], permissions: StreamRegistryV5.PermissionStruct[][]], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamIds: string[], users: AddressLike[][], permissions: StreamRegistryV5.PermissionStruct[][]],
+        [void],
+        'nonpayable'
+    >
     getFunction(
         nameOrSignature: 'setPublicPermission'
-    ): TypedContractMethod<[streamId: string, publishExpiration: BigNumberish, subscribeExpiration: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setTrustedForwarder'): TypedContractMethod<[forwarder: AddressLike], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, publishExpiration: BigNumberish, subscribeExpiration: BigNumberish],
+        [void],
+        'nonpayable'
+    >
+    getFunction(
+        nameOrSignature: 'setTrustedForwarder'
+    ): TypedContractMethod<[forwarder: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'streamIdToMetadata'): TypedContractMethod<[arg0: string], [string], 'view'>
     getFunction(nameOrSignature: 'streamIdToPermissions'): TypedContractMethod<
         [arg0: string, arg1: BytesLike],
@@ -723,16 +868,32 @@ export interface StreamRegistryV5 extends BaseContract {
         [void],
         'nonpayable'
     >
-    getFunction(nameOrSignature: 'updateStreamMetadata'): TypedContractMethod<[streamId: string, metadata: string], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeTo'): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeToAndCall'): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
-    getEvent(key: 'AdminChanged'): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+    getFunction(
+        nameOrSignature: 'updateStreamMetadata'
+    ): TypedContractMethod<[streamId: string, metadata: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeTo'
+    ): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeToAndCall'
+    ): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
+    getEvent(
+        key: 'AdminChanged'
+    ): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
     getEvent(
         key: 'BeaconUpgraded'
-    ): TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
+    ): TypedContractEvent<
+        BeaconUpgradedEvent.InputTuple,
+        BeaconUpgradedEvent.OutputTuple,
+        BeaconUpgradedEvent.OutputObject
+    >
     getEvent(
         key: 'PermissionUpdated'
-    ): TypedContractEvent<PermissionUpdatedEvent.InputTuple, PermissionUpdatedEvent.OutputTuple, PermissionUpdatedEvent.OutputObject>
+    ): TypedContractEvent<
+        PermissionUpdatedEvent.InputTuple,
+        PermissionUpdatedEvent.OutputTuple,
+        PermissionUpdatedEvent.OutputObject
+    >
     getEvent(
         key: 'PermissionUpdatedForUserId'
     ): TypedContractEvent<
@@ -742,26 +903,62 @@ export interface StreamRegistryV5 extends BaseContract {
     >
     getEvent(
         key: 'RoleAdminChanged'
-    ): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
-    getEvent(key: 'RoleGranted'): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
-    getEvent(key: 'RoleRevoked'): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
-    getEvent(key: 'StreamCreated'): TypedContractEvent<StreamCreatedEvent.InputTuple, StreamCreatedEvent.OutputTuple, StreamCreatedEvent.OutputObject>
-    getEvent(key: 'StreamDeleted'): TypedContractEvent<StreamDeletedEvent.InputTuple, StreamDeletedEvent.OutputTuple, StreamDeletedEvent.OutputObject>
-    getEvent(key: 'StreamUpdated'): TypedContractEvent<StreamUpdatedEvent.InputTuple, StreamUpdatedEvent.OutputTuple, StreamUpdatedEvent.OutputObject>
-    getEvent(key: 'Upgraded'): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+    ): TypedContractEvent<
+        RoleAdminChangedEvent.InputTuple,
+        RoleAdminChangedEvent.OutputTuple,
+        RoleAdminChangedEvent.OutputObject
+    >
+    getEvent(
+        key: 'RoleGranted'
+    ): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+    getEvent(
+        key: 'RoleRevoked'
+    ): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+    getEvent(
+        key: 'StreamCreated'
+    ): TypedContractEvent<
+        StreamCreatedEvent.InputTuple,
+        StreamCreatedEvent.OutputTuple,
+        StreamCreatedEvent.OutputObject
+    >
+    getEvent(
+        key: 'StreamDeleted'
+    ): TypedContractEvent<
+        StreamDeletedEvent.InputTuple,
+        StreamDeletedEvent.OutputTuple,
+        StreamDeletedEvent.OutputObject
+    >
+    getEvent(
+        key: 'StreamUpdated'
+    ): TypedContractEvent<
+        StreamUpdatedEvent.InputTuple,
+        StreamUpdatedEvent.OutputTuple,
+        StreamUpdatedEvent.OutputObject
+    >
+    getEvent(
+        key: 'Upgraded'
+    ): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     filters: {
         'AdminChanged(address,address)': TypedContractEvent<
             AdminChangedEvent.InputTuple,
             AdminChangedEvent.OutputTuple,
             AdminChangedEvent.OutputObject
         >
-        AdminChanged: TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+        AdminChanged: TypedContractEvent<
+            AdminChangedEvent.InputTuple,
+            AdminChangedEvent.OutputTuple,
+            AdminChangedEvent.OutputObject
+        >
         'BeaconUpgraded(address)': TypedContractEvent<
             BeaconUpgradedEvent.InputTuple,
             BeaconUpgradedEvent.OutputTuple,
             BeaconUpgradedEvent.OutputObject
         >
-        BeaconUpgraded: TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
+        BeaconUpgraded: TypedContractEvent<
+            BeaconUpgradedEvent.InputTuple,
+            BeaconUpgradedEvent.OutputTuple,
+            BeaconUpgradedEvent.OutputObject
+        >
         'PermissionUpdated(string,address,bool,bool,uint256,uint256,bool)': TypedContractEvent<
             PermissionUpdatedEvent.InputTuple,
             PermissionUpdatedEvent.OutputTuple,
@@ -787,34 +984,66 @@ export interface StreamRegistryV5 extends BaseContract {
             RoleAdminChangedEvent.OutputTuple,
             RoleAdminChangedEvent.OutputObject
         >
-        RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
+        RoleAdminChanged: TypedContractEvent<
+            RoleAdminChangedEvent.InputTuple,
+            RoleAdminChangedEvent.OutputTuple,
+            RoleAdminChangedEvent.OutputObject
+        >
         'RoleGranted(bytes32,address,address)': TypedContractEvent<
             RoleGrantedEvent.InputTuple,
             RoleGrantedEvent.OutputTuple,
             RoleGrantedEvent.OutputObject
         >
-        RoleGranted: TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+        RoleGranted: TypedContractEvent<
+            RoleGrantedEvent.InputTuple,
+            RoleGrantedEvent.OutputTuple,
+            RoleGrantedEvent.OutputObject
+        >
         'RoleRevoked(bytes32,address,address)': TypedContractEvent<
             RoleRevokedEvent.InputTuple,
             RoleRevokedEvent.OutputTuple,
             RoleRevokedEvent.OutputObject
         >
-        RoleRevoked: TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+        RoleRevoked: TypedContractEvent<
+            RoleRevokedEvent.InputTuple,
+            RoleRevokedEvent.OutputTuple,
+            RoleRevokedEvent.OutputObject
+        >
         'StreamCreated(string,string)': TypedContractEvent<
             StreamCreatedEvent.InputTuple,
             StreamCreatedEvent.OutputTuple,
             StreamCreatedEvent.OutputObject
         >
-        StreamCreated: TypedContractEvent<StreamCreatedEvent.InputTuple, StreamCreatedEvent.OutputTuple, StreamCreatedEvent.OutputObject>
-        'StreamDeleted(string)': TypedContractEvent<StreamDeletedEvent.InputTuple, StreamDeletedEvent.OutputTuple, StreamDeletedEvent.OutputObject>
-        StreamDeleted: TypedContractEvent<StreamDeletedEvent.InputTuple, StreamDeletedEvent.OutputTuple, StreamDeletedEvent.OutputObject>
+        StreamCreated: TypedContractEvent<
+            StreamCreatedEvent.InputTuple,
+            StreamCreatedEvent.OutputTuple,
+            StreamCreatedEvent.OutputObject
+        >
+        'StreamDeleted(string)': TypedContractEvent<
+            StreamDeletedEvent.InputTuple,
+            StreamDeletedEvent.OutputTuple,
+            StreamDeletedEvent.OutputObject
+        >
+        StreamDeleted: TypedContractEvent<
+            StreamDeletedEvent.InputTuple,
+            StreamDeletedEvent.OutputTuple,
+            StreamDeletedEvent.OutputObject
+        >
         'StreamUpdated(string,string)': TypedContractEvent<
             StreamUpdatedEvent.InputTuple,
             StreamUpdatedEvent.OutputTuple,
             StreamUpdatedEvent.OutputObject
         >
-        StreamUpdated: TypedContractEvent<StreamUpdatedEvent.InputTuple, StreamUpdatedEvent.OutputTuple, StreamUpdatedEvent.OutputObject>
-        'Upgraded(address)': TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+        StreamUpdated: TypedContractEvent<
+            StreamUpdatedEvent.InputTuple,
+            StreamUpdatedEvent.OutputTuple,
+            StreamUpdatedEvent.OutputObject
+        >
+        'Upgraded(address)': TypedContractEvent<
+            UpgradedEvent.InputTuple,
+            UpgradedEvent.OutputTuple,
+            UpgradedEvent.OutputObject
+        >
         Upgraded: TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     }
 }

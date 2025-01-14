@@ -71,7 +71,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 dataEntries: DataEntry[],
                 noCloserNodesFound: boolean
             ) => {
-                this.onResponseReceived(remoteNodeId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
+                this.onResponseReceived(
+                    remoteNodeId,
+                    routingPath,
+                    closestConnectedNodes,
+                    dataEntries,
+                    noCloserNodesFound
+                )
             }
         })
         this.rpcCommunicator.registerRpcNotification(
@@ -119,7 +125,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
             if (
                 this.options.operation === RecursiveOperation.FETCH_DATA &&
-                (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.options.waitedRoutingPathCompletions)
+                (this.hasNonStaleData() ||
+                    this.noCloserNodesReceivedCounter >= this.options.waitedRoutingPathCompletions)
             ) {
                 return true
             } else if (this.options.operation === RecursiveOperation.FETCH_DATA) {
@@ -186,7 +193,11 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         dataEntries.forEach((entry) => {
             const creatorNodeId = toDhtAddress(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
-            if (!existingEntry || existingEntry.createdAt! < entry.createdAt! || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
+            if (
+                !existingEntry ||
+                existingEntry.createdAt! < entry.createdAt! ||
+                (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)
+            ) {
                 this.foundData.set(creatorNodeId, entry)
             }
         })

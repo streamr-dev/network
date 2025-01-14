@@ -1,4 +1,11 @@
-import { ConnectionLocker, DhtAddress, ITransport, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
+import {
+    ConnectionLocker,
+    DhtAddress,
+    ITransport,
+    ListeningRpcCommunicator,
+    PeerDescriptor,
+    toNodeId
+} from '@streamr/dht'
 import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -9,7 +16,10 @@ import {
     ProxyDirection,
     StreamMessage
 } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import {
+    ContentDeliveryRpcClient,
+    ProxyConnectionRpcClient
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
@@ -20,7 +30,12 @@ import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 // TODO use options option or named constant?
-export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
+export const retry = async <T>(
+    task: () => Promise<T>,
+    description: string,
+    abortSignal: AbortSignal,
+    delay = 10000
+): Promise<T> => {
     while (true) {
         try {
             const result = await task()
@@ -76,13 +91,17 @@ export class ProxyClient extends EventEmitter<Events> {
     constructor(options: ProxyClientOptions) {
         super()
         this.options = options
-        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(options.streamPartId), options.transport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(
+            formStreamPartContentDeliveryServiceId(options.streamPartId),
+            options.transport
+        )
         // TODO use options option or named constant?
         this.neighbors = new NodeList(toNodeId(this.options.localPeerDescriptor), 1000)
         this.contentDeliveryRpcLocal = new ContentDeliveryRpcLocal({
             localPeerDescriptor: this.options.localPeerDescriptor,
             streamPartId: this.options.streamPartId,
-            markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
+            markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) =>
+                markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
             onLeaveNotice: (remoteNodeId: DhtAddress) => {
                 const contact = this.neighbors.get(remoteNodeId)
@@ -110,16 +129,31 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage', (msg: StreamMessage, context) =>
-            this.contentDeliveryRpcLocal.sendStreamMessage(msg, context)
+        this.rpcCommunicator.registerRpcNotification(
+            StreamMessage,
+            'sendStreamMessage',
+            (msg: StreamMessage, context) => this.contentDeliveryRpcLocal.sendStreamMessage(msg, context)
         )
-        this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice', (req: LeaveStreamPartNotice, context) =>
-            this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context)
+        this.rpcCommunicator.registerRpcNotification(
+            LeaveStreamPartNotice,
+            'leaveStreamPartNotice',
+            (req: LeaveStreamPartNotice, context) => this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context)
         )
     }
 
-    async setProxies(nodes: PeerDescriptor[], direction: ProxyDirection, userId: UserID, connectionCount?: number): Promise<void> {
-        logger.trace('Setting proxies', { streamPartId: this.options.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
+    async setProxies(
+        nodes: PeerDescriptor[],
+        direction: ProxyDirection,
+        userId: UserID,
+        connectionCount?: number
+    ): Promise<void> {
+        logger.trace('Setting proxies', {
+            streamPartId: this.options.streamPartId,
+            peerDescriptors: nodes,
+            direction,
+            userId,
+            connectionCount
+        })
         if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw new Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
@@ -161,7 +195,11 @@ export class ProxyClient extends EventEmitter<Events> {
             Array.from(this.definition!.nodes.keys()).filter((id) => !this.connections.has(id)),
             connectionCount
         )
-        await Promise.all(proxiesToAttempt.map((id) => this.attemptConnection(id, this.definition!.direction, this.definition!.userId)))
+        await Promise.all(
+            proxiesToAttempt.map((id) =>
+                this.attemptConnection(id, this.definition!.direction, this.definition!.userId)
+            )
+        )
     }
 
     private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: UserID): Promise<void> {

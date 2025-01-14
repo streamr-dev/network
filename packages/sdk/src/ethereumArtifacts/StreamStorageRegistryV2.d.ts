@@ -36,8 +36,13 @@ export interface StreamStorageRegistryV2Interface extends Interface {
             | 'upgradeTo'
             | 'upgradeToAndCall'
     ): FunctionFragment
-    getEvent(nameOrSignatureOrTopic: 'Added' | 'AdminChanged' | 'BeaconUpgraded' | 'Initialized' | 'Removed' | 'Upgraded'): EventFragment
-    encodeFunctionData(functionFragment: 'addAndRemoveStorageNodes', values: [string, AddressLike[], AddressLike[]]): string
+    getEvent(
+        nameOrSignatureOrTopic: 'Added' | 'AdminChanged' | 'BeaconUpgraded' | 'Initialized' | 'Removed' | 'Upgraded'
+    ): EventFragment
+    encodeFunctionData(
+        functionFragment: 'addAndRemoveStorageNodes',
+        values: [string, AddressLike[], AddressLike[]]
+    ): string
     encodeFunctionData(functionFragment: 'addStorageNode', values: [string, AddressLike]): string
     encodeFunctionData(functionFragment: 'initialize', values: [AddressLike, AddressLike, AddressLike]): string
     encodeFunctionData(functionFragment: 'isStorageNodeOf', values: [string, AddressLike]): string
@@ -144,15 +149,29 @@ export interface StreamStorageRegistryV2 extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
-    addAndRemoveStorageNodes: TypedContractMethod<[streamId: string, addNodes: AddressLike[], removeNodes: AddressLike[]], [void], 'nonpayable'>
+    addAndRemoveStorageNodes: TypedContractMethod<
+        [streamId: string, addNodes: AddressLike[], removeNodes: AddressLike[]],
+        [void],
+        'nonpayable'
+    >
     addStorageNode: TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [void], 'nonpayable'>
-    initialize: TypedContractMethod<[streamRegistryAddress: AddressLike, nodeRegistryAddress: AddressLike, arg2: AddressLike], [void], 'nonpayable'>
+    initialize: TypedContractMethod<
+        [streamRegistryAddress: AddressLike, nodeRegistryAddress: AddressLike, arg2: AddressLike],
+        [void],
+        'nonpayable'
+    >
     isStorageNodeOf: TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [boolean], 'view'>
     nodeRegistry: TypedContractMethod<[], [string], 'view'>
     pairs: TypedContractMethod<[arg0: string, arg1: AddressLike], [bigint], 'view'>
@@ -164,47 +183,105 @@ export interface StreamStorageRegistryV2 extends BaseContract {
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T
     getFunction(
         nameOrSignature: 'addAndRemoveStorageNodes'
-    ): TypedContractMethod<[streamId: string, addNodes: AddressLike[], removeNodes: AddressLike[]], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'addStorageNode'): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [void], 'nonpayable'>
+    ): TypedContractMethod<
+        [streamId: string, addNodes: AddressLike[], removeNodes: AddressLike[]],
+        [void],
+        'nonpayable'
+    >
+    getFunction(
+        nameOrSignature: 'addStorageNode'
+    ): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'initialize'
-    ): TypedContractMethod<[streamRegistryAddress: AddressLike, nodeRegistryAddress: AddressLike, arg2: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'isStorageNodeOf'): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [boolean], 'view'>
+    ): TypedContractMethod<
+        [streamRegistryAddress: AddressLike, nodeRegistryAddress: AddressLike, arg2: AddressLike],
+        [void],
+        'nonpayable'
+    >
+    getFunction(
+        nameOrSignature: 'isStorageNodeOf'
+    ): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [boolean], 'view'>
     getFunction(nameOrSignature: 'nodeRegistry'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'pairs'): TypedContractMethod<[arg0: string, arg1: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'proxiableUUID'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'removeStorageNode'): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'removeStorageNode'
+    ): TypedContractMethod<[streamId: string, nodeAddress: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'streamRegistry'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'upgradeTo'): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeToAndCall'): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
+    getFunction(
+        nameOrSignature: 'upgradeTo'
+    ): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeToAndCall'
+    ): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
     getEvent(key: 'Added'): TypedContractEvent<AddedEvent.InputTuple, AddedEvent.OutputTuple, AddedEvent.OutputObject>
-    getEvent(key: 'AdminChanged'): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+    getEvent(
+        key: 'AdminChanged'
+    ): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
     getEvent(
         key: 'BeaconUpgraded'
-    ): TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-    getEvent(key: 'Initialized'): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-    getEvent(key: 'Removed'): TypedContractEvent<RemovedEvent.InputTuple, RemovedEvent.OutputTuple, RemovedEvent.OutputObject>
-    getEvent(key: 'Upgraded'): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+    ): TypedContractEvent<
+        BeaconUpgradedEvent.InputTuple,
+        BeaconUpgradedEvent.OutputTuple,
+        BeaconUpgradedEvent.OutputObject
+    >
+    getEvent(
+        key: 'Initialized'
+    ): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+    getEvent(
+        key: 'Removed'
+    ): TypedContractEvent<RemovedEvent.InputTuple, RemovedEvent.OutputTuple, RemovedEvent.OutputObject>
+    getEvent(
+        key: 'Upgraded'
+    ): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     filters: {
-        'Added(string,address)': TypedContractEvent<AddedEvent.InputTuple, AddedEvent.OutputTuple, AddedEvent.OutputObject>
+        'Added(string,address)': TypedContractEvent<
+            AddedEvent.InputTuple,
+            AddedEvent.OutputTuple,
+            AddedEvent.OutputObject
+        >
         Added: TypedContractEvent<AddedEvent.InputTuple, AddedEvent.OutputTuple, AddedEvent.OutputObject>
         'AdminChanged(address,address)': TypedContractEvent<
             AdminChangedEvent.InputTuple,
             AdminChangedEvent.OutputTuple,
             AdminChangedEvent.OutputObject
         >
-        AdminChanged: TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+        AdminChanged: TypedContractEvent<
+            AdminChangedEvent.InputTuple,
+            AdminChangedEvent.OutputTuple,
+            AdminChangedEvent.OutputObject
+        >
         'BeaconUpgraded(address)': TypedContractEvent<
             BeaconUpgradedEvent.InputTuple,
             BeaconUpgradedEvent.OutputTuple,
             BeaconUpgradedEvent.OutputObject
         >
-        BeaconUpgraded: TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-        'Initialized(uint8)': TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        Initialized: TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        'Removed(string,address)': TypedContractEvent<RemovedEvent.InputTuple, RemovedEvent.OutputTuple, RemovedEvent.OutputObject>
+        BeaconUpgraded: TypedContractEvent<
+            BeaconUpgradedEvent.InputTuple,
+            BeaconUpgradedEvent.OutputTuple,
+            BeaconUpgradedEvent.OutputObject
+        >
+        'Initialized(uint8)': TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        Initialized: TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        'Removed(string,address)': TypedContractEvent<
+            RemovedEvent.InputTuple,
+            RemovedEvent.OutputTuple,
+            RemovedEvent.OutputObject
+        >
         Removed: TypedContractEvent<RemovedEvent.InputTuple, RemovedEvent.OutputTuple, RemovedEvent.OutputObject>
-        'Upgraded(address)': TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+        'Upgraded(address)': TypedContractEvent<
+            UpgradedEvent.InputTuple,
+            UpgradedEvent.OutputTuple,
+            UpgradedEvent.OutputObject
+        >
         Upgraded: TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     }
 }

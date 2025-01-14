@@ -13,7 +13,9 @@ function getSubtle(): crypto.webcrypto.SubtleCrypto {
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : crypto.webcrypto.subtle
     if (!subtle) {
         const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
-        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
+        throw new Error(
+            `SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`
+        )
     }
     return subtle
 }
@@ -67,7 +69,9 @@ export class RSAKeyPair {
     }
 
     static async create(keyLength: number): Promise<RSAKeyPair> {
-        return typeof window !== 'undefined' ? RSAKeyPair.create_browserEnvironment(keyLength) : RSAKeyPair.create_serverEnvironment(keyLength)
+        return typeof window !== 'undefined'
+            ? RSAKeyPair.create_browserEnvironment(keyLength)
+            : RSAKeyPair.create_serverEnvironment(keyLength)
     }
 
     private static async create_serverEnvironment(keyLength: number): Promise<RSAKeyPair> {

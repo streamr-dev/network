@@ -1,6 +1,11 @@
 import { DhtAddress, PeerDescriptor, toDhtAddress } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { ExternalRpcClient, NetworkOptions, StreamMessage as NewStreamMessage, ProxyDirection } from '@streamr/trackerless-network'
+import {
+    ExternalRpcClient,
+    NetworkOptions,
+    StreamMessage as NewStreamMessage,
+    ProxyDirection
+} from '@streamr/trackerless-network'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
@@ -37,7 +42,10 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout?: number }): Promise<void> {
+    async join(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number; timeout?: number }
+    ): Promise<void> {
         if (neighborRequirement !== undefined) {
             throw new Error('not implemented')
         }

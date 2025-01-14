@@ -91,7 +91,9 @@ describe('NetworkNodeFacade', () => {
                 }
             })
             const node = client.getNode()
-            expect((await node.getOptions()).layer0?.entryPoints).toContainEqual(peerDescriptorTranslator(fakeEntrypoint))
+            expect((await node.getOptions()).layer0?.entryPoints).toContainEqual(
+                peerDescriptorTranslator(fakeEntrypoint)
+            )
         })
 
         it('does not query endpoints if discoverEndpoints is false', async () => {
@@ -105,7 +107,9 @@ describe('NetworkNodeFacade', () => {
                 }
             })
             const node = client.getNode()
-            expect((await node.getOptions()).layer0?.entryPoints).not.toContainEqual(peerDescriptorTranslator(fakeEntrypoint))
+            expect((await node.getOptions()).layer0?.entryPoints).not.toContainEqual(
+                peerDescriptorTranslator(fakeEntrypoint)
+            )
         })
     })
 })

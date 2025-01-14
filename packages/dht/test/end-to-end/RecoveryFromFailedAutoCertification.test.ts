@@ -9,7 +9,11 @@ describe('Failed autocertification', () => {
     let entryPointPeerDescriptor: PeerDescriptor
 
     beforeEach(async () => {
-        entryPoint = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 11112, max: 11112 }, websocketServerEnableTls: false })
+        entryPoint = new DhtNode({
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 11112, max: 11112 },
+            websocketServerEnableTls: false
+        })
         await entryPoint.start()
         entryPointPeerDescriptor = entryPoint.getLocalPeerDescriptor()
         await entryPoint.joinDht([entryPointPeerDescriptor])

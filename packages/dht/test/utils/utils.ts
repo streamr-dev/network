@@ -13,7 +13,12 @@ import {
     ClosestRingPeersResponse
 } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
-import { IDhtNodeRpc, IRouterRpc, IStoreRpc, IWebsocketClientConnectorRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
+import {
+    IDhtNodeRpc,
+    IRouterRpc,
+    IStoreRpc,
+    IWebsocketClientConnectorRpc
+} from '../../generated/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
@@ -32,7 +37,11 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
     }
 }
 
-export const createMockRingNode = async (simulator: Simulator, nodeId: DhtAddress, region: number): Promise<DhtNode> => {
+export const createMockRingNode = async (
+    simulator: Simulator,
+    nodeId: DhtAddress,
+    region: number
+): Promise<DhtNode> => {
     const maxConnections = 80
     const dhtJoinTimeout = 45000
 
@@ -97,7 +106,11 @@ export const createMockConnectionDhtNode = async (
     return node
 }
 
-export const createMockConnectionLayer1Node = async (layer0Node: DhtNode, serviceId?: string, numberOfNodesPerKBucket = 8): Promise<DhtNode> => {
+export const createMockConnectionLayer1Node = async (
+    layer0Node: DhtNode,
+    serviceId?: string,
+    numberOfNodesPerKBucket = 8
+): Promise<DhtNode> => {
     const descriptor: PeerDescriptor = {
         nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
         type: NodeType.NODEJS
@@ -235,7 +248,11 @@ export const createMockPeers = (): PeerDescriptor[] => {
  * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
  * are neighbors.
  */
-export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000, waitTime = 20000): Promise<void> => {
+export const waitForStableTopology = async (
+    nodes: DhtNode[],
+    maxConnectionCount: number = 10000,
+    waitTime = 20000
+): Promise<void> => {
     const MAX_IDLE_TIME = 100
     const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
     await Promise.all(

@@ -50,7 +50,10 @@ describe('StreamPartIdDataKeyDistribution', () => {
         expect(Object.keys(byThreeInitials).length).toEqual(16 * 16 * 16)
         console.log(Object.values(byThreeInitials).map((a) => a.length))
 
-        const byFourInitials = groupBy(dataKeys, (dataKey: DhtAddress) => dataKey[0] + dataKey[1] + dataKey[2] + dataKey[3])
+        const byFourInitials = groupBy(
+            dataKeys,
+            (dataKey: DhtAddress) => dataKey[0] + dataKey[1] + dataKey[2] + dataKey[3]
+        )
         expect(Object.keys(byFourInitials).length).toEqual(16 * 16 * 16 * 16)
         console.log(Object.values(byFourInitials).map((a) => a.length))
     })

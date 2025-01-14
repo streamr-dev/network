@@ -75,7 +75,11 @@ export class Storage extends EventEmitter {
     async store(streamMessage: StreamMessage): Promise<boolean> {
         logger.debug('Store message', { msgId: streamMessage.messageId })
 
-        const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
+        const bucketId = this.bucketManager.getBucketId(
+            streamMessage.getStreamId(),
+            streamMessage.getStreamPartition(),
+            streamMessage.getTimestamp()
+        )
 
         return new Promise((resolve, reject) => {
             if (bucketId) {
@@ -127,7 +131,8 @@ export class Storage extends EventEmitter {
             'stream_id = ? AND partition = ? AND bucket_id IN ? ' +
             'ORDER BY ts DESC, sequence_no DESC ' +
             'LIMIT ?'
-        const COUNT_MESSAGES = 'SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
+        const COUNT_MESSAGES =
+            'SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
         const GET_BUCKETS = 'SELECT id FROM bucket WHERE stream_id = ? AND partition = ?'
 
         let total = 0
@@ -185,10 +190,14 @@ export class Storage extends EventEmitter {
                     }
                     try {
                         // get total stored message in bucket
-                        const resultSet = await this.cassandraClient.execute(COUNT_MESSAGES, [streamId, partition, bucketId], {
-                            prepare: true,
-                            fetchSize: 0 // disable paging
-                        })
+                        const resultSet = await this.cassandraClient.execute(
+                            COUNT_MESSAGES,
+                            [streamId, partition, bucketId],
+                            {
+                                prepare: true,
+                                fetchSize: 0 // disable paging
+                            }
+                        )
                         const row = resultSet.first()
                         total += row.total.low
 
@@ -208,8 +217,22 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: UserID): Readable {
-        return this.fetchRange(streamId, partition, fromTimestamp, fromSequenceNo, MAX_TIMESTAMP_VALUE, MAX_SEQUENCE_NUMBER_VALUE, publisherId)
+    requestFrom(
+        streamId: string,
+        partition: number,
+        fromTimestamp: number,
+        fromSequenceNo: number,
+        publisherId?: UserID
+    ): Readable {
+        return this.fetchRange(
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            MAX_TIMESTAMP_VALUE,
+            MAX_SEQUENCE_NUMBER_VALUE,
+            publisherId
+        )
     }
 
     requestRange(
@@ -224,11 +247,22 @@ export class Storage extends EventEmitter {
     ): Readable {
         // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?
         // (or maybe even queries with msgChain but without publisherId)
-        const isValidRequest = (publisherId !== undefined && msgChainId !== undefined) || (publisherId === undefined && msgChainId === undefined)
+        const isValidRequest =
+            (publisherId !== undefined && msgChainId !== undefined) ||
+            (publisherId === undefined && msgChainId === undefined)
         if (!isValidRequest) {
             throw new Error('Invalid combination of requestFrom arguments')
         }
-        return this.fetchRange(streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
+        return this.fetchRange(
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            toTimestamp,
+            toSequenceNo,
+            publisherId,
+            msgChainId
+        )
     }
 
     enableMetrics(metricsContext: MetricsContext): void {
@@ -417,7 +451,8 @@ export class Storage extends EventEmitter {
 
         const bucketId = buckets.rows[0].id
 
-        const query = 'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
+        const query =
+            'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
 
         const streams = await this.cassandraClient.execute(query, [streamId, partition, bucketId], {
             prepare: true
@@ -447,7 +482,8 @@ export class Storage extends EventEmitter {
 
         const bucketId = buckets.rows[0].id
 
-        const query = 'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts DESC LIMIT 1'
+        const query =
+            'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts DESC LIMIT 1'
 
         const streams = await this.cassandraClient.execute(query, [streamId, partition, bucketId], {
             prepare: true

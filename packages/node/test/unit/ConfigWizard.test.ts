@@ -94,7 +94,9 @@ describe('Config wizard', () => {
 
         jest.spyOn(Wallet, 'createRandom').mockImplementation(() => new Wallet(GENERATED_PRIVATE_KEY) as any)
 
-        jest.spyOn(JsonRpcProvider.prototype, 'getBalance').mockImplementation(() => Promise.resolve(parseEther(fakeBalance())))
+        jest.spyOn(JsonRpcProvider.prototype, 'getBalance').mockImplementation(() =>
+            Promise.resolve(parseEther(fakeBalance()))
+        )
 
         fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
 
@@ -598,7 +600,18 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt,http', '7170', '1883', '7171', storagePath])
+        expect(answers).toEqual([
+            'Generate',
+            false,
+            'polygon',
+            false,
+            true,
+            'websocket,mqtt,http',
+            '7170',
+            '1883',
+            '7171',
+            storagePath
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
@@ -658,7 +671,18 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt,http', '2000', '3000', '4000', storagePath])
+        expect(answers).toEqual([
+            'Generate',
+            false,
+            'polygon',
+            false,
+            true,
+            'websocket,mqtt,http',
+            '2000',
+            '3000',
+            '4000',
+            storagePath
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
@@ -728,7 +752,13 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins({ keypress: 'space' }, { keypress: 'down' }, { keypress: 'space' }, { keypress: 'down' }, 'enter'),
+            Step.pubsubPlugins(
+                { keypress: 'space' },
+                { keypress: 'down' },
+                { keypress: 'space' },
+                { keypress: 'down' },
+                'enter'
+            ),
             Step.pubsubPort({ type: '2000' }, 'enter'),
             Step.pubsubPort(
                 { type: '2000' },
@@ -743,7 +773,17 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt', '2000', '2001', storagePath])
+        expect(answers).toEqual([
+            'Generate',
+            false,
+            'polygon',
+            false,
+            true,
+            'websocket,mqtt',
+            '2000',
+            '2001',
+            storagePath
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
@@ -787,7 +827,13 @@ describe('Config wizard', () => {
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub('enter'),
-            Step.pubsubPlugins({ keypress: 'space' }, { keypress: 'down' }, { keypress: 'space' }, { keypress: 'down' }, 'enter'),
+            Step.pubsubPlugins(
+                { keypress: 'space' },
+                { keypress: 'down' },
+                { keypress: 'space' },
+                { keypress: 'down' },
+                'enter'
+            ),
             Step.pubsubPort('enter'),
             Step.pubsubPort(
                 { type: '7170' },
@@ -802,7 +848,17 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter')
         ])
 
-        expect(answers).toEqual(['Generate', false, 'polygon', false, true, 'websocket,mqtt', '7170', '7179', storagePath])
+        expect(answers).toEqual([
+            'Generate',
+            false,
+            'polygon',
+            false,
+            true,
+            'websocket,mqtt',
+            '7170',
+            '7179',
+            storagePath
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString())
 
@@ -1085,7 +1141,9 @@ describe('Config wizard', () => {
     })
 
     it('tells the user if their node and the operator are paired', async () => {
-        fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":["0x909dc59ff7a3b23126bc6f86ad44dd808fd424dc"]}}}')
+        fakeFetchResponseBody.mockImplementation(
+            () => '{"data":{"operator":{"nodes":["0x909dc59ff7a3b23126bc6f86ad44dd808fd424dc"]}}}'
+        )
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
@@ -1216,7 +1274,9 @@ describe('Config wizard', () => {
 
 describe('getNodeMnemonic', () => {
     it('gives a mnemonic for a private key', () => {
-        expect(getNodeMnemonic('0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d')).toEqual('Mountain Until Gun')
+        expect(getNodeMnemonic('0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d')).toEqual(
+            'Mountain Until Gun'
+        )
     })
 })
 

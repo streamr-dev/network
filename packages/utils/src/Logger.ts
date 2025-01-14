@@ -115,6 +115,8 @@ export class Logger {
             fileId = parts[parts.length - 1]
         }
         const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
-        return isPrettyPrintDisabled() ? longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
+        return isPrettyPrintDisabled()
+            ? longName
+            : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 }

@@ -46,9 +46,17 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         this.options.connectionLocker.weakUnlockConnection(nodeId, this.lockId)
     }
 
-    async openConnection(_request: TemporaryConnectionRequest, context: ServerCallContext): Promise<TemporaryConnectionResponse> {
+    async openConnection(
+        _request: TemporaryConnectionRequest,
+        context: ServerCallContext
+    ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        const remote = new ContentDeliveryRpcRemote(this.options.localPeerDescriptor, sender, this.options.rpcCommunicator, ContentDeliveryRpcClient)
+        const remote = new ContentDeliveryRpcRemote(
+            this.options.localPeerDescriptor,
+            sender,
+            this.options.rpcCommunicator,
+            ContentDeliveryRpcClient
+        )
         this.temporaryNodes.add(remote)
         this.options.connectionLocker.weakLockConnection(toNodeId(sender), this.lockId)
         return {

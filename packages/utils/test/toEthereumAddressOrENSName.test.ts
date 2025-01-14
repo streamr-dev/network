@@ -2,7 +2,9 @@ import { toEthereumAddressOrENSName } from '../src/toEthereumAddressOrENSName'
 
 describe('toEthereumAddressOrENSName', () => {
     it('returns ethereum address (lowercased) given ethereum address', () => {
-        expect(toEthereumAddressOrENSName('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(toEthereumAddressOrENSName('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')).toEqual(
+            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+        )
     })
 
     it('returns ens name (lowercased) given ens name', () => {

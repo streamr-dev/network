@@ -18,7 +18,8 @@ const keyspace = 'streamr_dev_v2'
 const insertBucket = async (cassandraClient: Client, streamId: string) => {
     const dateCreate = Date.now()
     const bucketId = TimeUuid.fromDate(new Date(dateCreate)).toString()
-    const query = 'INSERT INTO bucket (stream_id, partition, date_create, id, records, size)' + 'VALUES (?, 0, ?, ?, 1, 1)'
+    const query =
+        'INSERT INTO bucket (stream_id, partition, date_create, id, records, size)' + 'VALUES (?, 0, ?, ?, 1, 1)'
     await cassandraClient.execute(query, [streamId, dateCreate, bucketId], {
         prepare: true
     })

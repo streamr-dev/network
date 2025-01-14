@@ -5,7 +5,10 @@ import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import { convertGroupKeyRequestToBytes, convertGroupKeyResponseToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
+import {
+    convertGroupKeyRequestToBytes,
+    convertGroupKeyResponseToBytes
+} from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
@@ -15,7 +18,13 @@ import { GroupKeyRequest } from './../../src/protocol/GroupKeyRequest'
 import { GroupKeyResponse } from './../../src/protocol/GroupKeyResponse'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
@@ -32,7 +41,10 @@ const groupKeyMessageToStreamMessage = async (
                 groupKeyMessage instanceof GroupKeyRequest
                     ? convertGroupKeyRequestToBytes(groupKeyMessage)
                     : convertGroupKeyResponseToBytes(groupKeyMessage),
-            messageType: groupKeyMessage instanceof GroupKeyRequest ? StreamMessageType.GROUP_KEY_REQUEST : StreamMessageType.GROUP_KEY_RESPONSE,
+            messageType:
+                groupKeyMessage instanceof GroupKeyRequest
+                    ? StreamMessageType.GROUP_KEY_REQUEST
+                    : StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
         },

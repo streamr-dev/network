@@ -2,7 +2,11 @@ import fs from 'fs'
 
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 
-export const createKarmaConfig = (testPaths: string[], webpackConfig: () => Record<string, any>, localDirectory: string): ((config: any) => any) => {
+export const createKarmaConfig = (
+    testPaths: string[],
+    webpackConfig: () => Record<string, any>,
+    localDirectory: string
+): ((config: any) => any) => {
     const setupFiles = [__dirname + '/karma-setup.js']
     const localSetupFile = localDirectory + '/karma-setup.js'
     if (fs.existsSync(localSetupFile)) {
@@ -13,7 +17,13 @@ export const createKarmaConfig = (testPaths: string[], webpackConfig: () => Reco
     testPaths.forEach((f) => (preprocessors[f] = ['webpack', 'sourcemap']))
     return (config: any) => {
         config.set({
-            plugins: ['karma-electron', 'karma-webpack', 'karma-jasmine', 'karma-spec-reporter', 'karma-sourcemap-loader'],
+            plugins: [
+                'karma-electron',
+                'karma-webpack',
+                'karma-jasmine',
+                'karma-spec-reporter',
+                'karma-sourcemap-loader'
+            ],
             basePath: '.',
             frameworks: ['jasmine'],
             reporters: ['spec'],

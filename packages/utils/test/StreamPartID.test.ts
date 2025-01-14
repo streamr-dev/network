@@ -26,7 +26,9 @@ describe('StreamPartIDUtils#parse', () => {
     })
 
     it.each(INVALID_PARTITIONS)('throws error on invalid streamPartId string legacyStream#%s', (partition) => {
-        expect(() => StreamPartIDUtils.parse(`legacyStream#${partition}`)).toThrow(`invalid streamPartition value: ${Number(partition)}`)
+        expect(() => StreamPartIDUtils.parse(`legacyStream#${partition}`)).toThrow(
+            `invalid streamPartition value: ${Number(partition)}`
+        )
     })
 })
 

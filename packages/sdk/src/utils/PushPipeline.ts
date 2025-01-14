@@ -6,7 +6,10 @@ import { Pipeline, PipelineTransform } from './Pipeline'
  * Pipeline that is also a PushBuffer.
  * i.e. can call .push to push data into pipeline and .pipe to transform it.
  */
-export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, OutType> implements IPushBuffer<InType, OutType> {
+export class PushPipeline<InType, OutType = InType>
+    extends Pipeline<InType, OutType>
+    implements IPushBuffer<InType, OutType>
+{
     override readonly source: PushBuffer<InType>
 
     constructor(bufferSize = DEFAULT_BUFFER_SIZE) {

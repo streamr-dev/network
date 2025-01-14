@@ -32,13 +32,17 @@ const createMockTheGraphClient = (resultItems: SearchStreamsResultItem[]): Pick<
 describe('searchStreams', () => {
     it('results in order', async () => {
         const stream = toStreamID('/path', MOCK_USER)
-        const theGraphClient = createMockTheGraphClient([createMockResultItem(stream, JSON.stringify({ partitions: 11 }))])
+        const theGraphClient = createMockTheGraphClient([
+            createMockResultItem(stream, JSON.stringify({ partitions: 11 }))
+        ])
         jest.spyOn(theGraphClient, 'queryEntities')
         const orderBy = { field: 'updatedAt', direction: 'desc' } as const
 
         await collect(searchStreams('/', undefined, orderBy, theGraphClient as any))
 
         const graphQLquery = ((theGraphClient as any).queryEntities as jest.Mock).mock.calls[0][0]()
-        expect(graphQLquery.query).toMatch(new RegExp(`orderBy: "stream__${orderBy.field}",\\s*orderDirection: "${orderBy.direction}"`))
+        expect(graphQLquery.query).toMatch(
+            new RegExp(`orderBy: "stream__${orderBy.field}",\\s*orderDirection: "${orderBy.direction}"`)
+        )
     })
 })

@@ -60,7 +60,9 @@ export class StorageNodeRegistry {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         if (metadata !== undefined) {
-            await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
+            await waitForTx(
+                this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides)
+            )
         } else {
             await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
         }

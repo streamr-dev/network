@@ -81,7 +81,9 @@ describe('DiscoverySession', () => {
         expect(queriedNodes.length).toBeGreaterThanOrEqual(1)
         // Each queried node should closer to the target than the previous queried node, because we
         // use parallelism=1 and noProgressLimit=1
-        const distancesToTarget = queriedNodes.map((nodeId) => getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
+        const distancesToTarget = queriedNodes.map((nodeId) =>
+            getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId))
+        )
         for (let i = 1; i < distancesToTarget.length; i++) {
             expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
         }

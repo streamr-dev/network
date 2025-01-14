@@ -109,16 +109,16 @@ module.exports = (env, argv) => {
                     __dirname,
                     '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'
                 ),
-                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]: path.resolve(
-                    __dirname,
-                    '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'
-                ),
+                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
+                    path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
                 [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]: path.resolve(
                     __dirname,
                     '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'
                 ),
                 // swap out ServerPersistence for BrowserPersistence
-                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: path.resolve('./src/utils/persistence/BrowserPersistence.ts')
+                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: path.resolve(
+                    './src/utils/persistence/BrowserPersistence.ts'
+                )
             },
             fallback: {
                 module: false,

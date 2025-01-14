@@ -175,7 +175,10 @@ const handleRange = (
     const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) ?? MIN_SEQUENCE_NUMBER_VALUE
     const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) ?? MAX_SEQUENCE_NUMBER_VALUE
     if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
-        sendError('Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".', res)
+        sendError(
+            'Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".',
+            res
+        )
         return
     }
     if (fromTimestamp === undefined) {

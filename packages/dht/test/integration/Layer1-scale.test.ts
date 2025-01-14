@@ -55,9 +55,13 @@ describe('Layer1', () => {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
-            expect(layer1Node.getConnectionsView().getConnectionCount()).toEqual(layer0Node.getConnectionsView().getConnectionCount())
+            expect(layer1Node.getConnectionsView().getConnectionCount()).toEqual(
+                layer0Node.getConnectionsView().getConnectionCount()
+            )
             expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
-            expect(layer1Node.getConnectionsView().getConnections()).toEqual(layer0Node.getConnectionsView().getConnections())
+            expect(layer1Node.getConnectionsView().getConnections()).toEqual(
+                layer0Node.getConnectionsView().getConnections()
+            )
         }
     }, 120000)
 
@@ -111,10 +115,18 @@ describe('Layer1', () => {
             const stream3Node = stream3[i]
             const stream4Node = stream4[i]
 
-            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream1Node.getConnectionsView().getConnectionCount())
-            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream2Node.getConnectionsView().getConnectionCount())
-            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream3Node.getConnectionsView().getConnectionCount())
-            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream4Node.getConnectionsView().getConnectionCount())
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(
+                stream1Node.getConnectionsView().getConnectionCount()
+            )
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(
+                stream2Node.getConnectionsView().getConnectionCount()
+            )
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(
+                stream3Node.getConnectionsView().getConnectionCount()
+            )
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(
+                stream4Node.getConnectionsView().getConnectionCount()
+            )
         }
     }, 120000)
 

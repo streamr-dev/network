@@ -39,7 +39,12 @@ describe(weightedSample, () => {
                 () => counter++
             )
         })
-        expect(results).toEqual([...repeat('a', weights.a), ...repeat('b', weights.b), ...repeat('c', weights.c), ...repeat('d', weights.d)])
+        expect(results).toEqual([
+            ...repeat('a', weights.a),
+            ...repeat('b', weights.b),
+            ...repeat('c', weights.c),
+            ...repeat('d', weights.d)
+        ])
     })
 
     describe('sampleFn callback', () => {

@@ -20,7 +20,9 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
-        const cms: SimulatorTransport[] = range(otherNodeCount).map((i) => new SimulatorTransport(peerDescriptors[i], simulator))
+        const cms: SimulatorTransport[] = range(otherNodeCount).map(
+            (i) => new SimulatorTransport(peerDescriptors[i], simulator)
+        )
         await entrypointCm.start()
         await Promise.all(cms.map((cm) => cm.start()))
 
@@ -89,7 +91,11 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                 await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
             })
         )
-        await until(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4), 15000, 1000)
+        await until(
+            () => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4),
+            15000,
+            1000
+        )
         range(4).forEach((i) => {
             expect(otherContentDeliveryLayerNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(otherContentDeliveryLayerNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
@@ -119,9 +125,13 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                 otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
             })
         )
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getNeighbors().length >= 4, 10000)))
+        await Promise.all(
+            otherContentDeliveryLayerNodes.map((node) => until(() => node.getNeighbors().length >= 4, 10000))
+        )
 
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getOutgoingHandshakeCount() === 0)))
+        await Promise.all(
+            otherContentDeliveryLayerNodes.map((node) => until(() => node.getOutgoingHandshakeCount() === 0))
+        )
 
         await until(
             () => {

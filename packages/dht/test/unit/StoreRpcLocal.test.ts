@@ -1,6 +1,12 @@
 import { range } from 'lodash'
 import { StoreRpcLocal } from '../../src/dht/store/StoreRpcLocal'
-import { areEqualPeerDescriptors, randomDhtAddress, DhtAddress, toDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
+import {
+    areEqualPeerDescriptors,
+    randomDhtAddress,
+    DhtAddress,
+    toDhtAddress,
+    toDhtAddressRaw
+} from '../../src/identifiers'
 import { DataEntry, PeerDescriptor, StoreDataRequest } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
@@ -55,7 +61,10 @@ describe('StoreRpcLocal', () => {
             const request = {
                 entry: DATA_ENTRY
             }
-            await storeRpcLocal.replicateData(request as any, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
+            await storeRpcLocal.replicateData(
+                request as any,
+                { incomingSourceDescriptor: createMockPeerDescriptor() } as any
+            )
             expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             // Wait for setImmediate
             await wait(50)
@@ -89,7 +98,10 @@ describe('StoreRpcLocal', () => {
             const request = {
                 entry: DATA_ENTRY
             }
-            await storeRpcLocal.replicateData(request as any, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
+            await storeRpcLocal.replicateData(
+                request as any,
+                { incomingSourceDescriptor: createMockPeerDescriptor() } as any
+            )
             expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             // Wait for setImmediate
             await wait(50)
@@ -126,7 +138,10 @@ describe('StoreRpcLocal', () => {
             const request = {
                 entry: DATA_ENTRY
             }
-            await storeRpcLocal.replicateData(request as any, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
+            await storeRpcLocal.replicateData(
+                request as any,
+                { incomingSourceDescriptor: createMockPeerDescriptor() } as any
+            )
             expect(setAllEntriesAsStale).toHaveBeenCalledTimes(1)
             // Wait for setImmediate
             await wait(50)
@@ -152,7 +167,10 @@ describe('StoreRpcLocal', () => {
             const request = {
                 entry: DATA_ENTRY
             }
-            await storeRpcLocal.replicateData(request as any, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
+            await storeRpcLocal.replicateData(
+                request as any,
+                { incomingSourceDescriptor: createMockPeerDescriptor() } as any
+            )
             expect(setAllEntriesAsStale).toHaveBeenCalledTimes(0)
             // Wait for setImmediate
             await wait(50)

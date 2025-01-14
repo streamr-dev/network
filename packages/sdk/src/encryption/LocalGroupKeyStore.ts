@@ -52,7 +52,11 @@ export class LocalGroupKeyStore {
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly logger: Logger
 
-    constructor(persistenceManager: PersistenceManager, eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
+    constructor(
+        persistenceManager: PersistenceManager,
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
+    ) {
         this.persistenceManager = persistenceManager
         this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)

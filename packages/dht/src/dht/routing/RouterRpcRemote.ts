@@ -28,7 +28,10 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
         try {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
-            if (ack.error === RouteMessageError.DUPLICATE && areEqualBinaries(params.target, this.getPeerDescriptor().nodeId)) {
+            if (
+                ack.error === RouteMessageError.DUPLICATE &&
+                areEqualBinaries(params.target, this.getPeerDescriptor().nodeId)
+            ) {
                 return true
             } else if (ack.error !== undefined) {
                 return false

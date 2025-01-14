@@ -13,7 +13,11 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
         this.chain = chain
     }
 
-    async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
+    async isValidSignature(
+        contractAddress: EthereumAddress,
+        payload: Uint8Array,
+        signature: Uint8Array
+    ): Promise<boolean> {
         const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
         return this.chain.hasErc1271AllowedAddress(contractAddress, recoveredSignerUserId)
     }

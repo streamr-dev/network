@@ -18,12 +18,20 @@ export const decrypt = async (
     }
     let groupKey: GroupKey | undefined
     try {
-        groupKey = await groupKeyManager.fetchKey(streamMessage.getStreamPartID(), streamMessage.groupKeyId, streamMessage.getPublisherId())
+        groupKey = await groupKeyManager.fetchKey(
+            streamMessage.getStreamPartID(),
+            streamMessage.groupKeyId,
+            streamMessage.getPublisherId()
+        )
     } catch {
         if (destroySignal.isDestroyed()) {
             return streamMessage
         }
-        throw new StreamrClientError(`Could not get encryption key ${streamMessage.groupKeyId}`, 'DECRYPT_ERROR', streamMessage)
+        throw new StreamrClientError(
+            `Could not get encryption key ${streamMessage.groupKeyId}`,
+            'DECRYPT_ERROR',
+            streamMessage
+        )
     }
     if (destroySignal.isDestroyed()) {
         return streamMessage

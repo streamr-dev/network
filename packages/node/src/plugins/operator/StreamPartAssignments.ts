@@ -107,7 +107,10 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
             }
         }
         for (const streamPartId of this.myStreamParts) {
-            if (!this.assignments.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
+            if (
+                !this.assignments.has(streamPartId) ||
+                !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)
+            ) {
                 unassigned.push(streamPartId)
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)

@@ -34,7 +34,12 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         })
         newPeerDescriptors.forEach((peerDescriptor) =>
             this.options.nearbyNodeView.add(
-                new ContentDeliveryRpcRemote(this.options.localPeerDescriptor, peerDescriptor, this.options.rpcCommunicator, ContentDeliveryRpcClient)
+                new ContentDeliveryRpcRemote(
+                    this.options.localPeerDescriptor,
+                    peerDescriptor,
+                    this.options.rpcCommunicator,
+                    ContentDeliveryRpcClient
+                )
             )
         )
     }

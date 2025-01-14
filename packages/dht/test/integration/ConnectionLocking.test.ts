@@ -47,7 +47,12 @@ describe('Connection Locking', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([mockConnectorTransport1.stop(), mockConnectorTransport2.stop(), connectionManager1.stop(), connectionManager2.stop()])
+        await Promise.all([
+            mockConnectorTransport1.stop(),
+            mockConnectorTransport2.stop(),
+            connectionManager1.stop(),
+            connectionManager2.stop()
+        ])
         simulator.stop()
     })
 
@@ -171,8 +176,16 @@ describe('Connection Locking', () => {
         //@ts-expect-error private field
         await connectionManager1.gracefullyDisconnectAsync(mockPeerDescriptor2)
 
-        await until(() => !connectionManager1.hasRemoteLockedConnection(nodeId2) && !connectionManager1.hasLocalLockedConnection(nodeId2))
-        await until(() => !connectionManager2.hasRemoteLockedConnection(nodeId1) && !connectionManager2.hasLocalLockedConnection(nodeId1))
+        await until(
+            () =>
+                !connectionManager1.hasRemoteLockedConnection(nodeId2) &&
+                !connectionManager1.hasLocalLockedConnection(nodeId2)
+        )
+        await until(
+            () =>
+                !connectionManager2.hasRemoteLockedConnection(nodeId1) &&
+                !connectionManager2.hasLocalLockedConnection(nodeId1)
+        )
         await until(() => !connectionManager2.hasConnection(nodeId1))
         await until(() => !connectionManager1.hasConnection(nodeId2))
 

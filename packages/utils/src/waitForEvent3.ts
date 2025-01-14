@@ -48,7 +48,10 @@ export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> = { winnerName: keyof T; winnerArgs: any[] }
+export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> = {
+    winnerName: keyof T
+    winnerArgs: any[]
+}
 
 /**
  * Wait for an event to be emitted on eventemitter3 within timeout.
@@ -82,9 +85,11 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     }
 
     if (timeout !== null) {
-        return withTimeout(Promise.race(promises.map((promise) => promise.task)), timeout, 'raceEvents3').finally(() => {
-            cancelAll()
-        })
+        return withTimeout(Promise.race(promises.map((promise) => promise.task)), timeout, 'raceEvents3').finally(
+            () => {
+                cancelAll()
+            }
+        )
     } else {
         return Promise.race(promises.map((promise) => promise.task)).finally(() => {
             cancelAll()

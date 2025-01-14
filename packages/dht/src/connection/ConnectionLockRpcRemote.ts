@@ -1,6 +1,12 @@
 import { Logger } from '@streamr/utils'
 import { RpcRemote } from '../dht/contact/RpcRemote'
-import { DisconnectMode, DisconnectNotice, LockRequest, UnlockRequest, SetPrivateRequest } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    DisconnectMode,
+    DisconnectNotice,
+    LockRequest,
+    UnlockRequest,
+    SetPrivateRequest
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { LockID } from './ConnectionLockStates'
 import { toNodeId } from '../identifiers'

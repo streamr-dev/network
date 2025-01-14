@@ -3,14 +3,28 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import {
+    DEFAULT_PARTITION_COUNT,
+    EthereumAddress,
+    HexString,
+    Logger,
+    StreamID,
+    TheGraphClient,
+    toEthereumAddress,
+    toUserId
+} from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
-import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
+import {
+    Authentication,
+    AuthenticationInjectionToken,
+    SignerWithProvider,
+    createAuthentication
+} from './Authentication'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -34,13 +48,25 @@ import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
+import {
+    SearchStreamsOrderBy,
+    SearchStreamsPermissionFilter,
+    toInternalSearchStreamsPermissionFilter
+} from './contracts/searchStreams'
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
-import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
+import {
+    generateEthereumAccount as _generateEthereumAccount,
+    getEthersOverrides as _getEthersOverrides
+} from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
+import {
+    PermissionAssignment,
+    PermissionQuery,
+    toInternalPermissionAssignment,
+    toInternalPermissionQuery
+} from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends, toInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -115,7 +141,10 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
-        const theGraphClient = createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig)
+        const theGraphClient = createTheGraphClient(
+            container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter),
+            strictConfig
+        )
         container.register(TheGraphClient, { useValue: theGraphClient })
         this.id = strictConfig.id
         this.config = strictConfig
@@ -264,7 +293,8 @@ export class StreamrClient {
      * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
-        const matcher = streamDefinition !== undefined ? await this.streamIdBuilder.getMatcher(streamDefinition) : () => true
+        const matcher =
+            streamDefinition !== undefined ? await this.streamIdBuilder.getMatcher(streamDefinition) : () => true
         return this.subscriber.getSubscriptions().filter((s) => matcher(s.streamPartId))
     }
 
@@ -283,7 +313,11 @@ export class StreamrClient {
      * @returns a {@link MessageStream} that provides an alternative way of iterating messages. Rejects if the stream is
      * not stored (i.e. is not assigned to a storage node).
      */
-    async resend(streamDefinition: StreamDefinition, options: ResendOptions, onMessage?: MessageListener): Promise<MessageStream> {
+    async resend(
+        streamDefinition: StreamDefinition,
+        options: ResendOptions,
+        onMessage?: MessageListener
+    ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
         const pipeline = await this.resends.resend(streamPartId, toInternalResendOptions(options), getStorageNodes)
@@ -557,7 +591,10 @@ export class StreamrClient {
      * Unassigns a stream from a storage node.
      */
     async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
-        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
+        return this.streamStorageRegistry.removeStreamFromStorageNode(
+            streamIdOrPath,
+            toEthereumAddress(storageNodeAddress)
+        )
     }
 
     /**
@@ -671,7 +708,10 @@ export class StreamrClient {
      * Used to set known entry points for a stream partition. If entry points are not set they
      * will be automatically discovered from the Streamr Network.
      */
-    async setStreamPartitionEntryPoints(streamDefinition: StreamDefinition, entryPoints: NetworkPeerDescriptor[]): Promise<void> {
+    async setStreamPartitionEntryPoints(
+        streamDefinition: StreamDefinition,
+        entryPoints: NetworkPeerDescriptor[]
+    ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }

@@ -15,11 +15,18 @@ const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddre
     ipAsBuffer.writeUInt32BE(ipAddress)
     const ipHash = hash(ipAsBuffer)
     const signature = createSignature(ipAsBuffer, privateKey)
-    const nodeIdRaw = Buffer.concat([ipHash.subarray(ipHash.length - 13, ipHash.length), signature.subarray(signature.length - 7, signature.length)])
+    const nodeIdRaw = Buffer.concat([
+        ipHash.subarray(ipHash.length - 13, ipHash.length),
+        signature.subarray(signature.length - 7, signature.length)
+    ])
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse, region: number, nodeId?: DhtAddress): PeerDescriptor => {
+export const createPeerDescriptor = (
+    connectivityResponse: ConnectivityResponse,
+    region: number,
+    nodeId?: DhtAddress
+): PeerDescriptor => {
     const privateKey = crypto.randomBytes(32)
     const publicKey = crypto.randomBytes(20) // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw

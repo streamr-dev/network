@@ -91,7 +91,9 @@ describe('StreamRegistry', () => {
             'legacy format',
             async () => {
                 const streamId = '7wa7APtlTq6EC5iTCBy6dw'
-                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(
+                    `stream id "${streamId}" not valid`
+                )
             },
             TIMEOUT
         )
@@ -244,7 +246,9 @@ describe('StreamRegistry', () => {
                     await client.getOrCreateStream({
                         id: `${otherAddress}${newPath}`
                     })
-                }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${publicAddress}"`)
+                }).rejects.toThrow(
+                    `stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${publicAddress}"`
+                )
             },
             TIMEOUT
         )

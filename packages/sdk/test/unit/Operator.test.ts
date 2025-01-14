@@ -4,7 +4,12 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { capitalize } from 'lodash'
 import { DestroySignal } from '../../src/DestroySignal'
-import { Operator, OperatorEvents, ParseError, parsePartitionFromReviewRequestMetadata } from '../../src/contracts/Operator'
+import {
+    Operator,
+    OperatorEvents,
+    ParseError,
+    parsePartitionFromReviewRequestMetadata
+} from '../../src/contracts/Operator'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
@@ -84,7 +89,13 @@ const createOperator = (eventName: string, args: any[]) => {
 describe('Operator', () => {
     describe('reviewRequest listener', () => {
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
-            const operator = createOperator('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000n, 1050n, '{ "partition": 7 }'])
+            const operator = createOperator('ReviewRequest', [
+                SPONSORSHIP_ADDRESS,
+                OPERATOR_CONTRACT_ADDRESS,
+                1000n,
+                1050n,
+                '{ "partition": 7 }'
+            ])
             const listener = jest.fn()
             operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
@@ -99,7 +110,13 @@ describe('Operator', () => {
         })
 
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
-            const operator = createOperator('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000n, 1050n, '{ "partition": 666 }'])
+            const operator = createOperator('ReviewRequest', [
+                SPONSORSHIP_ADDRESS,
+                OPERATOR_CONTRACT_ADDRESS,
+                1000n,
+                1050n,
+                '{ "partition": 666 }'
+            ])
             const listener = jest.fn()
             operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)

@@ -74,7 +74,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                         logger.warn('Failed to set local description', { err })
                     }
                     if (this.peerConnection.localDescription !== null) {
-                        this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
+                        this.emit(
+                            'localDescription',
+                            this.peerConnection.localDescription?.sdp,
+                            this.peerConnection.localDescription?.type
+                        )
                     }
                 }
                 this.makingOffer = false
@@ -99,7 +103,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             return
         }
         try {
-            await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
+            await this.peerConnection?.setRemoteDescription({
+                sdp: description,
+                type: type.toLowerCase() as RTCSdpType
+            })
             clearTimeout(this.earlyTimeout)
         } catch (err) {
             logger.warn('Failed to set remote description', { err })
@@ -112,7 +119,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                 logger.warn('Failed to set local description', { err })
             }
             if (this.peerConnection.localDescription !== null) {
-                this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
+                this.emit(
+                    'localDescription',
+                    this.peerConnection.localDescription.sdp,
+                    this.peerConnection.localDescription.type
+                )
             }
         }
     }

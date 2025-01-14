@@ -101,7 +101,10 @@ export class WebsocketServer extends EventEmitter<Events> {
                     logger.trace('IConnection from origin ' + request.headers.origin + ' rejected.')
                     return
                 }
-                this.emit('connected', new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!))
+                this.emit(
+                    'connected',
+                    new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!)
+                )
             })
 
             this.httpServer.on('upgrade', (request, socket, head) => {

@@ -60,7 +60,11 @@ describe('Storing data in DHT', () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
         const requestor = createMockPeerDescriptor()
-        const successfulStorers = await storingNode.storeDataToDht(toDhtAddress(entry.key), entry.data!, toDhtAddress(requestor.nodeId))
+        const successfulStorers = await storingNode.storeDataToDht(
+            toDhtAddress(entry.key),
+            entry.data!,
+            toDhtAddress(requestor.nodeId)
+        )
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.fetchDataFromDht(toDhtAddress(entry.key))

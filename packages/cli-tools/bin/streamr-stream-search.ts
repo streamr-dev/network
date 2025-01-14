@@ -41,7 +41,13 @@ const createPermissionListOption = (id: string) => {
 }
 
 createClientCommand(async (client: StreamrClient, term: string | undefined, options: Options) => {
-    const permissionFilter = await createPermissionFilter(options.user, options.public, options.all, options.any, client)
+    const permissionFilter = await createPermissionFilter(
+        options.user,
+        options.public,
+        options.all,
+        options.any,
+        client
+    )
     const streams = client.searchStreams(term, permissionFilter)
     for await (const stream of streams) {
         console.info(stream.id)

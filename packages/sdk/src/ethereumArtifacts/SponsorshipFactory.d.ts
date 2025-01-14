@@ -66,7 +66,10 @@ export interface SponsorshipFactoryInterface extends Interface {
     encodeFunctionData(functionFragment: 'DEFAULT_ADMIN_ROLE', values?: undefined): string
     encodeFunctionData(functionFragment: 'addTrustedPolicies', values: [AddressLike[]]): string
     encodeFunctionData(functionFragment: 'addTrustedPolicy', values: [AddressLike]): string
-    encodeFunctionData(functionFragment: 'deploySponsorship', values: [BigNumberish, string, string, AddressLike[], BigNumberish[]]): string
+    encodeFunctionData(
+        functionFragment: 'deploySponsorship',
+        values: [BigNumberish, string, string, AddressLike[], BigNumberish[]]
+    ): string
     encodeFunctionData(functionFragment: 'deploymentTimestamp', values: [AddressLike]): string
     encodeFunctionData(functionFragment: 'getRoleAdmin', values: [BytesLike]): string
     encodeFunctionData(functionFragment: 'grantRole', values: [BytesLike, AddressLike]): string
@@ -154,7 +157,14 @@ export declare namespace NewSponsorshipEvent {
         policyParams: BigNumberish[],
         creator: AddressLike
     ]
-    type OutputTuple = [sponsorshipContract: string, streamId: string, metadata: string, policies: string[], policyParams: bigint[], creator: string]
+    type OutputTuple = [
+        sponsorshipContract: string,
+        streamId: string,
+        metadata: string,
+        policies: string[],
+        policyParams: bigint[],
+        creator: string
+    ]
     interface OutputObject {
         sponsorshipContract: string
         streamId: string
@@ -256,9 +266,15 @@ export interface SponsorshipFactory extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
@@ -267,7 +283,13 @@ export interface SponsorshipFactory extends BaseContract {
     addTrustedPolicies: TypedContractMethod<[policyAddresses: AddressLike[]], [void], 'nonpayable'>
     addTrustedPolicy: TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
     deploySponsorship: TypedContractMethod<
-        [minOperatorCount: BigNumberish, streamId: string, metadata: string, policies: AddressLike[], policyParams: BigNumberish[]],
+        [
+            minOperatorCount: BigNumberish,
+            streamId: string,
+            metadata: string,
+            policies: AddressLike[],
+            policyParams: BigNumberish[]
+        ],
         [string],
         'nonpayable'
     >
@@ -281,7 +303,11 @@ export interface SponsorshipFactory extends BaseContract {
         'nonpayable'
     >
     isTrustedPolicy: TypedContractMethod<[policyAddress: AddressLike], [boolean], 'view'>
-    onTokenTransfer: TypedContractMethod<[from: AddressLike, amount: BigNumberish, param: BytesLike], [void], 'nonpayable'>
+    onTokenTransfer: TypedContractMethod<
+        [from: AddressLike, amount: BigNumberish, param: BytesLike],
+        [void],
+        'nonpayable'
+    >
     proxiableUUID: TypedContractMethod<[], [string], 'view'>
     removeTrustedPolicy: TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
     renounceRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
@@ -297,79 +323,161 @@ export interface SponsorshipFactory extends BaseContract {
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T
     getFunction(nameOrSignature: 'ADMIN_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'DEFAULT_ADMIN_ROLE'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'addTrustedPolicies'): TypedContractMethod<[policyAddresses: AddressLike[]], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'addTrustedPolicy'): TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'addTrustedPolicies'
+    ): TypedContractMethod<[policyAddresses: AddressLike[]], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'addTrustedPolicy'
+    ): TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
     getFunction(
         nameOrSignature: 'deploySponsorship'
     ): TypedContractMethod<
-        [minOperatorCount: BigNumberish, streamId: string, metadata: string, policies: AddressLike[], policyParams: BigNumberish[]],
+        [
+            minOperatorCount: BigNumberish,
+            streamId: string,
+            metadata: string,
+            policies: AddressLike[],
+            policyParams: BigNumberish[]
+        ],
         [string],
         'nonpayable'
     >
     getFunction(nameOrSignature: 'deploymentTimestamp'): TypedContractMethod<[arg0: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'getRoleAdmin'): TypedContractMethod<[role: BytesLike], [string], 'view'>
-    getFunction(nameOrSignature: 'grantRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'hasRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
+    getFunction(
+        nameOrSignature: 'grantRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'hasRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
     getFunction(
         nameOrSignature: 'initialize'
-    ): TypedContractMethod<[templateAddress: AddressLike, dataTokenAddress: AddressLike, streamrConfigAddress: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'isTrustedPolicy'): TypedContractMethod<[policyAddress: AddressLike], [boolean], 'view'>
+    ): TypedContractMethod<
+        [templateAddress: AddressLike, dataTokenAddress: AddressLike, streamrConfigAddress: AddressLike],
+        [void],
+        'nonpayable'
+    >
+    getFunction(
+        nameOrSignature: 'isTrustedPolicy'
+    ): TypedContractMethod<[policyAddress: AddressLike], [boolean], 'view'>
     getFunction(
         nameOrSignature: 'onTokenTransfer'
     ): TypedContractMethod<[from: AddressLike, amount: BigNumberish, param: BytesLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'proxiableUUID'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'removeTrustedPolicy'): TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'renounceRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'removeTrustedPolicy'
+    ): TypedContractMethod<[policyAddress: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'renounceRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'sponsorshipContractTemplate'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'streamrConfig'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'supportsInterface'): TypedContractMethod<[interfaceId: BytesLike], [boolean], 'view'>
     getFunction(nameOrSignature: 'tokenAddress'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'trustedPolicies'): TypedContractMethod<[arg0: AddressLike], [boolean], 'view'>
-    getFunction(nameOrSignature: 'updateTemplate'): TypedContractMethod<[templateAddress: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeTo'): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'upgradeToAndCall'): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
-    getEvent(key: 'AdminChanged'): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+    getFunction(
+        nameOrSignature: 'updateTemplate'
+    ): TypedContractMethod<[templateAddress: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeTo'
+    ): TypedContractMethod<[newImplementation: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'upgradeToAndCall'
+    ): TypedContractMethod<[newImplementation: AddressLike, data: BytesLike], [void], 'payable'>
+    getEvent(
+        key: 'AdminChanged'
+    ): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
     getEvent(
         key: 'BeaconUpgraded'
-    ): TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-    getEvent(key: 'Initialized'): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+    ): TypedContractEvent<
+        BeaconUpgradedEvent.InputTuple,
+        BeaconUpgradedEvent.OutputTuple,
+        BeaconUpgradedEvent.OutputObject
+    >
+    getEvent(
+        key: 'Initialized'
+    ): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
     getEvent(
         key: 'NewSponsorship'
-    ): TypedContractEvent<NewSponsorshipEvent.InputTuple, NewSponsorshipEvent.OutputTuple, NewSponsorshipEvent.OutputObject>
+    ): TypedContractEvent<
+        NewSponsorshipEvent.InputTuple,
+        NewSponsorshipEvent.OutputTuple,
+        NewSponsorshipEvent.OutputObject
+    >
     getEvent(
         key: 'PolicyWhitelisted'
-    ): TypedContractEvent<PolicyWhitelistedEvent.InputTuple, PolicyWhitelistedEvent.OutputTuple, PolicyWhitelistedEvent.OutputObject>
+    ): TypedContractEvent<
+        PolicyWhitelistedEvent.InputTuple,
+        PolicyWhitelistedEvent.OutputTuple,
+        PolicyWhitelistedEvent.OutputObject
+    >
     getEvent(
         key: 'RoleAdminChanged'
-    ): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
-    getEvent(key: 'RoleGranted'): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
-    getEvent(key: 'RoleRevoked'): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+    ): TypedContractEvent<
+        RoleAdminChangedEvent.InputTuple,
+        RoleAdminChangedEvent.OutputTuple,
+        RoleAdminChangedEvent.OutputObject
+    >
+    getEvent(
+        key: 'RoleGranted'
+    ): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+    getEvent(
+        key: 'RoleRevoked'
+    ): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
     getEvent(
         key: 'TemplateAddress'
-    ): TypedContractEvent<TemplateAddressEvent.InputTuple, TemplateAddressEvent.OutputTuple, TemplateAddressEvent.OutputObject>
-    getEvent(key: 'Upgraded'): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+    ): TypedContractEvent<
+        TemplateAddressEvent.InputTuple,
+        TemplateAddressEvent.OutputTuple,
+        TemplateAddressEvent.OutputObject
+    >
+    getEvent(
+        key: 'Upgraded'
+    ): TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     filters: {
         'AdminChanged(address,address)': TypedContractEvent<
             AdminChangedEvent.InputTuple,
             AdminChangedEvent.OutputTuple,
             AdminChangedEvent.OutputObject
         >
-        AdminChanged: TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>
+        AdminChanged: TypedContractEvent<
+            AdminChangedEvent.InputTuple,
+            AdminChangedEvent.OutputTuple,
+            AdminChangedEvent.OutputObject
+        >
         'BeaconUpgraded(address)': TypedContractEvent<
             BeaconUpgradedEvent.InputTuple,
             BeaconUpgradedEvent.OutputTuple,
             BeaconUpgradedEvent.OutputObject
         >
-        BeaconUpgraded: TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>
-        'Initialized(uint8)': TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
-        Initialized: TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>
+        BeaconUpgraded: TypedContractEvent<
+            BeaconUpgradedEvent.InputTuple,
+            BeaconUpgradedEvent.OutputTuple,
+            BeaconUpgradedEvent.OutputObject
+        >
+        'Initialized(uint8)': TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
+        Initialized: TypedContractEvent<
+            InitializedEvent.InputTuple,
+            InitializedEvent.OutputTuple,
+            InitializedEvent.OutputObject
+        >
         'NewSponsorship(address,string,string,address[],uint256[],address)': TypedContractEvent<
             NewSponsorshipEvent.InputTuple,
             NewSponsorshipEvent.OutputTuple,
             NewSponsorshipEvent.OutputObject
         >
-        NewSponsorship: TypedContractEvent<NewSponsorshipEvent.InputTuple, NewSponsorshipEvent.OutputTuple, NewSponsorshipEvent.OutputObject>
+        NewSponsorship: TypedContractEvent<
+            NewSponsorshipEvent.InputTuple,
+            NewSponsorshipEvent.OutputTuple,
+            NewSponsorshipEvent.OutputObject
+        >
         'PolicyWhitelisted(address,bool)': TypedContractEvent<
             PolicyWhitelistedEvent.InputTuple,
             PolicyWhitelistedEvent.OutputTuple,
@@ -385,26 +493,46 @@ export interface SponsorshipFactory extends BaseContract {
             RoleAdminChangedEvent.OutputTuple,
             RoleAdminChangedEvent.OutputObject
         >
-        RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
+        RoleAdminChanged: TypedContractEvent<
+            RoleAdminChangedEvent.InputTuple,
+            RoleAdminChangedEvent.OutputTuple,
+            RoleAdminChangedEvent.OutputObject
+        >
         'RoleGranted(bytes32,address,address)': TypedContractEvent<
             RoleGrantedEvent.InputTuple,
             RoleGrantedEvent.OutputTuple,
             RoleGrantedEvent.OutputObject
         >
-        RoleGranted: TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+        RoleGranted: TypedContractEvent<
+            RoleGrantedEvent.InputTuple,
+            RoleGrantedEvent.OutputTuple,
+            RoleGrantedEvent.OutputObject
+        >
         'RoleRevoked(bytes32,address,address)': TypedContractEvent<
             RoleRevokedEvent.InputTuple,
             RoleRevokedEvent.OutputTuple,
             RoleRevokedEvent.OutputObject
         >
-        RoleRevoked: TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+        RoleRevoked: TypedContractEvent<
+            RoleRevokedEvent.InputTuple,
+            RoleRevokedEvent.OutputTuple,
+            RoleRevokedEvent.OutputObject
+        >
         'TemplateAddress(address)': TypedContractEvent<
             TemplateAddressEvent.InputTuple,
             TemplateAddressEvent.OutputTuple,
             TemplateAddressEvent.OutputObject
         >
-        TemplateAddress: TypedContractEvent<TemplateAddressEvent.InputTuple, TemplateAddressEvent.OutputTuple, TemplateAddressEvent.OutputObject>
-        'Upgraded(address)': TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
+        TemplateAddress: TypedContractEvent<
+            TemplateAddressEvent.InputTuple,
+            TemplateAddressEvent.OutputTuple,
+            TemplateAddressEvent.OutputObject
+        >
+        'Upgraded(address)': TypedContractEvent<
+            UpgradedEvent.InputTuple,
+            UpgradedEvent.OutputTuple,
+            UpgradedEvent.OutputObject
+        >
         Upgraded: TypedContractEvent<UpgradedEvent.InputTuple, UpgradedEvent.OutputTuple, UpgradedEvent.OutputObject>
     }
 }

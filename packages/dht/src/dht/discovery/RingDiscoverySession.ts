@@ -5,7 +5,13 @@ import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'
 import { RingContacts } from '../contact/RingContactList'
-import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from '../contact/ringIdentifiers'
+import {
+    RingId,
+    RingIdRaw,
+    getLeftDistance,
+    getRingIdFromPeerDescriptor,
+    getRingIdFromRaw
+} from '../contact/ringIdentifiers'
 
 const logger = new Logger(module)
 
@@ -100,7 +106,10 @@ export class RingDiscoverySession {
             this.options.parallelism,
             this.options.contactedPeers
         )
-        if ((uncontacted.left.length === 0 && uncontacted.right.length === 0) || this.noProgressCounter >= this.options.noProgressLimit) {
+        if (
+            (uncontacted.left.length === 0 && uncontacted.right.length === 0) ||
+            this.noProgressCounter >= this.options.noProgressLimit
+        ) {
             this.doneGate.open()
             return
         }
@@ -145,6 +154,11 @@ export class RingDiscoverySession {
         setImmediate(() => {
             this.findMoreContacts()
         })
-        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.options.abortSignal)
+        await withTimeout(
+            this.doneGate.waitUntilOpen(),
+            timeout,
+            'discovery session timed out',
+            this.options.abortSignal
+        )
     }
 }

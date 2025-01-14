@@ -1,4 +1,11 @@
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage,
+    convertBytesToStreamMessage
+} from '@streamr/sdk'
 import { randomUserId, waitForStreamToEnd } from '@streamr/test-utils'
 import { UserID, hexToBinary, toStreamID, utf8ToBinary, until, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
@@ -49,7 +56,13 @@ class ProxyClient {
         this.realClient = realClient
     }
 
-    eachRow(query: string, params: any, options: any, rowCallback: any, resultCallback?: (err: Error | undefined, result: any) => void) {
+    eachRow(
+        query: string,
+        params: any,
+        options: any,
+        rowCallback: any,
+        resultCallback?: (err: Error | undefined, result: any) => void
+    ) {
         if (this.hasError(query)) {
             resultCallback!(ProxyClient.ERROR, undefined)
         } else {
@@ -96,7 +109,10 @@ describe('cassanda-queries', () => {
 
     const waitForStoredMessageCount = async (expectedCount: number) => {
         return until(async () => {
-            const result = await realClient.execute('SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [MOCK_STREAM_ID])
+            const result = await realClient.execute(
+                'SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? ALLOW FILTERING',
+                [MOCK_STREAM_ID]
+            )
             const actualCount = result.rows[0].total.low
             return actualCount === expectedCount
         })
@@ -175,7 +191,16 @@ describe('cassanda-queries', () => {
             if (requestType === REQUEST_TYPE_FROM) {
                 return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId)
             } else if (requestType === REQUEST_TYPE_RANGE) {
-                return storage.requestRange(streamId, 0, minMockTimestamp, 0, maxMockTimestamp, 0, publisherId, msgChainId)
+                return storage.requestRange(
+                    streamId,
+                    0,
+                    minMockTimestamp,
+                    0,
+                    maxMockTimestamp,
+                    0,
+                    publisherId,
+                    msgChainId
+                )
             } else {
                 throw new Error('Assertion failed')
             }

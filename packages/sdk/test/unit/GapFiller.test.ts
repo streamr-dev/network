@@ -1,4 +1,13 @@
-import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, until } from '@streamr/utils'
+import {
+    Defer,
+    EthereumAddress,
+    StreamPartIDUtils,
+    hexToBinary,
+    toEthereumAddress,
+    utf8ToBinary,
+    wait,
+    until
+} from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
@@ -49,7 +58,11 @@ describe('GapFiller', () => {
     })
 
     const startActiveGapFiller = (
-        resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>,
+        resend: (
+            gap: Gap,
+            storageNodeAddress: EthereumAddress,
+            abortSignal: AbortSignal
+        ) => AsyncGenerator<StreamMessage>,
         getStorageNodeAddresses: () => Promise<EthereumAddress[]>,
         strategy: GapFillStrategy = 'light'
     ) => {

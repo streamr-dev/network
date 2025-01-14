@@ -68,7 +68,8 @@ export class StreamIDBuilder {
         return (streamPartId: StreamPartID) => {
             return (
                 targetStreamId === StreamPartIDUtils.getStreamID(streamPartId) &&
-                (targetPartition === undefined || targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId))
+                (targetPartition === undefined ||
+                    targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId))
             )
         }
     }

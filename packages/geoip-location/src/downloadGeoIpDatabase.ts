@@ -13,7 +13,12 @@ const HASH_SUFFIX = '.mmdb.sha384'
 
 const logger = new Logger(module)
 
-const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string, abortSignal: AbortSignal): Promise<void> => {
+const downloadNewDb = async (
+    url: string,
+    dbFolder: string,
+    remoteHash: string,
+    abortSignal: AbortSignal
+): Promise<void> => {
     // make a unique name for the temporary download folder
     // in case there are multiple downloads happening at the same time
 

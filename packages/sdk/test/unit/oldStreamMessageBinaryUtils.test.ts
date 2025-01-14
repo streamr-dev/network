@@ -1,6 +1,9 @@
 import { randomUserId } from '@streamr/test-utils'
 import { toStreamID } from '@streamr/utils'
-import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
+import {
+    convertBytesToStreamMessage,
+    convertStreamMessageToBytes
+} from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'

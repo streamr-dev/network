@@ -129,7 +129,9 @@ export class NetworkNodeFacade {
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor,
                 websocketPortRange:
-                    this.config.network.controlLayer.websocketPortRange !== null ? this.config.network.controlLayer.websocketPortRange : undefined
+                    this.config.network.controlLayer.websocketPortRange !== null
+                        ? this.config.network.controlLayer.websocketPortRange
+                        : undefined
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
@@ -281,15 +283,29 @@ export class NetworkNodeFacade {
         return this.cachedNode!.inspect(peerDescriptor, streamPartId)
     }
 
-    async setProxies(streamPartId: StreamPartID, nodes: NetworkPeerDescriptor[], direction: ProxyDirection, connectionCount?: number): Promise<void> {
+    async setProxies(
+        streamPartId: StreamPartID,
+        nodes: NetworkPeerDescriptor[],
+        direction: ProxyDirection,
+        connectionCount?: number
+    ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
         const peerDescriptors = nodes.map(peerDescriptorTranslator)
-        await this.cachedNode!.setProxies(streamPartId, peerDescriptors, direction, await this.authentication.getUserId(), connectionCount)
+        await this.cachedNode!.setProxies(
+            streamPartId,
+            peerDescriptors,
+            direction,
+            await this.authentication.getUserId(),
+            connectionCount
+        )
     }
 
-    async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: NetworkPeerDescriptor[]): Promise<void> {
+    async setStreamPartEntryPoints(
+        streamPartId: StreamPartID,
+        nodeDescriptors: NetworkPeerDescriptor[]
+    ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
@@ -297,7 +313,10 @@ export class NetworkNodeFacade {
         this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
-    async discoverOperators(leader: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<NetworkPeerDescriptor[]> {
+    async discoverOperators(
+        leader: NetworkPeerDescriptor,
+        streamPartId: StreamPartID
+    ): Promise<NetworkPeerDescriptor[]> {
         const client = await this.createExternalRpcClient(OperatorDiscoveryClient)
         const response = await client.discoverOperators(OperatorDiscoveryRequest.create({ streamPartId }), {
             sourceDescriptor: await this.getPeerDescriptor(),
@@ -306,14 +325,18 @@ export class NetworkNodeFacade {
         return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))
     }
 
-    private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): Promise<ProtoRpcClient<T>> {
+    private async createExternalRpcClient<T extends ExternalRpcClient>(
+        clientClass: ExternalRpcClientClass<T>
+    ): Promise<ProtoRpcClient<T>> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
         return this.cachedNode!.createExternalRpcClient(clientClass)
     }
 
-    async registerOperator(opts: { getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[] }): Promise<void> {
+    async registerOperator(opts: {
+        getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[]
+    }): Promise<void> {
         const node = await this.getNode()
         node.registerExternalNetworkRpcMethod(
             OperatorDiscoveryRequest,
@@ -322,7 +345,9 @@ export class NetworkNodeFacade {
             async (request: OperatorDiscoveryRequest) => {
                 const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
                 const operators = opts.getAssignedNodesForStreamPart(streamPartId)
-                return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
+                return OperatorDiscoveryResponse.create({
+                    operators: operators.map((operator) => peerDescriptorTranslator(operator))
+                })
             }
         )
     }

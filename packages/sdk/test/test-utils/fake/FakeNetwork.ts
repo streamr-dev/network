@@ -61,7 +61,10 @@ export class FakeNetwork {
             .map((m) => m.message)
     }
 
-    async waitForSentMessages(opts: SentMessagesFilter & { count: number }, timeout = 60 * 1000): Promise<StreamMessage[]> {
+    async waitForSentMessages(
+        opts: SentMessagesFilter & { count: number },
+        timeout = 60 * 1000
+    ): Promise<StreamMessage[]> {
         let found: StreamMessage[] = []
         const count = opts.count
         await until(

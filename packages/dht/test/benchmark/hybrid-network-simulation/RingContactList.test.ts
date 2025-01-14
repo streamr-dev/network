@@ -53,10 +53,16 @@ const mockData: [number, string][] = [
 
 const mockNodes: MockNode[] = mockData.map(([region, ipAddress]) => new MockNode(region, ipAddress))
 const referenceNode = mockNodes[5]
-const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor()))
+const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(
+    getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor())
+)
 
 mockNodes.forEach((node) => ringContactList.addContact(node))
 
-ringContactList.getClosestContacts().left.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
+ringContactList
+    .getClosestContacts()
+    .left.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
 logger.info('reference node: ' + ipv4ToString(referenceNode.getPeerDescriptor().ipAddress!))
-ringContactList.getClosestContacts().right.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
+ringContactList
+    .getClosestContacts()
+    .right.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))

@@ -146,10 +146,13 @@ export default class ServerPersistence implements PersistenceContext {
 
     async set(key: string, value: string, namespace: string): Promise<void> {
         await this.init()
-        await this.store!.run(`INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`, {
-            $key_: key,
-            $value_: value
-        })
+        await this.store!.run(
+            `INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`,
+            {
+                $key_: key,
+                $value_: value
+            }
+        )
     }
 
     async close(): Promise<void> {

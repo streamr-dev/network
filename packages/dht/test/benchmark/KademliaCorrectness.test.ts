@@ -23,9 +23,8 @@ describe('Kademlia correctness', () => {
     }
 
     const dhtIds: { type: string; data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> = JSON.parse(
-        fs.readFileSync('test/data/orderedneighbors.json').toString()
-    )
+    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> =
+        JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
         nodes = []
@@ -82,7 +81,13 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch {
-                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error(
+                    'Node ' +
+                        toNodeId(nodes[i].getLocalPeerDescriptor()) +
+                        ' had only ' +
+                        kademliaNeighbors.length +
+                        ' kademlia neighbors'
+                )
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

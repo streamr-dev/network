@@ -57,7 +57,10 @@ export class GroupKey {
             throw new GroupKeyError(`${this.name} data must be a Buffer: ${maybeGroupKey}`, maybeGroupKey)
         }
         if (maybeGroupKey.data.length !== 32) {
-            throw new GroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
+            throw new GroupKeyError(
+                `Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`,
+                maybeGroupKey
+            )
         }
     }
 

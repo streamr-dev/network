@@ -15,7 +15,9 @@ export const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: S
                 const existingValue = get(clientConfig, item.path)
                 if (!isEqual(item.value, existingValue)) {
                     const formattedValue = isString(existingValue) ? existingValue : `${JSON.stringify(existingValue)}`
-                    throw new Error(`Plugin ${plugin.name} doesn't support client config value "${formattedValue}" in ${item.path}`)
+                    throw new Error(
+                        `Plugin ${plugin.name} doesn't support client config value "${formattedValue}" in ${item.path}`
+                    )
                 }
             }
         }

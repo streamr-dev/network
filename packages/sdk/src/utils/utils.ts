@@ -47,7 +47,9 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
             const numTracked = Object.keys(counts).length
             if (numTracked > maxPrefixes) {
                 didWarn = true
-                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${maxPrefixes}`)
+                console.warn(
+                    `counterId should not be used for a large number of unique prefixes: ${numTracked} > ${maxPrefixes}`
+                )
             }
         }
 

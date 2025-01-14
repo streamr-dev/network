@@ -53,7 +53,10 @@ describe('NetworkStack NodeInfoRpc', () => {
         })
         await requesteStack.start()
         await otherStack.start()
-        nodeInfoClient = new NodeInfoClient(requestorPeerDescriptor, new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, requestorTransport))
+        nodeInfoClient = new NodeInfoClient(
+            requestorPeerDescriptor,
+            new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, requestorTransport)
+        )
     })
 
     afterEach(async () => {
@@ -83,7 +86,10 @@ describe('NetworkStack NodeInfoRpc', () => {
             peerDescriptor: normalizePeerDescriptor(requesteePeerDescriptor),
             controlLayer: {
                 neighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                connections: [normalizePeerDescriptor(otherPeerDescriptor), normalizePeerDescriptor(requestorPeerDescriptor)]
+                connections: [
+                    normalizePeerDescriptor(otherPeerDescriptor),
+                    normalizePeerDescriptor(requestorPeerDescriptor)
+                ]
             },
             streamPartitions: [
                 {

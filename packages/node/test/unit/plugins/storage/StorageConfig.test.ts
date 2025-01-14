@@ -1,5 +1,13 @@
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, toStreamID, toStreamPartID, wait } from '@streamr/utils'
+import {
+    EthereumAddress,
+    StreamPartID,
+    StreamPartIDUtils,
+    toEthereumAddress,
+    toStreamID,
+    toStreamPartID,
+    wait
+} from '@streamr/utils'
 import range from 'lodash/range'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 
@@ -123,7 +131,11 @@ describe(StorageConfig, () => {
         it('stream part listeners invoked', () => {
             expect(onStreamPartAdded).toHaveBeenCalledTimes(2 + 1)
             expect(onStreamPartRemoved).toHaveBeenCalledTimes(2)
-            expect(onStreamPartAdded.mock.calls).toEqual([[parse('stream-1#0')], [parse('stream-1#1')], [parse('stream-3#0')]])
+            expect(onStreamPartAdded.mock.calls).toEqual([
+                [parse('stream-1#0')],
+                [parse('stream-1#1')],
+                [parse('stream-3#0')]
+            ])
             expect(onStreamPartRemoved.mock.calls).toEqual([[parse('stream-1#0')], [parse('stream-1#1')]])
         })
 

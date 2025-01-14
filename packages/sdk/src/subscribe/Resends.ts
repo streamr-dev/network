@@ -23,7 +23,11 @@ import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
-import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream } from '../utils/utils'
+import {
+    FetchHttpStreamResponseError,
+    createQueryString,
+    fetchLengthPrefixedFrameHttpBinaryStream
+} from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
@@ -79,10 +83,22 @@ function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
 }
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
-    return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
+    return (
+        options &&
+        typeof options === 'object' &&
+        'from' in options &&
+        'to' in options &&
+        options.to &&
+        options.from != null
+    )
 }
 
-const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
+const createUrl = (
+    baseUrl: string,
+    endpointSuffix: string,
+    streamPartId: StreamPartID,
+    query: QueryDict = {}
+): string => {
     const queryMap = {
         ...query,
         format: 'raw'
@@ -116,7 +132,8 @@ const getHttpErrorTransform = (): ((error: any) => Promise<StreamrClientError>) 
 export const toInternalResendOptions = (options: ResendOptions): InternalResendOptions => {
     return {
         ...options,
-        publisherId: 'publisherId' in options && options.publisherId !== undefined ? toUserId(options.publisherId) : undefined
+        publisherId:
+            'publisherId' in options && options.publisherId !== undefined ? toUserId(options.publisherId) : undefined
     }
 }
 
@@ -127,7 +144,6 @@ export class Resends {
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
-    /* eslint-disable indent */
     constructor(
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
@@ -236,7 +252,10 @@ export class Resends {
                   getStorageNodes: async () => without(nodeAddresses, nodeAddress),
                   config: nodeAddresses.length === 1 ? { ...this.config, orderMessages: false } : this.config
               })
-        const lines = transformError(fetchLengthPrefixedFrameHttpBinaryStream(url, abortSignal), getHttpErrorTransform())
+        const lines = transformError(
+            fetchLengthPrefixedFrameHttpBinaryStream(url, abortSignal),
+            getHttpErrorTransform()
+        )
         setImmediate(async () => {
             let count = 0
             const messages = map(lines, (bytes: Uint8Array) => convertBytesToStreamMessage(bytes))

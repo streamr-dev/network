@@ -158,7 +158,10 @@ export class RestServer {
         }
     }
 
-    private createNewCertificateForExistingSubdomain = async (req: express.Request, res: express.Response): Promise<void> => {
+    private createNewCertificateForExistingSubdomain = async (
+        req: express.Request,
+        res: express.Response
+    ): Promise<void> => {
         const subdomain = req.params.subdomain
         const body = req.body as UpdateIpAndPortRequest
 
@@ -239,7 +242,14 @@ export class RestServer {
                 token
         )
         try {
-            await this.engine.updateSubdomainIp(subdomain, ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
+            await this.engine.updateSubdomainIp(
+                subdomain,
+                ipAndPort.ip,
+                ipAndPort.port,
+                streamrWebSocketPort,
+                sessionId,
+                token
+            )
 
             sendResponse(res)
         } catch (err) {

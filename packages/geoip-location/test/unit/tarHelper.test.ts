@@ -33,7 +33,9 @@ describe('tarHelper', () => {
             const url = serverUrl + serverPort + '/' + hashFileName
             const result = await fetch(url)
 
-            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('TAR_BAD_ARCHIVE: Unrecognized archive format')
+            await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow(
+                'TAR_BAD_ARCHIVE: Unrecognized archive format'
+            )
         })
 
         it('throws asynchonously if the stream does not contain the desired file', async () => {
@@ -66,7 +68,9 @@ describe('tarHelper', () => {
                 const url = serverUrl + serverPort + '/' + tarFileName
                 const result = await fetch(url, { signal: abortController.signal })
 
-                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('AbortError: This operation was aborted')
+                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow(
+                    'AbortError: This operation was aborted'
+                )
             },
             15 * 1000
         )
@@ -81,7 +85,9 @@ describe('tarHelper', () => {
 
                 const url = serverUrl + serverPort + '/' + tarFileName
                 const result = await fetch(url)
-                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow('Error extracting tarball')
+                await expect(extractFileFromTarStream(dbFileName, result.body!, '/tmp')).rejects.toThrow(
+                    'Error extracting tarball'
+                )
                 await closedPromise
             },
             15 * 1000

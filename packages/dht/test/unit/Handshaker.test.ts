@@ -72,7 +72,12 @@ describe('Handshaker', () => {
 
     describe('Outgoing', () => {
         beforeEach(() => {
-            handshaker = createOutgoingHandshaker(createMockPeerDescriptor(), pendingConnection, connection, createMockPeerDescriptor())
+            handshaker = createOutgoingHandshaker(
+                createMockPeerDescriptor(),
+                pendingConnection,
+                connection,
+                createMockPeerDescriptor()
+            )
         })
 
         afterEach(() => {

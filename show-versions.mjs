@@ -23,7 +23,9 @@ const warnings = []
 packages.forEach((pkg, index) => {
     const pkgJSON = pkgJSONs[pkg.name]
     // all dependencies of pkg
-    const deps = Object.entries({ ...pkgJSON.dependencies, ...pkgJSON.devDependencies }).filter(([name]) => pkgNames.has(name))
+    const deps = Object.entries({ ...pkgJSON.dependencies, ...pkgJSON.devDependencies }).filter(([name]) =>
+        pkgNames.has(name)
+    )
 
     // create output for each column
     const depsOutput = [...pkgNames].map((colName) => {
@@ -45,7 +47,9 @@ packages.forEach((pkg, index) => {
             )
         }
         if (!shouldLink) {
-            warnings.push(`${chalk.white(pkg.name)} depends on non-linked ${chalk.white(name)}: ${chalk.red(semverRange)}`)
+            warnings.push(
+                `${chalk.white(pkg.name)} depends on non-linked ${chalk.white(name)}: ${chalk.red(semverRange)}`
+            )
         }
         return `${shouldLink && exact ? `${chalk.green('✓')} ${semverRange}` : shouldLink ? chalk.yellow(semverRange) : chalk.red(semverRange)}`
     })

@@ -9,7 +9,13 @@ import { StreamPermission } from '../../src/permission'
 import { convertBytesToGroupKeyRequest } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 describe('SubscriberKeyExchange', () => {
     let publisherWallet: Wallet
@@ -31,7 +37,11 @@ describe('SubscriberKeyExchange', () => {
         return s.id
     }
 
-    const triggerGroupKeyRequest = async (streamPartId: StreamPartID, key: GroupKey, publisher: StreamrClient): Promise<void> => {
+    const triggerGroupKeyRequest = async (
+        streamPartId: StreamPartID,
+        key: GroupKey,
+        publisher: StreamrClient
+    ): Promise<void> => {
         const publisherNode = publisher.getNode()
         await publisherNode.broadcast(
             await createMockMessage({
@@ -107,7 +117,13 @@ describe('SubscriberKeyExchange', () => {
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
-            await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(subscriberWallet.address), SignatureType.SECP256K1)
+            await assertGroupKeyRequest(
+                request,
+                streamPartId,
+                [groupKey.id],
+                toUserId(subscriberWallet.address),
+                SignatureType.SECP256K1
+            )
             const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
             await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
@@ -140,7 +156,13 @@ describe('SubscriberKeyExchange', () => {
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
-            await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(erc1271Contract), SignatureType.ERC_1271)
+            await assertGroupKeyRequest(
+                request,
+                streamPartId,
+                [groupKey.id],
+                toUserId(erc1271Contract),
+                SignatureType.ERC_1271
+            )
             const keyStore = getLocalGroupKeyStore(toUserId(await subscriber.getUserId()))
             await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })

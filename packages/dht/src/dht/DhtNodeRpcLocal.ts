@@ -48,9 +48,15 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     // TODO rename to getClosestRingContacts (breaking change)
-    async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
+    async getClosestRingPeers(
+        request: ClosestRingPeersRequest,
+        context: ServerCallContext
+    ): Promise<ClosestRingPeersResponse> {
         this.options.addContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const closestContacts = this.options.getClosestRingContactsTo(request.ringId as RingIdRaw, this.options.peerDiscoveryQueryBatchSize)
+        const closestContacts = this.options.getClosestRingContactsTo(
+            request.ringId as RingIdRaw,
+            this.options.peerDiscoveryQueryBatchSize
+        )
         const response = {
             leftPeers: closestContacts.left,
             rightPeers: closestContacts.right,

@@ -37,9 +37,8 @@ describe('Ring correctness', () => {
     }
 
     const dhtIds: { type: string; data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> = JSON.parse(
-        fs.readFileSync('test/data/orderedneighbors.json').toString()
-    )
+    const groundTruth: Record<string, { name: string; distance: number; id: { type: string; data: number[] } }[]> =
+        JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
         jest.setTimeout(60000)
@@ -49,7 +48,11 @@ describe('Ring correctness', () => {
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockRingNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[i].data)), regions[i + 1])
+            const node = await createMockRingNode(
+                simulator,
+                toDhtAddress(Uint8Array.from(dhtIds[i].data)),
+                regions[i + 1]
+            )
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
@@ -131,7 +134,13 @@ describe('Ring correctness', () => {
                     correctNeighbors++
                 }
             } catch {
-                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error(
+                    'Node ' +
+                        toNodeId(nodes[i].getLocalPeerDescriptor()) +
+                        ' had only ' +
+                        kademliaNeighbors.length +
+                        ' kademlia neighbors'
+                )
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

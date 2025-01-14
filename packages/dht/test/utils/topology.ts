@@ -31,7 +31,12 @@ export const getTopologyPartitions = (topology: Multimap<DhtAddress, DhtAddress>
     return partitions
 }
 
-const getClosestNodes = (referenceId: DhtAddress, nodeIds: DhtAddress[], count: number, allowToContainReferenceId: boolean): DhtAddress[] => {
+const getClosestNodes = (
+    referenceId: DhtAddress,
+    nodeIds: DhtAddress[],
+    count: number,
+    allowToContainReferenceId: boolean
+): DhtAddress[] => {
     const list = new SortedContactList({
         referenceId,
         allowToContainReferenceId,
@@ -70,7 +75,9 @@ export const createTestTopology = (nodeCount: number, minNeighorCount: number): 
                 const closestNodedId = getClosestNodes(nodeId, otherNodes, 1, false)[0]
                 return [nodeId, closestNodedId]
             })
-            const mergePair = minBy(closestPairs, (pair) => getDistance(toDhtAddressRaw(pair[0]), toDhtAddressRaw(pair[1])))!
+            const mergePair = minBy(closestPairs, (pair) =>
+                getDistance(toDhtAddressRaw(pair[0]), toDhtAddressRaw(pair[1]))
+            )!
             topology.add(mergePair[0], mergePair[1])
             topology.add(mergePair[1], mergePair[0])
         }

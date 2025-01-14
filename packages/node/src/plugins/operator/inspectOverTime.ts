@@ -1,7 +1,13 @@
 import { AbortError, composeAbortSignals, EthereumAddress, Gate, Logger, wait } from '@streamr/utils'
 import { StreamrClient } from '@streamr/sdk'
 import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
-import { findNodesForTargetGivenFleetState, FindNodesForTargetGivenFleetStateFn, inspectTarget, InspectTargetFn, Target } from './inspectionUtils'
+import {
+    findNodesForTargetGivenFleetState,
+    FindNodesForTargetGivenFleetStateFn,
+    inspectTarget,
+    InspectTargetFn,
+    Target
+} from './inspectionUtils'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import range from 'lodash/range'
 

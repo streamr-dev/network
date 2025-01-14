@@ -21,7 +21,9 @@ export class GroupKeyResponseTranslator {
     }
 
     static toClientProtocol(msg: NewGroupKeyResponse): OldGroupKeyResponse {
-        const encryptedGroupKeys = msg.groupKeys.map((groupKey: NewGroupKey) => new OldEncryptedGroupKey(groupKey.id, groupKey.data))
+        const encryptedGroupKeys = msg.groupKeys.map(
+            (groupKey: NewGroupKey) => new OldEncryptedGroupKey(groupKey.id, groupKey.data)
+        )
         return new OldGroupKeyResponse({
             requestId: msg.requestId,
             recipient: toUserId(msg.recipientId),

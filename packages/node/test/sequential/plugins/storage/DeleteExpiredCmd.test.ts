@@ -17,7 +17,8 @@ jest.setTimeout(30000)
 
 const insertBucket = async (cassandraClient: Client, streamId: string, dateCreate: number) => {
     const bucketId = TimeUuid.fromDate(new Date(dateCreate)).toString()
-    const query = 'INSERT INTO bucket (stream_id, partition, date_create, id, records, size)' + 'VALUES (?, 0, ?, ?, 1, 1)'
+    const query =
+        'INSERT INTO bucket (stream_id, partition, date_create, id, records, size)' + 'VALUES (?, 0, ?, ?, 1, 1)'
     await cassandraClient.execute(query, [streamId, dateCreate, bucketId], {
         prepare: true
     })
@@ -29,9 +30,13 @@ const insertData = async (cassandraClient: Client, streamId: string, bucketId: B
         'INSERT INTO stream_data ' +
         '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) ' +
         'VALUES (?, 0, ?, ?, 0, ?, ?, ?)'
-    await cassandraClient.execute(insert, [streamId, bucketId, new Date(ts), 'publisherId', 'msgChainId', Buffer.from('{}')], {
-        prepare: true
-    })
+    await cassandraClient.execute(
+        insert,
+        [streamId, bucketId, new Date(ts), 'publisherId', 'msgChainId', Buffer.from('{}')],
+        {
+            prepare: true
+        }
+    )
 }
 
 const checkDBCount = async (cassandraClient: Client, streamId: string) => {

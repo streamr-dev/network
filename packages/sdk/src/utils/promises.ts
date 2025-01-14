@@ -42,7 +42,10 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
 export function pOnce<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
 ): ((...args: ArgsType) => Promise<ReturnType>) & { reset(): void; isStarted(): boolean } {
-    type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending'; promise: Promise<ReturnType> }
+    type CallStatus =
+        | PromiseSettledResult<ReturnType>
+        | { status: 'init' }
+        | { status: 'pending'; promise: Promise<ReturnType> }
     let currentCall: CallStatus = { status: 'init' }
 
     return Object.assign(
@@ -106,7 +109,10 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
 }
 
 // TODO better type annotations
-export const withThrottling = (fn: (...args: any[]) => Promise<any>, maxInvocationsPerSecond: number): ((...args: any[]) => Promise<any>) => {
+export const withThrottling = (
+    fn: (...args: any[]) => Promise<any>,
+    maxInvocationsPerSecond: number
+): ((...args: any[]) => Promise<any>) => {
     const throttler = pThrottle({
         limit: maxInvocationsPerSecond,
         interval: 1000

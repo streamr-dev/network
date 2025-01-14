@@ -34,7 +34,11 @@ export class ERC1271ContractFacade {
         })
     }
 
-    async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
+    async isValidSignature(
+        contractAddress: EthereumAddress,
+        payload: Uint8Array,
+        signature: Uint8Array
+    ): Promise<boolean> {
         const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
         const cacheKey = formCacheKey(contractAddress, recoveredSignerUserId)
         const cachedValue = this.publisherCache.get(cacheKey)

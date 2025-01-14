@@ -24,11 +24,16 @@ export interface TestERC1271Interface extends utils.Interface {
         'setAddresses(address[])': FunctionFragment
     }
 
-    getFunction(nameOrSignatureOrTopic: 'addressList' | 'getAddresses' | 'isValidSignature' | 'setAddresses'): FunctionFragment
+    getFunction(
+        nameOrSignatureOrTopic: 'addressList' | 'getAddresses' | 'isValidSignature' | 'setAddresses'
+    ): FunctionFragment
 
     encodeFunctionData(functionFragment: 'addressList', values: [PromiseOrValue<BigNumberish>]): string
     encodeFunctionData(functionFragment: 'getAddresses', values?: undefined): string
-    encodeFunctionData(functionFragment: 'isValidSignature', values: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]): string
+    encodeFunctionData(
+        functionFragment: 'isValidSignature',
+        values: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
+    ): string
     encodeFunctionData(functionFragment: 'setAddresses', values: [PromiseOrValue<string>[]]): string
 
     decodeFunctionResult(functionFragment: 'addressList', data: BytesLike): Result
@@ -66,7 +71,11 @@ export interface TestERC1271 extends BaseContract {
 
         getAddresses(overrides?: CallOverrides): Promise<[string[]]>
 
-        isValidSignature(_hash: PromiseOrValue<BytesLike>, _signature: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[string]>
+        isValidSignature(
+            _hash: PromiseOrValue<BytesLike>,
+            _signature: PromiseOrValue<BytesLike>,
+            overrides?: CallOverrides
+        ): Promise<[string]>
 
         setAddresses(
             validAddresses: PromiseOrValue<string>[],
@@ -78,16 +87,27 @@ export interface TestERC1271 extends BaseContract {
 
     getAddresses(overrides?: CallOverrides): Promise<string[]>
 
-    isValidSignature(_hash: PromiseOrValue<BytesLike>, _signature: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<string>
+    isValidSignature(
+        _hash: PromiseOrValue<BytesLike>,
+        _signature: PromiseOrValue<BytesLike>,
+        overrides?: CallOverrides
+    ): Promise<string>
 
-    setAddresses(validAddresses: PromiseOrValue<string>[], overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
+    setAddresses(
+        validAddresses: PromiseOrValue<string>[],
+        overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>
 
     callStatic: {
         addressList(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
 
         getAddresses(overrides?: CallOverrides): Promise<string[]>
 
-        isValidSignature(_hash: PromiseOrValue<BytesLike>, _signature: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<string>
+        isValidSignature(
+            _hash: PromiseOrValue<BytesLike>,
+            _signature: PromiseOrValue<BytesLike>,
+            overrides?: CallOverrides
+        ): Promise<string>
 
         setAddresses(validAddresses: PromiseOrValue<string>[], overrides?: CallOverrides): Promise<void>
     }
@@ -99,9 +119,16 @@ export interface TestERC1271 extends BaseContract {
 
         getAddresses(overrides?: CallOverrides): Promise<BigNumber>
 
-        isValidSignature(_hash: PromiseOrValue<BytesLike>, _signature: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>
+        isValidSignature(
+            _hash: PromiseOrValue<BytesLike>,
+            _signature: PromiseOrValue<BytesLike>,
+            overrides?: CallOverrides
+        ): Promise<BigNumber>
 
-        setAddresses(validAddresses: PromiseOrValue<string>[], overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<BigNumber>
+        setAddresses(
+            validAddresses: PromiseOrValue<string>[],
+            overrides?: Overrides & { from?: PromiseOrValue<string> }
+        ): Promise<BigNumber>
     }
 
     populateTransaction: {

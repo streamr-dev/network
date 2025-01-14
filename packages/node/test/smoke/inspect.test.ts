@@ -185,7 +185,10 @@ const getFlags = async (
     }))
 }
 
-const getOperatorStakeCount = async (operatorContractAddress: string, theGraphClient: TheGraphClient): Promise<number> => {
+const getOperatorStakeCount = async (
+    operatorContractAddress: string,
+    theGraphClient: TheGraphClient
+): Promise<number> => {
     const query = `
     {
         operator(id: "${operatorContractAddress.toLowerCase()}") {
@@ -226,7 +229,11 @@ describe('inspect', () => {
             logger.info('Setup sponsorship')
             const streamId = await createStream()
             const sponsorer = await generateWalletWithGasAndTokens()
-            const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
+            const sponsorship = await deploySponsorshipContract({
+                earningsPerSecond: 0n,
+                streamId,
+                deployer: sponsorer
+            })
             logger.info('Create operators')
             freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
             const CONFIG = {
@@ -256,7 +263,9 @@ describe('inspect', () => {
             // select only offline nodes, but because of ETH-784 the reviewer set won't change).
             logger.info('Unstake pre-baked operators')
             for (const operator of PRE_BAKED_OPERATORS) {
-                const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getProvider())) as any
+                const contract = getOperatorContract(operator.contractAddress).connect(
+                    new Wallet(operator.privateKey, getProvider())
+                ) as any
                 await (await contract.unstake(PRE_BAKED_SPONSORSHIP)).wait()
             }
 
@@ -326,9 +335,13 @@ describe('inspect', () => {
             expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(
                 DELEGATE_AMOUNT - multiplyWeiAmount(STAKE_AMOUNT, SLASHING_PERCENTAGE / 100)
             )
-            expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_AMOUNT - STAKE_AMOUNT + FLAGGER_REWARD_AMOUNT)
+            expect(await getTokenBalance(flags[0].flagger, token)).toEqual(
+                DELEGATE_AMOUNT - STAKE_AMOUNT + FLAGGER_REWARD_AMOUNT
+            )
             for (const voter of flags[0].votes.map((vote) => vote.voter)) {
-                expect(await getTokenBalance(voter, token)).toEqual(DELEGATE_AMOUNT - STAKE_AMOUNT + REVIEWER_REWARD_AMOUNT)
+                expect(await getTokenBalance(voter, token)).toEqual(
+                    DELEGATE_AMOUNT - STAKE_AMOUNT + REVIEWER_REWARD_AMOUNT
+                )
             }
         },
         1.1 * MAX_TEST_RUN_TIME

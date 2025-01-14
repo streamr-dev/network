@@ -89,7 +89,13 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on another stream part', async () => {
-        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(
+            proxiedStreamPart,
+            [proxyNodeDescriptor],
+            ProxyDirection.PUBLISH,
+            PROXIED_NODE_USER_ID,
+            1
+        )
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
@@ -104,12 +110,22 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(
+            true
+        )
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(
+            false
+        )
     })
 
     it('proxied node can act as full node on multiple stream parts', async () => {
-        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(
+            proxiedStreamPart,
+            [proxyNodeDescriptor],
+            ProxyDirection.PUBLISH,
+            PROXIED_NODE_USER_ID,
+            1
+        )
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
@@ -117,25 +133,29 @@ describe('proxy and full node', () => {
                 proxyNode.stack.getContentDeliveryManager() as any,
                 'newMessage',
                 5000,
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)
+                (streamMessage: StreamMessage) =>
+                    streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)
             ),
             waitForEvent3(
                 proxyNode.stack.getContentDeliveryManager() as any,
                 'newMessage',
                 5000,
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)
+                (streamMessage: StreamMessage) =>
+                    streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)
             ),
             waitForEvent3(
                 proxyNode.stack.getContentDeliveryManager() as any,
                 'newMessage',
                 5000,
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)
+                (streamMessage: StreamMessage) =>
+                    streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)
             ),
             waitForEvent3(
                 proxyNode.stack.getContentDeliveryManager() as any,
                 'newMessage',
                 5000,
-                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)
+                (streamMessage: StreamMessage) =>
+                    streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)
             ),
             proxiedNode.broadcast(createMessage(regularStreamPart1)),
             proxiedNode.broadcast(createMessage(regularStreamPart2)),
@@ -150,10 +170,20 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart2)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart3)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart4)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(
+            true
+        )
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(
+            false
+        )
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart2)!.proxied).toBe(
+            false
+        )
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart3)!.proxied).toBe(
+            false
+        )
+        expect(proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(regularStreamPart4)!.proxied).toBe(
+            false
+        )
     })
 })

@@ -79,7 +79,11 @@ export class Publisher {
         })
     }
 
-    async publish(streamDefinition: StreamDefinition, content: unknown, metadata?: PublishMetadata): Promise<StreamMessage> {
+    async publish(
+        streamDefinition: StreamDefinition,
+        content: unknown,
+        metadata?: PublishMetadata
+    ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
         /*
          * There are some steps in the publish process which need to be done sequentially:

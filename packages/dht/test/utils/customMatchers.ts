@@ -15,7 +15,11 @@ declare global {
     }
 }
 
-const formErrorMessage = (field: keyof PeerDescriptor, expected: string | number | undefined, actual: string | number | undefined): string => {
+const formErrorMessage = (
+    field: keyof PeerDescriptor,
+    expected: string | number | undefined,
+    actual: string | number | undefined
+): string => {
     return `PeerDescriptor ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 

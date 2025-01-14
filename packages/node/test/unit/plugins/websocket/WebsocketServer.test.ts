@@ -51,12 +51,15 @@ describe('WebsocketServer', () => {
         await wsServer.stop()
     })
 
-    describe.each([['/streams/dummy/invalid-action'], ['/invalid-path'], ['/']])('invalid connection url', (path: string) => {
-        it(path, async () => {
-            wsClient = createTestClient(path)
-            await assertConnectionError(400)
-        })
-    })
+    describe.each([['/streams/dummy/invalid-action'], ['/invalid-path'], ['/']])(
+        'invalid connection url',
+        (path: string) => {
+            it(path, async () => {
+                wsClient = createTestClient(path)
+                await assertConnectionError(400)
+            })
+        }
+    )
 
     describe('publish', () => {
         const connectAndPublish = async (queryParams?: any) => {
@@ -142,16 +145,31 @@ describe('WebsocketServer', () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM)
             await waitForEvent(wsClient, 'open')
             expect(streamrClient.subscribe).toHaveBeenCalledTimes(1)
-            expect(streamrClient.subscribe).toHaveBeenCalledWith({ id: MOCK_STREAM_ID, partition: undefined }, expect.anything())
+            expect(streamrClient.subscribe).toHaveBeenCalledWith(
+                { id: MOCK_STREAM_ID, partition: undefined },
+                expect.anything()
+            )
         })
 
         it('valid partitions', async () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '0,2,5' })
             await waitForEvent(wsClient, 'open')
             expect(streamrClient.subscribe).toHaveBeenCalledTimes(3)
-            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(1, { id: MOCK_STREAM_ID, partition: 0 }, expect.anything())
-            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(2, { id: MOCK_STREAM_ID, partition: 2 }, expect.anything())
-            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(3, { id: MOCK_STREAM_ID, partition: 5 }, expect.anything())
+            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(
+                1,
+                { id: MOCK_STREAM_ID, partition: 0 },
+                expect.anything()
+            )
+            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(
+                2,
+                { id: MOCK_STREAM_ID, partition: 2 },
+                expect.anything()
+            )
+            expect(streamrClient.subscribe).toHaveBeenNthCalledWith(
+                3,
+                { id: MOCK_STREAM_ID, partition: 5 },
+                expect.anything()
+            )
         })
 
         it('invalid partitions', async () => {

@@ -30,8 +30,12 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const cipher1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
         const cipher2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH))
-        expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(INITIALIZATION_VECTOR_LENGTH))
+        expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(
+            cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH)
+        )
+        expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(
+            cipher2.slice(INITIALIZATION_VECTOR_LENGTH)
+        )
     })
 
     it('StreamMessage decryption: happy path', async () => {

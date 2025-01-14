@@ -26,4 +26,6 @@ export const WakeUpRequest = new WakeUpRequest$Type()
 /**
  * @generated ServiceType for protobuf service WakeUpRpcService
  */
-export const WakeUpRpcService = new ServiceType('WakeUpRpcService', [{ name: 'wakeUp', options: {}, I: WakeUpRequest, O: Empty }])
+export const WakeUpRpcService = new ServiceType('WakeUpRpcService', [
+    { name: 'wakeUp', options: {}, I: WakeUpRequest, O: Empty }
+])

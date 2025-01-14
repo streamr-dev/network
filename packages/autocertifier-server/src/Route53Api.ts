@@ -53,11 +53,21 @@ export class Route53Api {
         return response
     }
 
-    public async upsertRecord(recordType: RRType, fqdn: string, value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
+    public async upsertRecord(
+        recordType: RRType,
+        fqdn: string,
+        value: string,
+        ttl: number
+    ): Promise<ChangeResourceRecordSetsCommandOutput> {
         return this.changeRecords(ChangeAction.UPSERT, recordType, [{ fqdn, value }], ttl)
     }
 
-    public async deleteRecord(recordType: RRType, fqdn: string, value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
+    public async deleteRecord(
+        recordType: RRType,
+        fqdn: string,
+        value: string,
+        ttl: number
+    ): Promise<ChangeResourceRecordSetsCommandOutput> {
         return this.changeRecords(ChangeAction.DELETE, recordType, [{ fqdn, value }], ttl)
     }
 

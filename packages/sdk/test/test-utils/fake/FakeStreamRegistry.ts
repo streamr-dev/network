@@ -23,7 +23,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
 
-    constructor(chain: FakeChain, streamIdBuilder: StreamIDBuilder, @inject(AuthenticationInjectionToken) authentication: Authentication) {
+    constructor(
+        chain: FakeChain,
+        streamIdBuilder: StreamIDBuilder,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
+    ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
@@ -104,7 +108,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: UserID | PublicPermissionTarget, permissions: StreamPermission[]) => {
+            (
+                registryItem: StreamRegistryItem,
+                target: UserID | PublicPermissionTarget,
+                permissions: StreamPermission[]
+            ) => {
                 const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
                 registryItem.permissions.addAll(target, nonExistingPermissions)
             }
@@ -115,7 +123,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: UserID | PublicPermissionTarget, permissions: StreamPermission[]) => {
+            (
+                registryItem: StreamRegistryItem,
+                target: UserID | PublicPermissionTarget,
+                permissions: StreamPermission[]
+            ) => {
                 registryItem.permissions.removeAll(target, permissions)
             }
         )
@@ -124,7 +136,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     async updatePermissions(
         streamIdOrPath: string,
         assignments: InternalPermissionAssignment[],
-        modifyRegistryItem: (registryItem: StreamRegistryItem, target: UserID | PublicPermissionTarget, permissions: StreamPermission[]) => void
+        modifyRegistryItem: (
+            registryItem: StreamRegistryItem,
+            target: UserID | PublicPermissionTarget,
+            permissions: StreamPermission[]
+        ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const registryItem = this.chain.getStream(streamId)
@@ -194,7 +210,10 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncGenerator<StreamID> {
+    searchStreams(
+        _term: string | undefined,
+        _permissionFilter: InternalSearchStreamsPermissionFilter | undefined
+    ): AsyncGenerator<StreamID> {
         throw new Error('not implemented')
     }
 

@@ -35,7 +35,11 @@ export class DnsServer {
         this.db = db
     }
 
-    private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleSOAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
@@ -53,7 +57,11 @@ export class DnsServer {
         send(response)
     }
 
-    private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleNSQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
@@ -65,7 +73,11 @@ export class DnsServer {
         send(response)
     }
 
-    private handleTextQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleTextQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         const name = mixedCaseName.toLowerCase()
         logger.info('handleTextQuery() ' + name)
 
@@ -108,24 +120,40 @@ export class DnsServer {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private handleAAAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleAAAAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         logger.info('handleAAAAQuery() ' + mixedCaseName)
         send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private handleCNAMEQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleCNAMEQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         logger.info('handleCNAMEQuery() ' + mixedCaseName)
         send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleCAAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         logger.info('handleCAAQuery() ' + mixedCaseName)
         send(response)
     }
 
-    private handleAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void, response: DnsResponse): Promise<void> => {
+    private handleAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         const name = mixedCaseName.toLowerCase()
         logger.info('handleAQuery() ' + name)
 
@@ -171,7 +199,10 @@ export class DnsServer {
         send(response)
     }
 
-    private handleQuery: AsyncDnsHandler = async (request: DnsRequest, send: (response: DnsResponse) => void): Promise<void> => {
+    private handleQuery: AsyncDnsHandler = async (
+        request: DnsRequest,
+        send: (response: DnsResponse) => void
+    ): Promise<void> => {
         const response = Packet.createResponseFromRequest(request)
         // @ts-ignore private field
         response.header.aa = 1

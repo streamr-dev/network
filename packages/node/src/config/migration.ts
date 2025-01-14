@@ -184,7 +184,9 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
         } else {
             const backupFile = formBackupFileName(fileName)
             // eslint-disable-next-line no-console
-            console.log(`Migrating config ${fileName} to ${explicitTargetFile} (archiving the original file to ${backupFile})`)
+            console.log(
+                `Migrating config ${fileName} to ${explicitTargetFile} (archiving the original file to ${backupFile})`
+            )
             content = createMigratedConfig(content)
             const directory = path.dirname(explicitTargetFile)
             if (!fs.existsSync(directory)) {

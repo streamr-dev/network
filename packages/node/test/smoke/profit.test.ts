@@ -55,8 +55,10 @@ const PROTOCOL_FEE = multiplyWeiAmount(SPONSOR_AMOUNT, PROTOCOL_FEE_PERCENTAGE /
 const TOTAL_PROFIT = SPONSOR_AMOUNT - PROTOCOL_FEE
 const TOTAL_DELEGATED = OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
 const OPERATORS_CUT = multiplyWeiAmount(TOTAL_PROFIT, OPERATORS_CUT_PERCENTAGE / 100)
-const OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS = ((TOTAL_PROFIT - OPERATORS_CUT) * OPERATOR_DELEGATED_AMOUNT) / TOTAL_DELEGATED + OPERATORS_CUT
-const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS = ((TOTAL_PROFIT - OPERATORS_CUT) * EXTERNAL_DELEGATED_AMOUNT) / TOTAL_DELEGATED
+const OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS =
+    ((TOTAL_PROFIT - OPERATORS_CUT) * OPERATOR_DELEGATED_AMOUNT) / TOTAL_DELEGATED + OPERATORS_CUT
+const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS =
+    ((TOTAL_PROFIT - OPERATORS_CUT) * EXTERNAL_DELEGATED_AMOUNT) / TOTAL_DELEGATED
 // If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between
 // the operator and the delegator based on their respective delegated amounts. However, if there are withdrawals,
 // the operator gets a larger share of the profit. This happens because the operator's delegated amount
@@ -126,7 +128,11 @@ describe('profit', () => {
             await sponsor(sponsorWallet, await sponsorshipContract.getAddress(), SPONSOR_AMOUNT)
             await delegate(operatorWallet, await operatorContract.getAddress(), OPERATOR_DELEGATED_AMOUNT)
             await delegate(delegatorWallet, await operatorContract.getAddress(), EXTERNAL_DELEGATED_AMOUNT)
-            await stake(operatorContract, await sponsorshipContract.getAddress(), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
+            await stake(
+                operatorContract,
+                await sponsorshipContract.getAddress(),
+                OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
+            )
 
             const broker = await startBroker({
                 privateKey: operatorNodeWallet.privateKey,
@@ -153,8 +159,16 @@ describe('profit', () => {
             await broker.stop()
 
             await unstake(operatorContract, await sponsorshipContract.getAddress())
-            await undelegate(delegatorWallet, operatorContract, EXTERNAL_DELEGATED_AMOUNT + DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS)
-            await undelegate(operatorWallet, operatorContract, OPERATOR_DELEGATED_AMOUNT + OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS + PROFIT_INACCURACY)
+            await undelegate(
+                delegatorWallet,
+                operatorContract,
+                EXTERNAL_DELEGATED_AMOUNT + DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS
+            )
+            await undelegate(
+                operatorWallet,
+                operatorContract,
+                OPERATOR_DELEGATED_AMOUNT + OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS + PROFIT_INACCURACY
+            )
             const afterBalances = await getBalances()
             expect(afterBalances.operatorContract).toEqual(0n)
             const diff = {

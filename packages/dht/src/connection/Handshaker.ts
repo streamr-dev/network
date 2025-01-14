@@ -1,7 +1,13 @@
 import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
-import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    Message,
+    HandshakeRequest,
+    HandshakeResponse,
+    PeerDescriptor,
+    HandshakeError
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedProtocolVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
@@ -36,7 +42,10 @@ export const createOutgoingHandshaker = (
         pendingConnection.off('disconnected', managedConnectionDisconnectedListener)
     }
     const handshakeFailedListener = (error?: HandshakeError) => {
-        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_PROTOCOL_VERSION) {
+        if (
+            error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR ||
+            error === HandshakeError.UNSUPPORTED_PROTOCOL_VERSION
+        ) {
             pendingConnection.close(false)
             stopHandshaker()
         } else {
@@ -104,12 +113,19 @@ export const rejectHandshake = (
     pendingConnection.destroy()
 }
 
-export const acceptHandshake = (handshaker: Handshaker, pendingConnection: PendingConnection, connection: IConnection): void => {
+export const acceptHandshake = (
+    handshaker: Handshaker,
+    pendingConnection: PendingConnection,
+    connection: IConnection
+): void => {
     handshaker.sendHandshakeResponse()
     pendingConnection.onHandshakeCompleted(connection)
 }
 
-export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): Message => {
+export const createHandshakeRequest = (
+    localPeerDescriptor: PeerDescriptor,
+    remotePeerDescriptor: PeerDescriptor
+): Message => {
     const outgoingHandshake: HandshakeRequest = {
         sourcePeerDescriptor: localPeerDescriptor,
         targetPeerDescriptor: remotePeerDescriptor,
@@ -162,7 +178,12 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeRequest') {
                 logger.trace('handshake request received')
                 const handshake = message.body.handshakeRequest
-                this.emit('handshakeRequest', handshake.sourcePeerDescriptor!, handshake.protocolVersion, handshake.targetPeerDescriptor)
+                this.emit(
+                    'handshakeRequest',
+                    handshake.sourcePeerDescriptor!,
+                    handshake.protocolVersion,
+                    handshake.targetPeerDescriptor
+                )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')

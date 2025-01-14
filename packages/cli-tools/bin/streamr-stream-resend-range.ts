@@ -25,7 +25,12 @@ createClientCommand(
             publisherId: options.publisherId,
             msgChainId: options.msgChainId
         }
-        assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
+        assertBothOrNoneDefined(
+            'publisherId',
+            'msgChainId',
+            '--publisher-id must be accompanied by option --msg-chain-id',
+            options
+        )
         await resend(streamId, resendOptions, client, false)
     },
     {

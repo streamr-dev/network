@@ -155,7 +155,11 @@ class IndexingState {
         this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
         const gate = this.getOrCreateGate(blockNumber)
         try {
-            await withTimeout(gate.waitUntilOpen(), this.timeout, `The Graph did not synchronize to block ${blockNumber}`)
+            await withTimeout(
+                gate.waitUntilOpen(),
+                this.timeout,
+                `The Graph did not synchronize to block ${blockNumber}`
+            )
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this.gates.delete(gate)

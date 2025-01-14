@@ -2,7 +2,12 @@ import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
-import { ClosestPeersRequest, ClosestRingPeersRequest, PeerDescriptor, PingRequest } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    ClosestPeersRequest,
+    ClosestRingPeersRequest,
+    PeerDescriptor,
+    PingRequest
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'

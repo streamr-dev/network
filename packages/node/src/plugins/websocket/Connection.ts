@@ -23,7 +23,12 @@ export const addPingListener = (ws: WebSocket): void => {
     })
 }
 
-export const addPingSender = (ws: WebSocket, socketId: string, sendInterval: number, disconnectTimeout: number): void => {
+export const addPingSender = (
+    ws: WebSocket,
+    socketId: string,
+    sendInterval: number,
+    disconnectTimeout: number
+): void => {
     let pendingStateChange: NodeJS.Timeout
     type State = 'active' | 'idle' | 'disconnected'
 

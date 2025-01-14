@@ -9,7 +9,12 @@ import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
+import {
+    createGroupKeyQueue,
+    createStreamRegistry,
+    createTestStream,
+    startFailingStorageNode
+} from '../test-utils/utils'
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'

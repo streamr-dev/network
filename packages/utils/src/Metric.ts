@@ -167,7 +167,11 @@ class RateSampler extends Sampler {
     }
 
     getAggregatedValue(): number | undefined {
-        if (this.startTimestamp !== undefined && this.stopTimestamp !== undefined && this.startTimestamp !== this.stopTimestamp) {
+        if (
+            this.startTimestamp !== undefined &&
+            this.stopTimestamp !== undefined &&
+            this.startTimestamp !== this.stopTimestamp
+        ) {
             const elapsedSeconds = (this.stopTimestamp - this.startTimestamp) / 1000
             return this.sum / elapsedSeconds
         } else {

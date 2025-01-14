@@ -1,7 +1,11 @@
 import { DhtAddress, PeerDescriptor, RpcRemote, toNodeId, toDhtAddressRaw } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    InterleaveRequest,
+    InterleaveResponse,
+    StreamPartHandshakeRequest
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
@@ -24,7 +28,8 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
             streamPartId,
             requestId: v4(),
             neighborNodeIds: neighborNodeIds.map((id) => toDhtAddressRaw(id)),
-            concurrentHandshakeNodeId: concurrentHandshakeNodeId !== undefined ? toDhtAddressRaw(concurrentHandshakeNodeId) : undefined,
+            concurrentHandshakeNodeId:
+                concurrentHandshakeNodeId !== undefined ? toDhtAddressRaw(concurrentHandshakeNodeId) : undefined,
             interleaveNodeId: interleaveNodeId !== undefined ? toDhtAddressRaw(interleaveNodeId) : undefined
         }
         try {

@@ -180,7 +180,11 @@ export class Operator {
         })
     }
 
-    private initEventGateways(contractAddress: EthereumAddress, loggerFactory: LoggerFactory, eventPollInterval: number): void {
+    private initEventGateways(
+        contractAddress: EthereumAddress,
+        loggerFactory: LoggerFactory,
+        eventPollInterval: number
+    ): void {
         const chainEventPoller = new ChainEventPoller(
             this.rpcProviderSource.getSubProviders().map((p) => {
                 return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
@@ -404,7 +408,10 @@ export class Operator {
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
-    async getEarnings(minSponsorshipEarningsInWithdraw: WeiAmount, maxSponsorshipsInWithdraw: number): Promise<EarningsData> {
+    async getEarnings(
+        minSponsorshipEarningsInWithdraw: WeiAmount,
+        maxSponsorshipsInWithdraw: number
+    ): Promise<EarningsData> {
         const {
             addresses: allSponsorshipAddresses,
             earnings,
@@ -431,13 +438,22 @@ export class Operator {
 
     async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
-        await (await this.contract!.withdrawEarningsFromSponsorships(sponsorshipAddresses, await this.getEthersOverrides())).wait()
+        await (
+            await this.contract!.withdrawEarningsFromSponsorships(sponsorshipAddresses, await this.getEthersOverrides())
+        ).wait()
     }
 
-    async triggerAnotherOperatorWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+    async triggerAnotherOperatorWithdraw(
+        targetOperatorAddress: EthereumAddress,
+        sponsorshipAddresses: EthereumAddress[]
+    ): Promise<void> {
         await this.connectToContract()
         await (
-            await this.contract!.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses, await this.getEthersOverrides())
+            await this.contract!.triggerAnotherOperatorWithdraw(
+                targetOperatorAddress,
+                sponsorshipAddresses,
+                await this.getEthersOverrides()
+            )
         ).wait()
     }
 
@@ -554,7 +570,11 @@ export class Operator {
         return toStreamID(await sponsorship.streamId())
     }
 
-    async voteOnFlag(sponsorshipAddress: EthereumAddress, targetOperator: EthereumAddress, kick: boolean): Promise<void> {
+    async voteOnFlag(
+        sponsorshipAddress: EthereumAddress,
+        targetOperator: EthereumAddress,
+        kick: boolean
+    ): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await this.connectToContract()
 
@@ -563,14 +583,21 @@ export class Operator {
         const gasLimit = 1300000n
 
         // estimateGas throws if transaction would fail, so doing the gas estimation will avoid sending failing transactions
-        const gasEstimate = (await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData)) as bigint
+        const gasEstimate = (await this.contract!.voteOnFlag.estimateGas(
+            sponsorshipAddress,
+            targetOperator,
+            voteData
+        )) as bigint
         if (gasEstimate > gasLimit) {
             throw new Error(`Gas estimate (${gasEstimate}) exceeds limit (${gasLimit})`)
         }
 
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
         await (
-            await this.contract!.voteOnFlag(sponsorshipAddress, targetOperator, voteData, { ...(await this.getEthersOverrides()), gasLimit })
+            await this.contract!.voteOnFlag(sponsorshipAddress, targetOperator, voteData, {
+                ...(await this.getEthersOverrides()),
+                gasLimit
+            })
         ).wait()
     }
 
@@ -592,7 +619,10 @@ export class Operator {
         try {
             metadata = JSON.parse(metadataAsString)
         } catch {
-            logger.warn('Encountered malformed metadata', { operatorAddress: await this.getContractAddress(), metadataAsString })
+            logger.warn('Encountered malformed metadata', {
+                operatorAddress: await this.getContractAddress(),
+                metadataAsString
+            })
             return undefined
         }
         let validatedMetadata: z.infer<typeof MetadataSchema>
@@ -624,7 +654,12 @@ export class Operator {
     private async connectToContract(): Promise<void> {
         if (this.contract === undefined) {
             const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-            this.contract = this.contractFactory.createWriteContract<OperatorContract>(this.contractAddress, OperatorArtifact, signer, 'operator')
+            this.contract = this.contractFactory.createWriteContract<OperatorContract>(
+                this.contractAddress,
+                OperatorArtifact,
+                signer,
+                'operator'
+            )
         }
     }
 }

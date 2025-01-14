@@ -31,7 +31,8 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             controlLayer: {
                 ...config.client.network?.controlLayer,
                 // TODO: more cleaner solution?
-                geoIpDatabaseFolder: config.client.network?.controlLayer?.geoIpDatabaseFolder ?? '~/.streamr/geoipdatabases'
+                geoIpDatabaseFolder:
+                    config.client.network?.controlLayer?.geoIpDatabaseFolder ?? '~/.streamr/geoipdatabases'
             }
         }
     })

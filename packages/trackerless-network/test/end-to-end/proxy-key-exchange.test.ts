@@ -1,7 +1,11 @@
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toUserIdRaw, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ProxyDirection, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    ProxyDirection,
+    SignatureType,
+    StreamMessage
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
@@ -82,7 +86,10 @@ describe('proxy group key exchange', () => {
             signature: hexToBinary('1234')
         }
 
-        await Promise.all([waitForEvent3(publisher.stack.getContentDeliveryManager() as any, 'newMessage'), subscriber.broadcast(request)])
+        await Promise.all([
+            waitForEvent3(publisher.stack.getContentDeliveryManager() as any, 'newMessage'),
+            subscriber.broadcast(request)
+        ])
     })
 
     it('happy path response', async () => {
@@ -110,6 +117,9 @@ describe('proxy group key exchange', () => {
             signature: hexToBinary('1234')
         }
 
-        await Promise.all([waitForEvent3(subscriber.stack.getContentDeliveryManager() as any, 'newMessage'), publisher.broadcast(response)])
+        await Promise.all([
+            waitForEvent3(subscriber.stack.getContentDeliveryManager() as any, 'newMessage'),
+            publisher.broadcast(response)
+        ])
     })
 })

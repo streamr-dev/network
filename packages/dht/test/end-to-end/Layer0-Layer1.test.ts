@@ -37,11 +37,27 @@ describe('Layer0-Layer1', () => {
         await node1.start()
         await node2.start()
 
-        stream1Node1 = new DhtNode({ transport: epDhtNode, connectionsView: epDhtNode.getConnectionsView(), serviceId: STREAM_ID1 })
-        stream1Node2 = new DhtNode({ transport: node1, connectionsView: node1.getConnectionsView(), serviceId: STREAM_ID1 })
+        stream1Node1 = new DhtNode({
+            transport: epDhtNode,
+            connectionsView: epDhtNode.getConnectionsView(),
+            serviceId: STREAM_ID1
+        })
+        stream1Node2 = new DhtNode({
+            transport: node1,
+            connectionsView: node1.getConnectionsView(),
+            serviceId: STREAM_ID1
+        })
 
-        stream2Node1 = new DhtNode({ transport: epDhtNode, connectionsView: epDhtNode.getConnectionsView(), serviceId: STREAM_ID2 })
-        stream2Node2 = new DhtNode({ transport: node2, connectionsView: node2.getConnectionsView(), serviceId: STREAM_ID2 })
+        stream2Node1 = new DhtNode({
+            transport: epDhtNode,
+            connectionsView: epDhtNode.getConnectionsView(),
+            serviceId: STREAM_ID2
+        })
+        stream2Node2 = new DhtNode({
+            transport: node2,
+            connectionsView: node2.getConnectionsView(),
+            serviceId: STREAM_ID2
+        })
 
         await Promise.all([stream1Node1.start(), stream1Node2.start(), stream2Node1.start(), stream2Node2.start()])
     })

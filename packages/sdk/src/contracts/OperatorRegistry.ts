@@ -67,7 +67,11 @@ export class OperatorRegistry {
         return picked
     }
 
-    async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number, maxHeartbeatAgeHours: number): Promise<NetworkPeerDescriptor[]> {
+    async findOperatorsOnStream(
+        streamId: StreamID,
+        maxQueryResults: number,
+        maxHeartbeatAgeHours: number
+    ): Promise<NetworkPeerDescriptor[]> {
         const query: GraphQLQuery = {
             query: `{
                 stream(id: "${streamId}") {
@@ -88,8 +92,11 @@ export class OperatorRegistry {
             }`
         }
         const result = await this.theGraphClient.queryEntity<StreamOperators>(query)
-        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships.flatMap((sponsorship: Sponsorship) =>
-            sponsorship.stakes.map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata))
+        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships.flatMap(
+            (sponsorship: Sponsorship) =>
+                sponsorship.stakes.map((stake: { operator: OperatorMetadata }) =>
+                    JSON.parse(stake.operator.latestHeartbeatMetadata)
+                )
         )
         return peerDescriptors
     }

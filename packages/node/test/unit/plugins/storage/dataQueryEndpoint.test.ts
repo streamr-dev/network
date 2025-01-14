@@ -1,4 +1,11 @@
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage,
+    convertStreamMessageToBytes
+} from '@streamr/sdk'
 import { randomUserId, toReadableStream } from '@streamr/test-utils'
 import { MetricsContext, hexToBinary, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
 import express from 'express'
@@ -6,7 +13,11 @@ import { Readable } from 'stream'
 import request from 'supertest'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE, createDataQueryEndpoint } from '../../../../src/plugins/storage/dataQueryEndpoint'
+import {
+    MAX_SEQUENCE_NUMBER_VALUE,
+    MIN_SEQUENCE_NUMBER_VALUE,
+    createDataQueryEndpoint
+} from '../../../../src/plugins/storage/dataQueryEndpoint'
 
 const PUBLISHER_ID = randomUserId()
 
@@ -24,7 +35,14 @@ describe('dataQueryEndpoint', () => {
 
     function createStreamMessage(content: any): StreamMessage {
         return new StreamMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, PUBLISHER_ID, 'msgChainId'),
+            messageId: new MessageID(
+                toStreamID('streamId'),
+                0,
+                new Date(2017, 3, 1, 12, 0, 0).getTime(),
+                0,
+                PUBLISHER_ID,
+                'msgChainId'
+            ),
             content: utf8ToBinary(JSON.stringify(content)),
             signature: hexToBinary('0x1234'),
             contentType: ContentType.JSON,
@@ -67,27 +85,32 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('responds 400 and error message if optional param "count" not a number', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?count=sixsixsix').expect('Content-Type', /json/).expect(
-                    400,
-                    {
-                        error: 'Query parameter "count" not a number: sixsixsix'
-                    },
-                    done
-                )
+                testGetRequest('/streams/streamId/data/partitions/0/last?count=sixsixsix')
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        400,
+                        {
+                            error: 'Query parameter "count" not a number: sixsixsix'
+                        },
+                        done
+                    )
             })
 
             it('responds 400 and error message if format parameter is invalid', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=foobar').expect('Content-Type', /json/).expect(
-                    400,
-                    {
-                        error: 'Query parameter "format" is invalid: foobar'
-                    },
-                    done
-                )
+                testGetRequest('/streams/streamId/data/partitions/0/last?format=foobar')
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        400,
+                        {
+                            error: 'Query parameter "format" is invalid: foobar'
+                        },
+                        done
+                    )
             })
 
             it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
-                const base = '/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
+                const base =
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
                 const suffixes = [`publisherId=${PUBLISHER_ID}`, 'msgChainId=bar']
                 for (const suffix of suffixes) {
                     await testGetRequest(`${base}&${suffix}`).expect('Content-Type', /json/).expect(400, {
@@ -113,7 +136,10 @@ describe('dataQueryEndpoint', () => {
             it('responds with raw format', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw')
                     .expect('Content-Type', 'application/octet-stream')
-                    .expect(Buffer.concat(streamMessages.map(convertStreamMessageToBytes).map(toLengthPrefixedFrame)), done)
+                    .expect(
+                        Buffer.concat(streamMessages.map(convertStreamMessageToBytes).map(toLengthPrefixedFrame)),
+                        done
+                    )
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {
@@ -162,7 +188,9 @@ describe('dataQueryEndpoint', () => {
 
         describe('user errors', () => {
             it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672&publisherId=foobar')
+                testGetRequest(
+                    '/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672&publisherId=foobar'
+                )
                     .expect('Content-Type', /json/)
                     .expect(
                         400,
@@ -194,19 +222,27 @@ describe('dataQueryEndpoint', () => {
                 await testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
 
                 expect(storage.requestFrom).toHaveBeenCalledTimes(1)
-                expect(storage.requestFrom).toHaveBeenCalledWith('streamId', 0, 1496408255672, MIN_SEQUENCE_NUMBER_VALUE, undefined)
+                expect(storage.requestFrom).toHaveBeenCalledWith(
+                    'streamId',
+                    0,
+                    1496408255672,
+                    MIN_SEQUENCE_NUMBER_VALUE,
+                    undefined
+                )
             })
 
             it('responds 500 and error message if storage signals error', (done) => {
                 storage.requestFrom = () => toReadableStream(new Error('error'))
 
-                testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672').expect('Content-Type', /json/).expect(
-                    500,
-                    {
-                        error: 'Failed to fetch data!'
-                    },
-                    done
-                )
+                testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        500,
+                        {
+                            error: 'Failed to fetch data!'
+                        },
+                        done
+                    )
             })
         })
 
@@ -214,7 +250,9 @@ describe('dataQueryEndpoint', () => {
             const query = `fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=${PUBLISHER_ID}`
 
             it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`).expect('Content-Type', /json/).expect(200, done)
+                testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
@@ -236,13 +274,15 @@ describe('dataQueryEndpoint', () => {
             it('responds 500 and error message if storage signals error', (done) => {
                 storage.requestFrom = () => toReadableStream(new Error('error'))
 
-                testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`).expect('Content-Type', /json/).expect(
-                    500,
-                    {
-                        error: 'Failed to fetch data!'
-                    },
-                    done
-                )
+                testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        500,
+                        {
+                            error: 'Failed to fetch data!'
+                        },
+                        done
+                    )
             })
         })
     })
@@ -268,13 +308,15 @@ describe('dataQueryEndpoint', () => {
                 )
             })
             it('responds 400 and error message if param "fromTimestamp" not a number', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=notANumber').expect('Content-Type', /json/).expect(
-                    400,
-                    {
-                        error: 'Query parameter "fromTimestamp" not a number: notANumber'
-                    },
-                    done
-                )
+                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=notANumber')
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        400,
+                        {
+                            error: 'Query parameter "fromTimestamp" not a number: notANumber'
+                        },
+                        done
+                    )
             })
             it('responds 400 and error message if param "toTimestamp" not given', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1')
@@ -302,7 +344,9 @@ describe('dataQueryEndpoint', () => {
                     )
             })
             it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=2&publisherId=foobar&msgChainId=x')
+                testGetRequest(
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=2&publisherId=foobar&msgChainId=x'
+                )
                     .expect('Content-Type', /json/)
                     .expect(
                         400,
@@ -327,13 +371,17 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
+                testGetRequest(
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909'
+                )
                     .expect('Content-Type', /json/)
                     .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909').expect(
+                testGetRequest(
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909'
+                ).expect(
                     streamMessages.map((msg) => toObject(msg)),
                     done
                 )
@@ -342,7 +390,9 @@ describe('dataQueryEndpoint', () => {
             it('invokes storage#requestRange once with correct arguments', async () => {
                 storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
-                await testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
+                await testGetRequest(
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909'
+                )
 
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
                 expect(storage.requestRange).toHaveBeenCalledWith(
@@ -360,7 +410,9 @@ describe('dataQueryEndpoint', () => {
             it('responds 500 and error message if storage signals error', (done) => {
                 storage.requestRange = () => toReadableStream(new Error('error'))
 
-                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
+                testGetRequest(
+                    '/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909'
+                )
                     .expect('Content-Type', /json/)
                     .expect(
                         500,
@@ -400,7 +452,9 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`).expect('Content-Type', /json/).expect(200, done)
+                testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
@@ -415,19 +469,30 @@ describe('dataQueryEndpoint', () => {
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
-                expect(storage.requestRange).toHaveBeenCalledWith('streamId', 0, 1496408255672, 1, 1496415670909, 2, PUBLISHER_ID, 'msgChainId')
+                expect(storage.requestRange).toHaveBeenCalledWith(
+                    'streamId',
+                    0,
+                    1496408255672,
+                    1,
+                    1496415670909,
+                    2,
+                    PUBLISHER_ID,
+                    'msgChainId'
+                )
             })
 
             it('responds 500 and error message if storage signals error', (done) => {
                 storage.requestRange = () => toReadableStream(new Error('error'))
 
-                testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`).expect('Content-Type', /json/).expect(
-                    500,
-                    {
-                        error: 'Failed to fetch data!'
-                    },
-                    done
-                )
+                testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(
+                        500,
+                        {
+                            error: 'Failed to fetch data!'
+                        },
+                        done
+                    )
             })
         })
     })

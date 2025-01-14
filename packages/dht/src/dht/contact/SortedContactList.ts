@@ -46,7 +46,8 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         }
         if (
             (!this.options.allowToContainReferenceId && this.options.referenceId === contactId) ||
-            (this.options.nodeIdDistanceLimit !== undefined && this.compareIds(this.options.nodeIdDistanceLimit, contactId) < 0)
+            (this.options.nodeIdDistanceLimit !== undefined &&
+                this.compareIds(this.options.nodeIdDistanceLimit, contactId) < 0)
         ) {
             return
         }

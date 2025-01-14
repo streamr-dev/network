@@ -1,6 +1,12 @@
 import { initEventGateway, Events, ObservableEventEmitter } from '@streamr/utils'
 import type { TransactionResponse } from 'ethers'
-import { BaseContract, Contract, ContractTransactionReceipt, ContractTransactionResponse, FunctionFragment } from 'ethers'
+import {
+    BaseContract,
+    Contract,
+    ContractTransactionReceipt,
+    ContractTransactionResponse,
+    FunctionFragment
+} from 'ethers'
 import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
@@ -61,7 +67,9 @@ const withErrorHandling = async <T>(execute: () => Promise<T>, methodName: strin
             ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
             undefined
         )
-        const wrappedError = new Error(`Error while ${action} contract call "${methodName}"${suffixes.length > 0 ? ', ' + suffixes.join(', ') : ''}`)
+        const wrappedError = new Error(
+            `Error while ${action} contract call "${methodName}"${suffixes.length > 0 ? ', ' + suffixes.join(', ') : ''}`
+        )
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -90,8 +98,15 @@ const createWrappedContractMethod = (
         if (isTransactionResponse(returnValue)) {
             eventEmitter.emit('onTransactionSubmit', methodFullName, returnValue)
             const originalWait = returnValue.wait.bind(returnValue)
-            returnValue.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
-                const receipt = await withErrorHandling(() => originalWait(confirmations, timeout), methodName, 'waiting transaction for')
+            returnValue.wait = async (
+                confirmations?: number,
+                timeout?: number
+            ): Promise<null | ContractTransactionReceipt> => {
+                const receipt = await withErrorHandling(
+                    () => originalWait(confirmations, timeout),
+                    methodName,
+                    'waiting transaction for'
+                )
                 eventEmitter.emit('onTransactionConfirm', methodFullName, receipt)
                 return receipt
             }
@@ -141,7 +156,13 @@ export const createDecoratedContract = <T extends BaseContract>(
      */
     const methodNames = contract.interface.fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => f.name)
     methodNames.forEach((methodName) => {
-        decoratedContract[methodName] = createWrappedContractMethod(contract, contractName, methodName, eventEmitter, concurrencyLimit)
+        decoratedContract[methodName] = createWrappedContractMethod(
+            contract,
+            contractName,
+            methodName,
+            eventEmitter,
+            concurrencyLimit
+        )
     })
 
     createLogger(eventEmitter, loggerFactory)

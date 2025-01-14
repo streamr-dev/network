@@ -67,7 +67,12 @@ export class InvalidSubdomainOrToken extends Err {
 }
 export class FailedToConnectToStreamrWebSocket extends Err {
     constructor(message?: string, originalError?: Error | string) {
-        super(ErrorCode.FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError)
+        super(
+            ErrorCode.FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            message,
+            originalError
+        )
     }
 }
 export class ServerError extends Err {

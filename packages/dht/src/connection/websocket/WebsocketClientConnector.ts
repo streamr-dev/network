@@ -2,7 +2,11 @@ import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { ConnectionType } from '../IConnection'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
-import { ConnectivityMethod, PeerDescriptor, WebsocketConnectionRequest } from '../../../generated/packages/dht/protos/DhtRpc'
+import {
+    ConnectivityMethod,
+    PeerDescriptor,
+    WebsocketConnectionRequest
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { WebsocketServer } from './WebsocketServer'
 import { createOutgoingHandshaker } from '../Handshaker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -43,7 +47,8 @@ export class WebsocketClientConnector {
     private registerLocalRpcMethods() {
         const rpcLocal = new WebsocketClientConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            hasConnection: (nodeId: DhtAddress): boolean => this.connectingConnections.has(nodeId) || this.options.hasConnection(nodeId),
+            hasConnection: (nodeId: DhtAddress): boolean =>
+                this.connectingConnections.has(nodeId) || this.options.hasConnection(nodeId),
             onNewConnection: (connection: PendingConnection) => this.options.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })

@@ -16,7 +16,10 @@ const fetchHeader: (url: string, header: string, timeout: number) => Promise<str
     return response.headers.get(header)
 }
 
-export const fetchAirportCodeFromAmazon: (url: string, timeout: number) => Promise<string> = async (url: string, timeout: number) => {
+export const fetchAirportCodeFromAmazon: (url: string, timeout: number) => Promise<string> = async (
+    url: string,
+    timeout: number
+) => {
     const header = await fetchHeader(url, 'X-Amz-Cf-Pop', timeout)
     // parse airport code from the first 3 characters of X-Amz-Cf-Pop header
     if (!header || header.length < 3) {

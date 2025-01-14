@@ -75,7 +75,16 @@ describe('Scaffold', () => {
 
         await next()
 
-        expect(order).toEqual(['change up', 'up start', 'up end', 'done up', 'change down', 'down start', 'down end', 'done down'])
+        expect(order).toEqual([
+            'change up',
+            'up start',
+            'up end',
+            'done up',
+            'change down',
+            'down start',
+            'down end',
+            'done down'
+        ])
     })
 
     it('calls down automatically if check is false after up complete', async () => {
@@ -478,7 +487,16 @@ describe('Scaffold', () => {
 
         await expect(async () => next()).rejects.toThrow(err)
 
-        expect(order).toEqual(['change up', 'up start', 'up end', 'done up', 'change down', 'down start', 'down end', 'done down'])
+        expect(order).toEqual([
+            'change up',
+            'up start',
+            'up end',
+            'done up',
+            'change down',
+            'down start',
+            'down end',
+            'done down'
+        ])
     })
 
     it('can change status in onChange', async () => {
@@ -545,9 +563,27 @@ describe('Scaffold', () => {
     describe('plays undo stack at point of state change', () => {
         let shouldUp: boolean
         let next: ReturnType<typeof Scaffold>
-        const allUp = ['change up', 'up start a', 'up end a', 'up start b', 'up end b', 'up start c', 'up end c', 'done up']
+        const allUp = [
+            'change up',
+            'up start a',
+            'up end a',
+            'up start b',
+            'up end b',
+            'up start c',
+            'up end c',
+            'done up'
+        ]
 
-        const allDown = ['change down', 'down start c', 'down end c', 'down start b', 'down end b', 'down start a', 'down end a', 'done down']
+        const allDown = [
+            'change down',
+            'down start c',
+            'down end c',
+            'down start b',
+            'down end b',
+            'down start a',
+            'down end a',
+            'done down'
+        ]
 
         beforeEach(() => {
             shouldUp = false
@@ -597,7 +633,15 @@ describe('Scaffold', () => {
 
             await Promise.all([next(), done])
 
-            expect(order).toEqual(['change up', 'up start a', 'up end a', 'change down', 'down start a', 'down end a', 'done down'])
+            expect(order).toEqual([
+                'change up',
+                'up start a',
+                'up end a',
+                'change down',
+                'down start a',
+                'down end a',
+                'done down'
+            ])
         })
 
         it('can stop before second step', async () => {

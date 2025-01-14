@@ -23,7 +23,13 @@ export class CertificateCreator {
     private readonly hmacKey: string
     private readonly challengeManager: ChallengeManager
 
-    constructor(acmeDirectoryUrl: string, hmacKid: string, hmacKey: string, privateKeyPath: string, challengeManager: ChallengeManager) {
+    constructor(
+        acmeDirectoryUrl: string,
+        hmacKid: string,
+        hmacKey: string,
+        privateKeyPath: string,
+        challengeManager: ChallengeManager
+    ) {
         this.acmeDirectoryUrl = acmeDirectoryUrl
         this.hmacKid = hmacKid
         this.hmacKey = hmacKey
@@ -60,7 +66,11 @@ export class CertificateCreator {
                 email: 'autocertifier@streamr.network',
                 termsOfServiceAgreed: true,
                 challengePriority: [DNS_01_CHALLENGE],
-                challengeCreateFn: async (authz: acme.Authorization, _challenge: Challenge, keyAuthorization: string) => {
+                challengeCreateFn: async (
+                    authz: acme.Authorization,
+                    _challenge: Challenge,
+                    keyAuthorization: string
+                ) => {
                     // this value must be saved for the challengeRemoveFn
                     keyAuth = keyAuthorization
                     await this.challengeManager.createChallenge(authz.identifier.value, keyAuthorization)

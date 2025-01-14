@@ -24,7 +24,9 @@ describe('custom matchers', () => {
     it('invalid usage', () => {
         expect(() => {
             expect(new Uint8Array([1, 2, 3])).toEqualBinary('foobar' as any)
-        }).toThrow('Invalid assertion: the "expected" object should be an instance of Uint8Array (it is an instance of String)')
+        }).toThrow(
+            'Invalid assertion: the "expected" object should be an instance of Uint8Array (it is an instance of String)'
+        )
         expect(() => {
             expect(new Uint8Array([1, 2, 3])).toEqualBinary(undefined as any)
         }).toThrow('Invalid assertion: the "expected" object should be an instance of Uint8Array (it is undefined)')

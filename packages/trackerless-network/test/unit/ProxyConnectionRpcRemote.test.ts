@@ -13,7 +13,12 @@ describe('ProxyConnectionRpcRemote', () => {
         rpcCommunicator.setOutgoingMessageListener(onOutgoingMessage)
         const clientPeerDescriptor = createMockPeerDescriptor()
         const serverPeerDescriptor = createMockPeerDescriptor()
-        const rpcRemote = new ProxyConnectionRpcRemote(clientPeerDescriptor, serverPeerDescriptor, rpcCommunicator, ProxyConnectionRpcClient)
+        const rpcRemote = new ProxyConnectionRpcRemote(
+            clientPeerDescriptor,
+            serverPeerDescriptor,
+            rpcCommunicator,
+            ProxyConnectionRpcClient
+        )
 
         const userId = randomUserId()
         await rpcRemote.requestConnection(ProxyDirection.PUBLISH, userId)

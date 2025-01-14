@@ -8,7 +8,12 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
-import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig } from '../../src/Config'
+import {
+    createStrictConfig,
+    ConfigInjectionToken,
+    StrictStreamrClientConfig,
+    StreamrClientConfig
+} from '../../src/Config'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
@@ -94,7 +99,10 @@ describeOnlyInNodeJs('MemoryLeaks', () => {
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
                 childContainer.register(TheGraphClient, {
-                    useValue: createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                    useValue: createTheGraphClient(
+                        childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter),
+                        config
+                    )
                 })
                 return { config, childContainer }
             }

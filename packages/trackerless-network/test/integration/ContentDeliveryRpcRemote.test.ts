@@ -43,10 +43,14 @@ describe('ContentDeliveryRpcRemote', () => {
             return Empty
         })
 
-        mockServerRpc.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice', async (): Promise<Empty> => {
-            recvCounter += 1
-            return Empty
-        })
+        mockServerRpc.registerRpcNotification(
+            LeaveStreamPartNotice,
+            'leaveStreamPartNotice',
+            async (): Promise<Empty> => {
+                recvCounter += 1
+                return Empty
+            }
+        )
 
         rpcRemote = new ContentDeliveryRpcRemote(clientNode, serverNode, clientRpc, ContentDeliveryRpcClient)
     })
@@ -60,7 +64,11 @@ describe('ContentDeliveryRpcRemote', () => {
     })
 
     it('sendStreamMessage', async () => {
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), StreamPartIDUtils.parse('test-stream#0'), randomUserId())
+        const msg = createStreamMessage(
+            JSON.stringify({ hello: 'WORLD' }),
+            StreamPartIDUtils.parse('test-stream#0'),
+            randomUserId()
+        )
 
         await rpcRemote.sendStreamMessage(msg)
         await until(() => recvCounter === 1)

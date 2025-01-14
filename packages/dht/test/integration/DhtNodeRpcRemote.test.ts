@@ -1,7 +1,12 @@
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
-import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    PingRequest,
+    PingResponse
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { toNodeId } from '../../src/identifiers'
@@ -19,7 +24,12 @@ describe('DhtNodeRpcRemote', () => {
     beforeEach(() => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
-        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
+        serverRpcCommunicator.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            mockDhtRpc.getClosestPeers
+        )
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.ping)
         clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
@@ -52,7 +62,12 @@ describe('DhtNodeRpcRemote', () => {
     })
 
     it('getClosestPeers error path', async () => {
-        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.throwGetClosestPeersError)
+        serverRpcCommunicator.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            mockDhtRpc.throwGetClosestPeersError
+        )
         await expect(rpcRemote.getClosestPeers(toNodeId(clientPeerDescriptor))).rejects.toThrow('Closest peers error')
     })
 })

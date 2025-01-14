@@ -4,7 +4,10 @@
  * If one of them rejects, provides a callback for reverting the
  * preceding (already resolved) values.
  */
-export async function pTransaction<T>(promises: Iterable<T | PromiseLike<T>>, rollback: (target: T) => Promise<void> | void): Promise<T[]> {
+export async function pTransaction<T>(
+    promises: Iterable<T | PromiseLike<T>>,
+    rollback: (target: T) => Promise<void> | void
+): Promise<T[]> {
     const results: T[] = []
     for (const promise of promises) {
         try {

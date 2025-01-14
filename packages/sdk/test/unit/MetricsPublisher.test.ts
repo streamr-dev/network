@@ -33,7 +33,10 @@ describe('MetricsPublisher', () => {
         eventEmitter.emit('streamPartSubscribed', undefined)
     }
 
-    const assertPublisherEnabled = async (config: Pick<StreamrClientConfig, 'metrics'>, expectedDurations: number[]) => {
+    const assertPublisherEnabled = async (
+        config: Pick<StreamrClientConfig, 'metrics'>,
+        expectedDurations: number[]
+    ) => {
         startMetricsPublisher(config)
         const createReportProducer = metricsContext.createReportProducer as jest.Mock
         await waitForCalls(createReportProducer, 1)

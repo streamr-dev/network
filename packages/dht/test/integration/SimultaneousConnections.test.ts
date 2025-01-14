@@ -19,7 +19,10 @@ const BASE_MESSAGE: Message = {
     }
 }
 
-const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
+const createConnectionManager = (
+    localPeerDescriptor: PeerDescriptor,
+    opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>
+) => {
     return new ConnectionManager({
         createConnectorFacade: () =>
             new DefaultConnectorFacade({

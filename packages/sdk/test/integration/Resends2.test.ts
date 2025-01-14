@@ -73,7 +73,9 @@ describe('Resends2', () => {
                     last: 5
                 }
             )
-        }).rejects.toThrowStreamrClientError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
+        }).rejects.toThrowStreamrClientError(
+            new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES')
+        )
     })
 
     it('throws error if bad partition', async () => {
@@ -217,12 +219,15 @@ describe('Resends2', () => {
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(environment.getLogger().warn).toHaveBeenLastCalledWith('Skip resend (no storage assigned to stream)', {
-                    streamPartId: toStreamPartID(stream.id, 0),
-                    resendOptions: {
-                        last: 100
+                expect(environment.getLogger().warn).toHaveBeenLastCalledWith(
+                    'Skip resend (no storage assigned to stream)',
+                    {
+                        streamPartId: toStreamPartID(stream.id, 0),
+                        resendOptions: {
+                            last: 100
+                        }
                     }
-                })
+                )
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
         })

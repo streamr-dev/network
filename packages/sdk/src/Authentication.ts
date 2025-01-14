@@ -30,7 +30,9 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     }
 }
 
-export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts' | '_timeouts'>): Authentication => {
+export const createAuthentication = (
+    config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts' | '_timeouts'>
+): Authentication => {
     if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
         const privateKey = (config.auth as PrivateKeyAuthConfig).privateKey
         const normalizedPrivateKey = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey

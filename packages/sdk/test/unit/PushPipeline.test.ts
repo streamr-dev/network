@@ -10,7 +10,13 @@ import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 const PUBLISHER_ID = randomUserId()
 

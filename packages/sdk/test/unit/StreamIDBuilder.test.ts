@@ -21,11 +21,15 @@ describe('StreamIDBuilder', () => {
 
     describe('toStreamID', () => {
         it('legacy stream id', () => {
-            return expect(streamIdBuilder.toStreamID('7wa7APtlTq6EC5iTCBy6dw')).resolves.toEqual('7wa7APtlTq6EC5iTCBy6dw')
+            return expect(streamIdBuilder.toStreamID('7wa7APtlTq6EC5iTCBy6dw')).resolves.toEqual(
+                '7wa7APtlTq6EC5iTCBy6dw'
+            )
         })
 
         it('full stream id', () => {
-            return expect(streamIdBuilder.toStreamID(`${address}/foo/bar`)).resolves.toEqual(`${normalizedAddress}/foo/bar`)
+            return expect(streamIdBuilder.toStreamID(`${address}/foo/bar`)).resolves.toEqual(
+                `${normalizedAddress}/foo/bar`
+            )
         })
 
         it('throws if given path-only format but ethereum address fetching rejects', () => {
@@ -65,7 +69,10 @@ describe('StreamIDBuilder', () => {
 
     describe('toStreamPartElements', () => {
         it.each(DEFINITIONS_WITHOUT_PARTITION)('given %s as string definition', (definition) => {
-            return expect(streamIdBuilder.toStreamPartElements(definition)).resolves.toEqual(['test.eth/foo/bar', undefined])
+            return expect(streamIdBuilder.toStreamPartElements(definition)).resolves.toEqual([
+                'test.eth/foo/bar',
+                undefined
+            ])
         })
 
         it.each(DEFINITIONS_WITH_PARTITION)('given %s as string part definition', (definition) => {

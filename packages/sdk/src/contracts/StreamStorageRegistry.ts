@@ -1,4 +1,12 @@
-import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumAddress, toStreamID } from '@streamr/utils'
+import {
+    EthereumAddress,
+    Logger,
+    StreamID,
+    TheGraphClient,
+    collect,
+    toEthereumAddress,
+    toStreamID
+} from '@streamr/utils'
 import min from 'lodash/min'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -120,12 +128,13 @@ export class StreamStorageRegistry {
     private async connectToContract() {
         if (!this.streamStorageRegistryContract) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-            this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
-                toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-                StreamStorageRegistryArtifact,
-                chainSigner,
-                'streamStorageRegistry'
-            )
+            this.streamStorageRegistryContract =
+                this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
+                    toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
+                    StreamStorageRegistryArtifact,
+                    chainSigner,
+                    'streamStorageRegistry'
+                )
         }
     }
 
@@ -153,7 +162,9 @@ export class StreamStorageRegistry {
         return await this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress)
     }
 
-    async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: { id: StreamID; metadata: StreamMetadata }[]; blockNumber: number }> {
+    async getStoredStreams(
+        nodeAddress: EthereumAddress
+    ): Promise<{ streams: { id: StreamID; metadata: StreamMetadata }[]; blockNumber: number }> {
         this.logger.debug('Get stored streams of storage node', { nodeAddress })
         const blockNumbers: number[] = []
         const res = await collect(
@@ -194,11 +205,14 @@ export class StreamStorageRegistry {
     }
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
-        const query = streamIdOrPath !== undefined ? await this.streamIdBuilder.toStreamID(streamIdOrPath) : GET_ALL_STORAGE_NODES
+        const query =
+            streamIdOrPath !== undefined ? await this.streamIdBuilder.toStreamID(streamIdOrPath) : GET_ALL_STORAGE_NODES
         return this.storageNodesCache.get(query)
     }
 
-    private async getStorageNodes_nonCached(query: StreamID | typeof GET_ALL_STORAGE_NODES): Promise<EthereumAddress[]> {
+    private async getStorageNodes_nonCached(
+        query: StreamID | typeof GET_ALL_STORAGE_NODES
+    ): Promise<EthereumAddress[]> {
         let queryResults: NodeQueryResult[]
         if (query !== GET_ALL_STORAGE_NODES) {
             const streamId = query

@@ -89,7 +89,11 @@ describe(findTarget, () => {
                 streamId: STREAM_ID
             }
         ])
-        setStreamPartsAssignedToMe([toStreamPartID(STREAM_ID, 0), toStreamPartID(STREAM_ID, 1), toStreamPartID(STREAM_ID, 2)])
+        setStreamPartsAssignedToMe([
+            toStreamPartID(STREAM_ID, 0),
+            toStreamPartID(STREAM_ID, 1),
+            toStreamPartID(STREAM_ID, 2)
+        ])
 
         const client = {
             getOperator: () => ({

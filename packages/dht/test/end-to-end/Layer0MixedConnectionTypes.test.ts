@@ -63,7 +63,11 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor])
         ])
 
-        await Promise.all([node1.joinDht([epPeerDescriptor]), node2.joinDht([epPeerDescriptor]), node5.joinDht([epPeerDescriptor])])
+        await Promise.all([
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node5.joinDht([epPeerDescriptor])
+        ])
 
         expect(node1.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node2.getNeighborCount()).toBeGreaterThanOrEqual(2)

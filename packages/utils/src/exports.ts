@@ -8,7 +8,15 @@ import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger, LogLevel } from './Logger'
-import { CountMetric, Metric, LevelMetric, MetricsContext, MetricsDefinition, MetricsReport, RateMetric } from './Metric'
+import {
+    CountMetric,
+    Metric,
+    LevelMetric,
+    MetricsContext,
+    MetricsDefinition,
+    MetricsReport,
+    RateMetric
+} from './Metric'
 import { Multimap } from './Multimap'
 import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
@@ -20,7 +28,13 @@ import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { until } from './until'
-import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
+import {
+    waitForEvent3,
+    runAndWaitForEvents3,
+    raceEvents3,
+    runAndRaceEvents3,
+    RunAndRaceEventsReturnType
+} from './waitForEvent3'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
@@ -106,7 +120,12 @@ export {
 export { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, MetricsReport, RateMetric }
 
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
-export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export {
+    DEFAULT_PARTITION_COUNT,
+    MAX_PARTITION_COUNT,
+    ensureValidStreamPartitionCount,
+    ensureValidStreamPartitionIndex
+} from './partition'
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
 export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
 export { HexString } from './HexString'

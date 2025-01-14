@@ -13,7 +13,14 @@ import type {
     ContractMethod,
     Listener
 } from 'ethers'
-import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, TypedLogDescription, TypedListener, TypedContractMethod } from '../common'
+import type {
+    TypedContractEvent,
+    TypedDeferredTopicFilter,
+    TypedEventLog,
+    TypedLogDescription,
+    TypedListener,
+    TypedContractMethod
+} from '../common'
 export interface DATAv2Interface extends Interface {
     getFunction(
         nameOrSignature:
@@ -222,9 +229,15 @@ export interface DATAv2 extends BaseContract {
         toBlock?: string | number | undefined
     ): Promise<Array<TypedEventLog<TCEvent>>>
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    on<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>
-    once<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, listener: TypedListener<TCEvent>): Promise<this>
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>
     listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>
     listeners(eventName?: string): Promise<Array<Listener>>
     removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>
@@ -237,7 +250,11 @@ export interface DATAv2 extends BaseContract {
     burn: TypedContractMethod<[amount: BigNumberish], [void], 'nonpayable'>
     burnFrom: TypedContractMethod<[account: AddressLike, amount: BigNumberish], [void], 'nonpayable'>
     decimals: TypedContractMethod<[], [bigint], 'view'>
-    decreaseAllowance: TypedContractMethod<[spender: AddressLike, subtractedValue: BigNumberish], [boolean], 'nonpayable'>
+    decreaseAllowance: TypedContractMethod<
+        [spender: AddressLike, subtractedValue: BigNumberish],
+        [boolean],
+        'nonpayable'
+    >
     getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], 'view'>
     grantRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
     hasRole: TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
@@ -247,7 +264,15 @@ export interface DATAv2 extends BaseContract {
     name: TypedContractMethod<[], [string], 'view'>
     nonces: TypedContractMethod<[owner: AddressLike], [bigint], 'view'>
     permit: TypedContractMethod<
-        [owner: AddressLike, spender: AddressLike, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike],
+        [
+            owner: AddressLike,
+            spender: AddressLike,
+            value: BigNumberish,
+            deadline: BigNumberish,
+            v: BigNumberish,
+            r: BytesLike,
+            s: BytesLike
+        ],
         [void],
         'nonpayable'
     >
@@ -258,55 +283,103 @@ export interface DATAv2 extends BaseContract {
     symbol: TypedContractMethod<[], [string], 'view'>
     totalSupply: TypedContractMethod<[], [bigint], 'view'>
     transfer: TypedContractMethod<[recipient: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
-    transferAndCall: TypedContractMethod<[_to: AddressLike, _value: BigNumberish, _data: BytesLike], [boolean], 'nonpayable'>
-    transferFrom: TypedContractMethod<[sender: AddressLike, recipient: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
+    transferAndCall: TypedContractMethod<
+        [_to: AddressLike, _value: BigNumberish, _data: BytesLike],
+        [boolean],
+        'nonpayable'
+    >
+    transferFrom: TypedContractMethod<
+        [sender: AddressLike, recipient: AddressLike, amount: BigNumberish],
+        [boolean],
+        'nonpayable'
+    >
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T
     getFunction(nameOrSignature: 'DEFAULT_ADMIN_ROLE'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'DOMAIN_SEPARATOR'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'MINTER_ROLE'): TypedContractMethod<[], [string], 'view'>
-    getFunction(nameOrSignature: 'allowance'): TypedContractMethod<[owner: AddressLike, spender: AddressLike], [bigint], 'view'>
-    getFunction(nameOrSignature: 'approve'): TypedContractMethod<[spender: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'allowance'
+    ): TypedContractMethod<[owner: AddressLike, spender: AddressLike], [bigint], 'view'>
+    getFunction(
+        nameOrSignature: 'approve'
+    ): TypedContractMethod<[spender: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
     getFunction(nameOrSignature: 'balanceOf'): TypedContractMethod<[account: AddressLike], [bigint], 'view'>
     getFunction(nameOrSignature: 'burn'): TypedContractMethod<[amount: BigNumberish], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'burnFrom'): TypedContractMethod<[account: AddressLike, amount: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'burnFrom'
+    ): TypedContractMethod<[account: AddressLike, amount: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'decimals'): TypedContractMethod<[], [bigint], 'view'>
     getFunction(
         nameOrSignature: 'decreaseAllowance'
     ): TypedContractMethod<[spender: AddressLike, subtractedValue: BigNumberish], [boolean], 'nonpayable'>
     getFunction(nameOrSignature: 'getRoleAdmin'): TypedContractMethod<[role: BytesLike], [string], 'view'>
-    getFunction(nameOrSignature: 'grantRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'hasRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
-    getFunction(nameOrSignature: 'increaseAllowance'): TypedContractMethod<[spender: AddressLike, addedValue: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'grantRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'hasRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [boolean], 'view'>
+    getFunction(
+        nameOrSignature: 'increaseAllowance'
+    ): TypedContractMethod<[spender: AddressLike, addedValue: BigNumberish], [boolean], 'nonpayable'>
     getFunction(nameOrSignature: 'isMinter'): TypedContractMethod<[minter: AddressLike], [boolean], 'view'>
-    getFunction(nameOrSignature: 'mint'): TypedContractMethod<[to: AddressLike, amount: BigNumberish], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'mint'
+    ): TypedContractMethod<[to: AddressLike, amount: BigNumberish], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'name'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'nonces'): TypedContractMethod<[owner: AddressLike], [bigint], 'view'>
     getFunction(
         nameOrSignature: 'permit'
     ): TypedContractMethod<
-        [owner: AddressLike, spender: AddressLike, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike],
+        [
+            owner: AddressLike,
+            spender: AddressLike,
+            value: BigNumberish,
+            deadline: BigNumberish,
+            v: BigNumberish,
+            r: BytesLike,
+            s: BytesLike
+        ],
         [void],
         'nonpayable'
     >
-    getFunction(nameOrSignature: 'renounceRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'revokeRole'): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
-    getFunction(nameOrSignature: 'setTokenInformation'): TypedContractMethod<[newName: string, newSymbol: string], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'renounceRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'revokeRole'
+    ): TypedContractMethod<[role: BytesLike, account: AddressLike], [void], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'setTokenInformation'
+    ): TypedContractMethod<[newName: string, newSymbol: string], [void], 'nonpayable'>
     getFunction(nameOrSignature: 'supportsInterface'): TypedContractMethod<[interfaceId: BytesLike], [boolean], 'view'>
     getFunction(nameOrSignature: 'symbol'): TypedContractMethod<[], [string], 'view'>
     getFunction(nameOrSignature: 'totalSupply'): TypedContractMethod<[], [bigint], 'view'>
-    getFunction(nameOrSignature: 'transfer'): TypedContractMethod<[recipient: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
+    getFunction(
+        nameOrSignature: 'transfer'
+    ): TypedContractMethod<[recipient: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
     getFunction(
         nameOrSignature: 'transferAndCall'
     ): TypedContractMethod<[_to: AddressLike, _value: BigNumberish, _data: BytesLike], [boolean], 'nonpayable'>
     getFunction(
         nameOrSignature: 'transferFrom'
     ): TypedContractMethod<[sender: AddressLike, recipient: AddressLike, amount: BigNumberish], [boolean], 'nonpayable'>
-    getEvent(key: 'Approval'): TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
+    getEvent(
+        key: 'Approval'
+    ): TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
     getEvent(
         key: 'RoleAdminChanged'
-    ): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
-    getEvent(key: 'RoleGranted'): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
-    getEvent(key: 'RoleRevoked'): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+    ): TypedContractEvent<
+        RoleAdminChangedEvent.InputTuple,
+        RoleAdminChangedEvent.OutputTuple,
+        RoleAdminChangedEvent.OutputObject
+    >
+    getEvent(
+        key: 'RoleGranted'
+    ): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+    getEvent(
+        key: 'RoleRevoked'
+    ): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
     getEvent(
         key: 'Transfer(address,address,uint256,bytes)'
     ): TypedContractEvent<
@@ -329,26 +402,42 @@ export interface DATAv2 extends BaseContract {
         UpdatedTokenInformationEvent.OutputObject
     >
     filters: {
-        'Approval(address,address,uint256)': TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
+        'Approval(address,address,uint256)': TypedContractEvent<
+            ApprovalEvent.InputTuple,
+            ApprovalEvent.OutputTuple,
+            ApprovalEvent.OutputObject
+        >
         Approval: TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>
         'RoleAdminChanged(bytes32,bytes32,bytes32)': TypedContractEvent<
             RoleAdminChangedEvent.InputTuple,
             RoleAdminChangedEvent.OutputTuple,
             RoleAdminChangedEvent.OutputObject
         >
-        RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>
+        RoleAdminChanged: TypedContractEvent<
+            RoleAdminChangedEvent.InputTuple,
+            RoleAdminChangedEvent.OutputTuple,
+            RoleAdminChangedEvent.OutputObject
+        >
         'RoleGranted(bytes32,address,address)': TypedContractEvent<
             RoleGrantedEvent.InputTuple,
             RoleGrantedEvent.OutputTuple,
             RoleGrantedEvent.OutputObject
         >
-        RoleGranted: TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>
+        RoleGranted: TypedContractEvent<
+            RoleGrantedEvent.InputTuple,
+            RoleGrantedEvent.OutputTuple,
+            RoleGrantedEvent.OutputObject
+        >
         'RoleRevoked(bytes32,address,address)': TypedContractEvent<
             RoleRevokedEvent.InputTuple,
             RoleRevokedEvent.OutputTuple,
             RoleRevokedEvent.OutputObject
         >
-        RoleRevoked: TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>
+        RoleRevoked: TypedContractEvent<
+            RoleRevokedEvent.InputTuple,
+            RoleRevokedEvent.OutputTuple,
+            RoleRevokedEvent.OutputObject
+        >
         'Transfer(address,address,uint256,bytes)': TypedContractEvent<
             Transfer_address_address_uint256_bytes_Event.InputTuple,
             Transfer_address_address_uint256_bytes_Event.OutputTuple,

@@ -74,7 +74,9 @@ describe('Stream Entry Points are replaced when known entry points leave streams
 
     // TODO: Investigate why 60 second timeouts are needed
     it('stream entry points are replaced when nodes leave streams', async () => {
-        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 })))
+        await Promise.all(
+            initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 }))
+        )
 
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
@@ -84,8 +86,17 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             })
         }
 
-        await Promise.all(initialNodesOnStream.map((node) => node.getContentDeliveryManager().leaveStreamPart(STREAM_PART_ID)))
-        await until(() => laterNodesOnStream.every((node) => node.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length >= 4), 60000, 1000)
+        await Promise.all(
+            initialNodesOnStream.map((node) => node.getContentDeliveryManager().leaveStreamPart(STREAM_PART_ID))
+        )
+        await until(
+            () =>
+                laterNodesOnStream.every(
+                    (node) => node.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length >= 4
+                ),
+            60000,
+            1000
+        )
 
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         newNodeInStream.getContentDeliveryManager().broadcast(msg)

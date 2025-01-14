@@ -90,7 +90,10 @@ describe('LocalDataStore', () => {
         it('data not stored by the given creator', () => {
             const storedEntry = createMockDataEntry()
             localDataStore.storeEntry(storedEntry)
-            const returnValue = localDataStore.markAsDeleted(toDhtAddress(storedEntry.key), toNodeId(createMockPeerDescriptor()))
+            const returnValue = localDataStore.markAsDeleted(
+                toDhtAddress(storedEntry.key),
+                toNodeId(createMockPeerDescriptor())
+            )
             expect(returnValue).toBe(false)
         })
     })

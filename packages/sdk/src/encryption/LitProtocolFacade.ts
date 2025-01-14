@@ -89,7 +89,6 @@ export class LitProtocolFacade {
     private readonly logger: Logger
     private connectLitNodeClient?: () => Promise<void>
 
-    /* eslint-disable indent */
     constructor(
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -107,7 +106,10 @@ export class LitProtocolFacade {
                 debug: this.config.encryption.litProtocolLogging
             })
             // Add a rate limiter to avoid calling `connect` each time we want to use lit protocol as this would cause an unnecessary handshake.
-            this.connectLitNodeClient = withRateLimit(() => this.litNodeClient!.connect(), LIT_PROTOCOL_CONNECT_INTERVAL)
+            this.connectLitNodeClient = withRateLimit(
+                () => this.litNodeClient!.connect(),
+                LIT_PROTOCOL_CONNECT_INTERVAL
+            )
         }
         await this.connectLitNodeClient!()
         return this.litNodeClient
@@ -120,7 +122,10 @@ export class LitProtocolFacade {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
             const encryptedSymmetricKey = await client.saveEncryptionKey({
-                evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
+                evmContractConditions: formEvmContractConditions(
+                    this.config.contracts.streamRegistryChainAddress,
+                    streamId
+                ),
                 symmetricKey,
                 authSig,
                 chain
@@ -143,7 +148,10 @@ export class LitProtocolFacade {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
             const symmetricKey = await client.getEncryptionKey({
-                evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
+                evmContractConditions: formEvmContractConditions(
+                    this.config.contracts.streamRegistryChainAddress,
+                    streamId
+                ),
                 toDecrypt: groupKeyId,
                 chain,
                 authSig

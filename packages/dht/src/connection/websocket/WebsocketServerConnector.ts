@@ -91,7 +91,9 @@ export class WebsocketServerConnector {
                     if (this.localPeerDescriptor !== undefined) {
                         this.attachHandshaker(connection)
                     } else {
-                        logger.trace('incoming Websocket connection before localPeerDescriptor was set, closing connection')
+                        logger.trace(
+                            'incoming Websocket connection before localPeerDescriptor was set, closing connection'
+                        )
                         connection.close(false).catch(() => {})
                     }
                 }
@@ -117,8 +119,18 @@ export class WebsocketServerConnector {
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
         handshaker.once(
             'handshakeRequest',
-            (localPeerDescriptor: PeerDescriptor, remoteProtocolVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
-                this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, remoteProtocolVersion, remotePeerDescriptor)
+            (
+                localPeerDescriptor: PeerDescriptor,
+                remoteProtocolVersion: string,
+                remotePeerDescriptor?: PeerDescriptor
+            ) => {
+                this.onServerSocketHandshakeRequest(
+                    localPeerDescriptor,
+                    connection,
+                    handshaker,
+                    remoteProtocolVersion,
+                    remotePeerDescriptor
+                )
             }
         )
     }
@@ -134,10 +146,23 @@ export class WebsocketServerConnector {
         if (this.ongoingConnectRequests.has(nodeId)) {
             const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
+                rejectHandshake(
+                    pendingConnection,
+                    websocketServerConnection,
+                    handshaker,
+                    HandshakeError.UNSUPPORTED_PROTOCOL_VERSION
+                )
                 delFunc()
-            } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+            } else if (
+                targetPeerDescriptor &&
+                !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)
+            ) {
+                rejectHandshake(
+                    pendingConnection,
+                    websocketServerConnection,
+                    handshaker,
+                    HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR
+                )
                 delFunc()
             } else {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
@@ -146,13 +171,31 @@ export class WebsocketServerConnector {
             const pendingConnection = new PendingConnection(remotePeerDescriptor)
 
             if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
-            } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                rejectHandshake(
+                    pendingConnection,
+                    websocketServerConnection,
+                    handshaker,
+                    HandshakeError.UNSUPPORTED_PROTOCOL_VERSION
+                )
+            } else if (
+                targetPeerDescriptor &&
+                !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)
+            ) {
+                rejectHandshake(
+                    pendingConnection,
+                    websocketServerConnection,
+                    handshaker,
+                    HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR
+                )
             } else if (this.options.onNewConnection(pendingConnection)) {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(
+                    pendingConnection,
+                    websocketServerConnection,
+                    handshaker,
+                    HandshakeError.DUPLICATE_CONNECTION
+                )
             }
         }
     }
@@ -220,7 +263,8 @@ export class WebsocketServerConnector {
             url: this.options.autoCertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
-            updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
+            updateCertificate: (certificate: string, privateKey: string) =>
+                this.websocketServer!.updateCertificate(certificate, privateKey)
         })
         logger.trace(`AutoCertifying subdomain...`)
         await this.autoCertifierClient.start()
@@ -239,7 +283,10 @@ export class WebsocketServerConnector {
         return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
     }
 
-    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): PendingConnection {
+    private requestConnectionFromPeer(
+        localPeerDescriptor: PeerDescriptor,
+        targetPeerDescriptor: PeerDescriptor
+    ): PendingConnection {
         setImmediate(() => {
             const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
@@ -286,7 +333,9 @@ export class WebsocketServerConnector {
         this.abortController.abort()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
+        await Promise.allSettled(
+            requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true))
+        )
 
         await this.websocketServer?.stop()
         this.geoIpLocator?.stop()

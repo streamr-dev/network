@@ -13,7 +13,8 @@ type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>
 
 const dbUrl = 'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/GeoLite2-City.tar.gz'
-const hashUrl = 'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/GeoLite2-City.mmdb.sha384'
+const hashUrl =
+    'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/GeoLite2-City.mmdb.sha384'
 
 const dbFileName = '/GeoLite2-City.tar.gz'
 const hashFileName = '/GeoLite2-City.mmdb.sha384'
@@ -72,7 +73,11 @@ export class TestServer extends EventEmitter<TestServerEvents> {
         fs.renameSync(CACHE_PATH + dbFileName + uniqueName, CACHE_PATH + dbFileName)
     }
 
-    private async writeDataKilobytesPerSecond(res: http.ServerResponse, data: Uint8Array, kilobytesPerSecond?: number): Promise<void> {
+    private async writeDataKilobytesPerSecond(
+        res: http.ServerResponse,
+        data: Uint8Array,
+        kilobytesPerSecond?: number
+    ): Promise<void> {
         let delayMilliseconds = 1
 
         if (kilobytesPerSecond) {

@@ -10,7 +10,11 @@ describe('Layer0', () => {
     let node4: DhtNode
 
     beforeEach(async () => {
-        epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
+        epDhtNode = new DhtNode({
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 10011, max: 10011 },
+            websocketServerEnableTls: false
+        })
         await epDhtNode.start()
         await epDhtNode.joinDht([epDhtNode.getLocalPeerDescriptor()])
 

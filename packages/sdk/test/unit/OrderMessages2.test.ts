@@ -1,5 +1,14 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, until } from '@streamr/utils'
+import {
+    ChangeFieldType,
+    StreamPartID,
+    StreamPartIDUtils,
+    UserID,
+    hexToBinary,
+    toStreamID,
+    wait,
+    until
+} from '@streamr/utils'
 import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -62,7 +71,11 @@ function formChainOfMessages(publisherId: UserID): MessageInfo[] {
             publisherId,
             timestamp: i,
             delivery:
-                Math.random() < UNAVAILABLE_RATE ? Delivery.UNAVAILABLE : Math.random() < GAP_FILLED_RATE ? Delivery.GAP_FILL : Delivery.REAL_TIME
+                Math.random() < UNAVAILABLE_RATE
+                    ? Delivery.UNAVAILABLE
+                    : Math.random() < GAP_FILLED_RATE
+                      ? Delivery.GAP_FILL
+                      : Delivery.REAL_TIME
         })
     }
     chainOfMessages.push({
@@ -126,7 +139,11 @@ describe.skip('OrderMessages2', () => {
                 actual[msg.getPublisherId()].push(msg.getTimestamp())
             }
 
-            const gapHandler = async (from: number, to: number, publisherId: UserID): Promise<PushPipeline<StreamMessage>> => {
+            const gapHandler = async (
+                from: number,
+                to: number,
+                publisherId: UserID
+            ): Promise<PushPipeline<StreamMessage>> => {
                 const pipeline = new PushPipeline<StreamMessage>()
                 const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
                     return delivery === Delivery.GAP_FILL && timestamp > from && timestamp <= to
@@ -150,7 +167,11 @@ describe.skip('OrderMessages2', () => {
                         _: StreamPartID,
                         options: ChangeFieldType<ResendRangeOptions, 'publisherId', UserID>
                     ): Promise<PushPipeline<StreamMessage>> => {
-                        return gapHandler(options.from.timestamp as number, options.to.timestamp as number, options.publisherId)
+                        return gapHandler(
+                            options.from.timestamp as number,
+                            options.to.timestamp as number,
+                            options.publisherId
+                        )
                     }
                 } as any,
                 {

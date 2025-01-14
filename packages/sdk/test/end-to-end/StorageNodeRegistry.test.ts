@@ -106,7 +106,10 @@ describe('StorageNodeRegistry', () => {
             await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
 
             await until(() => {
-                return onAddPayloads.find(({ streamId }) => streamId === stream.id) && onRemovePayloads.find(({ streamId }) => streamId === stream.id)
+                return (
+                    onAddPayloads.find(({ streamId }) => streamId === stream.id) &&
+                    onRemovePayloads.find(({ streamId }) => streamId === stream.id)
+                )
             })
 
             expect(onAddPayloads).toContainEqual({

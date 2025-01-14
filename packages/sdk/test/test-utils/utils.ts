@@ -71,7 +71,11 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string):
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${suffix !== undefined ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
+export const createTestStream = async (
+    streamrClient: StreamrClient,
+    module: NodeModule,
+    props?: StreamMetadata
+): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -130,7 +134,9 @@ type CreateMockMessageOptions = {
 } & ({ streamPartId: StreamPartID; stream?: never } | { stream: Stream; streamPartId?: never })
 
 export const createMockMessage = async (opts: CreateMockMessageOptions): Promise<StreamMessage> => {
-    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(opts.streamPartId ?? (await opts.stream.getStreamParts())[0])
+    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
+        opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
+    )
     const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
         authentication,
@@ -171,7 +177,10 @@ export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     )
 }
 
-export const startPublisherKeyExchangeSubscription = async (publisherClient: StreamrClient, streamPartId: StreamPartID): Promise<void> => {
+export const startPublisherKeyExchangeSubscription = async (
+    publisherClient: StreamrClient,
+    streamPartId: StreamPartID
+): Promise<void> => {
     const node = publisherClient.getNode()
     await node.join(streamPartId)
 }
@@ -226,8 +235,16 @@ export const createGroupKeyManager = (
     )
 }
 
-export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = await GroupKeyQueue.createInstance(undefined as any, authentication, createGroupKeyManager(undefined, authentication))
+export const createGroupKeyQueue = async (
+    authentication: Authentication,
+    current?: GroupKey,
+    next?: GroupKey
+): Promise<GroupKeyQueue> => {
+    const queue = await GroupKeyQueue.createInstance(
+        undefined as any,
+        authentication,
+        createGroupKeyManager(undefined, authentication)
+    )
     if (current !== undefined) {
         await queue.rekey(current)
     }
@@ -249,7 +266,11 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     )
 }
 
-export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (
+    privateKey: string,
+    wsPort?: number,
+    acceptProxyConnections = false
+): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
         auth: {

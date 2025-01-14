@@ -45,7 +45,15 @@ describe('MessageStream', () => {
         await waitForCalls(onMessage, 2)
         // TODO could implement test so that it doesn't call convertStreamMessageToMessage?
         // (if we don't test the convertStreamMessageToMessage logic elsewhere)
-        expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), omit(convertStreamMessageToMessage(msg1), 'content'))
-        expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), omit(convertStreamMessageToMessage(msg2), 'content'))
+        expect(onMessage).toHaveBeenNthCalledWith(
+            1,
+            msg1.getParsedContent(),
+            omit(convertStreamMessageToMessage(msg1), 'content')
+        )
+        expect(onMessage).toHaveBeenNthCalledWith(
+            2,
+            msg2.getParsedContent(),
+            omit(convertStreamMessageToMessage(msg2), 'content')
+        )
     })
 })

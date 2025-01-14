@@ -1,4 +1,9 @@
-import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from '../../src/logic/DuplicateMessageDetector'
+import {
+    DuplicateMessageDetector,
+    NumberPair,
+    GapMisMatchError,
+    InvalidNumberingError
+} from '../../src/logic/DuplicateMessageDetector'
 
 test('starts empty', () => {
     const detector = new DuplicateMessageDetector()
@@ -64,7 +69,9 @@ describe('gap handling', () => {
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
         expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5))).toEqual(true)
-        expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]')
+        expect(detector.toString()).toEqual(
+            '(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]'
+        )
     })
 
     test('left-side gap contraction', () => {

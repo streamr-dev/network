@@ -21,7 +21,9 @@ export const waitForStorage = async (
     if (!message) {
         throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
     }
-    const matcher = opts.messageMatchFn ?? ((msgTarget: Message, msgGot: Message) => areEqualBinaries(msgTarget.signature, msgGot.signature))
+    const matcher =
+        opts.messageMatchFn ??
+        ((msgTarget: Message, msgGot: Message) => areEqualBinaries(msgTarget.signature, msgGot.signature))
     const start = Date.now()
     let last: StreamMessage[] | undefined
     let found = false
@@ -35,7 +37,11 @@ export const waitForStorage = async (
             throw new Error(`timed out after ${duration}ms waiting for message`)
         }
         const getStorageNodes = (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
-        const resendStream = await resends.resend(toStreamPartID(message.streamId, message.streamPartition), { last: opts.count }, getStorageNodes)
+        const resendStream = await resends.resend(
+            toStreamPartID(message.streamId, message.streamPartition),
+            { last: opts.count },
+            getStorageNodes
+        )
         last = await collect(resendStream)
         for (const lastMsg of last) {
             if (matcher(message, convertStreamMessageToMessage(lastMsg))) {

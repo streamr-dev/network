@@ -179,7 +179,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         if (this.options.peerDescriptor !== undefined) {
             if (this.options.peerDescriptor.nodeId.length !== KADEMLIA_ID_LENGTH_IN_BYTES) {
-                throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
+                throw new Error(
+                    `Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`
+                )
             }
         }
         if (this.options.transport !== undefined && this.options.connectionsView === undefined) {
@@ -223,7 +225,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 autoCertifierUrl: this.options.autoCertifierUrl,
                 autoCertifierConfigFile: this.options.autoCertifierConfigFile,
                 geoIpDatabaseFolder: this.options.geoIpDatabaseFolder,
-                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse)
+                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) =>
+                    this.generatePeerDescriptorCallBack(connectivityResponse)
             }
             // If own PeerDescriptor is given in options, create a ConnectionManager with ws server
             if (this.options.peerDescriptor?.websocket) {
@@ -250,9 +253,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.transport = connectionManager
         }
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.options.serviceId, (msg, opts) => this.transport!.send(msg, opts), {
-            rpcRequestTimeout: this.options.rpcRequestTimeout
-        })
+        this.rpcCommunicator = new RoutingRpcCommunicator(
+            this.options.serviceId,
+            (msg, opts) => this.transport!.send(msg, opts),
+            {
+                rpcRequestTimeout: this.options.rpcRequestTimeout
+            }
+        )
 
         this.transport.on('message', (message: Message) => this.handleMessageFromTransport(message))
 
@@ -296,7 +303,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localDataStore: this.localDataStore,
             getNeighbors: () => this.peerManager!.getNeighbors().map((n) => n.getPeerDescriptor()),
             createRpcRemote: (contact: PeerDescriptor) => {
-                return new StoreRpcRemote(this.localPeerDescriptor!, contact, this.rpcCommunicator!, StoreRpcClient, this.options.rpcRequestTimeout)
+                return new StoreRpcRemote(
+                    this.localPeerDescriptor!,
+                    contact,
+                    this.rpcCommunicator!,
+                    StoreRpcClient,
+                    this.options.rpcRequestTimeout
+                )
             }
         })
         this.on('nearbyContactAdded', (peerDescriptor: PeerDescriptor) => {
@@ -306,7 +319,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         const pruneTargets = []
         if (this.options.periodicallyPingNeighbors === true) {
-            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node.getPeerDescriptor())))
+            pruneTargets.push(() =>
+                this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node.getPeerDescriptor()))
+            )
         }
         if (this.options.periodicallyPingRingContacts === true) {
             pruneTargets.push(() => this.peerManager!.getRingContacts().getAllContacts())
@@ -338,9 +353,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('nearbyContactRemoved', peerDescriptor)
         })
-        this.peerManager.on('nearbyContactAdded', (peerDescriptor: PeerDescriptor) => this.emit('nearbyContactAdded', peerDescriptor))
-        this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor) => this.emit('randomContactRemoved', peerDescriptor))
-        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor) => this.emit('randomContactAdded', peerDescriptor))
+        this.peerManager.on('nearbyContactAdded', (peerDescriptor: PeerDescriptor) =>
+            this.emit('nearbyContactAdded', peerDescriptor)
+        )
+        this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor) =>
+            this.emit('randomContactRemoved', peerDescriptor)
+        )
+        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor) =>
+            this.emit('randomContactAdded', peerDescriptor)
+        )
         this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('ringContactRemoved', peerDescriptor)
         })
@@ -397,8 +418,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             addContact: (contact: PeerDescriptor) => this.peerManager!.addContact(contact),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
-        this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', (req: ClosestPeersRequest, context) =>
-            dhtNodeRpcLocal.getClosestPeers(req, context)
+        this.rpcCommunicator!.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context)
         )
         this.rpcCommunicator!.registerRpcMethod(
             ClosestRingPeersRequest,
@@ -406,7 +430,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             'getClosestRingPeers',
             (req: ClosestRingPeersRequest, context) => dhtNodeRpcLocal.getClosestRingPeers(req, context)
         )
-        this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
+        this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', (req: PingRequest, context) =>
+            dhtNodeRpcLocal.ping(req, context)
+        )
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', (_req: LeaveNotice, context) =>
             dhtNodeRpcLocal.leaveNotice(context)
         )
@@ -414,20 +440,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => {
                 return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
             },
-            storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
+            storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) =>
+                this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFetchDataRequest,
             ExternalFetchDataResponse,
             'externalFetchData',
-            (req: ExternalFetchDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFetchData(req, context),
+            (req: ExternalFetchDataRequest, context: ServerCallContext) =>
+                externalApiRpcLocal.externalFetchData(req, context),
             { timeout: 10000 } // TODO use options option or named constant?
         )
         this.rpcCommunicator!.registerRpcMethod(
             ExternalStoreDataRequest,
             ExternalStoreDataResponse,
             'externalStoreData',
-            (req: ExternalStoreDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalStoreData(req, context),
+            (req: ExternalStoreDataRequest, context: ServerCallContext) =>
+                externalApiRpcLocal.externalStoreData(req, context),
             { timeout: 10000 } // TODO use options option or named constant?
         )
     }
@@ -527,7 +556,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             : []
     }
 
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalDistantPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
+    public async joinDht(
+        entryPointDescriptors: PeerDescriptor[],
+        doAdditionalDistantPeerDiscovery?: boolean,
+        retry?: boolean
+    ): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
@@ -550,7 +583,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDhtViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        const rpcRemote = new ExternalApiRpcRemote(this.localPeerDescriptor!, peer, this.rpcCommunicator!, ExternalApiRpcClient)
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
         return await rpcRemote.storeData(key, data)
     }
 
@@ -564,13 +602,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const rpcRemote = new ExternalApiRpcRemote(this.localPeerDescriptor!, peer, this.rpcCommunicator!, ExternalApiRpcClient)
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
         return await rpcRemote.externalFetchData(key)
     }
 
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
-            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
+            await this.recursiveOperationManager!.execute(
+                key,
+                RecursiveOperation.DELETE_DATA,
+                undefined,
+                waitForCompletion
+            )
         }
     }
 
@@ -588,7 +636,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNeighbors(): PeerDescriptor[] {
-        return this.started ? this.peerManager!.getNeighbors().map((remote: DhtNodeRpcRemote) => remote.getPeerDescriptor()) : []
+        return this.started
+            ? this.peerManager!.getNeighbors().map((remote: DhtNodeRpcRemote) => remote.getPeerDescriptor())
+            : []
     }
 
     getConnectionsView(): ConnectionsView {
@@ -608,7 +658,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async waitForNetworkConnectivity(): Promise<void> {
-        await until(() => this.connectionsView!.getConnectionCount() > 0, this.options.networkConnectivityTimeout, 100, this.abortController.signal)
+        await until(
+            () => this.connectionsView!.getConnectionCount() > 0,
+            this.options.networkConnectivityTimeout,
+            100,
+            this.abortController.signal
+        )
     }
 
     public hasJoined(): boolean {
@@ -621,7 +676,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             transport: this.transport!.getDiagnosticInfo(),
             router: this.router!.getDiagnosticInfo(),
             neighborCount: this.getNeighborCount(),
-            nearbyContactCount: Array.from(this.peerManager!.getNearbyContacts().getAllContactsInUndefinedOrder()).length,
+            nearbyContactCount: Array.from(this.peerManager!.getNearbyContacts().getAllContactsInUndefinedOrder())
+                .length,
             randomContactCount: this.peerManager!.getRandomContacts().getSize()
         }
     }

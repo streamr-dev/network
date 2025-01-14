@@ -19,9 +19,15 @@ export const initResendSubscription = (
     eventEmitter: EventEmitter<SubscriptionEvents>,
     loggerFactory: LoggerFactory
 ): void => {
-    const resendThenRealtime = async function* (src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, any> {
+    const resendThenRealtime = async function* (
+        src: AsyncGenerator<StreamMessage>
+    ): AsyncGenerator<StreamMessage, void, any> {
         try {
-            const resentMsgs = await resends.resend(subscription.streamPartId, toInternalResendOptions(resendOptions), getStorageNodes)
+            const resentMsgs = await resends.resend(
+                subscription.streamPartId,
+                toInternalResendOptions(resendOptions),
+                getStorageNodes
+            )
             subscription.onBeforeFinally.listen(async () => {
                 // TODO maybe we could add AbortControler parameter to resend() and signal it here?
                 resentMsgs.end()

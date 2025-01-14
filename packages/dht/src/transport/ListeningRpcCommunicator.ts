@@ -16,7 +16,9 @@ export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
             this.handleMessageFromPeer(msg)
         }
         this.disconnectedListener = (peerDescriptor: PeerDescriptor) => {
-            const requests = this.getRequestIds((request) => areEqualPeerDescriptors(peerDescriptor, request.getCallContext().targetDescriptor!))
+            const requests = this.getRequestIds((request) =>
+                areEqualPeerDescriptors(peerDescriptor, request.getCallContext().targetDescriptor!)
+            )
             requests.forEach((id) => this.handleClientError(id, new RpcError.Disconnected('Peer disconnected')))
         }
         this.transport = transport

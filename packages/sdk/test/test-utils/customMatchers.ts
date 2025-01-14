@@ -65,7 +65,9 @@ const createAssertionErrors = (actualError: unknown, expectedError: PartialStrea
         if (expectedError.message !== undefined) {
             // similar matching logic as in https://jestjs.io/docs/expect#tothrowerror
             const isMatch =
-                expectedError instanceof Error ? actualError.message === expectedError.message : actualError.message.includes(expectedError.message)
+                expectedError instanceof Error
+                    ? actualError.message === expectedError.message
+                    : actualError.message.includes(expectedError.message)
             if (!isMatch) {
                 assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
             }

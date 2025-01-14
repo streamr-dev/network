@@ -104,13 +104,15 @@ export class Simulator {
     private loopCounter = 0
     private MAX_LOOPS = 1000
 
-    private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
-        if (a.executionTime - b.executionTime === 0) {
-            return a.objectId - b.objectId
-        } else {
-            return a.executionTime - b.executionTime
+    private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>(
+        (a: SimulatorOperation, b: SimulatorOperation) => {
+            if (a.executionTime - b.executionTime === 0) {
+                return a.objectId - b.objectId
+            } else {
+                return a.executionTime - b.executionTime
+            }
         }
-    })
+    )
 
     private simulatorTimeout?: NodeJS.Timeout
 
@@ -139,7 +141,11 @@ export class Simulator {
         this.scheduleOperation = this.scheduleOperation.bind(this)
     }
 
-    private generateExecutionTime(association: Association, sourceRegion: number | undefined, targetRegion: number | undefined): number {
+    private generateExecutionTime(
+        association: Association,
+        sourceRegion: number | undefined,
+        targetRegion: number | undefined
+    ): number {
         let executionTime = Date.now() + this.getLatency(sourceRegion, targetRegion)
         if (association.getLastOperationAt() > executionTime) {
             executionTime = association.getLastOperationAt()
@@ -286,7 +292,11 @@ export class Simulator {
         this.scheduleNextTimeout()
     }
 
-    public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
+    public connect(
+        sourceConnection: SimulatorConnection,
+        targetDescriptor: PeerDescriptor,
+        connectedCallback: (error?: string) => void
+    ): void {
         if (this.stopped) {
             logger.error('connect() called on a stopped simulator ' + new Error().stack)
             return
@@ -296,7 +306,11 @@ export class Simulator {
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)
 
-        const executionTime = this.generateExecutionTime(association, sourceConnection.localPeerDescriptor.region, targetDescriptor.region)
+        const executionTime = this.generateExecutionTime(
+            association,
+            sourceConnection.localPeerDescriptor.region,
+            targetDescriptor.region
+        )
         association.setLastOperationAt(executionTime)
 
         const operation = new ConnectOperation(executionTime, association, sourceConnection, targetDescriptor)

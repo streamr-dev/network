@@ -82,7 +82,9 @@ describe('StreamMessageTranslator', () => {
         expect(translated.body.oneofKind).toEqual('contentMessage')
         expect((translated.body as any).contentMessage.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
-        expect((translated.body as any).contentMessage.content).toEqualBinary(utf8ToBinary(JSON.stringify({ hello: 'WORLD' })))
+        expect((translated.body as any).contentMessage.content).toEqualBinary(
+            utf8ToBinary(JSON.stringify({ hello: 'WORLD' }))
+        )
     })
 
     it('translates protobuf to old protocol', () => {

@@ -154,7 +154,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         if (!this.closed) {
             clearTimeout(this.earlyTimeout)
             const remoteNodeId = toNodeId(this.remotePeerDescriptor)
-            logger.trace(`Closing Node WebRTC Connection to ${remoteNodeId}` + `${reason !== undefined ? `, reason: ${reason}` : ''}`)
+            logger.trace(
+                `Closing Node WebRTC Connection to ${remoteNodeId}` +
+                    `${reason !== undefined ? `, reason: ${reason}` : ''}`
+            )
 
             this.closed = true
 

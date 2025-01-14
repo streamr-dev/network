@@ -40,8 +40,18 @@ createCommand()
     .description('generate and print semi-random JSON data or random binary data (hexadecimal) to stdout')
     .option('-r, --rate <n>', 'rate in milliseconds', createFnParseInt('--rate'), 500)
     .option('--binary', 'generate binary data instead of JSON')
-    .option('--min-length <n>', 'minimum message length in bytes (only for binary data)', createFnParseInt('--min-length'), 512)
-    .option('--max-length <n>', 'maximum message length in bytes (only for binary data)', createFnParseInt('--max-length'), 4096)
+    .option(
+        '--min-length <n>',
+        'minimum message length in bytes (only for binary data)',
+        createFnParseInt('--min-length'),
+        512
+    )
+    .option(
+        '--max-length <n>',
+        'maximum message length in bytes (only for binary data)',
+        createFnParseInt('--max-length'),
+        4096
+    )
     .action((options: Options) => {
         const generate = options.binary ? generateBinary : generateJson
         setInterval(() => {

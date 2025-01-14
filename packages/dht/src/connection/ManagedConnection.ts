@@ -49,7 +49,9 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     }
 
     private onDisconnected(gracefulLeave: boolean): void {
-        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
+        logger.trace(
+            getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave
+        )
         if (!this.replacedAsDuplicate) {
             this.emit('disconnected', gracefulLeave)
         }

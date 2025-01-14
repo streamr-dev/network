@@ -43,10 +43,20 @@ export class GeoIpLocator {
     private checkDatabase: () => Promise<void> = async () => {
         if (this.reader === undefined) {
             // if we do not have a reader, create a new one in any case
-            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.abortController.signal, this.mirrorUrl)
+            this.reader = await downloadGeoIpDatabase(
+                this.geoIpDatabaseFolder,
+                true,
+                this.abortController.signal,
+                this.mirrorUrl
+            )
         } else {
             // if we already have a reader, create a new one only if db has changed
-            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.abortController.signal, this.mirrorUrl)
+            const newReader = await downloadGeoIpDatabase(
+                this.geoIpDatabaseFolder,
+                false,
+                this.abortController.signal,
+                this.mirrorUrl
+            )
             if (newReader !== undefined) {
                 this.reader = newReader
             }

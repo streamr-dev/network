@@ -1,4 +1,11 @@
-import { NetworkPeerDescriptor, Stream, StreamMetadata, StreamPermission, StreamrClient, StreamrClientConfig } from '@streamr/sdk'
+import {
+    NetworkPeerDescriptor,
+    Stream,
+    StreamMetadata,
+    StreamPermission,
+    StreamrClient,
+    StreamrClientConfig
+} from '@streamr/sdk'
 import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import padEnd from 'lodash/padEnd'
 import { Broker, createBroker } from '../src/broker'
@@ -86,7 +93,11 @@ export const getTestName = (module: NodeModule): string => {
     return groups !== null ? groups[1] : module.filename
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
+export const createTestStream = async (
+    streamrClient: StreamrClient,
+    module: NodeModule,
+    props?: StreamMetadata
+): Promise<Stream> => {
     const id = `/test/${getTestName(module)}/${Date.now()}`
     const stream = await streamrClient.createStream({
         id,

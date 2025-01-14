@@ -3,7 +3,12 @@ import addFormats from 'ajv-formats'
 import { StrictConfig } from './config'
 import DEFINITIONS_SCHEMA from './definitions.schema.json'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): StrictConfig => {
+export const validateConfig = (
+    data: unknown,
+    schema: Schema,
+    contextName?: string,
+    useDefaults = true
+): StrictConfig => {
     const ajv = new Ajv({
         useDefaults
     })

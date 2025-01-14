@@ -3,7 +3,11 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export const announceNodeToContract = async (writeIntervalInMs: number, operator: Operator, streamrClient: StreamrClient): Promise<void> => {
+export const announceNodeToContract = async (
+    writeIntervalInMs: number,
+    operator: Operator,
+    streamrClient: StreamrClient
+): Promise<void> => {
     if (await isHeartbeatStale(writeIntervalInMs, operator)) {
         await writeHeartbeat(operator, streamrClient)
     }

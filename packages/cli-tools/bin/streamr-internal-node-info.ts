@@ -10,7 +10,11 @@ import semver from 'semver'
 
 const logger = new Logger(module)
 
-export type NormalizedNodeInfo = ChangeFieldType<NodeInfo, 'streamPartitions', Omit<StreamPartitionInfo, 'deprecatedContentDeliveryLayerNeighbors'>[]>
+export type NormalizedNodeInfo = ChangeFieldType<
+    NodeInfo,
+    'streamPartitions',
+    Omit<StreamPartitionInfo, 'deprecatedContentDeliveryLayerNeighbors'>[]
+>
 
 const toNormalizeNodeInfo = (info: NodeInfo): NormalizedNodeInfo => {
     const isLegacyFormat = semver.satisfies(semver.coerce(info.applicationVersion)!, '< 102.0.0')

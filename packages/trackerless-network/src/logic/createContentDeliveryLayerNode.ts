@@ -38,7 +38,8 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
     const ownNodeId = toNodeId(options.localPeerDescriptor)
     const rpcCommunicator =
-        options.rpcCommunicator ?? new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(options.streamPartId), options.transport)
+        options.rpcCommunicator ??
+        new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(options.streamPartId), options.transport)
     const neighborTargetCount = options.neighborTargetCount ?? 4
     const maxContactCount = options.maxContactCount ?? 20
     const minPropagationTargets = options.minPropagationTargets ?? 2

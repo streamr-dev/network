@@ -26,15 +26,21 @@ describe('Connectivity helpers', () => {
     })
 
     it('two server peers', () => {
-        expect(expectedConnectionType(tlsServerPeerDescriptor, tlsServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_CLIENT)
+        expect(expectedConnectionType(tlsServerPeerDescriptor, tlsServerPeerDescriptor)).toBe(
+            ConnectionType.WEBSOCKET_CLIENT
+        )
     })
 
     it('server to noServer', () => {
-        expect(expectedConnectionType(tlsServerPeerDescriptor, noServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_SERVER)
+        expect(expectedConnectionType(tlsServerPeerDescriptor, noServerPeerDescriptor)).toBe(
+            ConnectionType.WEBSOCKET_SERVER
+        )
     })
 
     it('no server to server', () => {
-        expect(expectedConnectionType(noServerPeerDescriptor, tlsServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_CLIENT)
+        expect(expectedConnectionType(noServerPeerDescriptor, tlsServerPeerDescriptor)).toBe(
+            ConnectionType.WEBSOCKET_CLIENT
+        )
     })
 
     it('no server to no server', () => {
@@ -42,11 +48,15 @@ describe('Connectivity helpers', () => {
     })
 
     it('browser to tls server', () => {
-        expect(expectedConnectionType(browserPeerDescriptor, tlsServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_CLIENT)
+        expect(expectedConnectionType(browserPeerDescriptor, tlsServerPeerDescriptor)).toBe(
+            ConnectionType.WEBSOCKET_CLIENT
+        )
     })
 
     it('tls server to browser', () => {
-        expect(expectedConnectionType(tlsServerPeerDescriptor, browserPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_SERVER)
+        expect(expectedConnectionType(tlsServerPeerDescriptor, browserPeerDescriptor)).toBe(
+            ConnectionType.WEBSOCKET_SERVER
+        )
     })
 
     it('browser to no tls server', () => {

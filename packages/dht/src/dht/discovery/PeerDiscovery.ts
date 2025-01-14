@@ -1,6 +1,13 @@
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionLocker } from '../../connection/ConnectionManager'
-import { DhtAddress, areEqualPeerDescriptors, randomDhtAddress, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
+import {
+    DhtAddress,
+    areEqualPeerDescriptors,
+    randomDhtAddress,
+    toDhtAddress,
+    toNodeId,
+    toDhtAddressRaw
+} from '../../identifiers'
 import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -49,7 +56,11 @@ export class PeerDiscovery {
         const distantJoinOptions = doAdditionalDistantPeerDiscovery
             ? { enabled: true, contactedPeers: new Set<DhtAddress>() }
             : ({ enabled: false } as const)
-        await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(entryPoint, contactedPeers, distantJoinOptions, retry)))
+        await Promise.all(
+            entryPoints.map((entryPoint) =>
+                this.joinThroughEntryPoint(entryPoint, contactedPeers, distantJoinOptions, retry)
+            )
+        )
     }
 
     private async joinThroughEntryPoint(
@@ -65,7 +76,9 @@ export class PeerDiscovery {
         this.joinCalled = true
         logger.debug(
             `Joining ${
-                this.options.serviceId === CONTROL_LAYER_NODE_SERVICE_ID ? 'The Streamr Network' : `Control Layer for ${this.options.serviceId}`
+                this.options.serviceId === CONTROL_LAYER_NODE_SERVICE_ID
+                    ? 'The Streamr Network'
+                    : `Control Layer for ${this.options.serviceId}`
             }` + ` via entrypoint ${toNodeId(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.options.localPeerDescriptor)) {
@@ -84,7 +97,9 @@ export class PeerDiscovery {
 
     async joinRing(): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
-        const sessions = [this.createRingSession(getRingIdRawFromPeerDescriptor(this.options.localPeerDescriptor), contactedPeers)]
+        const sessions = [
+            this.createRingSession(getRingIdRawFromPeerDescriptor(this.options.localPeerDescriptor), contactedPeers)
+        ]
         await this.runRingSessions(sessions)
     }
 
@@ -114,7 +129,11 @@ export class PeerDiscovery {
         return new RingDiscoverySession(sessionOptions)
     }
 
-    private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
+    private async runSessions(
+        sessions: DiscoverySession[],
+        entryPointDescriptor: PeerDescriptor,
+        retry: boolean
+    ): Promise<void> {
         try {
             for (const session of sessions) {
                 this.ongoingDiscoverySessions.set(session.id, session)
@@ -162,7 +181,10 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.options.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinThroughEntryPoint(entryPoint, contactedPeers, { enabled: true, contactedPeers: distantJoinContactPeers })
+            await this.joinThroughEntryPoint(entryPoint, contactedPeers, {
+                enabled: true,
+                contactedPeers: distantJoinContactPeers
+            })
             logger.debug(`Rejoined DHT successfully ${this.options.serviceId}!`)
         } catch {
             logger.warn(`Rejoining DHT ${this.options.serviceId} failed`)

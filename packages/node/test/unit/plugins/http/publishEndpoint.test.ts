@@ -19,7 +19,11 @@ describe('publishEndpoint', () => {
     }
 
     const postMessage = (msg: any, queryParams: any = {}) => {
-        return request(app).post(`/streams/${MOCK_STREAM_ID}`).set('Content-Type', 'application/json').query(queryParams).send(msg)
+        return request(app)
+            .post(`/streams/${MOCK_STREAM_ID}`)
+            .set('Content-Type', 'application/json')
+            .query(queryParams)
+            .send(msg)
     }
 
     const assertValidPublish = async ({

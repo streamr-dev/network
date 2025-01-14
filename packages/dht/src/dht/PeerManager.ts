@@ -78,15 +78,21 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             numberOfNodesPerKBucket: this.options.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.options.numberOfNodesPerKBucket
         })
-        this.ringContacts = new RingContactList<DhtNodeRpcRemote>(getRingIdRawFromPeerDescriptor(this.options.localPeerDescriptor))
+        this.ringContacts = new RingContactList<DhtNodeRpcRemote>(
+            getRingIdRawFromPeerDescriptor(this.options.localPeerDescriptor)
+        )
         this.ringContacts.on('contactAdded', (contact: DhtNodeRpcRemote) => {
             this.emit('ringContactAdded', contact.getPeerDescriptor())
         })
         this.ringContacts.on('contactRemoved', (contact: DhtNodeRpcRemote) => {
             this.emit('ringContactRemoved', contact.getPeerDescriptor())
         })
-        this.neighbors.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
-        this.neighbors.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(toNodeId(contact.getPeerDescriptor())))
+        this.neighbors.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) =>
+            this.onKBucketPing(oldContacts, newContact)
+        )
+        this.neighbors.on('removed', (contact: DhtNodeRpcRemote) =>
+            this.onKBucketRemoved(toNodeId(contact.getPeerDescriptor()))
+        )
         this.neighbors.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
         this.neighbors.on('updated', () => {
             // TODO: Update contact info to the connection manager and reconnect
@@ -103,13 +109,17 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.emit('nearbyContactRemoved', contact.getPeerDescriptor())
             this.randomContacts.addContact(this.options.createDhtNodeRpcRemote(contact.getPeerDescriptor()))
         })
-        this.nearbyContacts.on('contactAdded', (contact: DhtNodeRpcRemote) => this.emit('nearbyContactAdded', contact.getPeerDescriptor()))
+        this.nearbyContacts.on('contactAdded', (contact: DhtNodeRpcRemote) =>
+            this.emit('nearbyContactAdded', contact.getPeerDescriptor())
+        )
         this.activeContacts = new Set()
         this.randomContacts = new RandomContactList(this.options.localNodeId, this.options.maxContactCount)
         this.randomContacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor())
         )
-        this.randomContacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote) => this.emit('randomContactAdded', contactAdded.getPeerDescriptor()))
+        this.randomContacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote) =>
+            this.emit('randomContactAdded', contactAdded.getPeerDescriptor())
+        )
     }
 
     private onKBucketPing(oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote): void {

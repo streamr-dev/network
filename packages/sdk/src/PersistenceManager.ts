@@ -19,7 +19,11 @@ export class PersistenceManager {
     private readonly authentication: Authentication
     private readonly loggerFactory: LoggerFactory
 
-    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication, destroySignal: DestroySignal, loggerFactory: LoggerFactory) {
+    constructor(
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory
+    ) {
         this.authentication = authentication
         this.loggerFactory = loggerFactory
         destroySignal.onDestroy.listen(() => {

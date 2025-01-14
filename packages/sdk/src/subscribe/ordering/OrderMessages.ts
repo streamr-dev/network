@@ -12,7 +12,10 @@ const createMessageChain = (
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
     onUnfillableGap: (gap: Gap) => void,
     resends: Resends,
-    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>,
+    config: Pick<
+        StrictStreamrClientConfig,
+        'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'
+    >,
     abortSignal: AbortSignal
 ) => {
     const resend = async function* (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
@@ -64,7 +67,10 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: (gap: Gap) => void,
         resends: Resends,
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+        config: Pick<
+            StrictStreamrClientConfig,
+            'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'
+        >
     ) {
         this.chains = createLazyMap({
             valueFactory: async ([publisherId, msgChainId]) => {

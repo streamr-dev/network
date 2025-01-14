@@ -58,7 +58,10 @@ const createGraph = (topology: Topology) => {
     for (const nodeId of getNodeIds(topology)) {
         const shortNodeId = nodeId.substring(0, SHORT_ID_LENGTH)
         const explicitLabel = topology.labels !== undefined ? topology.labels[nodeId] : undefined
-        const attributes = explicitLabel !== undefined ? `label="${explicitLabel}: ${shortNodeId}", penwidth=3` : `label="${shortNodeId}"`
+        const attributes =
+            explicitLabel !== undefined
+                ? `label="${explicitLabel}: ${shortNodeId}", penwidth=3`
+                : `label="${shortNodeId}"`
         lines.push(`    "${nodeId}" [${attributes}]`)
     }
     if (topology.route !== undefined) {
@@ -114,7 +117,8 @@ createCommand()
     .description(description)
     .arguments('[topologyDefinitionFile]')
     .action(async (topologyDefinitionFile?: string) => {
-        const topologyDefinition = topologyDefinitionFile !== undefined ? fs.readFileSync(topologyDefinitionFile, 'utf-8') : await readStdin()
+        const topologyDefinition =
+            topologyDefinitionFile !== undefined ? fs.readFileSync(topologyDefinitionFile, 'utf-8') : await readStdin()
         // TODO could validate the content
         console.info(createGraph(JSON.parse(topologyDefinition) as Topology))
     })

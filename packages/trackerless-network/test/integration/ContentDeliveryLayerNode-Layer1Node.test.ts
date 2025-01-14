@@ -1,4 +1,12 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, toNodeId, getRandomRegion } from '@streamr/dht'
+import {
+    ConnectionManager,
+    DhtNode,
+    PeerDescriptor,
+    Simulator,
+    SimulatorTransport,
+    toNodeId,
+    getRandomRegion
+} from '@streamr/dht'
 import { Logger, StreamPartIDUtils, until } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -30,7 +38,9 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
         await entrypointCm.start()
 
-        const cms: ConnectionManager[] = range(otherNodeCount).map((i) => new SimulatorTransport(peerDescriptors[i], simulator))
+        const cms: ConnectionManager[] = range(otherNodeCount).map(
+            (i) => new SimulatorTransport(peerDescriptors[i], simulator)
+        )
         await Promise.all(cms.map((cm) => cm.start()))
 
         entryPointDiscoveryLayerNode = new DhtNode({
@@ -132,7 +142,9 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
                 otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
             })
         )
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getNeighbors().length >= 4, 10000)))
+        await Promise.all(
+            otherContentDeliveryLayerNodes.map((node) => until(() => node.getNeighbors().length >= 4, 10000))
+        )
 
         const avg =
             otherContentDeliveryLayerNodes.reduce((acc, curr) => {
@@ -140,7 +152,9 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             }, 0) / otherNodeCount
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => until(() => node.getOutgoingHandshakeCount() === 0)))
+        await Promise.all(
+            otherContentDeliveryLayerNodes.map((node) => until(() => node.getOutgoingHandshakeCount() === 0))
+        )
         await until(
             () => {
                 let mismatchCounter = 0

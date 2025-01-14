@@ -20,7 +20,10 @@ const Msg = (opts?: any) => {
 function toSeq(requests: Message[], ts = Date.now()) {
     return requests.map((msg) => {
         const { prevMsgRef } = msg.streamMessage
-        return [[msg.timestamp - ts, msg.sequenceNumber], prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null]
+        return [
+            [msg.timestamp - ts, msg.sequenceNumber],
+            prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null
+        ]
     })
 }
 

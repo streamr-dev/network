@@ -116,7 +116,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await maintainTopologyHelper.start()
 
         await streamrClient.getNode().registerOperator({
-            getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
+            getAssignedNodesForStreamPart: (streamPartId: StreamPartID) =>
+                streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
         })
 
         this.abortController.signal.addEventListener('abort', async () => {
@@ -129,7 +130,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             setAbortableInterval(
                 () => {
                     ;(async () => {
-                        await announceNodeToStream(toEthereumAddress(this.pluginConfig.operatorContractAddress), streamrClient)
+                        await announceNodeToStream(
+                            toEthereumAddress(this.pluginConfig.operatorContractAddress),
+                            streamrClient
+                        )
                     })()
                 },
                 this.pluginConfig.heartbeatUpdateIntervalInMs,
@@ -143,7 +147,11 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 await scheduleAtInterval(
                     async () => {
                         if (isLeader()) {
-                            await announceNodeToContract(this.pluginConfig.announceNodeToContract.writeIntervalInMs, operator, streamrClient)
+                            await announceNodeToContract(
+                                this.pluginConfig.announceNodeToContract.writeIntervalInMs,
+                                operator,
+                                streamrClient
+                            )
                         }
                     },
                     this.pluginConfig.announceNodeToContract.pollIntervalInMs,
@@ -245,9 +253,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     streamrClient,
                                     createOperatorFleetState,
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
-                                        return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
+                                        return streamrClient
+                                            .getOperator(targetOperatorContractAddress)
+                                            .fetchRedundancyFactor()
                                     },
-                                    maxDelayBeforeFirstInspectionInMs: this.pluginConfig.reviewSuspectNode.maxDelayBeforeFirstInspectionInMs,
+                                    maxDelayBeforeFirstInspectionInMs:
+                                        this.pluginConfig.reviewSuspectNode.maxDelayBeforeFirstInspectionInMs,
                                     heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                                     votingPeriod: {
                                         startTime: event.votingPeriodStartTimestamp,

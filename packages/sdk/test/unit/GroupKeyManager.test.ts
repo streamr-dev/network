@@ -86,14 +86,18 @@ describe('GroupKeyManager', () => {
             expect(key).toEqual(groupKey)
             expect(groupKeyStore.get).toHaveBeenCalledTimes(2)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(1)
-            expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledWith(groupKeyId, publisherId, toStreamPartID(streamId, 0))
+            expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledWith(
+                groupKeyId,
+                publisherId,
+                toStreamPartID(streamId, 0)
+            )
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(1)
         })
 
         it('key not present anywhere (timeout)', async () => {
-            await expect(groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)).rejects.toThrow(
-                'waitForEvent (timed out after 100 ms)'
-            )
+            await expect(
+                groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
+            ).rejects.toThrow('waitForEvent (timed out after 100 ms)')
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(1)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(1)
@@ -101,9 +105,9 @@ describe('GroupKeyManager', () => {
 
         it('skips lit protocol if lit protocol disabled in config', async () => {
             groupKeyManager = createGroupKeyManager(false)
-            await expect(groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)).rejects.toThrow(
-                'waitForEvent (timed out after 100 ms)'
-            )
+            await expect(
+                groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
+            ).rejects.toThrow('waitForEvent (timed out after 100 ms)')
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(0)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(1)

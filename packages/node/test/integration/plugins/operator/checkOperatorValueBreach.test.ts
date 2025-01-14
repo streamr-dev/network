@@ -6,7 +6,8 @@ import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 
-const { delegate, deploySponsorshipContract, getProvider, setupOperatorContract, sponsor, stake } = _operatorContractUtils
+const { delegate, deploySponsorshipContract, getProvider, setupOperatorContract, sponsor, stake } =
+    _operatorContractUtils
 
 const logger = new Logger(module)
 
@@ -37,24 +38,38 @@ describe('checkOperatorValueBreach', () => {
     it(
         'withdraws the other Operators earnings when they are above the limit',
         async () => {
-            const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({
-                nodeCount: 1,
-                ...deployConfig,
-                generateWalletWithGasAndTokens
-            })
+            const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } =
+                await setupOperatorContract({
+                    nodeCount: 1,
+                    ...deployConfig,
+                    generateWalletWithGasAndTokens
+                })
             const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
             const sponsorer = await generateWalletWithGasAndTokens()
             await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
-            const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+            const sponsorship1 = await deploySponsorshipContract({
+                earningsPerSecond: parseEther('100'),
+                streamId,
+                deployer: operatorWallet
+            })
             await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
             await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
-            const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('200'), streamId, deployer: operatorWallet })
+            const sponsorship2 = await deploySponsorshipContract({
+                earningsPerSecond: parseEther('200'),
+                streamId,
+                deployer: operatorWallet
+            })
             await sponsor(sponsorer, await sponsorship2.getAddress(), parseEther('25000'))
             await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
             const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
             const streamrConfigAddress = await operatorContract.streamrConfig()
-            const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
-            const allowedDifference = (valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction())) / ONE_ETHER
+            const streamrConfig = new Contract(
+                streamrConfigAddress,
+                streamrConfigABI,
+                getProvider()
+            ) as unknown as StreamrConfig
+            const allowedDifference =
+                (valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction())) / ONE_ETHER
             const client = createClient(watcherWallets[0].privateKey)
             const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
 

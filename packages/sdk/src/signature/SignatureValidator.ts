@@ -23,8 +23,12 @@ export class SignatureValidator {
         try {
             success = await this.validate(streamMessage)
         } catch (err) {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            throw new StreamrClientError(`An error occurred during address recovery from signature: ${err}`, 'INVALID_SIGNATURE', streamMessage)
+            throw new StreamrClientError(
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                `An error occurred during address recovery from signature: ${err}`,
+                'INVALID_SIGNATURE',
+                streamMessage
+            )
         }
         if (!success) {
             throw new StreamrClientError('Signature validation failed', 'INVALID_SIGNATURE', streamMessage)
@@ -40,7 +44,11 @@ export class SignatureValidator {
                     streamMessage.signature
                 )
             case SignatureType.SECP256K1:
-                return verifySignature(toUserIdRaw(streamMessage.getPublisherId()), createSignaturePayload(streamMessage), streamMessage.signature)
+                return verifySignature(
+                    toUserIdRaw(streamMessage.getPublisherId()),
+                    createSignaturePayload(streamMessage),
+                    streamMessage.signature
+                )
             case SignatureType.ERC_1271:
                 return this.erc1271ContractFacade.isValidSignature(
                     toEthereumAddress(streamMessage.getPublisherId()),
@@ -48,7 +56,9 @@ export class SignatureValidator {
                     streamMessage.signature
                 )
             default:
-                throw new Error(`Cannot validate message signature, unsupported signatureType: "${streamMessage.signatureType}"`)
+                throw new Error(
+                    `Cannot validate message signature, unsupported signatureType: "${streamMessage.signatureType}"`
+                )
         }
     }
 }

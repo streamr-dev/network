@@ -32,19 +32,29 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         this.options = options
     }
 
-    async handshake(request: StreamPartHandshakeRequest, context: ServerCallContext): Promise<StreamPartHandshakeResponse> {
+    async handshake(
+        request: StreamPartHandshakeRequest,
+        context: ServerCallContext
+    ): Promise<StreamPartHandshakeResponse> {
         return this.handleRequest(request, context)
     }
 
-    private handleRequest(request: StreamPartHandshakeRequest, context: ServerCallContext): StreamPartHandshakeResponse {
+    private handleRequest(
+        request: StreamPartHandshakeRequest,
+        context: ServerCallContext
+    ): StreamPartHandshakeResponse {
         const senderDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const getInterleaveNodeIds = () => (request.interleaveNodeId !== undefined ? [toDhtAddress(request.interleaveNodeId)] : [])
+        const getInterleaveNodeIds = () =>
+            request.interleaveNodeId !== undefined ? [toDhtAddress(request.interleaveNodeId)] : []
         const senderNodeId = toNodeId(senderDescriptor)
         if (this.options.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
         } else if (this.options.neighbors.has(senderNodeId) || this.options.ongoingHandshakes.has(senderNodeId)) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.options.neighbors.size() + this.options.ongoingHandshakes.size < this.options.maxNeighborCount) {
+        } else if (
+            this.options.neighbors.size() + this.options.ongoingHandshakes.size <
+            this.options.maxNeighborCount
+        ) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (
             this.options.neighbors.size(getInterleaveNodeIds()) - this.options.ongoingInterleaves.size >= 2 &&
@@ -76,7 +86,10 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         return res
     }
 
-    private acceptHandshakeWithInterleaving(request: StreamPartHandshakeRequest, requester: PeerDescriptor): StreamPartHandshakeResponse {
+    private acceptHandshakeWithInterleaving(
+        request: StreamPartHandshakeRequest,
+        requester: PeerDescriptor
+    ): StreamPartHandshakeResponse {
         const exclude: DhtAddress[] = []
         request.neighborNodeIds.forEach((id: DhtAddressRaw) => exclude.push(toDhtAddress(id)))
         this.options.ongoingInterleaves.forEach((id) => exclude.push(id))

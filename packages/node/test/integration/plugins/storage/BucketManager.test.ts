@@ -18,7 +18,8 @@ describe('BucketManager', () => {
         for (let i = 0; i < 100; i++) {
             const currentTimestamp = new Date(startTimestamp.getTime() + i * 60 * 1000) // + "i" minutes
             await cassandraClient.execute(
-                'INSERT INTO bucket (stream_id, partition, date_create, id, records, size) ' + 'VALUES (?, 0, ?, ?, 5, 5)',
+                'INSERT INTO bucket (stream_id, partition, date_create, id, records, size) ' +
+                    'VALUES (?, 0, ?, ?, 5, 5)',
                 [streamId, currentTimestamp, TimeUuid.fromDate(currentTimestamp).toString()],
                 {
                     prepare: true
@@ -61,7 +62,9 @@ describe('BucketManager', () => {
         expect(Object.values(bucketManager.buckets)).toHaveLength(0)
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
-        let result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [streamId])
+        let result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [
+            streamId
+        ])
         expect(result.rows.length).toEqual(0)
 
         // first time we call in constructor, second after timeout

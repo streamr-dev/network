@@ -118,7 +118,10 @@ describe('MaintainTopologyService', () => {
             await until(
                 async () => {
                     const state = await getSubscribedStreamPartIds(client)
-                    return containsAll(state, await stream2.getStreamParts()) && doesNotContainAny(state, await stream1.getStreamParts())
+                    return (
+                        containsAll(state, await stream2.getStreamParts()) &&
+                        doesNotContainAny(state, await stream1.getStreamParts())
+                    )
                 },
                 10000,
                 1000

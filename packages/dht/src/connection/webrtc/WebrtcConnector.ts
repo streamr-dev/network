@@ -70,9 +70,13 @@ export class WebrtcConnector {
 
     constructor(options: WebrtcConnectorOptions) {
         this.options = options
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, options.transport, {
-            rpcRequestTimeout: 15000 // TODO use options option or named constant?
-        })
+        this.rpcCommunicator = new ListeningRpcCommunicator(
+            WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID,
+            options.transport,
+            {
+                rpcRequestTimeout: 15000 // TODO use options option or named constant?
+            }
+        )
         this.registerLocalRpcMethods(options)
     }
 
@@ -97,27 +101,39 @@ export class WebrtcConnector {
                 }
             }
         )
-        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', async (req: RtcOffer, context: ServerCallContext) => {
-            if (!this.stopped) {
-                return localRpc.rtcOffer(req, context)
-            } else {
-                return {}
+        this.rpcCommunicator.registerRpcNotification(
+            RtcOffer,
+            'rtcOffer',
+            async (req: RtcOffer, context: ServerCallContext) => {
+                if (!this.stopped) {
+                    return localRpc.rtcOffer(req, context)
+                } else {
+                    return {}
+                }
             }
-        })
-        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', async (req: RtcAnswer, context: ServerCallContext) => {
-            if (!this.stopped) {
-                return localRpc.rtcAnswer(req, context)
-            } else {
-                return {}
+        )
+        this.rpcCommunicator.registerRpcNotification(
+            RtcAnswer,
+            'rtcAnswer',
+            async (req: RtcAnswer, context: ServerCallContext) => {
+                if (!this.stopped) {
+                    return localRpc.rtcAnswer(req, context)
+                } else {
+                    return {}
+                }
             }
-        })
-        this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate', async (req: IceCandidate, context: ServerCallContext) => {
-            if (!this.stopped) {
-                return localRpc.iceCandidate(req, context)
-            } else {
-                return {}
+        )
+        this.rpcCommunicator.registerRpcNotification(
+            IceCandidate,
+            'iceCandidate',
+            async (req: IceCandidate, context: ServerCallContext) => {
+                if (!this.stopped) {
+                    return localRpc.iceCandidate(req, context)
+                } else {
+                    return {}
+                }
             }
-        })
+        )
     }
 
     connect(targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean): PendingConnection {
@@ -166,7 +182,12 @@ export class WebrtcConnector {
             })
             handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
                 if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
-                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
+                    rejectHandshake(
+                        pendingConnection!,
+                        connection,
+                        handshaker,
+                        HandshakeError.UNSUPPORTED_PROTOCOL_VERSION
+                    )
                 } else {
                     acceptHandshake(handshaker, pendingConnection, connection)
                 }

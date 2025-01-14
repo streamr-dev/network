@@ -5,7 +5,12 @@ import { PublishMetadata } from '../src/publish/Publisher'
 import { Message } from './Message'
 import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamrClient } from './StreamrClient'
-import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery, toInternalPermissionAssignment } from './permission'
+import {
+    PermissionAssignment,
+    PublicPermissionQuery,
+    UserPermissionQuery,
+    toInternalPermissionAssignment
+} from './permission'
 
 /**
  * A convenience API for managing and accessing an individual stream.
@@ -36,7 +41,9 @@ export class Stream {
      *
      * @category Important
      */
-    async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
+    async hasPermission(
+        query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>
+    ): Promise<boolean> {
         return this.client.hasPermission({
             streamId: this.id,
             ...query
@@ -75,7 +82,10 @@ export class Stream {
      *
      * @category Important
      */
-    async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean; timeout?: number } = { wait: false }): Promise<void> {
+    async addToStorageNode(
+        storageNodeAddress: HexString,
+        opts: { wait: boolean; timeout?: number } = { wait: false }
+    ): Promise<void> {
         await this.client.addStreamToStorageNode(this.id, storageNodeAddress, opts)
     }
 

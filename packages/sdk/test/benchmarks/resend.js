@@ -84,7 +84,13 @@ async function run() {
             log(bytes(Buffer.byteLength(s)), s, published[0])
             return published
         } finally {
-            log('publishing %d %s messages to %s: %dms <<', batchSize, bytes(payloadBytes), stream.id, Date.now() - startTime)
+            log(
+                'publishing %d %s messages to %s: %dms <<',
+                batchSize,
+                bytes(payloadBytes),
+                stream.id,
+                Date.now() - startTime
+            )
         }
     }
 
@@ -128,10 +134,13 @@ async function run() {
         ])
 
         for (const batchSize of BATCH_SIZES) {
-            suite.add(`client resend last ${bytes(payloadBytes)} messages in batches of ${batchSize} without encryption`, {
-                defer: true,
-                fn: await test(client1, stream1, batchSize)
-            })
+            suite.add(
+                `client resend last ${bytes(payloadBytes)} messages in batches of ${batchSize} without encryption`,
+                {
+                    defer: true,
+                    fn: await test(client1, stream1, batchSize)
+                }
+            )
 
             suite.add(`client resend last ${bytes(payloadBytes)} messages in batches of ${batchSize} with encryption`, {
                 defer: true,

@@ -9,7 +9,13 @@ import { StreamPermission } from '../../src/permission'
 import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 describe('PublisherKeyExchange', () => {
     let publisherWallet: Wallet

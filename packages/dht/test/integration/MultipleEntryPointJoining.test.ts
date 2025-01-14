@@ -18,7 +18,11 @@ describe('multiple entry point joining', () => {
             node2 = await createMockConnectionDhtNode(simulator)
             node3 = await createMockConnectionDhtNode(simulator)
 
-            entryPoints = [node1.getLocalPeerDescriptor(), node2.getLocalPeerDescriptor(), node3.getLocalPeerDescriptor()]
+            entryPoints = [
+                node1.getLocalPeerDescriptor(),
+                node2.getLocalPeerDescriptor(),
+                node3.getLocalPeerDescriptor()
+            ]
         })
 
         afterEach(async () => {

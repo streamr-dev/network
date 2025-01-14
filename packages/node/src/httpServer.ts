@@ -29,7 +29,9 @@ const getApiKey = (req: Request) => {
     return undefined
 }
 
-export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthentication): ((req: Request, res: Response, next: NextFunction) => void) => {
+export const createAuthenticatorMiddleware = (
+    apiAuthentication?: ApiAuthentication
+): ((req: Request, res: Response, next: NextFunction) => void) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const apiKey = getApiKey(req)
         if (isValidAuthentication(apiKey, apiAuthentication)) {
@@ -41,7 +43,10 @@ export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthenticat
     }
 }
 
-export const startServer = async (endpoints: Endpoint[], config: StrictConfig['httpServer']): Promise<HttpServer | https.Server> => {
+export const startServer = async (
+    endpoints: Endpoint[],
+    config: StrictConfig['httpServer']
+): Promise<HttpServer | https.Server> => {
     const app = express()
     app.use(
         cors({

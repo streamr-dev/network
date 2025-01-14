@@ -126,7 +126,9 @@ describe('RpcCommunicator', () => {
         // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
-        await expect(promises.message.promise).rejects.toEqual(new Err.RpcRequest(`Server does not implement method ping`))
+        await expect(promises.message.promise).rejects.toEqual(
+            new Err.RpcRequest(`Server does not implement method ping`)
+        )
         // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
@@ -134,11 +136,13 @@ describe('RpcCommunicator', () => {
     it('Success responses to requests', async () => {
         let successCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
-        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
-            if (!message.errorType) {
-                successCounter += 1
+        rpcCommunicator.setOutgoingMessageListener(
+            async (message: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+                if (!message.errorType) {
+                    successCounter += 1
+                }
             }
-        })
+        )
 
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => successCounter === 1)
@@ -147,11 +151,13 @@ describe('RpcCommunicator', () => {
     it('Success responses to new registration method', async () => {
         let successCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
-        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (!message.errorType) {
-                successCounter += 1
+        rpcCommunicator.setOutgoingMessageListener(
+            async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+                if (!message.errorType) {
+                    successCounter += 1
+                }
             }
-        })
+        )
 
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => successCounter === 1)
@@ -159,12 +165,14 @@ describe('RpcCommunicator', () => {
 
     it('Error response on unknown method', async () => {
         let errorCounter = 0
-        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            //const pongWrapper = RpcMessage.fromBinary(message)
-            if (message.errorType && message.errorType === RpcErrorType.UNKNOWN_RPC_METHOD) {
-                errorCounter += 1
+        rpcCommunicator.setOutgoingMessageListener(
+            async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+                //const pongWrapper = RpcMessage.fromBinary(message)
+                if (message.errorType && message.errorType === RpcErrorType.UNKNOWN_RPC_METHOD) {
+                    errorCounter += 1
+                }
             }
-        })
+        )
 
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
@@ -174,11 +182,16 @@ describe('RpcCommunicator', () => {
         let errorCounter = 0
 
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.respondPingWithTimeout)
-        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (message.errorType !== undefined && message.errorType === (RpcErrorType.SERVER_TIMEOUT as RpcErrorType)) {
-                errorCounter += 1
+        rpcCommunicator.setOutgoingMessageListener(
+            async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+                if (
+                    message.errorType !== undefined &&
+                    message.errorType === (RpcErrorType.SERVER_TIMEOUT as RpcErrorType)
+                ) {
+                    errorCounter += 1
+                }
             }
-        })
+        )
 
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
@@ -187,11 +200,13 @@ describe('RpcCommunicator', () => {
     it('Error response on server error', async () => {
         let errorCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
-        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (message.errorType !== undefined && message.errorType === RpcErrorType.SERVER_ERROR) {
-                errorCounter += 1
+        rpcCommunicator.setOutgoingMessageListener(
+            async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+                if (message.errorType !== undefined && message.errorType === RpcErrorType.SERVER_ERROR) {
+                    errorCounter += 1
+                }
             }
-        })
+        )
 
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await until(() => errorCounter === 1)
@@ -202,9 +217,13 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, { nodeId: 'test' }, promises)
         // @ts-expect-error private
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        const matchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'test')
+        const matchingOngoingRequests = rpcCommunicator.getRequestIds(
+            (request) => request.getCallContext().nodeId === 'test'
+        )
         expect(matchingOngoingRequests.length).toEqual(1)
-        const noMatchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'nope')
+        const noMatchingOngoingRequests = rpcCommunicator.getRequestIds(
+            (request) => request.getCallContext().nodeId === 'nope'
+        )
         expect(noMatchingOngoingRequests.length).toEqual(0)
     })
 })

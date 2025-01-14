@@ -37,7 +37,8 @@ const publishStream = (stream: string, partitionKeyField: string | undefined, cl
                     return
                 }
             }
-            const partitionKey = partitionKeyField !== undefined && typeof message === 'object' ? message[partitionKeyField] : undefined
+            const partitionKey =
+                partitionKeyField !== undefined && typeof message === 'object' ? message[partitionKeyField] : undefined
             client.publish(stream, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
@@ -68,7 +69,9 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     })
 })
     .arguments('<streamId>')
-    .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
+    .description(
+        'publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data'
+    )
     .option(
         '-k, --partition-key-field <string>',
         'field name in each message to use for assigning the message to a stream partition (only for JSON data)'

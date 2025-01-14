@@ -103,7 +103,10 @@ export class FakeJsonRpcServer {
             }
             const fromBlock = parseInt(request.params[0].fromBlock, 16)
             if (BLOCK_NUMBER >= fromBlock) {
-                const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
+                const data = new AbiCoder().encode(
+                    ['string', 'string'],
+                    [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })]
+                )
                 return [
                     {
                         address: request.params[0].address,

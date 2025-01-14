@@ -22,7 +22,9 @@ export const getRingIdRawFromPeerDescriptor = (peerDescriptor: PeerDescriptor): 
     const ipAsbuffer = Buffer.alloc(4)
     ipAsbuffer.writeUInt32BE(peerDescriptor.ipAddress ?? 0, 0)
 
-    const uniquePartAsBuffer = Buffer.from(peerDescriptor.nodeId.subarray(peerDescriptor.nodeId.length - 7, peerDescriptor.nodeId.length))
+    const uniquePartAsBuffer = Buffer.from(
+        peerDescriptor.nodeId.subarray(peerDescriptor.nodeId.length - 7, peerDescriptor.nodeId.length)
+    )
 
     const arr = [regionAsBuffer, ipAsbuffer, uniquePartAsBuffer]
 

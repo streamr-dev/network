@@ -1,5 +1,11 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import {
+    Message,
+    PeerDescriptor,
+    RouteMessageAck,
+    RouteMessageError,
+    RouteMessageWrapper
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { IRouterRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
@@ -16,7 +22,10 @@ interface RouterRpcLocalOptions {
 
 const logger = new Logger(module)
 
-export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: RouteMessageError): RouteMessageAck => {
+export const createRouteMessageAck = (
+    routedMessage: RouteMessageWrapper,
+    error?: RouteMessageError
+): RouteMessageAck => {
     const ack: RouteMessageAck = {
         requestId: routedMessage.requestId,
         error
@@ -75,6 +84,10 @@ export class RouterRpcLocal implements IRouterRpc {
             this.options.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
-        return this.options.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })
+        return this.options.doRouteMessage({
+            ...routedMessage,
+            requestId: v4(),
+            target: forwardedMessage.targetDescriptor!.nodeId
+        })
     }
 }

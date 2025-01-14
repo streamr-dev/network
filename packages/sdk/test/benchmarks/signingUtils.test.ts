@@ -46,7 +46,11 @@ describe('SigningUtil', () => {
             for (let i = 0; i < ITERATIONS; i++) {
                 const result = await functionToTest()
                 if (
-                    !((expectedResult instanceof Uint8Array && areEqualBinaries(expectedResult, result as Uint8Array)) || result === expectedResult)
+                    !(
+                        (expectedResult instanceof Uint8Array &&
+                            areEqualBinaries(expectedResult, result as Uint8Array)) ||
+                        result === expectedResult
+                    )
                 ) {
                     throw new Error(`invalid result in ${name}`)
                 }
@@ -99,7 +103,10 @@ describe('SigningUtil', () => {
 
             const elapsedTimeEthers = await run(
                 async () => {
-                    return toEthereumAddress(verifyMessage(payload, binaryToHex(binarySignature, true))) === toEthereumAddress(wallet.address)
+                    return (
+                        toEthereumAddress(verifyMessage(payload, binaryToHex(binarySignature, true))) ===
+                        toEthereumAddress(wallet.address)
+                    )
                 },
                 true,
                 'Verify-ethers.js'

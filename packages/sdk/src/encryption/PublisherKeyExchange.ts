@@ -78,7 +78,9 @@ export class PublisherKeyExchange {
     private async onMessage(request: StreamMessage): Promise<void> {
         if (OldGroupKeyRequest.is(request)) {
             try {
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(
+                    request.content
+                )
                 const responseType = await this.getResponseType(recipient)
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })

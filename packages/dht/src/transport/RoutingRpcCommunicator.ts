@@ -10,7 +10,11 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
     private ownServiceId: ServiceID
     private sendFn: (msg: Message, opts: SendOptions) => Promise<void>
 
-    constructor(ownServiceId: ServiceID, sendFn: (msg: Message, opts: SendOptions) => Promise<void>, options?: RpcCommunicatorOptions) {
+    constructor(
+        ownServiceId: ServiceID,
+        sendFn: (msg: Message, opts: SendOptions) => Promise<void>,
+        options?: RpcCommunicatorOptions
+    ) {
         super(options)
         this.ownServiceId = ownServiceId
         this.sendFn = sendFn

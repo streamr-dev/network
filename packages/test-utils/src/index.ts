@@ -1,4 +1,13 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
+import {
+    EthereumAddress,
+    toEthereumAddress,
+    toUserId,
+    UserID,
+    until,
+    waitForEvent,
+    Logger,
+    retry
+} from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
@@ -250,7 +259,9 @@ const getTestProvider = (): Provider => {
     })
 }
 
-const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
+const getTestTokenContract = (
+    adminWallet: Wallet
+): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
     const ABI = [
         {
             inputs: [
@@ -271,7 +282,9 @@ const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: stri
             type: 'function'
         }
     ]
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as { mint: () => Promise<TransactionResponse> }
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as {
+        mint: () => Promise<TransactionResponse>
+    }
 }
 
 const getTestAdminWallet = (provider: Provider): Wallet => {

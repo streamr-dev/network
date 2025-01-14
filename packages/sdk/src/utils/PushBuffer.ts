@@ -44,7 +44,10 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
         if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
-            throw new StreamrClientError(`bufferSize must be a safe positive integer, got: ${bufferSize}`, 'INVALID_ARGUMENT')
+            throw new StreamrClientError(
+                `bufferSize must be a safe positive integer, got: ${bufferSize}`,
+                'INVALID_ARGUMENT'
+            )
         }
 
         this.bufferSize = bufferSize
@@ -215,7 +218,10 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 /**
  * Pull from a source into some PushBuffer
  */
-export async function pull<InType, OutType = InType>(src: AsyncGenerator<InType>, dest: IPushBuffer<InType, OutType>): Promise<void> {
+export async function pull<InType, OutType = InType>(
+    src: AsyncGenerator<InType>,
+    dest: IPushBuffer<InType, OutType>
+): Promise<void> {
     if (!src) {
         throw new Error('no source')
     }

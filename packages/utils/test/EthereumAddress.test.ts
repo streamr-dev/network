@@ -12,7 +12,11 @@ describe('toEthereumAddress', () => {
     })
 
     it('valid addresses are lowercased', () => {
-        expect(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        expect(toEthereumAddress('0xAAAAAAAAAAccccccccccBBBBBBBBBB1111155555')).toEqual('0xaaaaaaaaaaccccccccccbbbbbbbbbb1111155555')
+        expect(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toEqual(
+            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+        )
+        expect(toEthereumAddress('0xAAAAAAAAAAccccccccccBBBBBBBBBB1111155555')).toEqual(
+            '0xaaaaaaaaaaccccccccccbbbbbbbbbb1111155555'
+        )
     })
 })

@@ -1,6 +1,9 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -47,8 +50,11 @@ describe('ExternalNetworkRpc', () => {
 
     it('can make queries', async () => {
         const requestId = 'TEST'
-        serverNode.registerExternalNetworkRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', async () =>
-            StreamPartHandshakeResponse.create({ requestId })
+        serverNode.registerExternalNetworkRpcMethod(
+            StreamPartHandshakeRequest,
+            StreamPartHandshakeResponse,
+            'handshake',
+            async () => StreamPartHandshakeResponse.create({ requestId })
         )
         const client = clientNode.createExternalRpcClient(HandshakeRpcClient)
         const response = await client.handshake(StreamPartHandshakeRequest.create(), {

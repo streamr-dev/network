@@ -3,7 +3,11 @@ import { StreamPartIDUtils, until } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import {
+    createMockContentDeliveryLayerNodeAndDhtNode,
+    createMockPeerDescriptor,
+    createStreamMessage
+} from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('Propagation', () => {

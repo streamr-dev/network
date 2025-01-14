@@ -1,11 +1,15 @@
 import fs from 'fs'
 
 // load airportsWithCoodinates.csv
-const airportsWithCoordinates = fs.readFileSync('./data-generation/intermediate-files/airportsWithCoordinates.csv').toString()
+const airportsWithCoordinates = fs
+    .readFileSync('./data-generation/intermediate-files/airportsWithCoordinates.csv')
+    .toString()
 
 // parse the airportsWithCoordinates.csv file into an array of tuples
 const airportsWithCoordinatesLines = airportsWithCoordinates.split('\n')
-let airportsWithCoordinatesTuples = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
+let airportsWithCoordinatesTuples = new Array<
+    [code: string, x: string, y: string, number: number | undefined, continent: string, country: string]
+>()
 for (const line of airportsWithCoordinatesLines) {
     if (line.length < 3) {
         continue
@@ -99,14 +103,18 @@ for (const country of countries) {
     // copy all lines of the country from airportsWithCoordinatesTuples
     // into a new array in the order of clusters array
 
-    const countryArray = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
+    const countryArray = new Array<
+        [code: string, x: string, y: string, number: number | undefined, continent: string, country: string]
+    >()
     for (const cluster of clusters) {
         for (let i = cluster[0]; i < cluster[1]; i++) {
             countryArray.push(airportsWithCoordinatesTuples[i])
         }
     }
 
-    const newArray = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
+    const newArray = new Array<
+        [code: string, x: string, y: string, number: number | undefined, continent: string, country: string]
+    >()
 
     // go through airpotCorrdinatesTuples, copying lines to newArray.
     // If the line to be copied is the beginning of the first cluster,

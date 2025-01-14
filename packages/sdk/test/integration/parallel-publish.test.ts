@@ -62,7 +62,10 @@ describe('parallel publish', () => {
                     return m.prevMsgRef === undefined
                 } else {
                     const previous = sortedMessages[i - 1]
-                    return m.prevMsgRef!.timestamp === previous.getTimestamp() && m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber()
+                    return (
+                        m.prevMsgRef!.timestamp === previous.getTimestamp() &&
+                        m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber()
+                    )
                 }
             })
         ).toBeTrue()

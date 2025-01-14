@@ -32,7 +32,10 @@ describe('contract call cache', () => {
         const getMethodCalls = (): ProxyHttpServerRequest[] => {
             const methodCalls = server.getRequests().filter((r) => r.body.method === 'eth_call')
             return methodCalls.filter((c) => {
-                return parseEthereumFunctionSelectorFromCallData(c.body.params[0].data) === METADATA_QUERY_FUNCTION_SELECTOR
+                return (
+                    parseEthereumFunctionSelectorFromCallData(c.body.params[0].data) ===
+                    METADATA_QUERY_FUNCTION_SELECTOR
+                )
             })
         }
 

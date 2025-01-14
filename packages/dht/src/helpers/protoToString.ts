@@ -5,7 +5,10 @@ import { protoClasses as rpcProtoClasses } from '@streamr/proto-rpc'
 
 const typeRegistry = protoClasses.concat(rpcProtoClasses)
 
-export function protoToString<T extends object, ClassType extends IMessageType<T>>(protoObj: T, objectType: ClassType): string {
+export function protoToString<T extends object, ClassType extends IMessageType<T>>(
+    protoObj: T,
+    objectType: ClassType
+): string {
     let ret = ''
     try {
         ret = objectType.toJsonString(protoObj, {

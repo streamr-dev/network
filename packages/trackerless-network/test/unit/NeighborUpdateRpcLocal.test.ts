@@ -23,7 +23,14 @@ describe('NeighborUpdateRpcLocal', () => {
 
     const addNeighbors = (count: number) => {
         for (let i = 0; i < count; i++) {
-            neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, createMockPeerDescriptor(), rpcCommunicator, ContentDeliveryRpcClient))
+            neighbors.add(
+                new ContentDeliveryRpcRemote(
+                    localPeerDescriptor,
+                    createMockPeerDescriptor(),
+                    rpcCommunicator,
+                    ContentDeliveryRpcClient
+                )
+            )
         }
     }
 
@@ -81,7 +88,12 @@ describe('NeighborUpdateRpcLocal', () => {
 
     it('does not ask to be removed if caller is a neighbor', async () => {
         const caller = createMockPeerDescriptor()
-        const neighbor = new ContentDeliveryRpcRemote(localPeerDescriptor, caller, rpcCommunicator, ContentDeliveryRpcClient)
+        const neighbor = new ContentDeliveryRpcRemote(
+            localPeerDescriptor,
+            caller,
+            rpcCommunicator,
+            ContentDeliveryRpcClient
+        )
         neighbors.add(neighbor)
         const res = await rpcLocal.neighborUpdate(
             {
@@ -109,13 +121,21 @@ describe('NeighborUpdateRpcLocal', () => {
 
     it('asks to be removed if caller is a neighbor and both have too many neighbors', async () => {
         const caller = createMockPeerDescriptor()
-        const neighbor = new ContentDeliveryRpcRemote(localPeerDescriptor, caller, rpcCommunicator, ContentDeliveryRpcClient)
+        const neighbor = new ContentDeliveryRpcRemote(
+            localPeerDescriptor,
+            caller,
+            rpcCommunicator,
+            ContentDeliveryRpcClient
+        )
         neighbors.add(neighbor)
         addNeighbors(neighborTargetCount)
         const res = await rpcLocal.neighborUpdate(
             {
                 streamPartId,
-                neighborDescriptors: [localPeerDescriptor, ...range(neighborTargetCount).map(() => createMockPeerDescriptor())],
+                neighborDescriptors: [
+                    localPeerDescriptor,
+                    ...range(neighborTargetCount).map(() => createMockPeerDescriptor())
+                ],
                 removeMe: false
             },
             { incomingSourceDescriptor: caller } as any

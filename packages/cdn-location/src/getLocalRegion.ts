@@ -20,7 +20,10 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
     return airportCode
 }
 
-export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {
+export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (
+    latitude,
+    longitude
+) => {
     const distances: [airportCode: string, distance: number][] = []
 
     Object.keys(airportCodeToRegion).forEach((key) => {
@@ -50,8 +53,14 @@ const getRandomRegion: () => number = () => {
     return randomRegion
 }
 
-export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> = async (maxCacheAge = DEFAULT_MAX_CACHE_AGE) => {
-    if (cachedLocalRegion === undefined || cachedLocalRegionFetchTime === undefined || Date.now() - cachedLocalRegionFetchTime > maxCacheAge) {
+export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> = async (
+    maxCacheAge = DEFAULT_MAX_CACHE_AGE
+) => {
+    if (
+        cachedLocalRegion === undefined ||
+        cachedLocalRegionFetchTime === undefined ||
+        Date.now() - cachedLocalRegionFetchTime > maxCacheAge
+    ) {
         const region = await getLocalRegion()
         // eslint-disable-next-line require-atomic-updates
         cachedLocalRegion = region

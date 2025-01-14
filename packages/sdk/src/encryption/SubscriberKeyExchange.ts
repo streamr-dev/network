@@ -72,10 +72,20 @@ export class SubscriberKeyExchange {
         }, config.encryption.maxKeyRequestsPerSecond)
     }
 
-    private async doRequestGroupKey(groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(
+        groupKeyId: string,
+        publisherId: UserID,
+        streamPartId: StreamPartID
+    ): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
-        const request = await this.createRequest(groupKeyId, streamPartId, publisherId, this.rsaKeyPair!.getPublicKey(), requestId)
+        const request = await this.createRequest(
+            groupKeyId,
+            streamPartId,
+            publisherId,
+            this.rsaKeyPair!.getPublicKey(),
+            requestId
+        )
         await this.networkNodeFacade.broadcast(request)
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
@@ -143,7 +153,10 @@ export class SubscriberKeyExchange {
         if (this.pendingRequests.has(requestId)) {
             const authenticatedUser = await this.authentication.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return recipientId === authenticatedUser || (erc1271Contract !== undefined && recipientId === toUserId(erc1271Contract))
+            return (
+                recipientId === authenticatedUser ||
+                (erc1271Contract !== undefined && recipientId === toUserId(erc1271Contract))
+            )
         }
         return false
     }

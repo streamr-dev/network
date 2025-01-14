@@ -11,7 +11,10 @@ import { toNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
-const createOptions = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
+const createOptions = (
+    localPeerDescriptor: PeerDescriptor,
+    opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>
+) => {
     return {
         createConnectorFacade: () =>
             new DefaultConnectorFacade({
@@ -139,7 +142,10 @@ describe('Websocket Connection Management', () => {
             }
         }
 
-        await Promise.allSettled([waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000), wsServerManager.send(dummyMessage)])
+        await Promise.allSettled([
+            waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
+            wsServerManager.send(dummyMessage)
+        ])
         expect(wsServerManager.hasConnection(toNodeId(dummyMessage.targetDescriptor!))).toBeFalse()
     }, 20000)
 
@@ -171,9 +177,13 @@ describe('Websocket Connection Management', () => {
             messageId: 'mockerer',
             targetDescriptor: noWsServerConnectorPeerDescriptor
         }
-        await expect(noWsServerManager.send(dummyMessage)).rejects.toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+        await expect(noWsServerManager.send(dummyMessage)).rejects.toEqual(
+            new Err.CannotConnectToSelf('Cannot send to self')
+        )
 
         dummyMessage.targetDescriptor = wsServerConnectorPeerDescriptor
-        await expect(wsServerManager.send(dummyMessage)).rejects.toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+        await expect(wsServerManager.send(dummyMessage)).rejects.toEqual(
+            new Err.CannotConnectToSelf('Cannot send to self')
+        )
     })
 })

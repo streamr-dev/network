@@ -1,4 +1,12 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, ListeningRpcCommunicator, PeerDescriptor, areEqualPeerDescriptors, toNodeId } from '@streamr/dht'
+import {
+    ConnectionManager,
+    DhtNode,
+    DhtNodeOptions,
+    ListeningRpcCommunicator,
+    PeerDescriptor,
+    areEqualPeerDescriptors,
+    toNodeId
+} from '@streamr/dht'
 import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
@@ -66,7 +74,10 @@ export class NetworkStack {
         instances.push(this)
     }
 
-    async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number; timeout: number }): Promise<void> {
+    async joinStreamPart(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number; timeout: number }
+    ): Promise<void> {
         if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
@@ -74,14 +85,19 @@ export class NetworkStack {
         this.getContentDeliveryManager().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await until(() => {
-                return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+                return (
+                    this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+                )
             }, neighborRequirement.timeout)
         }
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && msg.body.oneofKind === 'contentMessage') {
+        if (
+            this.getContentDeliveryManager().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) &&
+            msg.body.oneofKind === 'contentMessage'
+        ) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
@@ -109,9 +125,15 @@ export class NetworkStack {
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
         await this.contentDeliveryManager?.start(this.controlLayerNode!, connectionManager, connectionManager)
         if (this.contentDeliveryManager) {
-            const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
+            const infoRpcCommunicator = new ListeningRpcCommunicator(
+                NODE_INFO_RPC_SERVICE_ID,
+                this.getConnectionManager()
+            )
             this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
-            this.nodeInfoClient = new NodeInfoClient(this.controlLayerNode!.getLocalPeerDescriptor(), infoRpcCommunicator)
+            this.nodeInfoClient = new NodeInfoClient(
+                this.controlLayerNode!.getLocalPeerDescriptor(),
+                infoRpcCommunicator
+            )
         }
     }
 

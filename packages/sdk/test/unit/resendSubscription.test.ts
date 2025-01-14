@@ -12,7 +12,12 @@ import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscription'
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
+import {
+    createGroupKeyQueue,
+    createRandomAuthentication,
+    createStreamRegistry,
+    mockLoggerFactory
+} from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -27,11 +32,16 @@ const createPushPipeline = (messages: StreamMessage[]) => {
     return pipeline
 }
 
-const createResend = (historicalMessages: StreamMessage[], gapHandler: (opts: ResendRangeOptions) => StreamMessage[]) => {
+const createResend = (
+    historicalMessages: StreamMessage[],
+    gapHandler: (opts: ResendRangeOptions) => StreamMessage[]
+) => {
     return jest
         .fn()
         .mockImplementationOnce(() => createPushPipeline(historicalMessages))
-        .mockImplementation((_streamPartId: StreamPartID, opts: ResendRangeOptions) => createPushPipeline(gapHandler(opts)))
+        .mockImplementation((_streamPartId: StreamPartID, opts: ResendRangeOptions) =>
+            createPushPipeline(gapHandler(opts))
+        )
 }
 
 const waitForMatchingItem = async (streamMessage: StreamMessage, queue: Queue<Message>) => {
@@ -126,7 +136,9 @@ describe('resend subscription', () => {
         const resend = createResend(historicalMessages, () => gapMessages)
         sub = createSubscription(resend)
         let latestMessageWhenResendComplete: Message
-        const onResendComplete = jest.fn().mockImplementation(() => (latestMessageWhenResendComplete = last(outputMessages.values())!))
+        const onResendComplete = jest
+            .fn()
+            .mockImplementation(() => (latestMessageWhenResendComplete = last(outputMessages.values())!))
         sub.on('resendCompleted', onResendComplete)
         startConsuming()
 
@@ -134,7 +146,12 @@ describe('resend subscription', () => {
         const immediateRealtimeMessages = await publishAndWaitUntilConsumed('immediateRealtime')
         await sub.unsubscribe()
 
-        const expectedMessages = [...historicalMessages, ...gapMessages, ...bufferedRealtimeMessages, ...immediateRealtimeMessages]
+        const expectedMessages = [
+            ...historicalMessages,
+            ...gapMessages,
+            ...bufferedRealtimeMessages,
+            ...immediateRealtimeMessages
+        ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
         expect(onResendComplete).toHaveBeenCalledTimes(1)
         expect(latestMessageWhenResendComplete!.content).toEqual(last(historicalMessages)!.getParsedContent())

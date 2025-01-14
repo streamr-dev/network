@@ -171,7 +171,9 @@ describe('TheGraphClient', () => {
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
         theGraphIndex.start()
-        return expect(() => client.queryEntity(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
+        return expect(() => client.queryEntity(MOCK_QUERY)).rejects.toThrow(
+            'The Graph did not synchronize to block 999999 (timed out after 1000 ms)'
+        )
     })
 
     it('one query timeouts, another succeeds', async () => {
@@ -180,7 +182,9 @@ describe('TheGraphClient', () => {
         await wait(800)
         const responsePromise2 = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
-        await expect(() => responsePromise1).rejects.toThrow('The Graph did not synchronize to block 7 (timed out after 1000 ms)')
+        await expect(() => responsePromise1).rejects.toThrow(
+            'The Graph did not synchronize to block 7 (timed out after 1000 ms)'
+        )
         expect(await responsePromise2).toEqual({
             foo: 'result-7'
         })

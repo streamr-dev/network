@@ -28,7 +28,8 @@ const toEqualBinary = (actual: unknown, expected: Uint8Array): jest.CustomMatche
     if (!(expected instanceof Uint8Array)) {
         return {
             pass: false,
-            message: () => `Invalid assertion: the "expected" object should be an instance of Uint8Array (it is ${formTypeDescription(expected)})`
+            message: () =>
+                `Invalid assertion: the "expected" object should be an instance of Uint8Array (it is ${formTypeDescription(expected)})`
         }
     }
     const areEqual = areEqualBinaries(actual, expected)
@@ -36,7 +37,11 @@ const toEqualBinary = (actual: unknown, expected: Uint8Array): jest.CustomMatche
         pass: areEqual,
         message: () => {
             if (!areEqual) {
-                return formErrorMessage('Binaries are not equal\n', binaryToHex(expected, true), binaryToHex(actual, true))
+                return formErrorMessage(
+                    'Binaries are not equal\n',
+                    binaryToHex(expected, true),
+                    binaryToHex(actual, true)
+                )
             } else {
                 return `Binaries are equal\n\nReceived:${printReceived(binaryToHex(actual, true))}`
             }

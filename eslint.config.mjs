@@ -36,6 +36,7 @@ export default [
             }
         },
         rules: {
+            indent: 'off',
             'class-methods-use-this': 'error',
             'default-case': 'error',
             'eol-last': 'error',
@@ -113,13 +114,7 @@ export default [
                     allow: [{ from: 'lib', name: 'Error' }]
                 }
             ],
-            '@stylistic/brace-style': [
-                'error',
-                '1tbs',
-                {
-                    allowSingleLine: true
-                }
-            ],
+            '@stylistic/brace-style': 'off',
             '@stylistic/comma-spacing': 'error',
             '@stylistic/func-call-spacing': 'error',
             '@stylistic/keyword-spacing': 'error',

@@ -21,7 +21,13 @@ import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 const CONTENT = {
     foo: 'bar'
@@ -45,9 +51,17 @@ describe('messagePipeline', () => {
         const messageSigner = new MessageSigner(createPrivateKeyAuthentication(publisher.privateKey))
         return messageSigner.createSignedMessage(
             {
-                messageId: new MessageID(streamId, partition, Date.now(), 0, toUserId(publisher.address), 'mock-msgChainId'),
+                messageId: new MessageID(
+                    streamId,
+                    partition,
+                    Date.now(),
+                    0,
+                    toUserId(publisher.address),
+                    'mock-msgChainId'
+                ),
                 messageType: StreamMessageType.MESSAGE,
-                content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
+                content:
+                    opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
                 contentType: opts.contentType ?? ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
                 ...opts
@@ -179,7 +193,9 @@ describe('messagePipeline', () => {
         })
         expect(output).toEqual([])
         expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledTimes(1)
-        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(
+            StreamPartIDUtils.getStreamID(streamPartId)
+        )
     })
 
     it('error: exception', async () => {

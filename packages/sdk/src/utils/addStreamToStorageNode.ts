@@ -31,8 +31,17 @@ export const addStreamToStorageNode = async (
         }
         let assignmentSubscription
         try {
-            const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(storageNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(streamPartId, false, undefined, new EventEmitter<SubscriptionEvents>(), loggerFactory)
+            const streamPartId = toStreamPartID(
+                formStorageNodeAssignmentStreamId(storageNodeAddress),
+                DEFAULT_PARTITION
+            )
+            assignmentSubscription = new Subscription(
+                streamPartId,
+                false,
+                undefined,
+                new EventEmitter<SubscriptionEvents>(),
+                loggerFactory
+            )
             await subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(
                 assignmentSubscription,

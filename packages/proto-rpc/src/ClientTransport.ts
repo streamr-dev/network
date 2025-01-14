@@ -65,7 +65,11 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
+    unary<I extends object, O extends object>(
+        method: MethodInfo<I, O>,
+        input: I,
+        options: ProtoRpcOptions
+    ): UnaryCall<I, O> {
         if (!options?.isProtoRpc) {
             throw new Error(
                 // eslint-disable-next-line max-len
@@ -85,7 +89,15 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         const defStatus = new Deferred<RpcStatus>()
         const defTrailer = new Deferred<RpcMetadata>()
 
-        const unary = new UnaryCall<I, O>(method, {}, input, defHeader.promise, defMessage.promise, defStatus.promise, defTrailer.promise)
+        const unary = new UnaryCall<I, O>(
+            method,
+            {},
+            input,
+            defHeader.promise,
+            defMessage.promise,
+            defStatus.promise,
+            defTrailer.promise
+        )
 
         const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
         const deferred: ResultParts = {

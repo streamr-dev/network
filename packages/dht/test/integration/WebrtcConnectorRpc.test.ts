@@ -55,7 +55,11 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(RtcOffer, 'rtcOffer', serverFunctions.rtcOffer)
         rpcCommunicator2.registerRpcNotification(RtcAnswer, 'rtcAnswer', serverFunctions.rtcAnswer)
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
-        rpcCommunicator2.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
+        rpcCommunicator2.registerRpcNotification(
+            WebrtcConnectionRequest,
+            'requestConnection',
+            serverFunctions.requestConnection
+        )
 
         rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())

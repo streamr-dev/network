@@ -33,7 +33,11 @@ const MIN_SEQUENCE_NUMBER = 0
 const MAX_SEQUENCE_NUMBER = 2147483647
 
 const startServer = async (
-    getMessages: (streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => AsyncIterable<StreamMessage>
+    getMessages: (
+        streamPartId: StreamPartID,
+        resendType: ResendType,
+        queryParams: Record<string, any>
+    ) => AsyncIterable<StreamMessage>
 ): Promise<Server> => {
     const app = express()
     app.get('/streams/:streamId/data/partitions/:partition/:resendType', async (req: Request, res: Response) => {
@@ -91,33 +95,35 @@ export class FakeStorageNode {
     }
 
     async start(): Promise<void> {
-        this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
-            switch (resendType) {
-                case 'last':
-                    return this.getLast(streamPartId, {
-                        count: queryParams.count
-                    })
-                case 'from':
-                    return this.getRange(streamPartId, {
-                        fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
-                        fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
-                        toTimestamp: MAX_TIMESTAMP,
-                        toSequenceNumber: MAX_SEQUENCE_NUMBER,
-                        publisherId: queryParams.publisherId
-                    })
-                case 'range':
-                    return this.getRange(streamPartId, {
-                        fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
-                        fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
-                        toTimestamp: parseNumberQueryParameter(queryParams.toTimestamp)!,
-                        toSequenceNumber: parseNumberQueryParameter(queryParams.toSequenceNumber),
-                        publisherId: queryParams.publisherId,
-                        msgChainId: queryParams.msgChainId
-                    })
-                default:
-                    throw new Error('assertion failed')
+        this.server = await startServer(
+            (streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
+                switch (resendType) {
+                    case 'last':
+                        return this.getLast(streamPartId, {
+                            count: queryParams.count
+                        })
+                    case 'from':
+                        return this.getRange(streamPartId, {
+                            fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
+                            fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
+                            toTimestamp: MAX_TIMESTAMP,
+                            toSequenceNumber: MAX_SEQUENCE_NUMBER,
+                            publisherId: queryParams.publisherId
+                        })
+                    case 'range':
+                        return this.getRange(streamPartId, {
+                            fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
+                            fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
+                            toTimestamp: parseNumberQueryParameter(queryParams.toTimestamp)!,
+                            toSequenceNumber: parseNumberQueryParameter(queryParams.toSequenceNumber),
+                            publisherId: queryParams.publisherId,
+                            msgChainId: queryParams.msgChainId
+                        })
+                    default:
+                        throw new Error('assertion failed')
+                }
             }
-        })
+        )
         const port = (this.server.address() as AddressInfo).port
         this.chain.setStorageNodeMetadata(this.getAddress(), {
             urls: [`http://127.0.0.1:${port}`]
@@ -149,7 +155,10 @@ export class FakeStorageNode {
                 })
                 await this.node.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
-                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
+                    streamPartId: toStreamPartID(
+                        formStorageNodeAssignmentStreamId(this.getAddress()),
+                        DEFAULT_PARTITION
+                    ),
                     publisher: this.wallet,
                     content: {
                         streamPart: streamPartId

@@ -2,7 +2,13 @@ import { until } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
 import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
-import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    PeerDescriptor,
+    PingRequest,
+    PingResponse
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -15,7 +21,10 @@ describe('DhtNode', () => {
     let otherPeerDescriptors: PeerDescriptor[]
 
     const startRemoteNode = (peerDescriptor: PeerDescriptor, environment: FakeEnvironment) => {
-        const epRpcCommunicator = new ListeningRpcCommunicator(SERVICE_ID_LAYER0, environment.createTransport(peerDescriptor))
+        const epRpcCommunicator = new ListeningRpcCommunicator(
+            SERVICE_ID_LAYER0,
+            environment.createTransport(peerDescriptor)
+        )
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: undefined as any,
             getNeighbors: () => without(getAllPeerDescriptors(), peerDescriptor),
@@ -23,9 +32,14 @@ describe('DhtNode', () => {
             addContact: () => {},
             removeContact: undefined as any
         })
-        epRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
-        epRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', (req: ClosestPeersRequest, context) =>
-            dhtNodeRpcLocal.getClosestPeers(req, context)
+        epRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', (req: PingRequest, context) =>
+            dhtNodeRpcLocal.ping(req, context)
+        )
+        epRpcCommunicator.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context)
         )
     }
 

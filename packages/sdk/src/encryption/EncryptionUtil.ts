@@ -46,7 +46,10 @@ export class EncryptionUtil {
         return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
     }
 
-    static decryptStreamMessage(streamMessage: StreamMessageAESEncrypted, groupKey: GroupKey): [Uint8Array, GroupKey?] | never {
+    static decryptStreamMessage(
+        streamMessage: StreamMessageAESEncrypted,
+        groupKey: GroupKey
+    ): [Uint8Array, GroupKey?] | never {
         let content: Uint8Array
         try {
             content = this.decryptWithAES(streamMessage.content, groupKey.data)

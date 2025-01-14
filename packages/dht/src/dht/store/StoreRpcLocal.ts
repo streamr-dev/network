@@ -2,7 +2,13 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { Timestamp } from '../../../generated/google/protobuf/timestamp'
-import { DataEntry, PeerDescriptor, ReplicateDataRequest, StoreDataRequest, StoreDataResponse } from '../../../generated/packages/dht/protos/DhtRpc'
+import {
+    DataEntry,
+    PeerDescriptor,
+    ReplicateDataRequest,
+    StoreDataRequest,
+    StoreDataResponse
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { IStoreRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
@@ -60,7 +66,9 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private isLocalNodeStorer(dataKey: DhtAddress): boolean {
-        return this.options.getStorers(dataKey).some((p) => areEqualPeerDescriptors(p, this.options.localPeerDescriptor))
+        return this.options
+            .getStorers(dataKey)
+            .some((p) => areEqualPeerDescriptors(p, this.options.localPeerDescriptor))
     }
 
     private replicateDataToNeighbors(requestor: PeerDescriptor, dataEntry: DataEntry): void {
@@ -71,7 +79,8 @@ export class StoreRpcLocal implements IStoreRpc {
         // replicate to all those node. Otherwise replicate only to the one closest one. And never replicate
         // to the requestor nor to itself.
         const targets = (isLocalNodePrimaryStorer ? storers : [storers[0]]).filter(
-            (p) => !areEqualPeerDescriptors(p, requestor) && !areEqualPeerDescriptors(p, this.options.localPeerDescriptor)
+            (p) =>
+                !areEqualPeerDescriptors(p, requestor) && !areEqualPeerDescriptors(p, this.options.localPeerDescriptor)
         )
         targets.forEach((target) => {
             setImmediate(() => {

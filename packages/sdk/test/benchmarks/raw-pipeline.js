@@ -107,7 +107,13 @@ async function run() {
             )
             return published
         } finally {
-            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.id.slice(0, 6), Date.now() - startTime)
+            log(
+                'publishing %d %s%s messages to %s…: %sms <<',
+                batchSize,
+                bytes(payloadBytes),
+                stream.id.slice(0, 6),
+                Date.now() - startTime
+            )
         }
     }
 

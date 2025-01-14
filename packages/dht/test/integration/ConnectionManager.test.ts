@@ -29,7 +29,9 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
     let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
+    const createConnectionManager = (
+        opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>
+    ) => {
         return new ConnectionManager({
             createConnectorFacade: () =>
                 new DefaultConnectorFacade({
@@ -43,7 +45,9 @@ describe('ConnectionManager', () => {
     }
 
     beforeEach(() => {
-        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response, getRandomRegion()))
+        createLocalPeerDescriptor = jest
+            .fn()
+            .mockImplementation((response) => createPeerDescriptor(response, getRandomRegion()))
     })
 
     beforeAll(async () => {

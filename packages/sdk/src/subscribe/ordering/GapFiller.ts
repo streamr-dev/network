@@ -31,7 +31,11 @@ const runAbortableTask = async (run: () => Promise<void>): Promise<void> => {
 export class GapFiller {
     private currentTask: { gap: Gap; abortController: AbortController } | undefined = undefined
     private readonly chain: OrderedMessageChain
-    private readonly resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
+    private readonly resend: (
+        gap: Gap,
+        storageNodeAddress: EthereumAddress,
+        abortSignal: AbortSignal
+    ) => AsyncGenerator<StreamMessage>
     private readonly getStorageNodeAddresses: () => Promise<EthereumAddress[]>
     private readonly strategy: GapFillStrategy
     private readonly initialWaitTime: number

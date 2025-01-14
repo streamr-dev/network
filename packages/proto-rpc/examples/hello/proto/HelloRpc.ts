@@ -44,4 +44,6 @@ export const HelloResponse = new HelloResponse$Type()
 /**
  * @generated ServiceType for protobuf service HelloRpcService
  */
-export const HelloRpcService = new ServiceType('HelloRpcService', [{ name: 'sayHello', options: {}, I: HelloRequest, O: HelloResponse }])
+export const HelloRpcService = new ServiceType('HelloRpcService', [
+    { name: 'sayHello', options: {}, I: HelloRequest, O: HelloResponse }
+])

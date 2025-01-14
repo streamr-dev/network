@@ -16,12 +16,18 @@ const getProvider = () => new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].
 describe('decorated contract', () => {
     it('read', async () => {
         const contract = createDecoratedContract<StreamRegistryContract>(
-            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryArtifact, getProvider()),
+            new Contract(
+                toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry),
+                StreamRegistryArtifact,
+                getProvider()
+            ),
             'StreamRegisty',
             mockLoggerFactory(),
             1
         )
-        const metadata = JSON.parse(await contract.getStreamMetadata('0xde1112f631486cfc759a50196853011528bc5fa0/assignments'))
+        const metadata = JSON.parse(
+            await contract.getStreamMetadata('0xde1112f631486cfc759a50196853011528bc5fa0/assignments')
+        )
         expect(metadata).toEqual({
             partitions: 1
         })

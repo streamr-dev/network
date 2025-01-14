@@ -2,7 +2,11 @@ import { MaybeAsync } from '../types'
 
 export type GeneratorForEach<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => void>
 export type GeneratorFilter<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => any>
-export type GeneratorMap<InType, OutType> = (value: InType, index: number, src: AsyncGenerator<InType>) => OutType | Promise<OutType>
+export type GeneratorMap<InType, OutType> = (
+    value: InType,
+    index: number,
+    src: AsyncGenerator<InType>
+) => OutType | Promise<OutType>
 
 type OnError<ValueType> = (err: Error, value: ValueType) => Promise<any> | any
 
@@ -18,7 +22,11 @@ const noopConsume = async (src: AsyncGenerator) => {
  * Allows inspection of a pipeline without mutating it.
  * Note: Pipeline will block until forEach call resolves.
  */
-export async function* forEach<InType>(src: AsyncGenerator<InType>, fn: GeneratorForEach<InType>, onError?: OnError<InType>): AsyncGenerator<InType> {
+export async function* forEach<InType>(
+    src: AsyncGenerator<InType>,
+    fn: GeneratorForEach<InType>,
+    onError?: OnError<InType>
+): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
         try {
@@ -65,7 +73,11 @@ export async function* map<InType, OutType>(
 /**
  * Similar to Array#filter
  */
-export async function* filter<InType>(src: AsyncGenerator<InType>, fn: GeneratorFilter<InType>, onError?: OnError<InType>): AsyncGenerator<InType> {
+export async function* filter<InType>(
+    src: AsyncGenerator<InType>,
+    fn: GeneratorFilter<InType>,
+    onError?: OnError<InType>
+): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
         let ok
@@ -116,7 +128,10 @@ export const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {
     }
 }
 
-export const transformError = async function* <T>(src: AsyncGenerator<T>, transformFn: (err: any) => any): AsyncGenerator<T> {
+export const transformError = async function* <T>(
+    src: AsyncGenerator<T>,
+    transformFn: (err: any) => any
+): AsyncGenerator<T> {
     try {
         for await (const item of src) {
             yield item

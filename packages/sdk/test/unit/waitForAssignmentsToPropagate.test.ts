@@ -8,7 +8,13 @@ import { MessageStream } from '../../src/subscribe/MessageStream'
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 const authentication = createRandomAuthentication()
 const messageSigner = new MessageSigner(authentication)
@@ -16,7 +22,14 @@ const messageSigner = new MessageSigner(authentication)
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
     return messageSigner.createSignedMessage(
         {
-            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
+            messageId: new MessageID(
+                toStreamID('assignmentStreamId'),
+                0,
+                ts,
+                0,
+                await authentication.getUserId(),
+                'msgChain'
+            ),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,

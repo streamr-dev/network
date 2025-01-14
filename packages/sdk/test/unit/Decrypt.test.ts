@@ -53,6 +53,8 @@ describe('Decrypt', () => {
         })
         await expect(() => {
             return decrypt(msg as StreamMessageAESEncrypted, groupKeyManager, destroySignal)
-        }).rejects.toThrowStreamrClientError(new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg))
+        }).rejects.toThrowStreamrClientError(
+            new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg)
+        )
     })
 })

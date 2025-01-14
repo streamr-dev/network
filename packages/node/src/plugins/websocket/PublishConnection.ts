@@ -16,7 +16,12 @@ export class PublishConnection implements Connection {
         this.partitionDefinition = parsePublishPartitionDefinition(queryParams)
     }
 
-    async init(ws: WebSocket, socketId: string, streamrClient: StreamrClient, payloadFormat: PayloadFormat): Promise<void> {
+    async init(
+        ws: WebSocket,
+        socketId: string,
+        streamrClient: StreamrClient,
+        payloadFormat: PayloadFormat
+    ): Promise<void> {
         const logger = new Logger(module, { socketId })
         const msgChainId = uuid()
         ws.on('message', async (data: WebSocket.RawData) => {

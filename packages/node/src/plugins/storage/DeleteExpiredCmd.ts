@@ -107,7 +107,10 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo | undefined)[]> {
+    private async fetchStreamsInfo(
+        streams: StreamPart[],
+        client: StreamrClient
+    ): Promise<(StreamPartInfo | undefined)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 try {
@@ -181,7 +184,12 @@ export class DeleteExpiredCmd {
                     })
                     .catch((err) => logger.error('Failed to execute query', { err, query }))
 
-                if (resultSet && (resultSet.rows.length === 0 || resultSet.rows[0].m === null || resultSet.rows[0].m.getTime() < timestampBefore)) {
+                if (
+                    resultSet &&
+                    (resultSet.rows.length === 0 ||
+                        resultSet.rows[0].m === null ||
+                        resultSet.rows[0].m.getTime() < timestampBefore)
+                ) {
                     result.push(bucket)
                 }
             })

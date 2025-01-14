@@ -3,7 +3,13 @@ import { StreamPartIDUtils, hexToBinary, toStreamID, utf8ToBinary } from '@strea
 import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
 import { MessageRef } from '../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from '../../src/protocol/StreamMessage'
 import { ValidationError } from '../../src/protocol/ValidationError'
 
 const content = {

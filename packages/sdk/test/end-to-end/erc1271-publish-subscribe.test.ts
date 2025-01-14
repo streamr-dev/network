@@ -153,7 +153,9 @@ describe('ERC-1271: publish and subscribe', () => {
     beforeAll(async () => {
         subscriberWallet = fastWallet()
         publisherWallet = new Wallet(await fetchPrivateKeyWithGas())
-        erc1271SubscriberContractAddress = await deployTestERC1271Contract([toEthereumAddress(subscriberWallet.address)])
+        erc1271SubscriberContractAddress = await deployTestERC1271Contract([
+            toEthereumAddress(subscriberWallet.address)
+        ])
         erc1271PublisherContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])
     }, TIMEOUT)
 

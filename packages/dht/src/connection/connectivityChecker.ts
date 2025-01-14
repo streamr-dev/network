@@ -1,7 +1,12 @@
 import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents3 } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
-import { ConnectivityRequest, ConnectivityResponse, Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import {
+    ConnectivityRequest,
+    ConnectivityResponse,
+    Message,
+    PeerDescriptor
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
@@ -44,7 +49,10 @@ export const connectAsync = async ({
 export const CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
 const CONNECTIVITY_CHECKER_TIMEOUT = 5000
 
-export const sendConnectivityRequest = async (request: ConnectivityRequest, entryPoint: PeerDescriptor): Promise<ConnectivityResponse> => {
+export const sendConnectivityRequest = async (
+    request: ConnectivityRequest,
+    entryPoint: PeerDescriptor
+): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection
     const wsServerInfo = {
         host: entryPoint.websocket!.host,

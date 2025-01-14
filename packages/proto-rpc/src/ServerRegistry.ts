@@ -60,7 +60,10 @@ export class ServerRegistry {
     private notifications = new Map<string, RegisteredNotification>()
 
     // eslint-disable-next-line class-methods-use-this
-    private getImplementation<T extends RegisteredMethod | RegisteredNotification>(rpcMessage: RpcMessage, map: Map<string, T>): T {
+    private getImplementation<T extends RegisteredMethod | RegisteredNotification>(
+        rpcMessage: RpcMessage,
+        map: Map<string, T>
+    ): T {
         if (!rpcMessage?.header?.method) {
             throw new UnknownRpcMethod('Header "method" missing from RPC message')
         }
@@ -77,7 +80,10 @@ export class ServerRegistry {
 
         const implementation = this.getImplementation(rpcMessage, this.methods)
         const timeout = implementation.options.timeout!
-        return await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
+        return await promiseTimeout(
+            timeout,
+            implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext())
+        )
     }
 
     public async handleNotification(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
@@ -85,7 +91,10 @@ export class ServerRegistry {
 
         const implementation = this.getImplementation(rpcMessage, this.notifications)
         const timeout = implementation.options.timeout!
-        await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
+        await promiseTimeout(
+            timeout,
+            implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext())
+        )
     }
 
     public registerRpcMethod<

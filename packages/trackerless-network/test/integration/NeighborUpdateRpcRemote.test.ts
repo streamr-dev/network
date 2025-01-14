@@ -32,18 +32,23 @@ describe('NeighborUpdateRpcRemote', () => {
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
 
-        mockServerRpc.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', async (): Promise<NeighborUpdate> => {
-            const node: PeerDescriptor = {
-                nodeId: new Uint8Array([4, 2, 4]),
-                type: NodeType.NODEJS
+        mockServerRpc.registerRpcMethod(
+            NeighborUpdate,
+            NeighborUpdate,
+            'neighborUpdate',
+            async (): Promise<NeighborUpdate> => {
+                const node: PeerDescriptor = {
+                    nodeId: new Uint8Array([4, 2, 4]),
+                    type: NodeType.NODEJS
+                }
+                const update: NeighborUpdate = {
+                    streamPartId: StreamPartIDUtils.parse('stream#0'),
+                    neighborDescriptors: [node],
+                    removeMe: false
+                }
+                return update
             }
-            const update: NeighborUpdate = {
-                streamPartId: StreamPartIDUtils.parse('stream#0'),
-                neighborDescriptors: [node],
-                removeMe: false
-            }
-            return update
-        })
+        )
         rpcRemote = new NeighborUpdateRpcRemote(clientNode, serverNode, clientRpc, NeighborUpdateRpcClient)
     })
 

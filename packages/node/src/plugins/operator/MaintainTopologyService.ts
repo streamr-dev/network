@@ -47,7 +47,9 @@ export class MaintainTopologyService {
         }
     })
 
-    private concurrencyLimiter(fn: (streamPartId: StreamPartID) => Promise<void>): (streamPartId: StreamPartID) => void {
+    private concurrencyLimiter(
+        fn: (streamPartId: StreamPartID) => Promise<void>
+    ): (streamPartId: StreamPartID) => void {
         return (streamPartId) => {
             this.concurrencyLimit(() => fn(streamPartId)).catch((err) => {
                 logger.warn('Encountered error while processing event', { err })

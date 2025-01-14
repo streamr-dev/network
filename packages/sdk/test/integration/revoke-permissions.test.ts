@@ -165,7 +165,9 @@ describe('revoke permissions', () => {
 
             expect(timedOut).toHaveBeenCalledTimes(0)
             expect(onSubError).toHaveBeenCalledTimes(1)
-            expect(received.map((m) => m.signature)).toEqual([...published.slice(0, revokeAfter)].map((m) => m.signature))
+            expect(received.map((m) => m.signature)).toEqual(
+                [...published.slice(0, revokeAfter)].map((m) => m.signature)
+            )
         }
     }
     describe('very low cache maxAge', () => {

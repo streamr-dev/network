@@ -24,7 +24,10 @@ describe('DhtNodeExternalApi', () => {
     it('fetch data happy path', async () => {
         const entry = createMockDataEntry()
         await dhtNode1.storeDataToDht(toDhtAddress(entry.key), entry.data!)
-        const foundData = await remote.fetchDataFromDhtViaPeer(toDhtAddress(entry.key), dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.fetchDataFromDhtViaPeer(
+            toDhtAddress(entry.key),
+            dhtNode1.getLocalPeerDescriptor()
+        )
         expectEqualData(foundData[0], entry)
     })
 
@@ -36,7 +39,10 @@ describe('DhtNodeExternalApi', () => {
     it('external store data happy path', async () => {
         const entry = createMockDataEntry()
         await remote.storeDataToDhtViaPeer(toDhtAddress(entry.key), entry.data!, dhtNode1.getLocalPeerDescriptor())
-        const foundData = await remote.fetchDataFromDhtViaPeer(toDhtAddress(entry.key), dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.fetchDataFromDhtViaPeer(
+            toDhtAddress(entry.key),
+            dhtNode1.getLocalPeerDescriptor()
+        )
         expectEqualData(foundData[0], entry)
         expect(toDhtAddress(foundData[0].creator)).toEqual(toNodeId(remote.getLocalPeerDescriptor()))
     })

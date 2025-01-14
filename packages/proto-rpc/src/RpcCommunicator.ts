@@ -28,7 +28,11 @@ class OngoingRequest<T extends ProtoCallContext> {
     private callContext: T
     private timeoutRef?: NodeJS.Timeout
 
-    constructor(deferredPromises: ResultParts, callContext: T, timeoutOptions?: { timeout: number; onTimeout: () => void }) {
+    constructor(
+        deferredPromises: ResultParts,
+        callContext: T,
+        timeoutOptions?: { timeout: number; onTimeout: () => void }
+    ) {
         this.deferredPromises = deferredPromises
         this.callContext = callContext
         if (timeoutOptions) {
@@ -76,7 +80,10 @@ class OngoingRequest<T extends ProtoCallContext> {
                 this.deferredPromises.trailer.resolve({})
             } catch (err) {
                 logger.debug(`Could not parse response, received message is likely `)
-                const error = new Err.FailedToParse(`Failed to parse received response, network protocol version likely is likely incompatible`, err)
+                const error = new Err.FailedToParse(
+                    `Failed to parse received response, network protocol version likely is likely incompatible`,
+                    err
+                )
                 this.rejectDeferredPromises(error, StatusCode.SERVER_ERROR)
             }
         }
@@ -111,7 +118,11 @@ interface RpcResponseParams {
     errorMessage?: string
 }
 
-type OutgoingMessageListener<T extends ProtoCallContext> = (message: RpcMessage, requestId: string, callContext: T) => Promise<void>
+type OutgoingMessageListener<T extends ProtoCallContext> = (
+    message: RpcMessage,
+    requestId: string,
+    callContext: T
+) => Promise<void>
 
 export class RpcCommunicator<T extends ProtoCallContext> {
     private stopped = false
@@ -128,9 +139,12 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         this.ongoingRequests = new Map()
 
         // Client side listener for outgoing request
-        this.rpcClientTransport.on('rpcRequest', (rpcMessage: RpcMessage, options: ProtoRpcOptions, deferredPromises: ResultParts | undefined) => {
-            this.onOutgoingMessage(rpcMessage, options as T, deferredPromises)
-        })
+        this.rpcClientTransport.on(
+            'rpcRequest',
+            (rpcMessage: RpcMessage, options: ProtoRpcOptions, deferredPromises: ResultParts | undefined) => {
+                this.onOutgoingMessage(rpcMessage, options as T, deferredPromises)
+            }
+        )
     }
 
     public async handleIncomingMessage(message: RpcMessage, callContext: T): Promise<void> {
@@ -285,7 +299,12 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         }
     }
 
-    private registerRequest(requestId: string, deferredPromises: ResultParts, callContext: T, timeout = this.rpcRequestTimeout): void {
+    private registerRequest(
+        requestId: string,
+        deferredPromises: ResultParts,
+        callContext: T,
+        timeout = this.rpcRequestTimeout
+    ): void {
         if (this.stopped) {
             return
         }
@@ -352,7 +371,14 @@ export class RpcCommunicator<T extends ProtoCallContext> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private createResponseRpcMessage({ request, body, errorType, errorClassName, errorCode, errorMessage }: RpcResponseParams): RpcMessage {
+    private createResponseRpcMessage({
+        request,
+        body,
+        errorType,
+        errorClassName,
+        errorCode,
+        errorMessage
+    }: RpcResponseParams): RpcMessage {
         return {
             body,
             header: {

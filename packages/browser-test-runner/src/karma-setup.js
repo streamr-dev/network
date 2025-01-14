@@ -54,8 +54,10 @@ expect.extend(jestExtendedMatchers)
 
 // Add missing Jest functions
 window.test = window.it
-window.test.each = (inputs) => (testName, test) => inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
-window.describe.each = (inputs) => (testName, test) => inputs.forEach((args) => window.describe(format(testName, args), () => test(args)))
+window.test.each = (inputs) => (testName, test) =>
+    inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
+window.describe.each = (inputs) => (testName, test) =>
+    inputs.forEach((args) => window.describe(format(testName, args), () => test(args)))
 window.test.todo = function todo() {
     return undefined
 }

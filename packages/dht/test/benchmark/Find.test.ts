@@ -25,10 +25,18 @@ describe('Find correctness', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[0].data)), undefined)
+        entryPoint = await createMockConnectionDhtNode(
+            simulator,
+            toDhtAddress(Uint8Array.from(dhtIds[0].data)),
+            undefined
+        )
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[i].data)), undefined)
+            const node = await createMockConnectionDhtNode(
+                simulator,
+                toDhtAddress(Uint8Array.from(dhtIds[i].data)),
+                undefined
+            )
             nodes.push(node)
         }
     })

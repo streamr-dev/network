@@ -14,7 +14,12 @@ export class SimulatorConnection extends Connection implements IConnection {
     private targetPeerDescriptor: PeerDescriptor
     private simulator: Simulator
 
-    constructor(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor, connectionType: ConnectionType, simulator: Simulator) {
+    constructor(
+        localPeerDescriptor: PeerDescriptor,
+        targetPeerDescriptor: PeerDescriptor,
+        connectionType: ConnectionType,
+        simulator: Simulator
+    ) {
         super(connectionType)
 
         this.localPeerDescriptor = localPeerDescriptor

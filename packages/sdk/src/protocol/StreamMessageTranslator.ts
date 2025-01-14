@@ -142,7 +142,10 @@ export class StreamMessageTranslator {
             contentType = newToOldContentType(msg.body.contentMessage.contentType)
             encryptionType = newToOldEncryptionType(msg.body.contentMessage.encryptionType)
             if (msg.body.contentMessage.newGroupKey) {
-                newGroupKey = new OldEncryptedGroupKey(msg.body.contentMessage.newGroupKey.id, msg.body.contentMessage.newGroupKey.data)
+                newGroupKey = new OldEncryptedGroupKey(
+                    msg.body.contentMessage.newGroupKey.id,
+                    msg.body.contentMessage.newGroupKey.data
+                )
             }
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {
@@ -174,7 +177,10 @@ export class StreamMessageTranslator {
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
+            prevMsgRef = new OldMessageRef(
+                Number(msg.previousMessageRef.timestamp),
+                msg.previousMessageRef.sequenceNumber
+            )
         }
         const translated = new OldStreamMessage({
             messageId,

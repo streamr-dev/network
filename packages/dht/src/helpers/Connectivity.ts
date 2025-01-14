@@ -7,7 +7,10 @@ export const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod
     return websocketServer.tls || hasPrivateAddress
 }
 
-export const expectedConnectionType = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): ConnectionType => {
+export const expectedConnectionType = (
+    localPeerDescriptor: PeerDescriptor,
+    remotePeerDescriptor: PeerDescriptor
+): ConnectionType => {
     if (
         remotePeerDescriptor.websocket &&
         (localPeerDescriptor.type !== NodeType.BROWSER || canOpenConnectionFromBrowser(remotePeerDescriptor.websocket))

@@ -1,7 +1,10 @@
 import { ListeningRpcCommunicator, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('HandshakeRpcRemote', () => {

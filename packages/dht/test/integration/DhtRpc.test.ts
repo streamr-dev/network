@@ -23,10 +23,20 @@ describe('DhtRpc', () => {
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
-        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            mockDhtRpc.getClosestPeers
+        )
 
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            mockDhtRpc.getClosestPeers
+        )
 
         rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
@@ -92,7 +102,12 @@ describe('DhtRpc', () => {
             return response
         }
 
-        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
+        rpcCommunicator2.registerRpcMethod(
+            ClosestPeersRequest,
+            ClosestPeersResponse,
+            'getClosestPeers',
+            respondGetClosestPeersWithTimeout
+        )
         const response = client2.getClosestPeers(
             { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {

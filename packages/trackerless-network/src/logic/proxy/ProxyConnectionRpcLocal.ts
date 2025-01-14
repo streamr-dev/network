@@ -58,7 +58,9 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice(this.options.streamPartId, false))
+        this.connections.forEach((connection) =>
+            connection.remote.leaveStreamPartNotice(this.options.streamPartId, false)
+        )
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -82,11 +84,16 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     private getSubscribers(): DhtAddress[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+        return Array.from(this.connections.keys()).filter(
+            (key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE
+        )
     }
 
     // IProxyConnectionRpc server method
-    async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
+    async requestConnection(
+        request: ProxyConnectionRequest,
+        context: ServerCallContext
+    ): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const remoteNodeId = toNodeId(senderPeerDescriptor)
         this.connections.set(remoteNodeId, {

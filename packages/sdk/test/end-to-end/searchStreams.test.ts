@@ -48,8 +48,14 @@ describe('searchStreams', () => {
         })
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },
-            { streamId: `/${SEARCH_TERM}/2-user-permission`, assignments: [{ userId: searcher, permissions: [StreamPermission.SUBSCRIBE] }] },
-            { streamId: `/${SEARCH_TERM}/3-public-permissions`, assignments: [{ public: true, permissions: [StreamPermission.SUBSCRIBE] }] },
+            {
+                streamId: `/${SEARCH_TERM}/2-user-permission`,
+                assignments: [{ userId: searcher, permissions: [StreamPermission.SUBSCRIBE] }]
+            },
+            {
+                streamId: `/${SEARCH_TERM}/3-public-permissions`,
+                assignments: [{ public: true, permissions: [StreamPermission.SUBSCRIBE] }]
+            },
             {
                 streamId: `/${SEARCH_TERM}/4-user-and-public-permissions`,
                 assignments: [
@@ -135,7 +141,11 @@ describe('searchStreams', () => {
                     userId: searcher,
                     allowPublic: true
                 })
-                expect(streamIds).toEqual([streamWithUserPermission.id, streamWithPublicPermission.id, streamWithUserAndPublicPermission.id])
+                expect(streamIds).toEqual([
+                    streamWithUserPermission.id,
+                    streamWithPublicPermission.id,
+                    streamWithUserAndPublicPermission.id
+                ])
             },
             TIMEOUT
         )

@@ -18,14 +18,24 @@ describe('RemoteRouter', () => {
     beforeEach(() => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
-        serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.routeMessage)
+        serverRpcCommunicator.registerRpcMethod(
+            RouteMessageWrapper,
+            RouteMessageAck,
+            'routeMessage',
+            mockRouterRpc.routeMessage
+        )
         clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
         serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
-        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, RouterRpcClient)
+        remoteRouter = new RouterRpcRemote(
+            clientPeerDescriptor,
+            serverPeerDescriptor,
+            clientRpcCommunicator,
+            RouterRpcClient
+        )
     })
 
     it('routeMessage happy path', async () => {
@@ -51,7 +61,12 @@ describe('RemoteRouter', () => {
     })
 
     it('routeMessage error path', async () => {
-        serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.throwRouteMessageError)
+        serverRpcCommunicator.registerRpcMethod(
+            RouteMessageWrapper,
+            RouteMessageAck,
+            'routeMessage',
+            mockRouterRpc.throwRouteMessageError
+        )
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
             serviceId: SERVICE_ID,

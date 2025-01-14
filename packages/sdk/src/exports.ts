@@ -81,7 +81,14 @@ export {
 } from './protocol/StreamMessage'
 
 // These are exported for the internal Operator class
-export { Operator, OperatorEvents, StakeEvent, ReviewRequestEvent, GetOperatorSponsorshipsResult, Flag } from './contracts/Operator'
+export {
+    Operator,
+    OperatorEvents,
+    StakeEvent,
+    ReviewRequestEvent,
+    GetOperatorSponsorshipsResult,
+    Flag
+} from './contracts/Operator'
 import {
     delegate,
     undelegate,
@@ -120,7 +127,12 @@ const _operatorContractUtils = {
     getOperatorContract
 }
 export { _operatorContractUtils }
-export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
+export type {
+    SetupOperatorContractOpts,
+    SetupOperatorContractReturnType,
+    DeployOperatorContractOpts,
+    DeploySponsorshipContractOpts
+}
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

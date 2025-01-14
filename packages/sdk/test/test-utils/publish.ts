@@ -22,7 +22,10 @@ type TestMessageOptions = Partial<{
     createMessage: (content: any) => any
 }>
 
-export async function* createTestMessages(total: number = 5, opts: TestMessageOptions = {}): AsyncGenerator<PublishMetadata & { content: any }> {
+export async function* createTestMessages(
+    total: number = 5,
+    opts: TestMessageOptions = {}
+): AsyncGenerator<PublishMetadata & { content: any }> {
     const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
     const batchId = counterId('createTestMessages')
     for (let i = 0; i < total; i++) {
@@ -76,7 +79,13 @@ export function getPublishTestStreamMessages(
     defaultOpts: PublishTestMessageOptions = {}
 ): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<Message[]> {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const { waitForLast, waitForLastCount, waitForLastTimeout, retainMessages = true, ...options } = merge(defaultOpts, opts)
+        const {
+            waitForLast,
+            waitForLastCount,
+            waitForLastTimeout,
+            retainMessages = true,
+            ...options
+        } = merge(defaultOpts, opts)
 
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         let streamMessages = []

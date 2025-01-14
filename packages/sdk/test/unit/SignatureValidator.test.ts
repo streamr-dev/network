@@ -9,7 +9,13 @@ import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
 import { StreamrClientError } from './../../src/StreamrClientError'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from './../../src/protocol/StreamMessage'
 
 describe('SignatureValidator', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
@@ -154,7 +160,14 @@ describe('SignatureValidator', () => {
         beforeEach(() => {
             const contractAddress = randomEthereumAddress()
             message = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamr.eth/foo/bar'), 0, 1704972511765, 0, toUserId(contractAddress), '401zi3b84sd64qn31fte'),
+                messageId: new MessageID(
+                    toStreamID('streamr.eth/foo/bar'),
+                    0,
+                    1704972511765,
+                    0,
+                    toUserId(contractAddress),
+                    '401zi3b84sd64qn31fte'
+                ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
                 content: utf8ToBinary('{"foo":"bar"}'),
                 messageType: StreamMessageType.MESSAGE,
@@ -190,7 +203,11 @@ describe('SignatureValidator', () => {
         it('failing signature validation scenario', async () => {
             erc1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
             await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toThrowStreamrClientError(
-                new StreamrClientError('An error occurred during address recovery from signature: Error: random issue', 'INVALID_SIGNATURE', message)
+                new StreamrClientError(
+                    'An error occurred during address recovery from signature: Error: random issue',
+                    'INVALID_SIGNATURE',
+                    message
+                )
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),

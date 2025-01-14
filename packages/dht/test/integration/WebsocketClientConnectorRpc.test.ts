@@ -16,10 +16,20 @@ describe('WebsocketClientConnectorRpc', () => {
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
-        rpcCommunicator1.registerRpcMethod(WebsocketConnectionRequest, Empty, 'requestConnection', mockWebsocketClientConnectorRpc.requestConnection)
+        rpcCommunicator1.registerRpcMethod(
+            WebsocketConnectionRequest,
+            Empty,
+            'requestConnection',
+            mockWebsocketClientConnectorRpc.requestConnection
+        )
 
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator2.registerRpcMethod(WebsocketConnectionRequest, Empty, 'requestConnection', mockWebsocketClientConnectorRpc.requestConnection)
+        rpcCommunicator2.registerRpcMethod(
+            WebsocketConnectionRequest,
+            Empty,
+            'requestConnection',
+            mockWebsocketClientConnectorRpc.requestConnection
+        )
 
         rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())

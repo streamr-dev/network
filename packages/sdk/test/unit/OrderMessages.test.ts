@@ -1,5 +1,14 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, collect, hexToBinary, toStreamID, until } from '@streamr/utils'
+import {
+    EthereumAddress,
+    StreamID,
+    StreamPartID,
+    StreamPartIDUtils,
+    collect,
+    hexToBinary,
+    toStreamID,
+    until
+} from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
 import without from 'lodash/without'
@@ -73,17 +82,23 @@ const createMessageStream = (...msgs: StreamMessage[]): PushPipeline<StreamMessa
 }
 
 const createResend = (availableMessages: StreamMessage[], isError: (from: number) => boolean = () => false) => {
-    return jest.fn().mockImplementation(async (_streamPartId: StreamPartID, options: ResendRangeOptions): Promise<PushPipeline<StreamMessage>> => {
-        const from = new MessageRef(options.from.timestamp as number, options.from.sequenceNumber!)
-        const to = new MessageRef(options.to.timestamp as number, options.to.sequenceNumber!)
-        if (!isError(from.timestamp)) {
-            return createMessageStream(
-                ...availableMessages.filter((msg) => msg.getMessageRef().compareTo(from) >= 0 && msg.getMessageRef().compareTo(to) <= 0)
-            )
-        } else {
-            throw new Error('mock-error')
-        }
-    })
+    return jest
+        .fn()
+        .mockImplementation(
+            async (_streamPartId: StreamPartID, options: ResendRangeOptions): Promise<PushPipeline<StreamMessage>> => {
+                const from = new MessageRef(options.from.timestamp as number, options.from.sequenceNumber!)
+                const to = new MessageRef(options.to.timestamp as number, options.to.sequenceNumber!)
+                if (!isError(from.timestamp)) {
+                    return createMessageStream(
+                        ...availableMessages.filter(
+                            (msg) => msg.getMessageRef().compareTo(from) >= 0 && msg.getMessageRef().compareTo(to) <= 0
+                        )
+                    )
+                } else {
+                    throw new Error('mock-error')
+                }
+            }
+        )
 }
 
 describe('OrderMessages', () => {
@@ -236,7 +251,9 @@ describe('OrderMessages', () => {
         }
         orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
-        expect(await collect(orderMessages)).toEqual(msgs.filter((msg) => msg.getTimestamp() < missing[0].getTimestamp()))
+        expect(await collect(orderMessages)).toEqual(
+            msgs.filter((msg) => msg.getTimestamp() < missing[0].getTimestamp())
+        )
         expect(resendAborted).toBe(true)
     })
 
@@ -402,7 +419,9 @@ describe('OrderMessages', () => {
                 resend: jest.fn().mockImplementation(() => createMessageStream())
             }
             const orderMessages = createOrderMessages(resends, undefined, getStorageNodes)
-            const messages = (await createMessages(5)).filter((m) => m.getTimestamp() !== 2000 && m.getTimestamp() !== 4000)
+            const messages = (await createMessages(5)).filter(
+                (m) => m.getTimestamp() !== 2000 && m.getTimestamp() !== 4000
+            )
             await orderMessages.addMessages(fromArray(messages))
             await collect(orderMessages)
             expect(getStorageNodes).toHaveBeenCalledTimes(1)

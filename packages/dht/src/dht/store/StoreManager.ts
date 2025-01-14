@@ -45,11 +45,15 @@ export class StoreManager {
         const rpcLocal = new StoreRpcLocal({
             localPeerDescriptor: this.options.localPeerDescriptor,
             localDataStore: this.options.localDataStore,
-            replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => this.replicateDataToContact(dataEntry, contact),
+            replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) =>
+                this.replicateDataToContact(dataEntry, contact),
             getStorers: (dataKey: DhtAddress) => this.getStorers(dataKey)
         })
-        this.options.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', (request: StoreDataRequest) =>
-            rpcLocal.storeData(request)
+        this.options.rpcCommunicator.registerRpcMethod(
+            StoreDataRequest,
+            StoreDataResponse,
+            'storeData',
+            (request: StoreDataRequest) => rpcLocal.storeData(request)
         )
         this.options.rpcCommunicator.registerRpcNotification(
             ReplicateDataRequest,
@@ -67,12 +71,17 @@ export class StoreManager {
     private replicateAndUpdateStaleState(dataKey: DhtAddress, newNode: PeerDescriptor): void {
         const storers = this.getStorers(dataKey)
         const storersBeforeContactAdded = storers.filter((p) => !areEqualPeerDescriptors(p, newNode))
-        const selfWasPrimaryStorer = areEqualPeerDescriptors(storersBeforeContactAdded[0], this.options.localPeerDescriptor)
+        const selfWasPrimaryStorer = areEqualPeerDescriptors(
+            storersBeforeContactAdded[0],
+            this.options.localPeerDescriptor
+        )
         if (selfWasPrimaryStorer) {
             if (storers.some((p) => areEqualPeerDescriptors(p, newNode))) {
                 setImmediate(async () => {
                     const dataEntries = Array.from(this.options.localDataStore.values(dataKey))
-                    await Promise.all(dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode)))
+                    await Promise.all(
+                        dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode))
+                    )
                 })
             }
         } else if (!storers.some((p) => areEqualPeerDescriptors(p, this.options.localPeerDescriptor))) {
@@ -136,7 +145,9 @@ export class StoreManager {
         await Promise.all(
             dataEntries.map(async (dataEntry) => {
                 const dataKey = toDhtAddress(dataEntry.key)
-                const neighbors = getClosestNodes(dataKey, this.options.getNeighbors(), { maxCount: this.options.redundancyFactor })
+                const neighbors = getClosestNodes(dataKey, this.options.getNeighbors(), {
+                    maxCount: this.options.redundancyFactor
+                })
                 await Promise.all(
                     neighbors.map(async (neighbor) => {
                         const rpcRemote = this.options.createRpcRemote(neighbor)

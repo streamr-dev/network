@@ -39,7 +39,10 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
     }
 }
 
-async function createStreamWithPermissions(privateKey: string, ...assignments: PermissionAssignment[]): Promise<Stream> {
+async function createStreamWithPermissions(
+    privateKey: string,
+    ...assignments: PermissionAssignment[]
+): Promise<Stream> {
     const creatorClient = new StreamrClient({
         environment: 'dev2',
         auth: {

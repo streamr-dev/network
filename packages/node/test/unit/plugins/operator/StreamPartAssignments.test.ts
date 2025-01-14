@@ -62,7 +62,13 @@ describe(StreamPartAssignments, () => {
         })() as unknown as OperatorFleetState
         // operatorFleetState.getPeerDescriptor = jest.fn()
         maintainTopologyHelper = new EventEmitter3()
-        assigments = new StreamPartAssignments(MY_NODE_ID, 1, getStreamParts, operatorFleetState as OperatorFleetState, maintainTopologyHelper)
+        assigments = new StreamPartAssignments(
+            MY_NODE_ID,
+            1,
+            getStreamParts,
+            operatorFleetState as OperatorFleetState,
+            maintainTopologyHelper
+        )
         events = eventsWithArgsToArray(assigments as any, ['assigned', 'unassigned'])
     })
 
@@ -123,7 +129,10 @@ describe(StreamPartAssignments, () => {
             ['unassigned', toStreamPartID(S1, 1)]
         ])
 
-        expect(assigments.getMyStreamParts()).toIncludeSameMembers([...streamPartMappings.get(S2)!, ...streamPartMappings.get(S3)!])
+        expect(assigments.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S2)!,
+            ...streamPartMappings.get(S3)!
+        ])
     })
 
     it('adding nodes in the presence of streams', async () => {

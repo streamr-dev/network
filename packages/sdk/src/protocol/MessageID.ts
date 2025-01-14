@@ -10,7 +10,14 @@ export class MessageID {
     readonly publisherId: UserID
     readonly msgChainId: string
 
-    constructor(streamId: StreamID, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: UserID, msgChainId: string) {
+    constructor(
+        streamId: StreamID,
+        streamPartition: number,
+        timestamp: number,
+        sequenceNumber: number,
+        publisherId: UserID,
+        msgChainId: string
+    ) {
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
         validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)

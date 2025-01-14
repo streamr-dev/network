@@ -27,7 +27,12 @@ export class Propagation {
     private readonly minPropagationTargets: number
     private readonly activeTaskStore: PropagationTaskStore
 
-    constructor({ sendToNeighbor, minPropagationTargets, ttl = DEFAULT_TTL, maxMessages = DEFAULT_MAX_MESSAGES }: ConstructorOptions) {
+    constructor({
+        sendToNeighbor,
+        minPropagationTargets,
+        ttl = DEFAULT_TTL,
+        maxMessages = DEFAULT_MAX_MESSAGES
+    }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
         this.activeTaskStore = new PropagationTaskStore(ttl, maxMessages)

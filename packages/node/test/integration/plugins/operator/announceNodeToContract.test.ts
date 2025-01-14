@@ -14,7 +14,9 @@ describe('announceNodeToContract', () => {
             nodeCount: 1,
             generateWalletWithGasAndTokens
         })
-        operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
+        operator = createClient(nodeWallets[0].privateKey).getOperator(
+            toEthereumAddress(await operatorContract.getAddress())
+        )
     }, TIMEOUT)
 
     it(
@@ -33,7 +35,10 @@ describe('announceNodeToContract', () => {
             // TODO: why is drift so large (ETH-577)?
             const DELTA = 60 * 15 * 1000
 
-            expect(await operator.getTimestampOfLastHeartbeat()).toBeWithin(approximateWriteTimestamp - DELTA, approximateWriteTimestamp + DELTA)
+            expect(await operator.getTimestampOfLastHeartbeat()).toBeWithin(
+                approximateWriteTimestamp - DELTA,
+                approximateWriteTimestamp + DELTA
+            )
         },
         TIMEOUT
     )

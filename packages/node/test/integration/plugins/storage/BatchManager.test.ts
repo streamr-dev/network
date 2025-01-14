@@ -91,7 +91,10 @@ describe('BatchManager', () => {
         })
 
         batch.on('inserted', async () => {
-            const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [streamId])
+            const result = await cassandraClient.execute(
+                'SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING',
+                [streamId]
+            )
 
             expect(result.rows.length).toEqual(1)
             done()

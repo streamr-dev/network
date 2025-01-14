@@ -92,7 +92,8 @@ describe('Logger', () => {
             expect(Logger.createName(module)).toBe(expected)
         })
         it('application id', () => {
-            const expected = typeof _streamr_electron_test === 'undefined' ? 'APP:Logger.test          ' : 'APP:Logger.test'
+            const expected =
+                typeof _streamr_electron_test === 'undefined' ? 'APP:Logger.test          ' : 'APP:Logger.test'
             process.env.STREAMR_APPLICATION_ID = 'APP'
             expect(Logger.createName(module)).toBe(expected)
             delete process.env.STREAMR_APPLICATION_ID

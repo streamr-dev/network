@@ -17,8 +17,17 @@ import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemo
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    ContentDeliveryRpcClient,
+    HandshakeRpcClient
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -108,7 +117,12 @@ export const createMockContentDeliveryRpcRemote = (remotePeerDescriptor?: PeerDe
 }
 
 export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
-    return new HandshakeRpcRemote(createMockPeerDescriptor(), createMockPeerDescriptor(), new RpcCommunicator(), HandshakeRpcClient)
+    return new HandshakeRpcRemote(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(),
+        new RpcCommunicator(),
+        HandshakeRpcClient
+    )
 }
 
 export const createNetworkNodeWithSimulator = async (
