@@ -96,12 +96,12 @@ describe('GeoIpLocator', () => {
         // expect the db to be there
         await until(() => fs.existsSync(dbDir + '/' + DB_FILENAME), 10000)
 
-        // suomi.fi
-        const location = locator.lookup('62.241.198.245')
+        // helsinki.fi
+        const location = locator.lookup('128.214.222.50')
         expect(location).toBeDefined()
 
         // Helsinki, Finland
-        expect(location!.latitude).toBe(60.1797)
-        expect(location!.longitude).toBe(24.9344)
+        expect(location!.latitude).toBe(60.1719)
+        expect(location!.longitude).toBe(24.9347)
     }, 60000)
 })
