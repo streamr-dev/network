@@ -1,6 +1,7 @@
 import type { Operator } from '@streamr/network-contracts'
 import {
     ProxyDirection,
+    SignerWithProvider,
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
@@ -27,7 +28,7 @@ describe('OperatorPlugin', () => {
     let broker: Broker
     let brokerWallet: Wallet
     let operatorContract: Operator
-    let operatorWallet: Wallet
+    let operatorWallet: Wallet & SignerWithProvider
 
     beforeAll(async () => {
         const deployment = (await setupOperatorContract({
