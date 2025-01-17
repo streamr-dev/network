@@ -3,7 +3,7 @@
  */
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
 export { Stream } from './Stream'
-export { StreamMetadata } from './StreamMetadata'
+export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
