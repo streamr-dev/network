@@ -42,7 +42,7 @@
     "lru-cache": "^11.0.2",
     "node-datachannel": "^0.10.1",
     "querystring": "0.2.1",
-    "uuid": "^11.0.4",
+    "uuid": "^11.0.5",
     "websocket": "^1.0.34",
     "ws": "^8.18.0"
   },
