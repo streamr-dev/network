@@ -28,17 +28,17 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run check
         working-directory: 'packages/${{ inputs.package }}'
-      - name: Fix Electron sandbox permissions # TODO: do this only for browser tests
-        run: |
-          sudo chown root:root node_modules/electron/dist/chrome-sandbox
-          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      #- name: Fix Electron sandbox permissions # TODO: do this only for browser tests
+      #  run: |
+      #    sudo chown root:root node_modules/electron/dist/chrome-sandbox
+      #    sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: install docker compose # TODO: this step probably belongs to streamr-docker-dev-action
         if: ${{ inputs.docker-services != '' }}
         run: sudo apt-get install -y docker-compose
