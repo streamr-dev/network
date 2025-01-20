@@ -251,7 +251,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
             dhtJoinTimeout: 20000,  // TODO use options option or named constant?
             periodicallyPingNeighbors: true,
-            periodicallyPingRingContacts: true
+            periodicallyPingRingContacts: true,
+            neighborPingLimit: 12
         })
     }
 
