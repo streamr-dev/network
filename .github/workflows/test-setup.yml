@@ -35,6 +35,9 @@ jobs:
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run check
         working-directory: 'packages/${{ inputs.package }}'
+      - name: Debug UID
+        run: |
+          echo "Current UID: $(id -u)"
       #- name: Fix Electron sandbox permissions # TODO: do this only for browser tests
       #  run: |
       #    sudo chown root:root node_modules/electron/dist/chrome-sandbox
