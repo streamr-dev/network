@@ -25,6 +25,10 @@ on:
       extra-log-prefix:
         required: false
         type: string
+      browser:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   test:
@@ -35,13 +39,15 @@ jobs:
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run check
         working-directory: 'packages/${{ inputs.package }}'
-      - name: Debug UID
+      - name: Fix Electron sandbox permissions
+        # This step resolves the error: "The SUID sandbox helper binary was found, but is not configured correctly"
+        # The issue began occurring after GitHub runners were upgraded to Ubuntu 24.04. A future upgrade of
+        # Electron/Chromium or GitHub runners may render this workaround unnecessary. If that happens, this step
+        # should be removed.
+        if: ${{ inputs.browser }}
         run: |
-          echo "Current UID: $(id -u)"
-      #- name: Fix Electron sandbox permissions # TODO: do this only for browser tests
-      #  run: |
-      #    sudo chown root:root node_modules/electron/dist/chrome-sandbox
-      #    sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: install docker compose # TODO: this step probably belongs to streamr-docker-dev-action
         if: ${{ inputs.docker-services != '' }}
         run: sudo apt-get install -y docker-compose
