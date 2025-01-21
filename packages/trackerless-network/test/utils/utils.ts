@@ -51,7 +51,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
         rpcRequestTimeout: 5000,
-        neighborPingLimit: 12
+        neighborPingLimit: 16
     })
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,

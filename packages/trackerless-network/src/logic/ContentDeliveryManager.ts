@@ -252,7 +252,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             dhtJoinTimeout: 20000,  // TODO use options option or named constant?
             periodicallyPingNeighbors: true,
             periodicallyPingRingContacts: true,
-            neighborPingLimit: 12
+            neighborPingLimit: 16
         })
     }
 
