@@ -22,7 +22,6 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 const CONTENT = {
     foo: 'bar'
@@ -136,7 +135,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Signature validation failed')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_SIGNATURE',
+            message: 'Signature validation failed'
+        })
         expect(output).toEqual([])
     })
 
@@ -151,7 +153,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Invalid JSON')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_MESSAGE_CONTENT',
+            message: 'Unable to parse JSON'
+        })
         expect(output).toEqual([])
     })
 
@@ -169,9 +174,10 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(StreamrClientError)
-        expect(error.code).toBe('DECRYPT_ERROR')
-        expect(error.message).toMatch(/Could not get encryption key/)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR',
+            message: 'Could not get encryption key'
+        })
         expect(output).toEqual([])
         expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledTimes(1)
         expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(StreamPartIDUtils.getStreamID(streamPartId))

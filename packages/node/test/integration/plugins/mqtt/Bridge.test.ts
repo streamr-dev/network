@@ -51,7 +51,7 @@ describe('MQTT Bridge', () => {
     })
 
     afterEach(async () => {
-        await streamrClient?.destroy()
+        await streamrClient.destroy()
     })
 
     test('message published by a MQTT client is delivered only once', async () => {

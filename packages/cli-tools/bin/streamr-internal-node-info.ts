@@ -16,7 +16,7 @@ export type NormalizedNodeInfo = ChangeFieldType<
     Omit<StreamPartitionInfo, 'deprecatedContentDeliveryLayerNeighbors'>[]>
 
 const toNormalizeNodeInfo = (info: NodeInfo): NormalizedNodeInfo => {
-    const isLegacyFormat = semver.satisfies(semver.coerce(info.version)!, '< 102.0.0')
+    const isLegacyFormat = semver.satisfies(semver.coerce(info.applicationVersion)!, '< 102.0.0')
     return {
         ...info,
         streamPartitions: info.streamPartitions.map((sp: StreamPartitionInfo) => ({
@@ -59,7 +59,7 @@ const createNodeInfoOutput = (nodeInfo: NormalizedNodeInfo) => {
                 rtt: n.rtt
             }))
         })),
-        version: nodeInfo.version
+        applicationVersion: nodeInfo.applicationVersion
     }
 }
 

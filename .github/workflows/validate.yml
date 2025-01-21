@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: utils
+      browser: true
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
@@ -59,6 +60,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: proto-rpc
+      browser: true
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
@@ -72,6 +74,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: dht
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
@@ -89,6 +92,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: trackerless-network
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
@@ -133,6 +137,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: sdk
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-unit
@@ -142,6 +147,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: sdk
+      browser: true
       extra-log-prefix: '-browser'
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true

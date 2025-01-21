@@ -1,10 +1,9 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, StreamID, TheGraphClient, wait, until } from '@streamr/utils'
-import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from 'ethers'
-import fetch from 'node-fetch'
+import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
+import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
 import { createClient, createTestStream, formConfig } from '../utils'
 import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugin'
@@ -39,7 +38,6 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
 const {
     setupOperatorContract,
     getProvider,
-    generateWalletWithGasAndTokens,
     deploySponsorshipContract,
     delegate,
     stake,
@@ -62,11 +60,11 @@ const CLOSE_EXPIRED_FLAGS_MAX_AGE = 30 * 1000
 const VALID_OPERATOR_COUNT = 3  // one flagger and at least two voters are needed (see VoteKickPolicy.sol:166)
 const MAX_TEST_RUN_TIME = 15 * 60 * 1000
 
-const DELEGATE_WEI = 50000
-const STAKE_WEI = 10000
-const REVIEWER_REWARD_WEI = 700
-const FLAGGER_REWARD_WEI = 900
-const SLASHING_FRACTION = 0.25
+const DELEGATE_AMOUNT = parseEther('50000')
+const STAKE_AMOUNT = parseEther('10000')
+const REVIEWER_REWARD_AMOUNT = parseEther('700')
+const FLAGGER_REWARD_AMOUNT = parseEther('900')
+const SLASHING_PERCENTAGE = 25
 
 // two operators and a sponsorship which have been created in dev-chain init
 const PRE_BAKED_OPERATORS = [{
@@ -96,10 +94,11 @@ const createOperator = async (
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
-        }
+        },
+        generateWalletWithGasAndTokens
     })
-    await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_WEI)
-    await stake(operator.operatorContract, sponsorshipAddress, STAKE_WEI)
+    await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_AMOUNT)
+    await stake(operator.operatorContract, sponsorshipAddress, STAKE_AMOUNT)
     const node = await createBroker(formConfig({
         privateKey: operator.nodeWallets[0].privateKey,
         extraPlugins: {
@@ -191,8 +190,8 @@ const getOperatorStakeCount = async (operatorContractAddress: string, theGraphCl
     return response.operator.stakes.length
 }
 
-const getTokenBalance = async (address: string, token: any): Promise<number> => {
-    return Number(formatEther(await token.balanceOf(address)))
+const getTokenBalance = async (address: string, token: any): Promise<bigint> => {
+    return await token.balanceOf(address)
 }
 
 describe('inspect', () => {
@@ -215,13 +214,13 @@ describe('inspect', () => {
         await streamrConfig.setReviewPeriodSeconds(REVIEW_PERIOD)
         await streamrConfig.setVotingPeriodSeconds(VOTING_PERIOD)
         await streamrConfig.setFlagProtectionSeconds(0)
-        await streamrConfig.setFlagReviewerRewardWei(parseEther(String(REVIEWER_REWARD_WEI)))
-        await streamrConfig.setFlaggerRewardWei(parseEther(String(FLAGGER_REWARD_WEI)))
-        await streamrConfig.setSlashingFraction(parseEther(String(SLASHING_FRACTION)))
+        await streamrConfig.setFlagReviewerRewardWei(REVIEWER_REWARD_AMOUNT)
+        await streamrConfig.setFlaggerRewardWei(FLAGGER_REWARD_AMOUNT)
+        await streamrConfig.setSlashingFraction(parseEther(String(SLASHING_PERCENTAGE / 100)))
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0, streamId, deployer: sponsorer })
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {
@@ -312,10 +311,12 @@ describe('inspect', () => {
 
         // assert slashing and rewards
         const token = getTestTokenContract().connect(getProvider())
-        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_FRACTION * STAKE_WEI)
-        expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_WEI - STAKE_WEI + FLAGGER_REWARD_WEI)
+        expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(
+            DELEGATE_AMOUNT - multiplyWeiAmount(STAKE_AMOUNT, SLASHING_PERCENTAGE / 100)
+        )
+        expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_AMOUNT - STAKE_AMOUNT + FLAGGER_REWARD_AMOUNT)
         for (const voter of flags[0].votes.map((vote) => vote.voter)) {
-            expect(await getTokenBalance(voter, token)).toEqual(DELEGATE_WEI - STAKE_WEI + REVIEWER_REWARD_WEI)
+            expect(await getTokenBalance(voter, token)).toEqual(DELEGATE_AMOUNT - STAKE_AMOUNT + REVIEWER_REWARD_AMOUNT)
         }
 
     }, 1.1 * MAX_TEST_RUN_TIME)

@@ -4,7 +4,7 @@ export type GeneratorForEach<InType> = MaybeAsync<(value: InType, index: number,
 export type GeneratorFilter<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => any>
 export type GeneratorMap<InType, OutType> = (value: InType, index: number, src: AsyncGenerator<InType>) => OutType | Promise<OutType>
 
-type OnError<ValueType> = (err: Error, value: ValueType, index: number) => Promise<any> | any
+type OnError<ValueType> = (err: Error, value: ValueType) => Promise<any> | any
 
 const noopConsume = async (src: AsyncGenerator) => {
     // eslint-disable-next-line no-underscore-dangle
@@ -29,7 +29,7 @@ export async function* forEach<InType>(
             await fn(v, index, src)
         } catch (err) {
             if (onError) {
-                await onError(err, v, index)
+                await onError(err, v)
                 continue
             } else {
                 throw err
@@ -55,7 +55,7 @@ export async function* map<InType, OutType>(
             yield await fn(v, index, src)
         } catch (err) {
             if (onError) {
-                await onError(err, v, index)
+                await onError(err, v)
                 continue
             } else {
                 throw err
@@ -81,7 +81,7 @@ export async function* filter<InType>(
             ok = await fn(v, index, src)
         } catch (err) {
             if (onError) {
-                await onError(err, v, index)
+                await onError(err, v)
                 continue
             } else {
                 throw err

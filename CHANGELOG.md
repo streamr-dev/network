@@ -42,6 +42,9 @@ Changes before Tatum release are not documented in this file.
   - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
   - both methods overwrite metadata instead of merging it
 - **BREAKING CHANGE:** Methods `Stream#getMetadata()` and `Stream#getStreamParts()` are async (https://github.com/streamr-dev/network/pull/2883)
+- **BREAKING CHANGE:** Rename event `streamRemovedFromFromStorageNode` to `streamRemovedFromStorageNode` (https://github.com/streamr-dev/network/pull/2930)
+- **BREAKING CHANGE:** Replace custom errors with `StreamrClientError`: (https://github.com/streamr-dev/network/pull/2895, https://github.com/streamr-dev/network/pull/2927)
+  - `StreamrClientError` contains `MessageID` instead of `StreamMessage`
 - Caching changes:
   - storage node addresses (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
   - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
@@ -106,6 +109,10 @@ Changes before Tatum release are not documented in this file.
 ### @streamr/cli-tools
 
 #### Added
+
+- Add binary data support to `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
+- Add binary data support to `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
+- Add binary data support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
 
 #### Changed
 

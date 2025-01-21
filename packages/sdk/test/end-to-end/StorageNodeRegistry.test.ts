@@ -26,8 +26,8 @@ describe('StorageNodeRegistry', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            creatorClient?.destroy(),
-            listenerClient?.destroy()
+            creatorClient.destroy(),
+            listenerClient.destroy()
         ])
     })
 
@@ -81,7 +81,7 @@ describe('StorageNodeRegistry', () => {
         listenerClient.on('streamAddedToStorageNode', (payload: any) => {
             onAddPayloads.push(payload)
         })
-        listenerClient.on('streamRemovedFromFromStorageNode', (payload: any) => {
+        listenerClient.on('streamRemovedFromStorageNode', (payload: any) => {
             onRemovePayloads.push(payload)
         })
 

@@ -1,14 +1,13 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
-import { multiply } from '../../../../src/helpers/multiply'
+import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
+import { parseEther } from 'ethers'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
     setupOperatorContract,
     sponsor,
     stake
@@ -16,7 +15,7 @@ const {
 
 const logger = new Logger(module)
 
-const STAKE_AMOUNT = 10000
+const STAKE_AMOUNT = parseEther('10000')
 const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorValue', () => {
@@ -40,27 +39,27 @@ describe('maintainOperatorValue', () => {
         const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                operatorsCutPercent: 10
-            }
+                operatorsCutPercentage: 10
+            },
+            generateWalletWithGasAndTokens
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('25000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
-        const { maxAllowedEarningsDataWei } = await operator.getEarnings(1, 20)
-        const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
+        const { maxAllowedEarnings } = await operator.getEarnings(1n, 20)
+        const triggerWithdrawLimit = multiplyWeiAmount(maxAllowedEarnings, 1 - SAFETY_FRACTION)
         await until(async () => {
-            const { sumDataWei } = await operator.getEarnings(1, 20)
-            const earnings = sumDataWei
-            return earnings > triggerWithdrawLimitDataWei
+            const { sum } = await operator.getEarnings(1n, 20)
+            return sum > triggerWithdrawLimit
         }, 10000, 1000)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
 
         await maintainOperatorValue(
             SAFETY_FRACTION,
-            1,
+            1n,
             20,
             operator
         )

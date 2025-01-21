@@ -473,8 +473,8 @@ export class StreamrClient {
     /**
      * Checks whether the given permission is in effect.
      */
-    hasPermission(query: PermissionQuery): Promise<boolean> {
-        return this.streamRegistry.hasPermission(toInternalPermissionQuery(query))
+    async hasPermission(query: PermissionQuery): Promise<boolean> {
+        return this.streamRegistry.hasPermission(await toInternalPermissionQuery(query, this.streamIdBuilder))
     }
 
     /**
@@ -652,6 +652,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getNode(): NetworkNodeFacade {
         return this.node
@@ -748,6 +749,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getConfig(): StrictStreamrClientConfig {
         return this.config
@@ -756,6 +758,8 @@ export class StreamrClient {
     /**
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
+     *
+     * The {@link https://docs.ethers.org/v6/api/contract/#Overrides Overrides} type is from the `ethers` library.
      */
     getEthersOverrides(): Promise<Overrides> {
         return _getEthersOverrides(this.rpcProviderSource, this.config)

@@ -29,7 +29,7 @@ describe(StorageEventListener, () => {
     })
 
     afterEach(() => {
-        listener?.destroy()
+        listener.destroy()
     })
 
     it('start() registers storage event listener on client', async () => {
