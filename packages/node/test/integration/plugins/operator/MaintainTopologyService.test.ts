@@ -1,7 +1,7 @@
 import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, fastPrivateKey } from '@streamr/test-utils'
 import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -19,7 +19,7 @@ const {
 } = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
-    const privateKey = await fetchPrivateKeyWithGas()
+    const privateKey = await createTestPrivateKey({ gas: true })
     const client = createClient(privateKey)
     const s1 = await createTestStream(client, module, { partitions: 1 })
     const s2 = await createTestStream(client, module, { partitions: 3 })

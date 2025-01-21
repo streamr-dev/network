@@ -1,4 +1,4 @@
-import { createTestWallet, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, fastWallet } from '@streamr/test-utils'
 import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { MessageMetadata } from '../../src'
@@ -22,7 +22,7 @@ describe('ERC-1271: publish', () => {
     }, TIMEOUT)
 
     async function createStream(publicSubscribePermission: boolean): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
@@ -88,7 +88,7 @@ describe('ERC-1271: subscribe', () => {
     }, TIMEOUT)
 
     async function createStream(): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
@@ -150,7 +150,7 @@ describe('ERC-1271: publish and subscribe', () => {
     }, TIMEOUT)
 
     async function createStream(): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],

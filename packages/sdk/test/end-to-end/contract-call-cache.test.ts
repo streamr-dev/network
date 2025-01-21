@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { createTestWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { collect, StreamID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
@@ -40,7 +40,7 @@ describe('contract call cache', () => {
 
         beforeAll(async () => {
             authenticatedUser = await createTestWallet({ gas: true })
-            const creator = createTestClient(await fetchPrivateKeyWithGas())
+            const creator = createTestClient(await createTestPrivateKey({ gas: true }))
             existingStreamId = (await createTestStream(creator, module)).id
             creator.grantPermissions(existingStreamId, {
                 userId: authenticatedUser.address,

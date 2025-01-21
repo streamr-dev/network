@@ -1,5 +1,5 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { createTestClient, runCommand } from './utils'
@@ -12,7 +12,7 @@ const MINIMUM_DELEGATION_SECONDS = 1  // the config value defined in StreamrEnvD
 describe('operator', () => {
 
     it('happy path', async () => {
-        const client = createTestClient(await fetchPrivateKeyWithGas())
+        const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream('/test')
         const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
             streamId: stream.id,

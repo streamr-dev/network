@@ -305,7 +305,7 @@ export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean 
     return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
 }
 
-export const fetchPrivateKeyWithGas = async (): Promise<string> => {
-    const wallet = await createTestWallet({ gas: true, tokens: false })
+export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<string> => {
+    const wallet = await createTestWallet(opts)
     return wallet.privateKey
 }

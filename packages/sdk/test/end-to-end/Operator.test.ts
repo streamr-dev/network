@@ -1,15 +1,16 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
+import { sample } from 'lodash'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
-    SetupOperatorContractReturnType,
     delegate,
     deploySponsorshipContract,
     getTestAdminWallet,
     setupOperatorContract,
+    SetupOperatorContractReturnType,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
@@ -18,7 +19,6 @@ import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
 import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
 import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
-import { sample } from 'lodash'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -38,7 +38,7 @@ const createTheGraphClient = (): TheGraphClient => {
 }
 
 async function createStream(): Promise<string> {
-    const client = createClient(await fetchPrivateKeyWithGas())
+    const client = createClient(await createTestPrivateKey({ gas: true }))
     const streamId = (await client.createStream(`/${Date.now()}`)).id
     await client.destroy()
     return streamId

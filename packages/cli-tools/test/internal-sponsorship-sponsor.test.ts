@@ -1,5 +1,5 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { parseEther } from 'ethers'
 import { createTestClient, runCommand } from './utils'
 
@@ -8,7 +8,7 @@ const SPONSOR_AMOUNT = '12345'
 describe('sponsorship-sponsor', () => {
 
     it('happy path', async () => {
-        const client = createTestClient(await fetchPrivateKeyWithGas())
+        const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream('/test')
         const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
             streamId: stream.id,

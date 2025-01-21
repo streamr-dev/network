@@ -1,5 +1,5 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
@@ -24,7 +24,7 @@ describe('maintainOperatorValue', () => {
 
     beforeAll(async () => {
         logger.debug('Creating stream for the test')
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await createTestPrivateKey({ gas: true }))
         streamId = (await createTestStream(client, module)).id
         await client.destroy()
     }, 60 * 1000)

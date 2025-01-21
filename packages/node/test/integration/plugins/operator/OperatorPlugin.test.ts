@@ -5,7 +5,7 @@ import {
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, fastPrivateKey } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet, parseEther } from 'ethers'
 import { cloneDeep, set } from 'lodash'
@@ -52,7 +52,7 @@ describe('OperatorPlugin', () => {
     }
 
     it('accepts proxy connections', async () => {
-        const subscriber = createClient(await fetchPrivateKeyWithGas())
+        const subscriber = createClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(subscriber, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
@@ -110,7 +110,7 @@ describe('OperatorPlugin', () => {
     })
     
     it('operator discovery', async () => {
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(client, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })

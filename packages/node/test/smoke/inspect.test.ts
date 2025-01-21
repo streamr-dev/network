@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
@@ -81,7 +81,7 @@ const DEV_CHAIN_DEFAULT_MINING_INTERVAL = 1000  // hardhat config option in dev-
 const logger = new Logger(module)
 
 const createStream = async (): Promise<StreamID> => {
-    const creator = createClient(await fetchPrivateKeyWithGas())
+    const creator = createClient(await createTestPrivateKey({ gas: true }))
     const stream = await createTestStream(creator, module)
     await creator.destroy()
     return stream.id
