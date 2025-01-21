@@ -57,9 +57,9 @@ export class ExperimentNodeWrapper {
         await this.connect()
     }
 
-    async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string) {
+    async startNode(startWsServer: boolean, entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string) {
         logger.info('starting node', { storeRoutingPaths: storeRoutingPaths })
-        this.createNode(entryPoints, asEntryPoint, storeRoutingPaths, storeMessagePaths, nodeId)
+        this.createNode(startWsServer, entryPoints, asEntryPoint, storeRoutingPaths, storeMessagePaths, nodeId)
         await this.node!.start(join)
         this.node!.registerExternalRoutingRpcMethod(GetRoutingPath, RoutingPath, 'getRoutingPath', async (request: GetRoutingPath, context: ServerCallContext): Promise<RoutingPath> => {
             const source = (context as DhtCallContext).incomingSourceDescriptor
@@ -100,7 +100,7 @@ export class ExperimentNodeWrapper {
         }, 30 * 1000)
     }
 
-    createNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string): void {
+    createNode(startWsServer: boolean, entryPoints: PeerDescriptor[], asEntryPoint: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string): void {
         let configPeerDescriptor: PeerDescriptor | undefined
         if (asEntryPoint) {
             configPeerDescriptor = {
@@ -115,7 +115,7 @@ export class ExperimentNodeWrapper {
         }
         const layer0config = {
             entryPoints: asEntryPoint ? [configPeerDescriptor!] : entryPoints,
-            websocketPortRange: { min: 44444, max: 44888 },
+            websocketPortRange: startWsServer ? { min: 44444, max: 44888 } : undefined,
             websocketServerEnableTls: false,
             peerDescriptor: configPeerDescriptor,
             webrtcAllowPrivateAddresses: true,
@@ -161,7 +161,7 @@ export class ExperimentNodeWrapper {
             const message = ExperimentServerMessage.fromBinary(new Uint8Array(data as ArrayBuffer))
             if (message.instruction.oneofKind === 'start') {
                 const instruction = message.instruction.start
-                setImmediate(() => this.startNode(instruction.entryPoints, instruction.asEntryPoint, instruction.join, instruction.storeRoutingPaths, instruction.storeMessagePaths, instruction.nodeId))
+                setImmediate(() => this.startNode(instruction.startWsServer, instruction.entryPoints, instruction.asEntryPoint, instruction.join, instruction.storeRoutingPaths, instruction.storeMessagePaths, instruction.nodeId))
             } else if (message.instruction.oneofKind === 'joinExperiment') {
                 const instruction = message.instruction.joinExperiment
                 setImmediate(() => this.joinExperiment(instruction.entryPoints))
@@ -182,7 +182,7 @@ export class ExperimentNodeWrapper {
                 setImmediate(() => this.publishOnInterval(instruction.streamPartId, instruction.interval))
             } else if (message.instruction.oneofKind === 'measureTimeToData') {
                 const instruction = message.instruction.measureTimeToData
-                setImmediate(() => this.measureTimeToData(instruction.streamPartId, instruction.entryPoints))
+                setImmediate(() => this.measureTimeToData(instruction.startWsServer, instruction.streamPartId, instruction.entryPoints))
             } else if (message.instruction.oneofKind === 'pingExperiment') {
                 const instruction = message.instruction.pingExperiment
                 setImmediate(() => this.pingExperiment(instruction.ips))
@@ -292,9 +292,9 @@ export class ExperimentNodeWrapper {
         setInterval(() => this.publishMessage(streamPart), interval)
     }
 
-    async measureTimeToData(streamPartId: string, entryPoints: PeerDescriptor[]): Promise<void> {
+    async measureTimeToData(startWsServer: boolean, streamPartId: string, entryPoints: PeerDescriptor[]): Promise<void> {
         logger.info('running time to data experiment')
-        this.createNode(entryPoints, false, false, false)
+        this.createNode(startWsServer, entryPoints, false, false, false)
         await this.node!.start()
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         const startTime = Date.now()

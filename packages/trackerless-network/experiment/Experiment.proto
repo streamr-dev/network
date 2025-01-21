@@ -4,7 +4,7 @@ option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
-import "packages/dht/protos/PeerDescriptor.proto";
+import "packages/dht/protos/DhtRpc.proto";
 
 service RoutingExperimentRpc {
     rpc getRoutingPath (GetRoutingPath) returns (RoutingPath);
@@ -44,25 +44,26 @@ message Hello {
 }
 
 message Start {
-    repeated peerDescriptor.PeerDescriptor entryPoints = 1;
+    repeated dht.PeerDescriptor entryPoints = 1;
     bool asEntryPoint = 2;
     bool join = 3;
     optional string nodeId = 4;
     bool storeRoutingPaths = 5;
     bool storeMessagePaths = 6;
+    bool startWsServer = 7;
 }
 
 message Started {
-    peerDescriptor.PeerDescriptor peerDescriptor = 1;
+    dht.PeerDescriptor peerDescriptor = 1;
     int32 timeToJoin = 2;
 }
 
 message JoinExperiment {
-    repeated peerDescriptor.PeerDescriptor entryPoints = 1;
+    repeated dht.PeerDescriptor entryPoints = 1;
 }
 
 message RoutingExperiment {
-    repeated peerDescriptor.PeerDescriptor routingTargets = 1;
+    repeated dht.PeerDescriptor routingTargets = 1;
 }
 
 message ExperimentResults {
@@ -84,7 +85,7 @@ message GetRoutingPath {
 }
 
 message RoutingPath {
-    repeated peerDescriptor.PeerDescriptor path = 1;
+    repeated dht.PeerDescriptor path = 1;
     int64 sendTime = 2;
     int64 timeToReceiver = 3;
 }
@@ -108,7 +109,8 @@ message PublishOnInterval {
 
 message MeasureTimeToData {
     string streamPartId = 1;
-    repeated peerDescriptor.PeerDescriptor entryPoints = 2;
+    repeated dht.PeerDescriptor entryPoints = 2;
+    bool startWsServer = 3;
 }
 
 message PingExperiment {

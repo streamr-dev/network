@@ -118,7 +118,8 @@ export class ExperimentController {
                     nodeId: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
                     join: true,
                     storeRoutingPaths,
-                    storeMessagePaths
+                    storeMessagePaths,
+                    startWsServer: true
                 }
             }
         })
@@ -127,7 +128,7 @@ export class ExperimentController {
         return entryPoint
     }
 
-    async startNodes(entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
+    async startNodes(startWsServer: boolean, entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
         logger.info('starting nodes')
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
@@ -141,7 +142,8 @@ export class ExperimentController {
                         asEntryPoint: false,
                         join,
                         storeRoutingPaths,
-                        storeMessagePaths
+                        storeMessagePaths,
+                        startWsServer
                     }
                 }
             })
@@ -217,7 +219,7 @@ export class ExperimentController {
         await until(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
     }
 
-    async runTimeToDataExperiment(entryPoint: string): Promise<void> {
+    async runTimeToDataExperiment(startWsServer: boolean, entryPoint: string): Promise<void> {
         const streamPartId = 'experiment#0'
         const publisher = sample(Array.from(this.clients.keys()).filter((id) => id !== entryPoint))!
         await this.startPublisher(publisher, streamPartId)
@@ -236,7 +238,8 @@ export class ExperimentController {
                         entryPoints: [
                             this.clients.get(entryPoint)!.peerDescriptor!,
                             // ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
-                        ]
+                        ],
+                        startWsServer
                     }
                 }
             })

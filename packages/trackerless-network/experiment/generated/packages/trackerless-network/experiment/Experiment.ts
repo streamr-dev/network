@@ -3,7 +3,7 @@
 // tslint:disable
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
-import { PeerDescriptor } from "../../dht/protos/PeerDescriptor";
+import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message ExperimentServerMessage
  */
@@ -152,7 +152,7 @@ export interface Hello {
  */
 export interface Start {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor entryPoints = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor entryPoints = 1;
      */
     entryPoints: PeerDescriptor[];
     /**
@@ -175,13 +175,17 @@ export interface Start {
      * @generated from protobuf field: bool storeMessagePaths = 6;
      */
     storeMessagePaths: boolean;
+    /**
+     * @generated from protobuf field: bool startWsServer = 7;
+     */
+    startWsServer: boolean;
 }
 /**
  * @generated from protobuf message Started
  */
 export interface Started {
     /**
-     * @generated from protobuf field: peerDescriptor.PeerDescriptor peerDescriptor = 1;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
      */
     peerDescriptor?: PeerDescriptor;
     /**
@@ -194,7 +198,7 @@ export interface Started {
  */
 export interface JoinExperiment {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor entryPoints = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor entryPoints = 1;
      */
     entryPoints: PeerDescriptor[];
 }
@@ -203,7 +207,7 @@ export interface JoinExperiment {
  */
 export interface RoutingExperiment {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor routingTargets = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor routingTargets = 1;
      */
     routingTargets: PeerDescriptor[];
 }
@@ -256,7 +260,7 @@ export interface GetRoutingPath {
  */
 export interface RoutingPath {
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor path = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor path = 1;
      */
     path: PeerDescriptor[];
     /**
@@ -313,9 +317,13 @@ export interface MeasureTimeToData {
      */
     streamPartId: string;
     /**
-     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor entryPoints = 2;
+     * @generated from protobuf field: repeated dht.PeerDescriptor entryPoints = 2;
      */
     entryPoints: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: bool startWsServer = 3;
+     */
+    startWsServer: boolean;
 }
 /**
  * @generated from protobuf message PingExperiment
@@ -420,7 +428,8 @@ class Start$Type extends MessageType<Start> {
             { no: 3, name: "join", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "nodeId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "storeRoutingPaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 6, name: "storeMessagePaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 6, name: "storeMessagePaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "startWsServer", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -581,7 +590,8 @@ class MeasureTimeToData$Type extends MessageType<MeasureTimeToData> {
     constructor() {
         super("MeasureTimeToData", [
             { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "entryPoints", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 2, name: "entryPoints", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 3, name: "startWsServer", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
