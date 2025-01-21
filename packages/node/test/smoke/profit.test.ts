@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
-import { _operatorContractUtils } from '@streamr/sdk'
+import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
 import { multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, Wallet, parseEther } from 'ethers'
@@ -66,10 +66,10 @@ const PROFIT_INACCURACY = parseEther('50')
 
 describe('profit', () => {
 
-    let operatorWallet: Wallet
-    let delegatorWallet: Wallet
-    let sponsorWallet: Wallet
-    let operatorNodeWallet: Wallet
+    let operatorWallet: Wallet & SignerWithProvider
+    let delegatorWallet: Wallet & SignerWithProvider
+    let sponsorWallet: Wallet & SignerWithProvider
+    let operatorNodeWallet: Wallet & SignerWithProvider
     let operatorContract: Operator
     let sponsorshipContract: Sponsorship
 
