@@ -30,7 +30,7 @@
     "@streamr/sdk": "102.0.0-beta.0",
     "@streamr/trackerless-network": "102.0.0-beta.0",
     "@streamr/utils": "102.0.0-beta.0",
-    "commander": "^13.0.0",
+    "commander": "^13.1.0",
     "easy-table": "^1.1.1",
     "ethers": "^6.13.0",
     "event-stream": "^4.0.1",
