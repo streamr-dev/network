@@ -279,8 +279,7 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
 
 export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
-    const privateKey = crypto.randomBytes(32).toString('hex')
-    const newWallet = new Wallet(privateKey)
+    const newWallet = fastWallet()
     const adminWallet = getTestAdminWallet(provider)
     const token = getTestTokenContract(adminWallet)
     await retry(
