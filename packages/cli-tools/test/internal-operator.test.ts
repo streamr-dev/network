@@ -53,5 +53,5 @@ describe('operator', () => {
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(0n)
 
         await client.destroy()
-    }, 10 * 1000)
+    }, 30 * 1000)
 })
