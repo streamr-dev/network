@@ -36,7 +36,7 @@
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "ts-essentials": "^10.0.4",
-    "uuid": "^11.0.4",
+    "uuid": "^11.0.5",
     "yallist": "^5.0.0"
   },
   "devDependencies": {
