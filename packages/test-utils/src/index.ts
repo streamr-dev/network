@@ -277,8 +277,7 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
     return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
 }
 
-// TODO refactor method e.g. to createTestWallet({ gas: boolean, token: boolean })
-export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wallet & AbstractSigner<Provider>> => {
+export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
@@ -286,13 +285,15 @@ export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wal
     const token = getTestTokenContract(adminWallet)
     await retry(
         async () => {
-            if (tokens) {
+            if (opts?.gas) {
+                await (await adminWallet.sendTransaction({
+                    to: newWallet.address,
+                    value: parseEther('1')
+                })).wait()
+            }
+            if (opts?.tokens) {
                 await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
             }
-            await (await adminWallet.sendTransaction({
-                to: newWallet.address,
-                value: parseEther('1')
-            })).wait()
         },
         (message: string, err: any) => {
             logger.debug(message, { err })
@@ -305,6 +306,6 @@ export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wal
 }
 
 export const fetchPrivateKeyWithGas = async (): Promise<string> => {
-    const wallet = await generateWalletWithGasAndTokens(false)
+    const wallet = await createTestWallet({ gas: true, tokens: false })
     return wallet.privateKey
 }

@@ -1,7 +1,7 @@
 import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
 import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -65,7 +65,7 @@ describe('MaintainTopologyService', () => {
     })
 
     it('happy path', async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens()
+        const operatorWallet = await createTestWallet({ gas: true, tokens: true })
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })

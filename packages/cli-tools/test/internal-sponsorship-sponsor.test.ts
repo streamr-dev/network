@@ -1,5 +1,5 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
 import { createTestClient, runCommand } from './utils'
 import { parseEther, Wallet } from 'ethers'
 
@@ -15,7 +15,7 @@ describe('sponsorship-sponsor', () => {
             deployer: new Wallet(await fetchPrivateKeyWithGas()).connect(_operatorContractUtils.getProvider())
         })
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         await runCommand(`internal sponsorship-sponsor ${sponsorshipAddress} ${SPONSOR_AMOUNT}`, {
             privateKey: sponsorer.privateKey

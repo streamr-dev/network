@@ -5,7 +5,7 @@ import {
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet, parseEther } from 'ethers'
 import { cloneDeep, set } from 'lodash'
@@ -33,7 +33,7 @@ describe('OperatorPlugin', () => {
     beforeAll(async () => {
         const deployment = (await setupOperatorContract({
             nodeCount: 1,
-            generateWalletWithGasAndTokens
+            createTestWallet
         }))
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet
@@ -55,7 +55,7 @@ describe('OperatorPlugin', () => {
         const subscriber = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(subscriber, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
@@ -113,7 +113,7 @@ describe('OperatorPlugin', () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(client, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))

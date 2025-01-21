@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
 import { multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, Wallet, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
@@ -104,15 +104,15 @@ describe('profit', () => {
             operatorConfig: {
                 operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             },
-            generateWalletWithGasAndTokens
+            createTestWallet
         }))
         sponsorshipContract = await deploySponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas
         })
-        sponsorWallet = await generateWalletWithGasAndTokens()
-        delegatorWallet = await generateWalletWithGasAndTokens()
+        sponsorWallet = await createTestWallet({ gas: true, tokens: true })
+        delegatorWallet = await createTestWallet({ gas: true, tokens: true })
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
             streamrConfigABI
