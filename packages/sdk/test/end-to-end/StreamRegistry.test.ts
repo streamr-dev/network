@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { createTestWallet, fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
@@ -31,7 +31,7 @@ describe('StreamRegistry', () => {
     let createdStream: Stream
 
     beforeAll(async () => {
-        wallet = new Wallet(await fetchPrivateKeyWithGas())
+        wallet = await createTestWallet({ gas: true })
         publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
             environment: 'dev2',

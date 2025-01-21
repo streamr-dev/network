@@ -1,8 +1,8 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, createTestWallet } from '@streamr/test-utils'
-import { createTestClient, runCommand } from './utils'
-import { parseEther, Wallet } from 'ethers'
+import { createTestWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
+import { parseEther } from 'ethers'
+import { createTestClient, runCommand } from './utils'
 
 const DELEGATION_AMOUNT = '20000'
 const STAKE_AMOUNT = '10000'
@@ -16,7 +16,7 @@ describe('operator', () => {
         const stream = await client.createStream('/test')
         const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
             streamId: stream.id,
-            deployer: new Wallet(await fetchPrivateKeyWithGas()).connect(_operatorContractUtils.getProvider())
+            deployer: await createTestWallet({ gas: true })
         })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         const operator = await createTestWallet({ gas: true, tokens: true })

@@ -1,15 +1,15 @@
+import { Stream, StreamrClient, convertBytesToStreamMessage } from '@streamr/sdk'
+import { createTestWallet } from '@streamr/test-utils'
+import { until } from '@streamr/utils'
 import cassandra, { Client } from 'cassandra-driver'
-import { StreamrClient, Stream, convertBytesToStreamMessage } from '@streamr/sdk'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Broker } from '../../../../src/broker'
 import {
-    createClient,
     STREAMR_DOCKER_DEV_HOST,
+    createClient,
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from '../../../../src/broker'
-import { until } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -28,8 +28,8 @@ describe('StorageConfig', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        publisherAccount = await createTestWallet({ gas: true })
+        storageNodeAccount = await createTestWallet({ gas: true })
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,

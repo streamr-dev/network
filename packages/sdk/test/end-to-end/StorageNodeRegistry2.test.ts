@@ -1,6 +1,6 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { createTestWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -20,7 +20,7 @@ describe('StorageNodeRegistry2', () => {
 
     beforeAll(async () => {
         client = createTestClient(await fetchPrivateKeyWithGas(), 43236)
-        const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
+        const storageNodeWallet = await createTestWallet({ gas: true })
         storageNodeClient = createTestClient(storageNodeWallet.privateKey, 43237)
         storageNodeAddress = toEthereumAddress(storageNodeWallet.address)
         createdStream = await createTestStream(client, module)

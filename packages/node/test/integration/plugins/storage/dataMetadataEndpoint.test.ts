@@ -7,7 +7,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
 const httpPort1 = 12371
@@ -33,7 +33,7 @@ describe('dataMetadataEndpoints', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        storageNodeAccount = await createTestWallet({ gas: true })
         client1 = createClient(await fetchPrivateKeyWithGas())
         storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
     }, TIMEOUT)
