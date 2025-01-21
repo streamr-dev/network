@@ -5,7 +5,9 @@ import {
     StreamPartID,
     toEthereumAddress, toLengthPrefixedFrame,
     toStreamID,
-    toStreamPartID
+    toStreamPartID,
+    toUserId,
+    UserID
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { once } from 'events'
@@ -119,8 +121,8 @@ export class FakeStorageNode {
         this.chain.setStorageNodeMetadata(this.getAddress(), {
             urls: [`http://127.0.0.1:${port}`]
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
+        const storageNodeAssignmentStreamPermissions = new Multimap<UserID, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(toUserId(this.getAddress()), StreamPermission.PUBLISH)
         this.chain.setStream(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
@@ -135,7 +137,7 @@ export class FakeStorageNode {
     }
 
     private async addStream(streamId: StreamID): Promise<void> {
-        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions
+        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions as number
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
         streamParts.forEach(async (streamPartId) => {
             if (!(await this.node.getStreamParts()).includes(streamPartId)) {

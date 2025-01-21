@@ -1,5 +1,5 @@
 import { toNodeId } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { NodeList } from '../../src/logic/NodeList'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
@@ -69,7 +69,7 @@ describe('ContentDeliveryLayerNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         discoveryLayerNode.setClosestContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('nearbyContactAdded', peerDescriptor1)
-        await waitForCondition(() => nearbyNodeView.size() === 2)
+        await until(() => nearbyNodeView.size() === 2)
         expect(nearbyNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()
         expect(nearbyNodeView.get(toNodeId(peerDescriptor2))).toBeTruthy()
     })
@@ -79,7 +79,7 @@ describe('ContentDeliveryLayerNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         discoveryLayerNode.setRandomContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('randomContactAdded', peerDescriptor1)
-        await waitForCondition(() => randomNodeView.size() === 2)
+        await until(() => randomNodeView.size() === 2)
         expect(randomNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()
         expect(randomNodeView.get(toNodeId(peerDescriptor2))).toBeTruthy()
     })
@@ -90,7 +90,7 @@ describe('ContentDeliveryLayerNode', () => {
         discoveryLayerNode.addNewRandomPeerToKBucket()
         discoveryLayerNode.setClosestContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('nearbyContactAdded', peerDescriptor1)
-        await waitForCondition(() => {
+        await until(() => {
             return nearbyNodeView.size() === 3
         }, 20000)
         expect(nearbyNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()

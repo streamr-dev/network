@@ -16,7 +16,7 @@ export type NormalizedNodeInfo = ChangeFieldType<
     Omit<StreamPartitionInfo, 'deprecatedContentDeliveryLayerNeighbors'>[]>
 
 const toNormalizeNodeInfo = (info: NodeInfo): NormalizedNodeInfo => {
-    const isLegacyFormat = semver.satisfies(semver.coerce(info.version)!, '< 102.0.0')
+    const isLegacyFormat = semver.satisfies(semver.coerce(info.applicationVersion)!, '< 102.0.0')
     return {
         ...info,
         streamPartitions: info.streamPartitions.map((sp: StreamPartitionInfo) => ({
@@ -59,7 +59,7 @@ const createNodeInfoOutput = (nodeInfo: NormalizedNodeInfo) => {
                 rtt: n.rtt
             }))
         })),
-        version: nodeInfo.version
+        applicationVersion: nodeInfo.applicationVersion
     }
 }
 
@@ -71,7 +71,7 @@ createClientCommand(async (client: StreamrClient, nodeId: string) => {
     if (peerDescriptor !== undefined) {
         const info = await networkNode.stack.fetchNodeInfo(peerDescriptor)
         const normalizedInfo = toNormalizeNodeInfo(info)
-        console.log(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
+        console.info(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
     } else {
         logger.error('No peer descriptor found')
     }

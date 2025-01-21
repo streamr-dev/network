@@ -1,5 +1,5 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { Any } from '../../generated/google/protobuf/any'
@@ -76,7 +76,7 @@ describe('Joining stream parts on offline nodes', () => {
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         node2.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => messageReceived, 40000)
+        await until(() => messageReceived, 40000)
     }, 60000)
 
 })

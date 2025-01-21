@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, UserID } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toUserId, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -23,7 +23,7 @@ describe('PublisherKeyExchange', () => {
         const stream = await publisherClient.createStream(createRelativeTestStreamId(module))
         await publisherClient.grantPermissions(stream.id, {
             permissions: [StreamPermission.SUBSCRIBE],
-            user: subscriberWallet.address
+            userId: subscriberWallet.address
         })
         return stream
     }
@@ -73,7 +73,7 @@ describe('PublisherKeyExchange', () => {
             }
         })
         const stream = await createStream()
-        streamPartId = stream.getStreamParts()[0]
+        streamPartId = (await stream.getStreamParts())[0]
         await startPublisherKeyExchangeSubscription(publisherClient, streamPartId)
     })
 
@@ -100,7 +100,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, key, toEthereumAddress(publisherWallet.address), SignatureType.SECP256K1)
+            await assertValidResponse(response, key, toUserId(publisherWallet.address), SignatureType.SECP256K1)
         })
     })
 
@@ -108,9 +108,9 @@ describe('PublisherKeyExchange', () => {
         const erc1271ContractAddress = randomEthereumAddress()
         await publisherClient.grantPermissions(StreamPartIDUtils.getStreamID(streamPartId), {
             permissions: [StreamPermission.PUBLISH],
-            user: erc1271ContractAddress
+            userId: erc1271ContractAddress
         })
-        environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
+        environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toUserId(publisherWallet.address))
 
         const key = GroupKey.generate()
         await publisherClient.updateEncryptionKey({
@@ -124,6 +124,6 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.ERC_1271)
+        await assertValidResponse(response, key, toUserId(erc1271ContractAddress), SignatureType.ERC_1271)
     })
 })

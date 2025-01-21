@@ -19,8 +19,8 @@ run_application() {
         { print "\033[38;2;" color "m" substr($0, 1, 1) substr($0, index($0, " "), length($0)); color = default_color }'
 }
 
-run_application node ./dist/bin/broker.js S1 '136;136;255' configs/development-1.env.json &
-run_application node ./dist/bin/broker.js B1 '0;136;255' configs/development-2.env.json &
-run_application node ./dist/bin/broker.js B2 '136;204;255' configs/development-3.env.json &
+run_application node ./dist/bin/streamr-node.js S1 '136;136;255' configs/development-1.env.json &
+run_application node ./dist/bin/streamr-node.js B1 '0;136;255' configs/development-2.env.json &
+run_application node ./dist/bin/streamr-node.js B2 '136;204;255' configs/development-3.env.json &
 
 wait

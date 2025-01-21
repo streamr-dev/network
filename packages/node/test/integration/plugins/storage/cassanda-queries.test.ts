@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { randomUserId, waitForStreamToEnd } from '@streamr/test-utils'
-import { UserID, hexToBinary, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { UserID, hexToBinary, toStreamID, utf8ToBinary, until, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
@@ -52,7 +52,7 @@ class ProxyClient {
         if (this.hasError(query)) {
             resultCallback!(ProxyClient.ERROR, undefined)
         } else {
-            return this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
+            this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
         }
     }
 
@@ -95,7 +95,7 @@ describe('cassanda-queries', () => {
     let realClient: Client
 
     const waitForStoredMessageCount = async (expectedCount: number) => {
-        return waitForCondition(async () => {
+        return until(async () => {
             const result = await realClient.execute('SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [
                 MOCK_STREAM_ID
             ])
@@ -121,7 +121,7 @@ describe('cassanda-queries', () => {
     })
 
     afterAll(async () => {
-        await storage?.close() // also cleans up realClient
+        await storage.close() // also cleans up realClient
     })
 
     beforeEach(async () => {

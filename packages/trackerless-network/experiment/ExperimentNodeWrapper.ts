@@ -4,7 +4,7 @@ import { NetworkNode } from '../src/NetworkNode'
 import { NetworkStack } from '../src/NetworkStack'
 import { ExperimentClientMessage, ExperimentServerMessage, GetRoutingPath, Hello, RoutingPath } from './generated/packages/trackerless-network/experiment/Experiment'
 import { DhtCallContext, DhtNode, NodeType, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { binaryToHex, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import { binaryToHex, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, utf8ToBinary, wait, until } from '@streamr/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
@@ -300,7 +300,7 @@ export class ExperimentNodeWrapper {
         const startTime = Date.now()
         await this.node!.join(streamPart)
         try {
-            await waitForCondition(() => 
+            await until(() => 
                 this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
                 && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
             , 90000, 1000)

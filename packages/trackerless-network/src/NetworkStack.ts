@@ -7,7 +7,7 @@ import {
     areEqualPeerDescriptors,
     toNodeId
 } from '@streamr/dht'
-import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
@@ -82,7 +82,7 @@ export class NetworkStack {
         await this.ensureConnectedToControlLayer()
         this.getContentDeliveryManager().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
-            await waitForCondition(() => {
+            await until(() => {
                 return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
             }, neighborRequirement.timeout)
         }
@@ -108,7 +108,7 @@ export class NetworkStack {
         await this.controlLayerNode!.start()
         logger.info(`Node id is ${toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())}`)
         const connectionManager = this.controlLayerNode!.getTransport() as ConnectionManager
-        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
+        if ((this.options.layer0?.entryPoints?.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.controlLayerNode!.getLocalPeerDescriptor())
         ))) {
             await this.controlLayerNode?.joinDht(this.options.layer0.entryPoints)
@@ -171,7 +171,7 @@ export class NetworkStack {
                 neighbors: this.getControlLayerNode().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
-            version: applicationVersion
+            applicationVersion
         }
     }
 

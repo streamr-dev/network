@@ -117,7 +117,6 @@ describe('merge', () => {
     })
 
     it('class instances are handled as object references', () => {
-        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class Foo {
             values: Record<string, unknown> = {}
         }

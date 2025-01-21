@@ -26,6 +26,7 @@ const publisherOne = randomUserId()
 const publisherTwo = randomUserId()
 const publisherThree = randomUserId()
 
+// eslint-disable-next-line jest/no-export
 export function buildMsg({
     streamId,
     streamPartition,
@@ -135,8 +136,8 @@ describe('Storage', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            storage?.close(),
-            cassandraClient?.shutdown()
+            storage.close(),
+            cassandraClient.shutdown()
         ])
     })
 

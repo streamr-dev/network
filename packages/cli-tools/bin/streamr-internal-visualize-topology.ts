@@ -117,6 +117,6 @@ createCommand()
             ? fs.readFileSync(topologyDefinitionFile, 'utf-8')
             : await readStdin()
         // TODO could validate the content
-        console.log(createGraph(JSON.parse(topologyDefinition) as Topology))
+        console.info(createGraph(JSON.parse(topologyDefinition) as Topology))
     })
     .parse()

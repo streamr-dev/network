@@ -133,7 +133,7 @@ export class RestServer {
     private createSubdomainAndCertificate = async (req: express.Request, res: express.Response): Promise<void> => {
         logger.info('createSubdomainAndCertificate')
         const body = req.body as CreateCertifiedSubdomainRequest
-        if (!body || !body.streamrWebSocketPort) {
+        if (!body?.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
             sendError(res, err)
             return
@@ -161,13 +161,13 @@ export class RestServer {
         const subdomain = req.params.subdomain
         const body = req.body as UpdateIpAndPortRequest
 
-        if (!body || !body.streamrWebSocketPort) {
+        if (!body?.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
             sendError(res, err)
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        if (!body || !body.token) {
+        if (!body?.token) {
             const err = new TokenMissing('Token not given')
             sendError(res, err)
             return
@@ -195,14 +195,14 @@ export class RestServer {
         const subdomain = req.params.subdomain
         const body = req.body as UpdateIpAndPortRequest
 
-        if (!body || !body.streamrWebSocketPort) {
+        if (!body?.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
             sendError(res, err)
             return
         }
         const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
 
-        if (!body || !body.token) {
+        if (!body?.token) {
             const err = new TokenMissing('Token not given')
             sendError(res, err)
             return

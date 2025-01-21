@@ -76,7 +76,7 @@ describe('Basics', () => {
                     }
                 }
                 expect(received.map((s) => s.content)).toEqual(published.map((s) => s.content))
-                return expect(received.map((streamMessage) => streamMessage.timestamp)).toEqual(published.map(() => 1111111))
+                expect(received.map((streamMessage) => streamMessage.timestamp)).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createTestStream(client, module)
             await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })

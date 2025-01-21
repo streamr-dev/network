@@ -148,7 +148,7 @@ export const createDecoratedContract = <T extends BaseContract>(
      * single-value results: the return type of contract.functions[methodName] is always
      * Promise<Result> (see https://docs.ethers.org/v6/api/contract/#BaseContract)
      */
-    const methodNames = contract.interface.fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
+    const methodNames = contract.interface.fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => f.name)
     methodNames.forEach((methodName) => {
         decoratedContract[methodName] = createWrappedContractMethod(
             contract,

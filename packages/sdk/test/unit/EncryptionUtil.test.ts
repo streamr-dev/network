@@ -5,6 +5,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { createMockMessage } from '../test-utils/utils'
 import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -61,6 +62,8 @@ describe('EncryptionUtil', () => {
             ...msg,
             newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
         }) as StreamMessageAESEncrypted
-        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrow('Could not decrypt new group key')
+        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError(
+            new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', msg2)
+        )
     })
 })

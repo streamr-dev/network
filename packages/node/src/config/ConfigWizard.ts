@@ -9,7 +9,6 @@ import omit from 'lodash/omit'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
-import fetch from 'node-fetch'
 import {
     CURRENT_CONFIGURATION_VERSION,
     formSchemaUrl,
@@ -382,7 +381,6 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
  * Lets the user decide where to write the config file.
  */
 async function getStoragePath(): Promise<string> {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         const path = await input({
             message: 'Select a path to store the generated config in',

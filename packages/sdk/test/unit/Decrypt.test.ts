@@ -10,6 +10,7 @@ import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { decrypt } from '../../src/encryption/decrypt'
 import { createGroupKeyManager, createMockMessage } from '../test-utils/utils'
 import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 describe('Decrypt', () => {
 
@@ -32,7 +33,7 @@ describe('Decrypt', () => {
             encryptionType: EncryptionType.NONE,
             content: unencryptedContent
         }))
-        expect(groupKeyManager.fetchKey).toBeCalledWith(
+        expect(groupKeyManager.fetchKey).toHaveBeenCalledWith(
             encryptedMessage.getStreamPartID(),
             encryptedMessage.groupKeyId,
             encryptedMessage.getPublisherId()
@@ -54,6 +55,8 @@ describe('Decrypt', () => {
                 msg as StreamMessageAESEncrypted,
                 groupKeyManager,
                 destroySignal)
-        }).rejects.toThrow(`Decrypt error: Could not get GroupKey ${groupKey.id}`)
+        }).rejects.toThrowStreamrClientError(
+            new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg)
+        )
     })
 })

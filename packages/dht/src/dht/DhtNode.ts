@@ -4,7 +4,7 @@ import {
     MetricsContext,
     merge,
     scheduleAtInterval,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
@@ -30,11 +30,11 @@ import {
     ExternalStoreDataResponse,
     LeaveNotice,
     Message,
+    PeerDescriptor,
     PingRequest,
     PingResponse,
     RecursiveOperation
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor' 
 import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
@@ -79,6 +79,10 @@ export interface DhtNodeOptions {
     storageRedundancyFactor?: number
     periodicallyPingNeighbors?: boolean
     periodicallyPingRingContacts?: boolean
+    // Limit for how many new neighbors to ping. If number of neighbors is higher than the limit new neighbors 
+    // are not pinged when they are added. This is to prevent flooding the network with pings when joining.
+    // Enable periodicallyPingNeighbors to eventually ping all neighbors.
+    neighborPingLimit?: number
 
     transport?: ITransport
     connectionsView?: ConnectionsView
@@ -343,7 +347,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionLocker: this.connectionLocker,
             lockId: this.options.serviceId,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
-            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId)
+            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId),
+            neighborPingLimit: this.options.neighborPingLimit
         })
         this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('nearbyContactRemoved', peerDescriptor)
@@ -624,7 +629,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
  
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(
+        await until(
             () => this.connectionsView!.getConnectionCount() > 0,
             this.options.networkConnectivityTimeout,
             100,

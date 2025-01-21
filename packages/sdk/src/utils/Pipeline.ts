@@ -70,7 +70,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     constructor(source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
         this.source = source
-        this.definition = definition || new PipelineDefinition<InType, OutType>(source)
+        this.definition = definition ?? new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
         this.handleError = this.handleError.bind(this)
@@ -103,7 +103,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     onMessage = Signal.create<[OutType]>()
 
-    onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
+    onError = ErrorSignal.create<[Error, (InType | OutType)?]>()
 
     filter(fn: G.GeneratorFilter<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))

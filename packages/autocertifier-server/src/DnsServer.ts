@@ -90,7 +90,8 @@ export class DnsServer {
         if (parts.length < 4 || parts[0] !== '_acme-challenge') {
             // @ts-ignore private field
             response.header.rcode = FORMERR
-            return send(response)
+            send(response)
+            return
         }
 
         const subdomain = parts[1]
@@ -105,7 +106,8 @@ export class DnsServer {
         if (!subdomainRecord) {
             // @ts-ignore private field
             response.header.rcode = NXDOMAIN
-            return send(response)
+            send(response)
+            return
         }
 
         const acmeChallenge = subdomainRecord.acmeChallenge
@@ -162,7 +164,8 @@ export class DnsServer {
         if (parts.length < 3) {
             // @ts-ignore private field
             response.header.rcode = NXDOMAIN
-            return send(response)
+            send(response)
+            return
         }
 
         const subdomain = parts[0]
@@ -182,7 +185,8 @@ export class DnsServer {
                 logger.info('handleAQuery() not found: ' + name)
                 // @ts-ignore private field
                 response.header.rcode = NXDOMAIN
-                return send(response)
+                send(response)
+                return
             }
             retIp = subdomainRecord.ip
         }
@@ -203,11 +207,12 @@ export class DnsServer {
         // @ts-ignore private field
         response.header.aa = 1
         const question = request.questions[0]
-        if (question === undefined || question.name === undefined) {
+        if (question?.name === undefined) {
             logger.debug('filtering invalid question')
             // @ts-ignore private field
             response.header.rcode = FORMERR
-            return send(response)
+            send(response)
+            return
         }
         const mixedCaseName = question.name
         const name = mixedCaseName.toLowerCase()
@@ -216,7 +221,8 @@ export class DnsServer {
             logger.debug('invalid domain name in query: ' + name)
             // @ts-ignore private field
             response.header.rcode = NXDOMAIN
-            return send(response)
+            send(response)
+            return
         }
 
         const parts = mixedCaseName.split('.')

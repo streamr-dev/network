@@ -12,7 +12,7 @@
         "package.json",
         "src/**/*",
         "src/**/*.json",
-        "vendor/**/*",
+        "bin/generate-config-validator.js",
         "src/config.schema.json",
         "test/**/*",
         "test/**/*.json"

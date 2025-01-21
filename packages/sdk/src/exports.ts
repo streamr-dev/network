@@ -2,7 +2,8 @@
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
-export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
+export { Stream } from './Stream'
+export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
@@ -65,6 +66,7 @@ export type {
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
+export type { UserID } from '@streamr/utils'
 export type { EncryptedGroupKey } from './protocol/EncryptedGroupKey'
 export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
@@ -77,8 +79,6 @@ export {
     StreamMessageOptions,
     StreamMessageType
 } from './protocol/StreamMessage'
-
-export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
 
 // These are exported for the internal Operator class
 export {
@@ -102,7 +102,6 @@ import {
     stake,
     unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
     getTestTokenContract,
     getTestAdminWallet,
@@ -122,7 +121,6 @@ const _operatorContractUtils = {
     stake,
     unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     deployOperatorContract,
     getTestTokenContract,
     getTestAdminWallet,
@@ -132,4 +130,4 @@ export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
-export type { Signer, Eip1193Provider, Overrides } from 'ethers'
+export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

@@ -34,7 +34,7 @@ describe('resend and subscribe', () => {
         })
         stream = await subscriber.createStream('/path')
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = await environment.startStorageNode()
@@ -57,7 +57,7 @@ describe('resend and subscribe', () => {
             streamId: stream.id,
             distributionMethod: 'rekey'
         })
-        await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
+        await startPublisherKeyExchangeSubscription(publisher, (await stream.getStreamParts())[0])
 
         const historicalMessage = await createMockMessage({
             timestamp: 1000,

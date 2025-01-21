@@ -12,10 +12,10 @@ The static function `StreamrClient.generateEthereumAccount()` generates a new Et
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
 
-Retrieve the address with the async call,
+Retrieve the user id (e.g. Ethereum address) with the async call,
 
 ```ts
-const address = await streamr.getAddress()
+const address = await streamr.getUserId()
 ```
 
 ## Search for streams
@@ -43,7 +43,7 @@ To get all streams for which a user has any direct permission:
 
 ```ts
 const streams = await streamr.searchStreams('foo', {
-  user: '0x12345...',
+  userId: '0x12345...',
 });
 ```
 
@@ -51,7 +51,7 @@ To get all streams for which a user has any permission (direct or public):
 
 ```ts
 const streams = await streamr.searchStreams('foo', {
-  user: '0x12345...',
+  userId: '0x12345...',
   allowPublic: true,
 });
 ```
@@ -62,7 +62,7 @@ If you want to find the streams you can subscribe to:
 
 ```ts
 const streams = await streamr.searchStreams(undefined, {
-  user: '0x12345...',
+  userId: '0x12345...',
   allOf: [StreamPermission.SUBSCRIBE],
   allowPublic: true,
 });

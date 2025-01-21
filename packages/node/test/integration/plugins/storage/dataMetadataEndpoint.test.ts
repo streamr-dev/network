@@ -40,8 +40,8 @@ describe('dataMetadataEndpoints', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            client1?.destroy(),
-            storageNode?.stop()
+            client1.destroy(),
+            storageNode.stop()
         ])
     }, TIMEOUT)
 
@@ -70,7 +70,7 @@ describe('dataMetadataEndpoints', () => {
 
     async function setUpStream(): Promise<Stream> {	
         const freshStream = await createTestStream(client1, module)	
-        await freshStream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))	
+        await freshStream.addToStorageNode(toEthereumAddress(storageNodeAccount.address), { wait: true })
         return freshStream	
     }
 

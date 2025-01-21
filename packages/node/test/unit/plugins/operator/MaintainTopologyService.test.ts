@@ -1,5 +1,5 @@
 import { StreamrClient, Subscription } from '@streamr/sdk'
-import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID, wait, until } from '@streamr/utils'
 import EventEmitter3 from 'eventemitter3'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
@@ -60,7 +60,7 @@ describe('MaintainTopologyService', () => {
         assignments.emit('assigned', SP1)
         assignments.emit('assigned', SP2)
 
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 2)
+        await until(() => streamrClient.subscribe.mock.calls.length >= 2)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(2)
         expect(streamrClient.subscribe.mock.calls[0][0]).toEqual(formRawSubscriptionParam(SP1))
         expect(streamrClient.subscribe.mock.calls[1][0]).toEqual(formRawSubscriptionParam(SP2))
@@ -83,7 +83,7 @@ describe('MaintainTopologyService', () => {
 
         assignments.emit('unassigned', SP1)
 
-        await waitForCondition(() => totalUnsubscribes(SP1) === 1)
+        await until(() => totalUnsubscribes(SP1) === 1)
         expect(totalUnsubscribes(SP2)).toEqual(0)
     })
 
@@ -102,7 +102,7 @@ describe('MaintainTopologyService', () => {
             assignments.emit('assigned', SP3)
         }
 
-        await waitForCondition(
+        await until(
             () => totalUnsubscribes(SP3) >= 10,
             undefined,
             undefined,

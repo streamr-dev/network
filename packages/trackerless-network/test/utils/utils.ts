@@ -10,7 +10,7 @@ import {
     toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -50,7 +50,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
+        neighborPingLimit: 16
     })
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
@@ -76,7 +77,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId: toUserIdRaw(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {

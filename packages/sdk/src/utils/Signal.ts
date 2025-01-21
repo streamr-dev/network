@@ -239,7 +239,7 @@ export class Signal<ArgsType extends any[] = []> {
         const task = this.execTrigger(...args)
         this.currentTask = task
         try {
-            return await this.currentTask
+            await this.currentTask
         } finally {
             if (this.currentTask === task) {
                 this.currentTask = undefined

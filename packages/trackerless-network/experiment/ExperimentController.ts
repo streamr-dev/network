@@ -2,7 +2,7 @@ import http from 'http'
 import { Socket } from 'net'
 import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
-import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
+import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, wait, until } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, last, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
@@ -98,7 +98,7 @@ export class ExperimentController {
     }
 
     async waitForClients(onConditionFn?: () => void): Promise<void> {
-        await waitForCondition(() => { 
+        await until(() => { 
             if (onConditionFn !== undefined) {
                 onConditionFn()
             }
@@ -123,7 +123,7 @@ export class ExperimentController {
             }
         })
         this.clients.get(entryPoint)!.socket.send(ExperimentServerMessage.toBinary(instruction))
-        await waitForCondition(() => this.clients.get(entryPoint)!.peerDescriptor !== undefined, 15000, 1000)
+        await until(() => this.clients.get(entryPoint)!.peerDescriptor !== undefined, 15000, 1000)
         return entryPoint
     }
 
@@ -163,7 +163,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.resultsReceived.size === this.nodeCount - 1, 30000, 1000)
+        await until(() => this.resultsReceived.size === this.nodeCount - 1, 30000, 1000)
     }
 
     async runRoutingExperiment(): Promise<void> {
@@ -197,7 +197,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }, (current) => current === this.instructionsCompleted)
-        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 5 * 60 * 1000, 1000)
+        await until(() => this.instructionsCompleted === this.nodeCount, 5 * 60 * 1000, 1000)
     }
 
     async publishMessage(streamPartId: StreamPartID): Promise<void> {
@@ -214,7 +214,7 @@ export class ExperimentController {
         await this.runBatchedOperation(nodes, 6, async (node) => {
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }, (current) => current === this.instructionsCompleted)
-        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
+        await until(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
     }
 
     async runTimeToDataExperiment(entryPoint: string): Promise<void> {
@@ -250,7 +250,7 @@ export class ExperimentController {
             }
             expectedSubscribers += 1
         }
-        await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 1 * 60 * 1000, 1000)
+        await until(() => this.resultsReceived.size === expectedSubscribers, 1 * 60 * 1000, 1000)
 
     }
 
@@ -270,7 +270,7 @@ export class ExperimentController {
                 }
             })
             this.clients.get(node)!.socket.send(ExperimentServerMessage.toBinary(message))
-            await waitForCondition(() => this.resultsReceived.has(node), 30000, 50)
+            await until(() => this.resultsReceived.has(node), 30000, 50)
             joinedNodes.push(node)
         }
     }
@@ -303,7 +303,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.topologyResult.size === this.nodeCount, 10 * 60 * 1000, 100)
+        await until(() => this.topologyResult.size === this.nodeCount, 10 * 60 * 1000, 100)
         const sumOfNeighbors = Array.from(this.topologyResult.values()).reduce((acc, neighbors) => acc + neighbors.length, 0)
         const averageNeighbors = sumOfNeighbors / this.nodeCount
         this.topologyResult.forEach((neighbors, id) => {
@@ -343,7 +343,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 10 * 60 * 1000, 1000)
+        await until(() => this.resultsReceived.size === this.nodeCount, 10 * 60 * 1000, 1000)
     }
 
     async stop(): Promise<void> {
@@ -372,7 +372,7 @@ export class ExperimentController {
             const batch = batches[i]
             await Promise.all(batch.map((node) => operation(node)))
             const instructedNodeCount = batch.length === batchSize ? batchSize * (parseInt(i) + 1) : batchSize * parseInt(i) + batch.length
-            await waitForCondition(() => untilCondition(instructedNodeCount), 2 * 60 * 1000, 1000)
+            await until(() => untilCondition(instructedNodeCount), 2 * 60 * 1000, 1000)
             logger.info(`batch ${i} completed, ${nodes.length - instructedNodeCount} nodes remaining`)
         }
     }

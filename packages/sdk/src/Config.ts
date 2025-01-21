@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { LogLevel, merge } from '@streamr/utils'
+import { HexString, LogLevel, merge } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
@@ -11,6 +11,9 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 
 export interface ProviderAuthConfig {
+    /**
+     * The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type is from the `ethers` library.
+     */
     ethereum: Eip1193Provider
 }
 
@@ -19,7 +22,7 @@ export interface PrivateKeyAuthConfig {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: string
+    address?: HexString
 }
 
 export interface ControlLayerConfig {
@@ -371,9 +374,9 @@ export interface StreamrClientConfig {
     }
 
     contracts?: {
-        streamRegistryChainAddress?: string
-        streamStorageRegistryChainAddress?: string
-        storageNodeRegistryChainAddress?: string
+        streamRegistryChainAddress?: HexString
+        streamStorageRegistryChainAddress?: HexString
+        storageNodeRegistryChainAddress?: HexString
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
         rpcs?: ConnectionInfo[]

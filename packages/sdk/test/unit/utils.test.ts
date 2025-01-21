@@ -1,6 +1,6 @@
 import { isRunningInElectron, startTestServer, testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toLengthPrefixedFrame, waitForCondition } from '@streamr/utils'
-import { Request, Response } from 'express'
+import { collect, toLengthPrefixedFrame, until } from '@streamr/utils'
+import express from 'express'
 import range from 'lodash/range'
 import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream, getEndpointUrl } from '../../src/utils/utils'
 import { nextValue } from './../../src/utils/iterators'
@@ -30,7 +30,7 @@ describe('utils', () => {
 
         it('happy path', async () => {
             const LINE_COUNT = 5
-            const server = await startTestServer('/', async (_req: Request, res: Response) => {
+            const server = await startTestServer('/', async (_req: express.Request, res: express.Response) => {
                 for (const i of range(LINE_COUNT)) {
                     res.write(toLengthPrefixedFrame(Buffer.from(`${i}`)))
                 }
@@ -43,7 +43,7 @@ describe('utils', () => {
 
         testOnlyInNodeJs('abort', async () => {
             let serverResponseClosed = false
-            const server = await startTestServer('/', async (_req: Request, res: Response) => {
+            const server = await startTestServer('/', async (_req: express.Request, res: express.Response) => {
                 res.on('close', () => {
                     serverResponseClosed = true
                 })
@@ -54,7 +54,7 @@ describe('utils', () => {
             const line = await nextValue(iterator)
             expect(line?.toString()).toBe('foobar')
             abortController.abort()
-            await waitForCondition(() => serverResponseClosed === true)
+            await until(() => serverResponseClosed === true)
             await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
             await server.stop()
         })
@@ -74,7 +74,7 @@ describe('utils', () => {
 
         it('invalid host', async () => {
             const iterator = fetchLengthPrefixedFrameHttpBinaryStream('http://mock.test')[Symbol.asyncIterator]()
-            await expect(() => nextValue(iterator)).rejects.toThrow(isRunningInElectron() ? /Failed to fetch/ : /getaddrinfo ENOTFOUND/)
+            await expect(() => nextValue(iterator)).rejects.toThrow(isRunningInElectron() ? /failed to fetch/i : /fetch failed/i)
         })
     })
 })

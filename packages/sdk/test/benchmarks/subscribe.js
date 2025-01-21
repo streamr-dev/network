@@ -1,12 +1,8 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
-const fetch = require('node-fetch')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
-const { KeyServer } = require('@streamr/test-utils')
-
-const keyserver = new KeyServer()
 
 // note this is not the number of messages, just the start number
 let count = 100000 // pedantic: use large initial number so payload size is similar
@@ -141,7 +137,6 @@ async function run() {
     })
 
     suite.on('complete', async () => {
-        keyserver.destroy()
         log('Destroying clients')
         const tasks = [
             client1.destroy(),
