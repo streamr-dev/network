@@ -7,6 +7,7 @@ program
     .usage('<command> [<args>]')
     .description('storage node subcommands')
     .command('list', 'list storage nodes')
+    .command('register', 'register a storage node')
     .command('add-stream', 'add stream')
     .command('remove-stream', 'remove stream')
     .command('list-streams', 'list stream in a storage node')
