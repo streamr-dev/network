@@ -25,7 +25,7 @@ describe('heartbeatUtils', () => {
                     tls: false
                 }
             }),
-            'version'
+            'applicationVersion'
         )
         expect(() => HeartbeatMessageSchema.parse(msg)).not.toThrow()
     })

@@ -14,7 +14,7 @@ export const HeartbeatMessageSchema = z.object({
         })),
         region: z.optional(z.number())
     }),
-    version: z.optional(z.string())  // optional for backward compatibility (written from v102 onward)
+    applicationVersion: z.optional(z.string())  // optional for backward compatibility (written from v102 onward)
 })
 
 export type HeartbeatMessage = z.infer<typeof HeartbeatMessageSchema>
@@ -23,6 +23,6 @@ export function createHeartbeatMessage(peerDescriptor: NetworkPeerDescriptor): H
     return {
         msgType: 'heartbeat',
         peerDescriptor,
-        version: applicationVersion
+        applicationVersion
     }
 }

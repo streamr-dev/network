@@ -28,7 +28,7 @@ describe('announceNodeToStream', () => {
         expect(content).toEqual({
             msgType: 'heartbeat',
             peerDescriptor: await client.getPeerDescriptor(),
-            version: applicationVersion
+            applicationVersion
         })
 
         await anonymousClient.destroy()
