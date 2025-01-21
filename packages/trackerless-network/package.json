@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
-    "prebuild": "./proto.sh",
+    "prebuild": "./proto.sh && ./experiment/proto.sh",
     "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
