@@ -79,6 +79,10 @@ export interface DhtNodeOptions {
     storageRedundancyFactor?: number
     periodicallyPingNeighbors?: boolean
     periodicallyPingRingContacts?: boolean
+    // Limit for how many new neighbors to ping. If number of neighbors is higher than the limit new neighbors 
+    // are not pinged when they are added. This is to prevent flooding the network with pings when joining.
+    // Enable periodicallyPingNeighbors to eventually ping all neighbors.
+    neighborPingLimit?: number
 
     transport?: ITransport
     connectionsView?: ConnectionsView
@@ -340,7 +344,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionLocker: this.connectionLocker,
             lockId: this.options.serviceId,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
-            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId)
+            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId),
+            neighborPingLimit: this.options.neighborPingLimit
         })
         this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('nearbyContactRemoved', peerDescriptor)
