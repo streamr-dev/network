@@ -76,4 +76,11 @@ describe('RoutingSession', () => {
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
     })
 
+    it('recalculates Routing Table if it is empty', () => {
+        connections.set(toNodeId(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
+        routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
+    })
+
 })
