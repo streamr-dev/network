@@ -9,10 +9,10 @@ import {
     LockRequest,
     LockResponse,
     Message,
+    PeerDescriptor,
     UnlockRequest,
     SetPrivateRequest
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
@@ -308,7 +308,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.metrics.sendMessagesPerSecond.record(1)
 
         if (this.endpoints.get(nodeId)!.connected) {
-            return (connection as ManagedConnection).send(binary)
+            (connection as ManagedConnection).send(binary)
         } else {
             return (this.endpoints.get(nodeId)! as ConnectingEndpoint).buffer.push(binary)
         }
@@ -652,7 +652,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     public getDiagnosticInfo(): Record<string, unknown> {
         const managedConnections: ManagedConnection[] = Array.from(this.endpoints.values())
             .filter((endpoint) => endpoint.connected)
-            .map((endpoint) => endpoint.connection as ManagedConnection)
+            .map((endpoint) => endpoint.connection)
         return {
             connections: managedConnections.map((connection) => connection.getDiagnosticInfo()),
             connectionCount: this.endpoints.size

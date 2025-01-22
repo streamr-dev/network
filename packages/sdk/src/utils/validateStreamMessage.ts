@@ -2,9 +2,9 @@ import { UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
-import { StreamMessageError } from '../protocol/StreamMessageError'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
+import { StreamrClientError } from '../StreamrClientError'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -56,7 +56,7 @@ const doValidate = async (
                 streamRegistry
             )
         default:
-            throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
+            throw new StreamrClientError(`Unknown message type: ${streamMessage.messageType}!`, 'ASSERTION_FAILED', streamMessage)
     }
 }
 
@@ -68,12 +68,16 @@ const validateMessage = async (
     const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
     const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
-        throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
+        throw new StreamrClientError(
+            `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
+            'INVALID_PARTITION', 
+            streamMessage
+        )
     }
     const sender = streamMessage.getPublisherId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
-        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}`, streamMessage)
+        throw new StreamrClientError(`${sender} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
 }
 
@@ -86,10 +90,10 @@ const validateGroupKeyMessage = async (
     const streamId = streamMessage.getStreamId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
     if (!isPublisher) {
-        throw new StreamMessageError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, streamMessage)
+        throw new StreamrClientError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
     const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
     if (!isSubscriber) {
-        throw new StreamMessageError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, streamMessage)
+        throw new StreamrClientError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
 }

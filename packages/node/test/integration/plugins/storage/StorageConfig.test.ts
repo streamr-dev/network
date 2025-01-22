@@ -9,7 +9,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -38,7 +38,7 @@ describe('StorageConfig', () => {
     })
 
     afterAll(async () => {
-        await cassandraClient?.shutdown()
+        await cassandraClient.shutdown()
     })
 
     beforeEach(async () => {
@@ -50,7 +50,7 @@ describe('StorageConfig', () => {
     afterEach(async () => {
         await client.destroy()
         await Promise.allSettled([
-            storageNode?.stop(),
+            storageNode.stop(),
         ])
     })
 
@@ -59,7 +59,7 @@ describe('StorageConfig', () => {
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })
-        await waitForCondition(async () => {
+        await until(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)
         })

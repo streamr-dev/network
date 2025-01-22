@@ -42,17 +42,17 @@ describe('AutoCertifierClientFacade', () => {
 
     it('start', async () => {
         await client.start()
-        expect(setHost).toBeCalled()
-        expect(updateCertificate).toBeCalled()
+        expect(setHost).toHaveBeenCalled()
+        expect(updateCertificate).toHaveBeenCalled()
     })
 
     it('updated events are processed', async () => {
         await client.start()
-        expect(setHost).toBeCalledTimes(1)
-        expect(updateCertificate).toBeCalledTimes(1);
+        expect(setHost).toHaveBeenCalledTimes(1)
+        expect(updateCertificate).toHaveBeenCalledTimes(1);
         (mockClient as MockAutoCertifierClient).emitUpdateSubdomain()
-        expect(setHost).toBeCalledTimes(2)
-        expect(updateCertificate).toBeCalledTimes(2)
+        expect(setHost).toHaveBeenCalledTimes(2)
+        expect(updateCertificate).toHaveBeenCalledTimes(2)
     })
 
 })

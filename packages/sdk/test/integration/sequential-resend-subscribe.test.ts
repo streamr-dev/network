@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { collect, waitForCondition } from '@streamr/utils'
+import { collect, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -77,7 +77,7 @@ describe('sequential resend subscribe', () => {
 
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
             const receivedMsgsPromise = collect(sub, expectedMessageCount)
-            await waitForCondition(() => onResent.mock.calls.length > 0)
+            await until(() => onResent.mock.calls.length > 0)
             const streamMessage = await publisher.publish(stream.id, Msg(), { // should be realtime
                 timestamp: id
             })

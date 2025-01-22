@@ -7,5 +7,7 @@ lerna-debug.log
 oldsrc
 dist
 coverage
+generated
 test/simulation/data/nodeids.json
 test/simulation/data/orderedneighbors.json
+test/proto/

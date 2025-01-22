@@ -1,10 +1,10 @@
 import {
     HandshakeError,
     IceCandidate,
+    PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebrtcConnectionRequest
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
@@ -18,7 +18,7 @@ import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
-import { isMaybeSupportedVersion } from '../../helpers/version'
+import { isMaybeSupportedProtocolVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
@@ -169,8 +169,8 @@ export class WebrtcConnector {
                 remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
             handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
-                if (!isMaybeSupportedVersion(remoteVersion)) {
-                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
+                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
                 } else {
                     acceptHandshake(handshaker, pendingConnection, connection)
                 }

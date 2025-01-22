@@ -1,4 +1,4 @@
-import { ipv4ToNumber, waitForCondition } from '@streamr/utils'
+import { ipv4ToNumber, until } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { once } from 'events'
 import { Server as HttpServer, createServer as createHttpServer } from 'http'
@@ -48,7 +48,7 @@ describe('connectivityRequestHandler', () => {
         }
         connection.emit('data', Message.toBinary(request))
 
-        await waitForCondition(() => connection.send.mock.calls.length > 0)
+        await until(() => connection.send.mock.calls.length > 0)
 
         const receivedMessage = Message.fromBinary(connection.send.mock.calls[0][0])
         expect(receivedMessage).toEqual({
@@ -62,7 +62,7 @@ describe('connectivityRequestHandler', () => {
                         tls: false
                     },
                     ipAddress: ipv4ToNumber(HOST),
-                    version: LOCAL_PROTOCOL_VERSION
+                    protocolVersion: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },
@@ -83,7 +83,7 @@ describe('connectivityRequestHandler', () => {
         }
         connection.emit('data', Message.toBinary(request))
 
-        await waitForCondition(() => connection.send.mock.calls.length > 0)
+        await until(() => connection.send.mock.calls.length > 0)
 
         const receivedMessage = Message.fromBinary(connection.send.mock.calls[0][0])
         expect(receivedMessage).toEqual({
@@ -92,7 +92,7 @@ describe('connectivityRequestHandler', () => {
                     host: HOST,
                     natType: 'unknown',
                     ipAddress: ipv4ToNumber(HOST),
-                    version: LOCAL_PROTOCOL_VERSION
+                    protocolVersion: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },

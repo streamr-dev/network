@@ -1,16 +1,16 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
-import cors from 'cors'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
-import { Wallet } from 'ethers'
+import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
-import express, { Request, Response } from 'express'
-import http from 'http'
+import express from 'express'
 import random from 'lodash/random'
 import { AddressInfo } from 'net'
-import fetch from 'node-fetch'
 import { Readable } from 'stream'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export type Event = string
+
+const logger = new Logger(module)
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a
@@ -86,40 +86,6 @@ export const runAndRaceEvents = async (
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
-}
-
-/**
- * Run functions and wait conditions to become true by re-evaluating every `retryInterval` milliseconds. Returns a promise created with Promise.all() 
- * and waitForCondition() calls. Calls the functions after creating the promise.
- * 
- * @param operations function(s) to call
- * @param conditions condition(s) to be evaluated; condition functions should return boolean or Promise<boolean> and have
- * no side-effects.
- * @param timeout amount of time in milliseconds to wait for
- * @param retryInterval how often, in milliseconds, to re-evaluate condition
- * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
- * @returns {Promise<unknown[]>} resolves immediately if
- * conditions evaluate to true on a retry attempt within timeout. If timeout
- * is reached with conditionFn never evaluating to true, rejects.
- */
-export const runAndWaitForConditions = async (
-    operations: (() => void) | ((() => void)[]), 
-    conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
-    timeout = 5000,
-    retryInterval = 100,
-    onTimeoutContext?: () => string
-): Promise<unknown[]> => {
-    const ops = Array.isArray(operations) ? operations : [operations]
-    const conds = Array.isArray(conditions) ? conditions : [conditions]
-    const promise = Promise.all(conds.map((condition) => waitForCondition(
-        condition,
-        timeout,
-        retryInterval,
-        undefined,
-        onTimeoutContext
-    )))
-    ops.forEach((op) => { op() })
-    return promise
 }
 
 /**
@@ -201,112 +167,19 @@ export function isRunningInElectron(): boolean {
 }
 
 export function testOnlyInNodeJs(...args: Parameters<typeof it>): void {
-    return isRunningInElectron() ? it.skip(...args) : it(...args)
+    if (isRunningInElectron()) {
+        it.skip(...args)
+    } else {
+        it(...args)
+    }
 }
 
 export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void {
-    return isRunningInElectron() ? describe.skip(...args) : describe(...args)
-}
-
-/**
- * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
- * balances in streamr-docker-dev environment.
- */
-export class KeyServer {
-    public static readonly KEY_SERVER_PORT = 45454
-    private static singleton: KeyServer | undefined
-    private readonly ready: Promise<unknown>
-    private server?: http.Server
-
-    public static async startIfNotRunning(): Promise<void> {
-        if (KeyServer.singleton === undefined) {
-            KeyServer.singleton = new KeyServer()
-            await KeyServer.singleton.ready
-        }
+    if (isRunningInElectron()) {
+        describe.skip(...args)
+    } else {
+        describe(...args)
     }
-
-    public static async stopIfRunning(): Promise<void> {
-        if (KeyServer.singleton !== undefined) {
-            const temp = KeyServer.singleton
-            KeyServer.singleton = undefined
-            await temp.destroy()
-        }
-    }
-
-    private constructor() {
-        const app = express()
-        app.use(cors())
-        let c = 1
-        app.get('/key', (_req, res) => {
-            const hexString = c.toString(16)
-            const privateKey = '0x' + hexString.padStart(64, '0')
-            res.send(privateKey)
-            c += 1
-            if (c > 1000) {
-                c = 1
-            } else if (c === 10) {
-                /*
-                    NET-666: There is something weird about the 10th key '0x0000000000....a'
-                    that causes StreamRegistryContract to read a weird value to msg.sender
-                    that does NOT correspond to the public address. Until that is investigated
-                    and solved, skipping this key.
-                 */
-                c = 11
-            }
-        })
-        console.info(`starting up keyserver on port ${KeyServer.KEY_SERVER_PORT}...`)
-        this.ready = new Promise((resolve, reject) => {
-            this.server = app.listen(KeyServer.KEY_SERVER_PORT)
-                .once('listening', () => {
-                    console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
-                    resolve(true)
-                })
-                .once('error', (err) => {
-                    reject(err)
-                })
-        })
-    }
-
-    private destroy(): Promise<unknown> {
-        if (this.server === undefined) {
-            return Promise.resolve(true)
-        }
-        return new Promise((resolve, reject) => {
-            this.server!.close((err) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    console.info(`closed keyserver on port ${KeyServer.KEY_SERVER_PORT}`)
-                    resolve(true)
-                }
-            })
-        })
-    }
-}
-
-export async function fetchPrivateKeyWithGas(): Promise<string> {
-    let response
-    try {
-        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-            timeout: 5 * 1000
-        })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } catch (_e2) {
-            // no-op
-        } finally {
-            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 5 * 1000
-            })
-        }
-    }
-
-    if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
-    }
-
-    return response.text()
 }
 
 export class Queue<T> {
@@ -318,7 +191,7 @@ export class Queue<T> {
     }
 
     async pop(timeout?: number): Promise<T> {
-        await waitForCondition(() => this.items.length > 0, timeout)
+        await until(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 
@@ -337,7 +210,7 @@ export class Queue<T> {
 
 export const startTestServer = async (
     endpoint: string,
-    onRequest: (req: Request, res: Response) => Promise<void>
+    onRequest: (req: express.Request, res: express.Response) => Promise<void>
 ): Promise<{ url: string, stop: () => Promise<void> }> => {
     const app = express()
     app.get(endpoint, async (req, res) => {
@@ -368,3 +241,70 @@ export type Methods<T> = Pick<T, MethodNames<T>>
 
 import * as customMatchers from './customMatchers'
 export { customMatchers }
+
+const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
+
+const getTestProvider = (): Provider => {
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
+        batchStallTime: 0,       // Don't batch requests, send them immediately
+        cacheTimeout: -1         // Do not employ result caching
+    })
+}
+
+const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
+    const ABI = [{
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'to',
+                type: 'address'
+            },
+            {
+                internalType: 'uint256',
+                name: 'amount',
+                type: 'uint256'
+            }
+        ],
+        name: 'mint',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    }]
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as { mint: () => Promise<TransactionResponse> }
+}
+
+const getTestAdminWallet = (provider: Provider): Wallet => {
+    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
+}
+
+// TODO refactor method e.g. to createTestWallet({ gas: boolean, token: boolean })
+export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wallet & AbstractSigner<Provider>> => {
+    const provider = getTestProvider()
+    const privateKey = crypto.randomBytes(32).toString('hex')
+    const newWallet = new Wallet(privateKey)
+    const adminWallet = getTestAdminWallet(provider)
+    const token = getTestTokenContract(adminWallet)
+    await retry(
+        async () => {
+            if (tokens) {
+                await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            }
+            await (await adminWallet.sendTransaction({
+                to: newWallet.address,
+                value: parseEther('1')
+            })).wait()
+        },
+        (message: string, err: any) => {
+            logger.debug(message, { err })
+        },
+        'Token minting',
+        10,
+        100
+    )
+    return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
+}
+
+export const fetchPrivateKeyWithGas = async (): Promise<string> => {
+    const wallet = await generateWalletWithGasAndTokens(false)
+    return wallet.privateKey
+}

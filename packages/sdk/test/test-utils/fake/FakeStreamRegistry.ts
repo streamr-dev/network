@@ -3,7 +3,6 @@ import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream } from '../../../src/Stream'
-import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamMetadata } from '../../../src/StreamMetadata'
 import { StreamrClientError } from '../../../src/StreamrClientError'
@@ -22,18 +21,15 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
-    private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     
     constructor(
         chain: FakeChain,
-        streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
-        this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
     }
@@ -61,7 +57,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         }
     }
 
-    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
+    async setStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
@@ -170,18 +166,23 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permission: StreamPermission.SUBSCRIBE
         })
     }
-    
+
     // eslint-disable-next-line class-methods-use-this
-    clearStreamCache(): void {
+    populateMetadataCache(): void {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
+    // eslint-disable-next-line class-methods-use-this
+    invalidatePermissionCaches(): void {
+        // no-op
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+    async isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
+    }
+
+    async isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -200,7 +201,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncGenerator<StreamID> {
         throw new Error('not implemented')
     }
 

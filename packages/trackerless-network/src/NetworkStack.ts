@@ -7,7 +7,7 @@ import {
     areEqualPeerDescriptors,
     toNodeId
 } from '@streamr/dht'
-import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
@@ -82,7 +82,7 @@ export class NetworkStack {
         await this.ensureConnectedToControlLayer()
         this.getContentDeliveryManager().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
-            await waitForCondition(() => {
+            await until(() => {
                 return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
             }, neighborRequirement.timeout)
         }
@@ -171,7 +171,7 @@ export class NetworkStack {
                 neighbors: this.getControlLayerNode().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
-            version: applicationVersion
+            applicationVersion
         }
     }
 

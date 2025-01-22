@@ -1,14 +1,13 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey } from '@streamr/test-utils'
-import { collect, toStreamPartID } from '@streamr/utils'
+import { collect, toStreamPartID, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessageType } from '../../src/protocol/StreamMessage'
-import { until } from '../../src/utils/promises'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
@@ -107,7 +106,7 @@ describe('Group Key Persistence', () => {
             })
 
             it('works', async () => {
-                await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
+                await startPublisherKeyExchangeSubscription(publisher2, (await stream.getStreamParts())[0])
 
                 const received: Message[] = []
                 const sub = await subscriber.resend(

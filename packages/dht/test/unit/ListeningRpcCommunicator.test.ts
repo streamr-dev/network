@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -44,9 +44,9 @@ describe('ListeningRpcCommunicator', () => {
             RpcMessage.create(),
             { targetDescriptor: peerDescriptor }, createDeferredPromises()
         )
-        await waitForCondition(() => rpcCommunicator.getRequestIds(() => true).length > 0)
+        await until(() => rpcCommunicator.getRequestIds(() => true).length > 0)
         transport.emit('disconnected', peerDescriptor, false)
-        await waitForCondition(() => rpcCommunicator.getRequestIds(() => true).length === 0)
+        await until(() => rpcCommunicator.getRequestIds(() => true).length === 0)
     }, 10000)
 
 })

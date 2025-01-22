@@ -2,6 +2,8 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
+    NodeType,
+    PeerDescriptor,
     PingRequest,
     PingResponse,
     RouteMessageAck,
@@ -10,7 +12,6 @@ import {
     StoreDataResponse,
     ClosestRingPeersResponse
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import {
     IDhtNodeRpc,
@@ -24,7 +25,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { Any } from '../../generated/google/protobuf/any'
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, until } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
@@ -257,7 +258,7 @@ export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount
     await Promise.all(connectionManagers.map(async (connectionManager) => {
         connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
         try {
-            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
+            await until(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
         } catch {
             // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
             // locked connections and therefore it is ok to that garbage collector was not able to remove any of those

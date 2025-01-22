@@ -1,7 +1,6 @@
 import { IRecursiveOperationSessionRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { Empty } from '../../../generated/google/protobuf/empty'
-import { DataEntry, RecursiveOperationResponse } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { DataEntry, RecursiveOperationResponse, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'

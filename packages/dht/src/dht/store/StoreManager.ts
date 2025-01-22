@@ -11,12 +11,11 @@ import { Any } from '../../../generated/google/protobuf/any'
 import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import {
     DataEntry,
+    PeerDescriptor,
     RecursiveOperation,
     ReplicateDataRequest,
-    StoreDataRequest,
-    StoreDataResponse
+    StoreDataRequest, StoreDataResponse
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../../types/ServiceID'
 import { getClosestNodes } from '../contact/getClosestNodes'

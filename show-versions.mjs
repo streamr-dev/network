@@ -1,4 +1,6 @@
-#!/usr/bin/env npx zx
+#!/usr/bin/env -S NODE_NO_WARNINGS=1 npx zx
+
+// TODO when we start to use Node >= 21.3, we can maybe use --disable-warning=ExperimentalWarning instead of NODE_NO_WARNINGS=1
 
 import { join } from 'path'
 import semver from 'semver'

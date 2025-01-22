@@ -33,7 +33,7 @@ describe('Resends', () => {
         await expect(async () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             message: `Storage node fetch failed: Mock error, httpStatus=400, url=${requestUrl}`,
             code: 'STORAGE_NODE_ERROR'
         })
@@ -45,11 +45,10 @@ describe('Resends', () => {
         await expect(async () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             message: isRunningInElectron()
                 ? 'Failed to fetch'
-                // eslint-disable-next-line max-len
-                : 'request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test',
+                : 'fetch failed (code=STORAGE_NODE_ERROR)',
             code: 'STORAGE_NODE_ERROR'
         })
     })

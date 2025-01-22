@@ -1,6 +1,6 @@
 {
   "name": "@streamr/proto-rpc",
-  "version": "102.0.0-beta.0",
+  "version": "102.0.0-beta.2",
   "description": "Proto-RPC",
   "repository": {
     "type": "git",
@@ -12,33 +12,32 @@
   "license": "(Apache-2.0 AND BSD-3-Clause)",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "generate-protoc-code": "./proto.sh",
+    "prebuild": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
-    "check": "tsc -p ./tsconfig.jest.json",
+    "check": "./test-proto.sh && tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
-    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "npm run test-unit && npm run test-integration",
-    "test-browser": "karma start karma.config.js",
-    "test-unit": "jest test/unit",
-    "test-integration": "jest --bail test/integration"
+    "eslint": "./test-proto.sh && eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "test": "./test-proto.sh && npm run test-unit && npm run test-integration",
+    "test-browser": "./test-proto.sh && karma start karma.config.js",
+    "test-unit": "./test-proto.sh && jest test/unit",
+    "test-integration": "./test-proto.sh && jest --bail test/integration"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/utils": "102.0.0-beta.0",
+    "@streamr/utils": "102.0.0-beta.2",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "uuid": "^10.0.0"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "102.0.0-beta.0",
-    "@types/lodash": "^4.17.12",
-    "@types/uuid": "^10.0.0"
+    "@streamr/test-utils": "102.0.0-beta.2",
+    "@types/lodash": "^4.17.14"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8",
-    "utf-8-validate": "^6.0.3"
+    "bufferutil": "^4.0.9",
+    "utf-8-validate": "^6.0.5"
   }
 }

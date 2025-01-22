@@ -3,15 +3,15 @@ import {
     SetupOperatorContractOpts,
     _operatorContractUtils,
 } from '@streamr/sdk'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Contract } from 'ethers'
+import { generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { Logger, toEthereumAddress, until } from '@streamr/utils'
+import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
     getProvider,
     setupOperatorContract,
     sponsor,
@@ -39,23 +39,24 @@ describe('checkOperatorValueBreach', () => {
         await client.destroy()
         deployConfig = {
             operatorConfig: {
-                operatorsCutPercent: 10
-            }
+                operatorsCutPercentage: 10
+            },
+            generateWalletWithGasAndTokens
         }
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, generateWalletWithGasAndTokens })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000)
-        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
+        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('200'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, await sponsorship2.getAddress(), parseEther('25000'))
+        await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
@@ -64,10 +65,10 @@ describe('checkOperatorValueBreach', () => {
         const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
 
         logger.debug('Waiting until above', { allowedDifference })
-        await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        await until(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorValueBreach(operator, client, async () => {
             return [toEthereumAddress(await operatorContract.getAddress())]
-        }, 1, 20)
+        }, 1n, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

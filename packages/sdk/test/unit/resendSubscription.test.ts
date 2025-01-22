@@ -1,5 +1,5 @@
 import { Queue, randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { mock } from 'jest-mock-extended'
 import { isEqual } from 'lodash'
@@ -34,7 +34,7 @@ const createResend = (historicalMessages: StreamMessage[], gapHandler: (opts: Re
 }
 
 const waitForMatchingItem = async (streamMessage: StreamMessage, queue: Queue<Message>) => {
-    await waitForCondition(() => {
+    await until(() => {
         return queue.values().some((msg) => isEqual(msg.content, streamMessage.getParsedContent()))
     })
 }
@@ -146,9 +146,9 @@ describe('resend subscription', () => {
             ...immediateRealtimeMessages
         ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
-        expect(onResendComplete).toBeCalledTimes(1)
+        expect(onResendComplete).toHaveBeenCalledTimes(1)
         expect(latestMessageWhenResendComplete!.content).toEqual(last(historicalMessages)!.getParsedContent())
-        expect(resend).toBeCalledTimes(2)  // the historical messages fetch and the gap fill
+        expect(resend).toHaveBeenCalledTimes(2)  // the historical messages fetch and the gap fill
     })
 
     it('gap not fillable', async () => {
@@ -166,7 +166,7 @@ describe('resend subscription', () => {
             ...realtimeMessages
         ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
-        expect(resend).toBeCalledTimes(MAX_GAP_REQUESTS + 1)  // the historical messages fetch and all gap fill tries
+        expect(resend).toHaveBeenCalledTimes(MAX_GAP_REQUESTS + 1)  // the historical messages fetch and all gap fill tries
     })
 
     it('no historical data', async () => {
@@ -178,7 +178,7 @@ describe('resend subscription', () => {
         await sub.unsubscribe()
 
         expectEqualMessageCollections(outputMessages, realtimeMessages)
-        expect(resend).toBeCalledTimes(1)  // the historical messages fetch
+        expect(resend).toHaveBeenCalledTimes(1)  // the historical messages fetch
     })
 
     it('gap fill disabled', async () => {
@@ -196,7 +196,7 @@ describe('resend subscription', () => {
             ...realtimeMessages
         ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
-        expect(resend).toBeCalledTimes(1)  // the historical messages fetch
+        expect(resend).toHaveBeenCalledTimes(1)  // the historical messages fetch
     })
 
     it('multiple message chains', async () => {
@@ -236,7 +236,7 @@ describe('resend subscription', () => {
         ]
         expectEqualMessageCollections(outputMessages.values().filter((m) => m.msgChainId === msgChainIds[0]), expectedMessages1)
         expectEqualMessageCollections(outputMessages.values().filter((m) => m.msgChainId === msgChainIds[1]), expectedMessages2)
-        expect(resend).toBeCalledTimes(3)  // the historical messages fetch and one gap fill for each message chain
+        expect(resend).toHaveBeenCalledTimes(3)  // the historical messages fetch and one gap fill for each message chain
     })
 
     it('ignore duplicate', async () => {
@@ -257,7 +257,7 @@ describe('resend subscription', () => {
             ...realtimeMessages,
         ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
-        expect(resend).toBeCalledTimes(2)  // the historical messages fetch and the gap fill
+        expect(resend).toHaveBeenCalledTimes(2)  // the historical messages fetch and the gap fill
     })
 
     it('real-time resolves gap', async () => {
@@ -276,7 +276,7 @@ describe('resend subscription', () => {
             ...realtimeMessages,
         ]
         expectEqualMessageCollections(outputMessages, expectedMessages)
-        expect(resend).toBeCalledTimes(1)  // the historical messages fetch
+        expect(resend).toHaveBeenCalledTimes(1)  // the historical messages fetch
     })
 
 })

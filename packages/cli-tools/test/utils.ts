@@ -1,5 +1,5 @@
 import { Stream, StreamrClient } from '@streamr/sdk'
-import { collect, waitForCondition } from '@streamr/utils'
+import { collect, until } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
 
@@ -75,7 +75,7 @@ export const createTestClient = (privateKey?: string): StreamrClient => {
 }
 
 export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: StreamrClient): Promise<void> => {
-    await waitForCondition(async () => {
+    await until(async () => {
         // eslint-disable-next-line no-underscore-dangle
         for await (const _msg of client.searchStreams(stream.id, undefined)) {
             return true

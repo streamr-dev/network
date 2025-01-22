@@ -8,7 +8,7 @@ import {
     toStreamPartID,
     toUserId,
     UserID,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -127,7 +127,7 @@ describe('SubscriberKeyExchange', () => {
                 SignatureType.SECP256K1
             )
             const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
-            await waitForCondition(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
+            await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
 
         it('happy path: ERC-1271', async () => {
@@ -157,7 +157,7 @@ describe('SubscriberKeyExchange', () => {
             })
             await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(erc1271Contract), SignatureType.ERC_1271)
             const keyStore = getLocalGroupKeyStore(toUserId(await subscriber.getUserId()))
-            await waitForCondition(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
+            await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
     })
 })

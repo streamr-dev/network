@@ -9,7 +9,7 @@ import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
-import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
@@ -77,7 +77,7 @@ describe('messagePipeline', () => {
         streamRegistry = {
             getStreamMetadata: async () => ({ partitions: 1 }),
             isStreamPublisher: async () => true,
-            clearStreamCache: jest.fn()
+            invalidatePermissionCaches: jest.fn()
         }
         pipeline = createMessagePipeline({
             streamPartId,
@@ -133,9 +133,12 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Signature validation failed')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_SIGNATURE',
+            message: 'Signature validation failed'
+        })
         expect(output).toEqual([])
     })
 
@@ -148,9 +151,12 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Invalid JSON')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_MESSAGE_CONTENT',
+            message: 'Unable to parse JSON'
+        })
         expect(output).toEqual([])
     })
 
@@ -166,13 +172,15 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(DecryptError)
-        expect(error.message).toMatch(/timed out/)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR',
+            message: 'Could not get encryption key'
+        })
         expect(output).toEqual([])
-        expect(streamRegistry.clearStreamCache).toBeCalledTimes(1)
-        expect(streamRegistry.clearStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledTimes(1)
+        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
     })
 
     it('error: exception', async () => {
@@ -184,7 +192,7 @@ describe('messagePipeline', () => {
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(onError).toBeCalledTimes(1)
-        expect(onError).toBeCalledWith(err)
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onError).toHaveBeenCalledWith(err)
     })
 })

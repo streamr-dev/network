@@ -4,7 +4,6 @@ import { fastWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -40,8 +39,8 @@ describe('resend with existing key', () => {
         storageNode.storeMessage(message)
     }
 
-    const resendRange = (fromTimestamp: number, toTimestamp: number) => {
-        return subscriber.resend(stream.getStreamParts()[0], {
+    const resendRange = async (fromTimestamp: number, toTimestamp: number) => {
+        return subscriber.resend((await stream.getStreamParts())[0], {
             from: {
                 timestamp: fromTimestamp
             },
@@ -56,7 +55,7 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         const messages = await collect(messageStream)
-        expect(onError).not.toBeCalled()
+        expect(onError).not.toHaveBeenCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.timestamp)).toEqual(expectedTimestamps)
     }
@@ -66,9 +65,11 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         await collect(messageStream)
-        expect(onError).toBeCalled()
+        expect(onError).toHaveBeenCalled()
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(DecryptError)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR'
+        })
     }
 
     beforeEach(async () => {

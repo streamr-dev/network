@@ -5,21 +5,20 @@ import {
     DEFAULT_PARTITION_COUNT,
     Logger,
     MAX_PARTITION_COUNT,
+    merge,
     StreamPartID,
     StreamPartIDUtils,
+    until,
     UserID,
-    merge,
     utf8ToBinary,
-    wait,
-    waitForCondition
+    wait
 } from '@streamr/utils'
 import crypto from 'crypto'
-import { Wallet } from 'ethers'
+import { id, Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
 import { AddressInfo } from 'net'
-import fetch from 'node-fetch'
 import path from 'path'
 import { DependencyContainer } from 'tsyringe'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -129,7 +128,7 @@ export const createMockMessage = async (
     opts: CreateMockMessageOptions
 ): Promise<StreamMessage> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
-        opts.streamPartId ?? opts.stream.getStreamParts()[0]
+        opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
     const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
@@ -201,7 +200,7 @@ export const createStreamRegistry = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
-        clearStreamCache: () => {}
+        invalidatePermissionCaches: () => {}
     } as any
 }
 
@@ -244,7 +243,7 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 }
 
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
-    await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
+    await until(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
 }
@@ -317,4 +316,14 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
             })
         })
     })
+}
+
+const ETHEREUM_FUNCTION_SELECTOR_LENGTH = 10  // 0x + 4 bytes
+
+export const formEthereumFunctionSelector = (methodSignature: string): string => {
+    return id(methodSignature).substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
+}
+
+export const parseEthereumFunctionSelectorFromCallData = (data: string): string => {
+    return data.substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
 }

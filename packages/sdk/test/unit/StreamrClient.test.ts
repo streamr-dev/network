@@ -61,7 +61,7 @@ describe('StreamrClient', () => {
                     distributionMethod: 'rotate',
                     key: GroupKey.generate()
                 })
-            }).rejects.toThrowStreamrError({
+            }).rejects.toThrowStreamrClientError({
                 message: 'cannot pass "key" when Lit Protocol is enabled',
                 code: 'UNSUPPORTED_OPERATION'
             })

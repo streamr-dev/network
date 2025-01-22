@@ -17,7 +17,7 @@ import {
 } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { Mapping } from '../utils/Mapping'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
@@ -26,7 +26,7 @@ import { createMessageRef, createRandomMsgChainId } from './messageChain'
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
+    streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
@@ -37,10 +37,10 @@ export class MessageFactory {
     private readonly streamId: StreamID
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
-    private readonly defaultMessageChainIds: Mapping<[partition: number], string>
+    private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     // eslint-disable-next-line max-len
-    private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
+    private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
@@ -53,8 +53,10 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
-        this.defaultMessageChainIds = new Mapping(async () => {
-            return createRandomMsgChainId()
+        this.defaultMessageChainIds = createLazyMap<number, string>({
+            valueFactory: async () => {
+                return createRandomMsgChainId()
+            }
         })
     }
 
@@ -66,7 +68,7 @@ export class MessageFactory {
         const publisherId = await this.getPublisherId(metadata)
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
-            this.streamRegistry.clearStreamCache(this.streamId)
+            this.streamRegistry.invalidatePermissionCaches(this.streamId)
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 
@@ -88,7 +90,7 @@ export class MessageFactory {
         }
 
         const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
-        const msgChainKey = formLookupKey(partition, msgChainId)
+        const msgChainKey = formLookupKey([partition, msgChainId])
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)

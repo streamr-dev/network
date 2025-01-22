@@ -2,7 +2,7 @@ import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import { StreamrClient } from '@streamr/sdk'
 import { fastWallet } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 
 const wallet = fastWallet()
 
@@ -47,20 +47,20 @@ describe('Subscriber Plugin', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            client?.destroy(),
-            plugin?.stop()
+            client.destroy(),
+            plugin.stop()
         ])
     })
 
     it('subscribes to the configured list of streams', async () => {
         const node = client.getNode()
-        await waitForCondition(async () => {
+        await until(async () => {
             const streams = (await node.getStreamParts()).map((stream) => stream.toString())
             return streams.includes('stream-0#0')
                 && streams.includes('stream-0#1')
                 && streams.includes('stream-1#0')
         })
-        // If waitForCondition succeeds we are okay
+        // If until succeeds we are okay
         expect(true).toEqual(true)
     })
 })

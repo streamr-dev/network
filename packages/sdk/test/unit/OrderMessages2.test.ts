@@ -1,5 +1,5 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, waitForCondition } from '@streamr/utils'
+import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, until } from '@streamr/utils'
 import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -196,7 +196,7 @@ describe.skip('OrderMessages2', () => {
         }()
         await orderMessages.addMessages(producer)
 
-        await waitForCondition(() => PUBLISHER_IDS.every((publisherId) => {
+        await until(() => PUBLISHER_IDS.every((publisherId) => {
             return expected[publisherId].length === actual[publisherId].length
         }), 60 * 1000)
         expect(onUnfillableGap).toHaveBeenCalledTimes(totalUnfillableGaps)

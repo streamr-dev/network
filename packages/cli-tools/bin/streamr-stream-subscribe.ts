@@ -16,7 +16,7 @@ interface Options extends BaseOptions {
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
-    const formContent = (content: unknown) => options.raw ? binaryToHex(content as Uint8Array) : content
+    const formContent = (content: unknown) => content instanceof Uint8Array ? binaryToHex(content) : content
     const formMessage = options.withMetadata
         ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
         : (content: unknown) => formContent(content)

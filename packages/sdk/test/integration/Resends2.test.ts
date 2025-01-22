@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { StreamID, collect, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { StreamID, collect, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
@@ -55,11 +55,11 @@ describe('Resends2', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     afterAll(async () => {
-        await publisher?.destroy()
+        await publisher.destroy()
     })
 
     it('throws if no storage assigned', async () => {
@@ -71,7 +71,7 @@ describe('Resends2', () => {
             }, {
                 last: 5
             })
-        }).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
+        }).rejects.toThrowStreamrClientError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {
@@ -371,7 +371,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn()
                 sub.once('resendCompleted', onResent)
                 const receivedMsgsPromise = collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
-                await waitForCondition(() => onResent.mock.calls.length > 0)
+                await until(() => onResent.mock.calls.length > 0)
 
                 published.push(...await publishTestMessages(REALTIME_MESSAGES))
 

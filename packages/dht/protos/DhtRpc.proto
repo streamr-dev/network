@@ -7,7 +7,6 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
-import "packages/dht/protos/PeerDescriptor.proto";
 
 service DhtNodeRpc {
   // TODO rename to getClosestNeighbors (breaking change)
@@ -78,7 +77,7 @@ message ExternalStoreDataRequest {
 }
 
 message ExternalStoreDataResponse {
-  repeated peerDescriptor.PeerDescriptor storers = 1;
+  repeated PeerDescriptor storers = 1;
 }
 
 message ReplicateDataRequest {
@@ -104,7 +103,7 @@ message ClosestPeersRequest {
 
 // TODO rename to ClosestNeighborsResponse
 message ClosestPeersResponse {
-  repeated peerDescriptor.PeerDescriptor peers = 1;
+  repeated PeerDescriptor peers = 1;
   string requestId = 2;
 }
 
@@ -116,8 +115,8 @@ message ClosestRingPeersRequest {
 
 // TODO rename to ClosestRingContactsResponse
 message ClosestRingPeersResponse {
-  repeated peerDescriptor.PeerDescriptor leftPeers = 1;
-  repeated peerDescriptor.PeerDescriptor rightPeers = 2;
+  repeated PeerDescriptor leftPeers = 1;
+  repeated PeerDescriptor rightPeers = 2;
   string requestId = 3;
 }
 
@@ -133,10 +132,10 @@ enum RecursiveOperation {
 }
 
 message RecursiveOperationResponse {
-  repeated peerDescriptor.PeerDescriptor closestConnectedNodes = 1;
+  repeated PeerDescriptor closestConnectedNodes = 1;
   repeated DataEntry dataEntries = 2;
   bool noCloserNodesFound = 3;
-  repeated peerDescriptor.PeerDescriptor routingPath = 4;
+  repeated PeerDescriptor routingPath = 4;
 }
 
 message PingRequest {
@@ -150,6 +149,30 @@ message PingResponse {
 message LeaveNotice {
 }
 
+message PeerDescriptor {
+  bytes nodeId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+  optional uint32 region = 6;
+  optional uint32 ipAddress = 7;
+  optional bytes publicKey = 8;
+  // signature of fields 2-8
+  optional bytes signature = 9; 
+}
+
+message ConnectivityMethod {
+  uint32 port = 1;
+  string host = 2;
+  bool tls = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
+}
+
 enum RpcResponseError {
   SERVER_TIMOUT = 0;
   CLIENT_TIMEOUT = 1;
@@ -159,11 +182,11 @@ enum RpcResponseError {
 
 message RouteMessageWrapper {
   string requestId = 1;
-  peerDescriptor.PeerDescriptor sourcePeer = 2;
+  PeerDescriptor sourcePeer = 2;
   bytes target = 3;
   Message message = 4;
-  repeated peerDescriptor.PeerDescriptor reachableThrough = 5;
-  repeated peerDescriptor.PeerDescriptor routingPath = 6;
+  repeated PeerDescriptor reachableThrough = 5;
+  repeated PeerDescriptor routingPath = 6;
   repeated string parallelRootNodeIds = 7;
 }
 
@@ -190,37 +213,39 @@ message ConnectivityRequest {
 message ConnectivityResponse {
   string host = 1;
   string natType = 2;
-  peerDescriptor.ConnectivityMethod websocket = 3;
+  ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
-  string version = 5;
+  string protocolVersion = 5;
   optional double latitude = 6;
   optional double longitude = 7;
 }
 
 message HandshakeRequest {
-  peerDescriptor.PeerDescriptor sourcePeerDescriptor = 1;
-  optional peerDescriptor.PeerDescriptor targetPeerDescriptor = 2;
-  string version = 3;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional PeerDescriptor targetPeerDescriptor = 2;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 message HandshakeResponse {
-  peerDescriptor.PeerDescriptor sourcePeerDescriptor = 1;
+  PeerDescriptor sourcePeerDescriptor = 1;
   optional HandshakeError error = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
   INVALID_TARGET_PEER_DESCRIPTOR = 1;
-  UNSUPPORTED_VERSION = 2;
+  UNSUPPORTED_PROTOCOL_VERSION = 2;
 }
 
 // Wraps all messages
 
 message Message {
   string messageId = 1;
-  peerDescriptor.PeerDescriptor sourceDescriptor = 2;
-  peerDescriptor.PeerDescriptor targetDescriptor = 3;
+  PeerDescriptor sourceDescriptor = 2;
+  PeerDescriptor targetDescriptor = 3;
   string serviceId = 4; // id of the RPC service
   oneof body {
     protorpc.RpcMessage rpcMessage = 5;

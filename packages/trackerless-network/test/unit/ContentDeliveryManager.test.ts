@@ -1,5 +1,5 @@
 import { areEqualPeerDescriptors } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
 import { ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
@@ -23,7 +23,8 @@ describe('ContentDeliveryManager', () => {
     })
 
     it('PeerDescriptor is correct', () => {
-        expect(areEqualPeerDescriptors(peerDescriptor, manager.getPeerDescriptor()))
+        // TODO could use toEqualPeerDescriptor from dht package if we export that custom matcher
+        expect(areEqualPeerDescriptors(peerDescriptor, manager.getPeerDescriptor())).toBe(true)
     })
 
     describe('join and leave', () => {
@@ -53,7 +54,7 @@ describe('ContentDeliveryManager', () => {
 
         it('broadcast joins stream', async () => {
             manager.broadcast(message)
-            await waitForCondition(() => manager.hasStreamPart(streamPartId))
+            await until(() => manager.hasStreamPart(streamPartId))
         })
     })
 

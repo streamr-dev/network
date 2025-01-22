@@ -28,8 +28,8 @@ describe('StorageNodeRegistry2', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            client?.destroy(),
-            storageNodeClient?.destroy()
+            client.destroy(),
+            storageNodeClient.destroy()
         ])
     })
 
@@ -55,7 +55,7 @@ describe('StorageNodeRegistry2', () => {
 
         it('all', async () => {
             const storageNodeUrls = await client.getStorageNodes()
-            return expect(storageNodeUrls).toContain(storageNodeAddress)
+            expect(storageNodeUrls).toContain(storageNodeAddress)
         }, TIMEOUT)
     })
 

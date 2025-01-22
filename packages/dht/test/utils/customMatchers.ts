@@ -1,7 +1,7 @@
 import { areEqualBinaries } from '@streamr/utils'
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import { isEqual } from 'lodash'
-import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { toDhtAddress } from '../../src/identifiers'
 
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
@@ -15,8 +15,8 @@ declare global {
     }
 }
 
-const formErrorMessage = (description: string, expected: string | number | undefined, actual: string | number | undefined): string => {
-    return `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
+const formErrorMessage = (field: keyof PeerDescriptor, expected: string | number | undefined, actual: string | number | undefined): string => {
+    return `PeerDescriptor ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
 const toEqualPeerDescriptor = (
@@ -32,7 +32,7 @@ const toEqualPeerDescriptor = (
         messages.push(formErrorMessage('type', typeNames[expected.type], typeNames[actual.type]))
     }
     expectEqualConnectivityMethod('udp', expected.udp, actual.udp, messages)
-    expectEqualConnectivityMethod('tpc', expected.tcp, actual.tcp, messages)
+    expectEqualConnectivityMethod('tcp', expected.tcp, actual.tcp, messages)
     expectEqualConnectivityMethod('websocket', expected.websocket, actual.websocket, messages)
     if (expected.region !== actual.region) {
         messages.push(formErrorMessage('region', expected?.region, actual?.region))
@@ -45,13 +45,13 @@ const toEqualPeerDescriptor = (
     } else {
         return {
             pass: true,
-            message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+            message: () => 'PeerDescriptors are equal'
         }
     }
 }
 
 const expectEqualConnectivityMethod = (
-    description: string,
+    field: keyof PeerDescriptor,
     method1: ConnectivityMethod | undefined,
     method2: ConnectivityMethod | undefined,
     messages: string[]
@@ -62,7 +62,7 @@ const expectEqualConnectivityMethod = (
             : undefined
     }
     if (!isEqual(method1, method2)) {
-        messages.push(formErrorMessage(description, toOutput(method1), toOutput(method2)))
+        messages.push(formErrorMessage(field, toOutput(method1), toOutput(method2)))
     }
 }
 
