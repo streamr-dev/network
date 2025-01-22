@@ -1,0 +1,11 @@
+.idea
+/src
+/test
+/generated
+/examples
+jest.config.js
+tsconfig.json
+tsconfig.*.json
+*.tsbuildinfo
+.eslintignore
+.eslintrc
