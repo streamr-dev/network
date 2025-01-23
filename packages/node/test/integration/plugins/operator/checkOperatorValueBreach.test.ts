@@ -3,7 +3,7 @@ import {
     SetupOperatorContractOpts,
     _operatorContractUtils,
 } from '@streamr/sdk'
-import { generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { Logger, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
@@ -41,15 +41,15 @@ describe('checkOperatorValueBreach', () => {
             operatorConfig: {
                 operatorsCutPercentage: 10
             },
-            generateWalletWithGasAndTokens
+            createTestWallet
         }
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, generateWalletWithGasAndTokens })
+        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, createTestWallet })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
