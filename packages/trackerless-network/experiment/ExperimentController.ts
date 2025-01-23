@@ -128,14 +128,13 @@ export class ExperimentController {
         return entryPoint
     }
 
-    async startNodes(startWsServer: boolean, entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
+    async startNodes(ratioOfWsNodes: number, entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
         logger.info('starting nodes')
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
         await this.runBatchedOperation(nodes, 12, async (node) => {
-            const startWsServerForNode = startWsServer ? startWsServer 
-                : Math.random() < 0.08 ? false : true
+            const startWsServerForNode = Math.random() < ratioOfWsNodes
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',

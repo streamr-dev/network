@@ -11,7 +11,7 @@ const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin', '
 const experiment = process.argv[2]
 const env = process.argv[3]
 const numOfRepeats = parseInt(process.argv[4])
-const startNodesWithWsServer = process.argv[5] === 'true'
+const ratioOfWsNodes = parseFloat(process.argv[5]) 
 
 const nodeCounts = [
     // 1,
@@ -190,7 +190,7 @@ const startAwsInstances = async (controller: ExperimentController, nodeCountPerR
     await controller.waitForClients(() => waitLogger())
 }
 
-const run = async (startNodesWithWsServer: boolean, nodeCountPerRegion: number, resultName: string, runs: number) => {
+const run = async (ratioOfWsNodes: number, nodeCountPerRegion: number, resultName: string, runs: number) => {
     const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
     for (let repeat = 0; repeat < runs; repeat++) {
         logger.info('starting experiment', { experiment, nodeCount, repeat })
@@ -213,20 +213,20 @@ const run = async (startNodesWithWsServer: boolean, nodeCountPerRegion: number, 
         if (experiment === 'join') {
             const entryPointId = await controller.startEntryPoint()
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId, false)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, false)
             logger.info('all nodes started')
             await controller.runJoinExperiment(entryPointId)
             logger.info('experiment done')
         } else if (experiment === 'propagation') { 
             const entryPointId = await controller.startEntryPoint(false, true)
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId, true, false, true)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, true, false, true)
             logger.info('all nodes started')
             await controller.runPropagationExperiment('experiment#0')
         } else if (experiment === 'routing') {
             const entryPointId = await controller.startEntryPoint(true)
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId, true, true)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, true, true)
             logger.info('all nodes started')
             await wait(10000)
             await controller.runRoutingExperiment()
@@ -234,14 +234,14 @@ const run = async (startNodesWithWsServer: boolean, nodeCountPerRegion: number, 
         } else if (experiment === 'timetodata') {
             const entryPointId = await controller.startEntryPoint()
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId, false)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, false)
             logger.info('all nodes started')
-            await controller.runTimeToDataExperiment(startNodesWithWsServer, entryPointId)
+            await controller.runTimeToDataExperiment(Math.random() < ratioOfWsNodes, entryPointId)
             logger.info('experiment done')
         } else if (experiment === 'scalingjoin') {
             const entryPointId = await controller.startEntryPoint()
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId, false)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, false)
             logger.info('all nodes started')
             await controller.runScalingJoinExperiment(entryPointId)
         } else if (experiment === 'pinging') {
@@ -250,7 +250,7 @@ const run = async (startNodesWithWsServer: boolean, nodeCountPerRegion: number, 
         } else {
             const entryPointId = await controller.startEntryPoint(true)
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(startNodesWithWsServer, entryPointId)
+            await controller.startNodes(ratioOfWsNodes, entryPointId)
             logger.info('all nodes started')
         }
         logger.info(`experiment ${experiment} completed`)
@@ -277,11 +277,11 @@ const run = async (startNodesWithWsServer: boolean, nodeCountPerRegion: number, 
 
 (async () => {
     if (experiment === 'reset') {
-        await run(startNodesWithWsServer, 0, 'reset', 1)
+        await run(ratioOfWsNodes, 0, 'reset', 1)
     } else {
         const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
         for (const nodeCount of nodeCounts) {
-            await run(startNodesWithWsServer, nodeCount, datetime, numOfRepeats)
+            await run(ratioOfWsNodes, nodeCount, datetime, numOfRepeats)
         }
     }
     
