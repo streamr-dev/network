@@ -27,7 +27,7 @@ export interface SetupOperatorContractOpts {
         operatorsCutPercentage?: number
         metadata?: string
     }
-    generateWalletWithGasAndTokens: () => Promise<Wallet & SignerWithProvider>
+    createTestWallet: (opts?: { gas?: boolean, tokens?: boolean }) => Promise<Wallet & SignerWithProvider>
 }
 
 /**
@@ -45,7 +45,7 @@ const logger = new Logger(module)
 export async function setupOperatorContract(
     opts: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
-    const operatorWallet = await opts.generateWalletWithGasAndTokens()
+    const operatorWallet = await opts.createTestWallet({ gas: true, tokens: true })
     const operatorContract = await deployOperatorContract({
         deployer: operatorWallet,
         operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
@@ -54,7 +54,7 @@ export async function setupOperatorContract(
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
-            nodeWallets.push(await opts.generateWalletWithGasAndTokens())
+            nodeWallets.push(await opts.createTestWallet({ gas: true, tokens: true }))
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }

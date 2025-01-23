@@ -1,21 +1,21 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { parseEther } from 'ethers'
 import { createTestClient, runCommand } from './utils'
-import { parseEther, Wallet } from 'ethers'
 
 const SPONSOR_AMOUNT = '12345'
 
 describe('sponsorship-sponsor', () => {
 
     it('happy path', async () => {
-        const client = createTestClient(await fetchPrivateKeyWithGas())
+        const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream('/test')
         const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
             streamId: stream.id,
-            deployer: new Wallet(await fetchPrivateKeyWithGas()).connect(_operatorContractUtils.getProvider())
+            deployer: await createTestWallet({ gas: true })
         })
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         await runCommand(`internal sponsorship-sponsor ${sponsorshipAddress} ${SPONSOR_AMOUNT}`, {
             privateKey: sponsorer.privateKey

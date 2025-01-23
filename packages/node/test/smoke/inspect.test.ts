@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
@@ -81,7 +81,7 @@ const DEV_CHAIN_DEFAULT_MINING_INTERVAL = 1000  // hardhat config option in dev-
 const logger = new Logger(module)
 
 const createStream = async (): Promise<StreamID> => {
-    const creator = createClient(await fetchPrivateKeyWithGas())
+    const creator = createClient(await createTestPrivateKey({ gas: true }))
     const stream = await createTestStream(creator, module)
     await creator.destroy()
     return stream.id
@@ -95,7 +95,7 @@ const createOperator = async (
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
         },
-        generateWalletWithGasAndTokens
+        createTestWallet
     })
     await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_AMOUNT)
     await stake(operator.operatorContract, sponsorshipAddress, STAKE_AMOUNT)
@@ -219,7 +219,7 @@ describe('inspect', () => {
         await streamrConfig.setSlashingFraction(parseEther(String(SLASHING_PERCENTAGE / 100)))
         logger.info('Setup sponsorship')
         const streamId = await createStream()
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)

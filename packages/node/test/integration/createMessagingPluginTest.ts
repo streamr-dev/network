@@ -1,5 +1,5 @@
 import { MessageMetadata, Stream, StreamrClient } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
+import { createTestWallet, Queue } from '@streamr/test-utils'
 import { merge, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
@@ -59,7 +59,7 @@ export const createMessagingPluginTest = <T>(
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
-            brokerUser = new Wallet(await fetchPrivateKeyWithGas())
+            brokerUser = await createTestWallet({ gas: true })
             broker = await startBroker({
                 privateKey: brokerUser.privateKey,
                 apiAuthentication: {
