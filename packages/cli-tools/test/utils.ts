@@ -18,7 +18,8 @@ export const runCommand = async (commandLine: string, opts?: StartCommandOptions
 }
 
 export async function* startCommand(commandLine: string, opts?: StartCommandOptions): AsyncGenerator<string> {
-    const args: string[] = ['dist/bin/streamr.js']
+    // TODO: --no-deprecation needed to get around deprecation warning for "punycode" in Node.js 22, remove when warning has gone away
+    const args: string[] = ['--no-deprecation', 'dist/bin/streamr.js']
     args.push(...commandLine.split(' '))
     if (opts?.privateKey !== undefined) {
         args.push('--private-key', opts.privateKey)
