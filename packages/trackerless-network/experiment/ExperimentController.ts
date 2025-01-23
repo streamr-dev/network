@@ -134,6 +134,8 @@ export class ExperimentController {
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
         await this.runBatchedOperation(nodes, 12, async (node) => {
+            const startWsServerForNode = startWsServer ? startWsServer 
+                : Math.random() < 0.08 ? false : true
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
@@ -143,7 +145,7 @@ export class ExperimentController {
                         join,
                         storeRoutingPaths,
                         storeMessagePaths,
-                        startWsServer
+                        startWsServer: startWsServerForNode
                     }
                 }
             })
