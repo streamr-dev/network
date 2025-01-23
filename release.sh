@@ -8,7 +8,7 @@ if [[ "$1" == "" ]]; then
 fi
 
 # check that there was some tag value selected in the manual workflow UI (see publish-npm.yml)
-if [[ "$1" == "<SELECT>" ]]; then
+if [[ "$1" == "SELECT" ]]; then
     echo 'invalid value for "tag"'
     exit 1
 fi
