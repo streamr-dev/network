@@ -7,6 +7,12 @@ if [[ "$1" == "" ]]; then
     exit 1
 fi
 
+# check that there was some tag value selected in the manual workflow UI (see publish-npm.yml)
+if [[ "$1" == "<SELECT>" ]]; then
+    echo 'invalid value for "tag"'
+    exit 1
+fi
+
 npm run build
 
 # Build sdk webpack bundle
