@@ -1,6 +1,6 @@
 import { Stream, StreamrClient } from '@streamr/sdk'
 import mqtt from 'async-mqtt'
-import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
+import { createTestWallet, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream } from '../../../utils'
 import { wait } from '@streamr/utils'
@@ -28,7 +28,7 @@ describe('MQTT Bridge', () => {
     }
 
     beforeAll(async () => {
-        brokerUser = new Wallet(await fetchPrivateKeyWithGas())
+        brokerUser = await createTestWallet({ gas: true })
         broker = await startBroker({
             privateKey: brokerUser.privateKey,
             extraPlugins: {

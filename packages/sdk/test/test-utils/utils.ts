@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, fastPrivateKey } from '@streamr/test-utils'
 import {
     DEFAULT_PARTITION_COUNT,
     Logger,
@@ -90,7 +90,7 @@ export const getCreateClient = (
         if (opts.auth?.privateKey) {
             key = opts.auth.privateKey
         } else {
-            key = await fetchPrivateKeyWithGas()
+            key = await createTestPrivateKey({ gas: true })
         }
         const client = new StreamrClient(merge<StreamrClientConfig>(
             {

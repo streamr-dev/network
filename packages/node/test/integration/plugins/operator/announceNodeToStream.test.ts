@@ -1,6 +1,7 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { fastPrivateKey, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { fastPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
+import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient } from '../../../utils'
@@ -12,7 +13,7 @@ describe('announceNodeToStream', () => {
     it('publishes to stream', async () => {
         const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
             nodeCount: 1,
-            generateWalletWithGasAndTokens
+            createTestWallet
         })
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
         const nodeWallet = nodeWallets[0]
@@ -26,7 +27,8 @@ describe('announceNodeToStream', () => {
         const [{ content }] = await collect(subscription, 1)
         expect(content).toEqual({
             msgType: 'heartbeat',
-            peerDescriptor: await client.getPeerDescriptor()
+            peerDescriptor: await client.getPeerDescriptor(),
+            applicationVersion
         })
 
         await anonymousClient.destroy()

@@ -1,7 +1,7 @@
-import { Wallet } from 'ethers'
-import { describeOnlyInNodeJs, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, describeOnlyInNodeJs, fastWallet } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -18,7 +18,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
     let proxyUser: Wallet = fastWallet()
 
     beforeEach(async () => {
-        client = createTestClient(await fetchPrivateKeyWithGas())
+        client = createTestClient(await createTestPrivateKey({ gas: true }))
         stream = await createTestStream(client, module)
         proxyUser = fastWallet()
         await stream.grantPermissions({

@@ -6,8 +6,9 @@ on:
       tag:
         type: choice
         required: true
-        default: latest
+        default: SELECT
         options:
+          - SELECT
           - latest
           - beta
           - alpha

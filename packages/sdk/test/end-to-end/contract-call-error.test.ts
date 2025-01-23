@@ -1,4 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, fastWallet } from '@streamr/test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('contract call error', () => {
@@ -31,7 +31,7 @@ describe('contract call error', () => {
     })
 
     it('concurrent transactions', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const client = new StreamrClient({
             environment: 'dev2',
             auth: {

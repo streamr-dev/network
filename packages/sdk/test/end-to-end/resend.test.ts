@@ -1,5 +1,5 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, until } from '@streamr/utils'
+import { createTestPrivateKey, fastPrivateKey } from '@streamr/test-utils'
+import { until, wait } from '@streamr/utils'
 import { randomBytes } from 'crypto'
 import random from 'lodash/random'
 import range from 'lodash/range'
@@ -20,7 +20,7 @@ describe('resend', () => {
     let payloads: (Uint8Array | { idx: number })[]
 
     beforeEach(async () => {
-        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
+        publisherClient = createTestClient(await createTestPrivateKey({ gas: true }), 43232)
         resendClient = createTestClient(fastPrivateKey(), 43233)
         const binaryPayloads = range(NUM_OF_MESSAGES / 2).map(() => randomBytes(random(0, 256)))
         const jsonPayloads = range(NUM_OF_MESSAGES / 2).map((idx) => ({ idx }))

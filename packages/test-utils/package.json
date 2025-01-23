@@ -1,6 +1,6 @@
 {
   "name": "@streamr/test-utils",
-  "version": "102.0.0-beta.0",
+  "version": "102.0.0-beta.3",
   "description": "A collection of shared test utilities",
   "repository": {
     "type": "git",
@@ -10,8 +10,10 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
-    "customMatchers.d.ts",
-    "setupCustomMatchers.js"
+    "dist/",
+    "!dist/tsconfig.node.tsbuildinfo",
+    "setupCustomMatchers.js",
+    "customMatcherTypes.d.ts"
   ],
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
@@ -23,8 +25,8 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@streamr/config": "^5.4.1",
-    "@streamr/utils": "102.0.0-beta.0",
+    "@streamr/config": "^5.4.2",
+    "@streamr/utils": "102.0.0-beta.3",
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
     "express": "^4.21.2",

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Contract, JsonRpcProvider, Wallet } from 'ethers'
 import { createDecoratedContract } from '../../src/contracts/contract'
@@ -29,7 +29,7 @@ describe('decorated contract', () => {
     })
 
     it('write', async () => {
-        const wallet = new Wallet(await fetchPrivateKeyWithGas(), getProvider())
+        const wallet = new Wallet(await createTestPrivateKey({ gas: true }), getProvider())
         const contract = createDecoratedContract<StreamRegistryContract>(
             new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryArtifact, wallet),
             'StreamRegisty',
