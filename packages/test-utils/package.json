@@ -10,8 +10,10 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
-    "customMatchers.d.ts",
-    "setupCustomMatchers.js"
+    "dist/",
+    "!dist/tsconfig.node.tsbuildinfo",
+    "setupCustomMatchers.js",
+    "customMatcherTypes.d.ts"
   ],
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
