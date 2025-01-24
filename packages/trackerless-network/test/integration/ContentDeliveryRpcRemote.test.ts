@@ -1,21 +1,20 @@
 import {
     ListeningRpcCommunicator,
-    Simulator,
+    NodeType,
     PeerDescriptor,
-    SimulatorTransport,
-    NodeType
+    Simulator,
+    SimulatorTransport
 } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
-import { waitForCondition } from '@streamr/utils'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -86,16 +85,16 @@ describe('ContentDeliveryRpcRemote', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            randomEthereumAddress()
+            randomUserId()
         )
 
         await rpcRemote.sendStreamMessage(msg)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
         rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
 })

@@ -1,5 +1,5 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 
 describe('StreamPartIDtoDataKey', () => {
 

@@ -10,5 +10,9 @@ For ease of use, small changes can be suggested by editing the markdown file on 
 ### Run it locally
 Simply, `npm ci` & `npm start`
 
-## Streamr core devs
-Deployments are automatically made after every commit to `main`, therefore editing markdown files directly on `main` will be reflected in production within a minute or two.
+### Create & serve production build locally
+Simply, `npm ci` & `npm run build` & `npm run serve`
+
+### Clean & clear build folder
+Simply, `npm run clear`
+

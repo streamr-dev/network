@@ -1,10 +1,10 @@
 import {
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+    StreamPartIDUtils,
+    until
+} from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -55,10 +55,10 @@ describe('NetworkStack', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomUserId()
         )
         stack2.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessages === 1)
+        await until(() => receivedMessages === 1)
     })
 
     it('join and wait for neighbors', async () => {

@@ -1,10 +1,10 @@
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
+import { ClosestPeersRequest, ClosestPeersResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { toNodeId } from '../../src/identifiers'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
@@ -18,8 +18,8 @@ describe('DhtRpc', () => {
     const neighbors = createMockPeers()
     const mockDhtRpc = createMockDhtRpc(neighbors)
 
-    const outgoingListener2 = (message: RpcMessage) => {
-        rpcCommunicator1.handleIncomingMessage(message)
+    const outgoingListener2 = async (message: RpcMessage) => {
+        rpcCommunicator1.handleIncomingMessage(message, new DhtCallContext())
     }
 
     beforeEach(() => {
@@ -29,11 +29,11 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
-            rpcCommunicator2.handleIncomingMessage(message)
+        rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
+            rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
 
-        rpcCommunicator2.on('outgoingMessage', outgoingListener2)
+        rpcCommunicator2.setOutgoingMessageListener(outgoingListener2)
 
         client1 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
         client2 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
@@ -53,7 +53,7 @@ describe('DhtRpc', () => {
             }
         )
         const res1 = await response1
-        expect(res1.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
+        expect(res1.peers.map((p) => toNodeId(p))).toEqual(neighbors.map((n) => toNodeId(n)))
 
         const response2 = client2.getClosestPeers(
             { nodeId: peerDescriptor2.nodeId, requestId: '1' },
@@ -63,12 +63,11 @@ describe('DhtRpc', () => {
             }
         )
         const res2 = await response2
-        expect(res2.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
+        expect(res2.peers.map((p) => toNodeId(p))).toEqual(neighbors.map((n) => toNodeId(n)))
     })
 
     it('Default RPC timeout, client side', async () => {
-        rpcCommunicator2.off('outgoingMessage', outgoingListener2)
-        rpcCommunicator2.on('outgoingMessage', async () => {
+        rpcCommunicator2.setOutgoingMessageListener(async () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(

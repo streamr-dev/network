@@ -1,12 +1,11 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { waitForCondition } from '@streamr/utils'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { Layer0Node } from '../../src/logic/Layer0Node'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('content delivery layer node with real connections', () => {
 
@@ -18,11 +17,11 @@ describe('content delivery layer node with real connections', () => {
     // Currently the nodes here are practically layer0 nodes acting as layer1 nodes, for the purpose of this test
     // they are layer1 nodes as the DHT is per stream
     // TODO refactor the test to use normal layering style (i.e. have separate objects for layer0 and layer1 nodes)
-    let epDhtNode: Layer0Node & Layer1Node
-    let dhtNode1: Layer0Node & Layer1Node
-    let dhtNode2: Layer0Node & Layer1Node
-    let dhtNode3: Layer0Node & Layer1Node
-    let dhtNode4: Layer0Node & Layer1Node
+    let epDhtNode: ControlLayerNode & DiscoveryLayerNode
+    let dhtNode1: ControlLayerNode & DiscoveryLayerNode
+    let dhtNode2: ControlLayerNode & DiscoveryLayerNode
+    let dhtNode3: ControlLayerNode & DiscoveryLayerNode
+    let dhtNode4: ControlLayerNode & DiscoveryLayerNode
     let contentDeliveryLayerNode1: ContentDeliveryLayerNode
     let contentDeliveryLayerNode2: ContentDeliveryLayerNode
     let contentDeliveryLayerNode3: ContentDeliveryLayerNode
@@ -45,7 +44,7 @@ describe('content delivery layer node with real connections', () => {
         contentDeliveryLayerNode1 = createContentDeliveryLayerNode(
             {
                 streamPartId,
-                layer1Node: epDhtNode,
+                discoveryLayerNode: epDhtNode,
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 localPeerDescriptor: epPeerDescriptor,
@@ -54,7 +53,7 @@ describe('content delivery layer node with real connections', () => {
         )
         contentDeliveryLayerNode2 = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: dhtNode1,
+            discoveryLayerNode: dhtNode1,
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
@@ -62,7 +61,7 @@ describe('content delivery layer node with real connections', () => {
         })
         contentDeliveryLayerNode3 = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: dhtNode2,
+            discoveryLayerNode: dhtNode2,
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
@@ -70,7 +69,7 @@ describe('content delivery layer node with real connections', () => {
         })
         contentDeliveryLayerNode4 = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: dhtNode3,
+            discoveryLayerNode: dhtNode3,
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
@@ -78,7 +77,7 @@ describe('content delivery layer node with real connections', () => {
         })
         contentDeliveryLayerNode5 = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: dhtNode4,
+            discoveryLayerNode: dhtNode4,
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
@@ -107,10 +106,15 @@ describe('content delivery layer node with real connections', () => {
             dhtNode2.stop(),
             dhtNode3.stop(),
             dhtNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode1.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode2.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode3.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode5.stop(),
             (epDhtNode.getTransport() as ConnectionManager).stop(),
             (dhtNode1.getTransport() as ConnectionManager).stop(),
@@ -121,7 +125,7 @@ describe('content delivery layer node with real connections', () => {
     })
 
     it('can fully connected topologies ', async () => {
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -142,7 +146,7 @@ describe('content delivery layer node with real connections', () => {
         contentDeliveryLayerNode4.on('message', () => receivedMessageCount += 1)
         contentDeliveryLayerNode5.on('message', () => receivedMessageCount += 1)
 
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -153,9 +157,9 @@ describe('content delivery layer node with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomUserId()
         )
         contentDeliveryLayerNode1.broadcast(msg)
-        await waitForCondition(() => receivedMessageCount >= 4)
+        await until(() => receivedMessageCount >= 4)
     })
 })

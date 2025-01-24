@@ -1,11 +1,11 @@
-import { Wallet } from '@ethersproject/wallet'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
+import { Wallet } from 'ethers'
 import { createTestClient, runCommand, waitForTheGraphToHaveIndexed } from './utils'
 
 describe('show stream', () => {
 
     it('happy path', async () => {
-        const creatorPrivateKey = await fetchPrivateKeyWithGas()
+        const creatorPrivateKey = await createTestPrivateKey({ gas: true })
         const client = createTestClient(creatorPrivateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         await waitForTheGraphToHaveIndexed(stream, client)

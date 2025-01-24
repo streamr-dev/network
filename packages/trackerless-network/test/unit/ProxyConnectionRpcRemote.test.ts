@@ -1,9 +1,9 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 import { hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRpcRemote } from '../../src/logic/proxy/ProxyConnectionRpcRemote'
-import { ProxyConnectionRequest, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ProxyConnectionRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ProxyConnectionRequest, ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyConnectionRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('ProxyConnectionRpcRemote', () => {
@@ -21,14 +21,14 @@ describe('ProxyConnectionRpcRemote', () => {
             ProxyConnectionRpcClient
         )
 
-        const userId = randomEthereumAddress()
+        const userId = randomUserId()
         await rpcRemote.requestConnection(ProxyDirection.PUBLISH, userId)
 
         const [rpcMessage, _, callContext] = onOutgoingMessage.mock.calls[0]
         const request = ProxyConnectionRequest.fromBinary(rpcMessage.body.value)
         expect(request).toEqual({
             direction: ProxyDirection.PUBLISH,
-            userId: Uint8Array.from(hexToBinary(userId))
+            userId: expect.toEqualBinary(hexToBinary(userId))
         })
         expect(callContext).toMatchObject({
             sourceDescriptor: clientPeerDescriptor,

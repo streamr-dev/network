@@ -1,9 +1,8 @@
-import { ListeningRpcCommunicator, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { utf8ToBinary } from '@streamr/utils'
+import { ListeningRpcCommunicator, randomDhtAddress, toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Inspector', () => {
     
@@ -12,7 +11,7 @@ describe('Inspector', () => {
 
     const inspectedDescriptor = createMockPeerDescriptor()
 
-    const nodeId = createRandomDhtAddress()
+    const nodeId = randomDhtAddress()
     let mockConnect: jest.Mock
 
     const messageRef = {
@@ -41,12 +40,12 @@ describe('Inspector', () => {
 
     it('Opens inspection connection and runs successfully', async () => {
         setTimeout(() => {
-            inspector.markMessage(getNodeIdFromPeerDescriptor(inspectedDescriptor), messageRef)
+            inspector.markMessage(toNodeId(inspectedDescriptor), messageRef)
             inspector.markMessage(nodeId, messageRef)
         }, 250)
         await inspector.inspect(inspectedDescriptor)
-        expect(inspector.isInspected(getNodeIdFromPeerDescriptor(inspectedDescriptor))).toBe(false)
-        expect(mockConnect).toBeCalledTimes(1)
+        expect(inspector.isInspected(toNodeId(inspectedDescriptor))).toBe(false)
+        expect(mockConnect).toHaveBeenCalledTimes(1)
     })
 
 })

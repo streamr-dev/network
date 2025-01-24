@@ -1,3 +1,4 @@
+---
 name: publish npm
 on:
   workflow_dispatch:
@@ -5,8 +6,9 @@ on:
       tag:
         type: choice
         required: true
-        default: latest
+        default: SELECT
         options:
+          - SELECT
           - latest
           - beta
           - alpha

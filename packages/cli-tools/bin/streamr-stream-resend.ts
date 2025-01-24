@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { createCommand } from '../src/command'
 
 createCommand()

@@ -31,7 +31,7 @@ describe('WebsocketServermemoryLeak', () => {
                 console.log('clientWebsocket connected ' + i)
             })
             
-            clientWebsocket.connect(`ws://127.0.0.1:${port}`)
+            clientWebsocket.connect(`ws://127.0.0.1:${port}`, false)
             i++
             await wait(3000)
         }

@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { toDhtAddress } from '../../src/identifiers'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
 
 const NODE_COUNT = 48
@@ -16,7 +16,7 @@ describe('Layer1', () => {
 
     beforeEach(async () => {
         simulator = new Simulator()
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(entryPoint0Descriptor.nodeId))
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(entryPoint0Descriptor.nodeId))
         await layer0EntryPoint.joinDht([entryPoint0Descriptor])
 
         nodes = []
@@ -63,9 +63,9 @@ describe('Layer1', () => {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
-            expect(layer1Node.getConnectionCount()).toEqual(layer0Node.getConnectionCount())
+            expect(layer1Node.getConnectionsView().getConnectionCount()).toEqual(layer0Node.getConnectionsView().getConnectionCount())
             expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
-            expect(layer1Node.getConnections()).toEqual(layer0Node.getConnections())
+            expect(layer1Node.getConnectionsView().getConnections()).toEqual(layer0Node.getConnectionsView().getConnections())
         }
     }, 120000)
 
@@ -119,10 +119,10 @@ describe('Layer1', () => {
             const stream3Node = stream3[i]
             const stream4Node = stream4[i]
 
-            expect(layer0Node.getConnectionCount()).toEqual(stream1Node.getConnectionCount())
-            expect(layer0Node.getConnectionCount()).toEqual(stream2Node.getConnectionCount())
-            expect(layer0Node.getConnectionCount()).toEqual(stream3Node.getConnectionCount())
-            expect(layer0Node.getConnectionCount()).toEqual(stream4Node.getConnectionCount())
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream1Node.getConnectionsView().getConnectionCount())
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream2Node.getConnectionsView().getConnectionCount())
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream3Node.getConnectionsView().getConnectionCount())
+            expect(layer0Node.getConnectionsView().getConnectionCount()).toEqual(stream4Node.getConnectionsView().getConnectionCount())
 
         }
     }, 120000)
@@ -178,7 +178,7 @@ describe('Layer1', () => {
     //         })
     //     })
     //
-    //     await waitForCondition(() => {
+    //     await until(() => {
     //         return [...receivedMessages.values()].every((set) => {
     //             return set.size === receivedMessages.size - 1
     //         })

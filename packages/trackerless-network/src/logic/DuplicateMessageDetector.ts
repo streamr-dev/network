@@ -54,7 +54,7 @@ export class InvalidNumberingError extends Error {
 export class GapMisMatchError extends Error {
     constructor(state: string, previousNumber: NumberPair, number: NumberPair) {
         super('pre-condition: gap overlap in given numbers:'
-            + ` previousNumber=${previousNumber}, number=${number}, state=${state}`)
+            + ` previousNumber=${previousNumber.toString()}, number=${number.toString()}, state=${state}`)
     }
 }
 
@@ -83,7 +83,7 @@ export class GapMisMatchError extends Error {
  */
 export class DuplicateMessageDetector {
     private readonly maxGapCount: number
-    private readonly gaps: Array<[NumberPair, NumberPair]>
+    private readonly gaps: [NumberPair, NumberPair][]
 
     constructor(maxGapCount = 10000) {
         this.maxGapCount = maxGapCount
@@ -94,7 +94,7 @@ export class DuplicateMessageDetector {
      * returns true if number has not yet been seen (i.e. is not a duplicate)
      */
     markAndCheck(previousNumber: NumberPair | null, number: NumberPair): boolean | never {
-        if (previousNumber && previousNumber.greaterThanOrEqual(number)) {
+        if (previousNumber?.greaterThanOrEqual(number)) {
             throw new InvalidNumberingError()
         }
 
@@ -162,6 +162,6 @@ export class DuplicateMessageDetector {
     }
 
     toString(): string {
-        return this.gaps.map(([lower, upper]) => `(${lower}, ${upper}]`).join(', ')
+        return this.gaps.map(([lower, upper]) => `(${lower.toString()}, ${upper.toString()}]`).join(', ')
     }
 }

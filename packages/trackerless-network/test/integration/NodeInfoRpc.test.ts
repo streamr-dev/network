@@ -1,10 +1,9 @@
-import { Simulator, SimulatorTransport, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor } from '../utils/utils'
 import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcLocal'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 // TODO add Jest utility so that the normalization is not needed (NET-1254)
 const normalizePeerDescriptor = (peerDescriptor: PeerDescriptor) => {
@@ -40,6 +39,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         requesteStack = new NetworkStack({
             layer0: {
                 transport: requesteeTransport1,
+                connectionsView: requesteeTransport1,
                 peerDescriptor: requesteePeerDescriptor,
                 entryPoints: [requesteePeerDescriptor]
             }
@@ -47,6 +47,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack = new NetworkStack({
             layer0: {
                 transport: otherTransport,
+                connectionsView: otherTransport,
                 peerDescriptor: otherPeerDescriptor,
                 entryPoints: [requesteePeerDescriptor]
             }
@@ -71,7 +72,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
         requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
-        await waitForCondition(() => 
+        await until(() => 
             requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 
             && otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1
             && requesteStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
@@ -88,15 +89,19 @@ describe('NetworkStack NodeInfoRpc', () => {
                 {
                     id: streamPartId1,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 },
                 {
                     id: streamPartId2,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 }
             ],
-            version: expect.any(String)
+            applicationVersion: expect.any(String)
         })
         expect(result.streamPartitions.length).toEqual(2)
     })

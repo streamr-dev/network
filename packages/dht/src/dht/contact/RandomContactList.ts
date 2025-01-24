@@ -8,10 +8,9 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
     constructor(
         localNodeId: DhtAddress,
         maxSize: number,
-        randomness = 0.20,
-        defaultContactQueryLimit?: number
+        randomness = 0.20
     ) {
-        super(localNodeId, maxSize, defaultContactQueryLimit)
+        super(localNodeId, maxSize)
         this.randomness = randomness
     }
 
@@ -48,7 +47,10 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
         return false
     }
 
-    public getContacts(limit = this.defaultContactQueryLimit): C[] {
-        return this.contactIds.slice(0, limit).map((contactId) => this.contactsById.get(contactId)!)
+    public getContacts(limit?: number): C[] {
+        const items = (limit === undefined)
+            ? this.contactIds
+            : this.contactIds.slice(0, Math.max(limit, 0))
+        return items.map((contactId) => this.contactsById.get(contactId)!)
     }
 }

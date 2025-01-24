@@ -66,10 +66,10 @@ export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> =
 
 export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
-    eventNames: Array<keyof T>,
+    eventNames: (keyof T)[],
     timeout: number | null = 5000
 ): Promise<RunAndRaceEventsReturnType<T>> {
-    const promises: Array<{ task: Promise<RunAndRaceEventsReturnType<T>>, cancel: () => void }> = []
+    const promises: { task: Promise<RunAndRaceEventsReturnType<T>>, cancel: () => void }[] = []
     eventNames.forEach((eventName) => {
         const item = once(emitter, eventName)
         const wrappedTask = item.task.then((value: any[]) => {
@@ -102,9 +102,9 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
 }
 
 export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
-    operations: Array<(() => void)>,
+    operations: (() => void)[],
     emitter: EventEmitter<T>,
-    eventNames: Array<keyof T>,
+    eventNames: (keyof T)[],
     timeout: number
 ): Promise<RunAndRaceEventsReturnType<T>> {
     const promise = raceEvents3(emitter, eventNames, timeout)
@@ -123,7 +123,7 @@ const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
     operations: (() => void)[],
     waitedEvents: [emitter: EventEmitter<T>, event: keyof T][],
     timeout: number,
-    promiseFn: (args: Array<Promise<unknown>>) => Promise<unknown[]>
+    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
     const promise = promiseFn(waitedEvents.map(([emitter, event]) => waitForEvent3(emitter, event, timeout)))
     operations.forEach((op) => { op() })

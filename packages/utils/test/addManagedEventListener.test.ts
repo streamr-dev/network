@@ -3,6 +3,7 @@ import { addManagedEventListener } from '../src/addManagedEventListener'
 
 interface Events {
     foo: (x: string, y: number) => void
+    bar: (x: number) => void
 }
 
 describe('addManagedEventListener', () => {
@@ -17,14 +18,14 @@ describe('addManagedEventListener', () => {
             listener,
             abortController.signal
         )
-        emitter.emit('foo', 'bar', 111)
-        emitter.emit('foo', 'bar', 222)
-        expect(listener).toBeCalledTimes(2)
-        expect(listener).toHaveBeenNthCalledWith(1, 'bar', 111)
-        expect(listener).toHaveBeenNthCalledWith(2, 'bar', 222)
+        emitter.emit('foo', 'abc', 111)
+        emitter.emit('foo', 'abc', 222)
+        expect(listener).toHaveBeenCalledTimes(2)
+        expect(listener).toHaveBeenNthCalledWith(1, 'abc', 111)
+        expect(listener).toHaveBeenNthCalledWith(2, 'abc', 222)
         abortController.abort()
-        emitter.emit('foo', 'bar', 333)
-        expect(listener).toBeCalledTimes(2)
+        emitter.emit('foo', 'abc', 333)
+        expect(listener).toHaveBeenCalledTimes(2)
     })
 
     it('already aborted', () => {
@@ -38,7 +39,7 @@ describe('addManagedEventListener', () => {
             listener,
             abortController.signal
         )
-        emitter.emit('foo', 'bar', 111)
-        expect(listener).not.toBeCalled()
+        emitter.emit('foo', 'abc', 111)
+        expect(listener).not.toHaveBeenCalled()
     })
 })

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 1
 ---
 
 # Streamr CLI tool
@@ -190,7 +190,7 @@ User can specify environment and authentication details with the following comma
 
 - `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
 - `--config <file>`, e.g. `--config foobar.json`
-- `--dev` use the pre-defined [development environment](https://github.com/streamr-dev/streamr-docker-dev)
+- `--env` use a pre-defined environment, e.g. `--env dev2` to use the [development environment](https://github.com/streamr-dev/streamr-docker-dev)
 
 The `--config` argument tries to read a configuration file from the current working directory (either without a file extension, or with `.json` extension added). It also tries to read it from `~/.streamr/config/${id}.json` dotfile.
 
@@ -251,5 +251,5 @@ development environment, you can combine the `subscribe` and `publish` commands 
 the real-time events.
 
 ```
-streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --dev <streamId> --private-key <key>
+streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish <streamId> --env dev2 --private-key <key>
 ```

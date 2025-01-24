@@ -1,4 +1,4 @@
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, toNodeId } from '@streamr/dht'
 import { sample } from 'lodash'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
@@ -8,9 +8,16 @@ export interface Events {
     nodeRemoved: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
 }
 
-const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, ContentDeliveryRpcRemote>, exclude: DhtAddress[]): ContentDeliveryRpcRemote[] => {
-    return Array.from(nodes.entries())
-        .filter(([id, _node]) => !exclude.includes(id))
+const getValuesOfIncludedKeys = (
+    nodes: Map<DhtAddress, ContentDeliveryRpcRemote>,
+    exclude: DhtAddress[],
+    wsOnly = false
+): ContentDeliveryRpcRemote[] => {
+    const values = wsOnly 
+        ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined)
+        : Array.from(nodes.entries())
+    return values
+        .filter(([id]) => !exclude.includes(id))
         .map(([_id, node]) => node)
 }
 
@@ -29,7 +36,7 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     add(remote: ContentDeliveryRpcRemote): void {
-        const nodeId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
+        const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
@@ -77,8 +84,8 @@ export class NodeList extends EventEmitter<Events> {
         return sample(getValuesOfIncludedKeys(this.nodes, exclude))
     }
 
-    getFirst(exclude: DhtAddress[]): ContentDeliveryRpcRemote | undefined {
-        const included = getValuesOfIncludedKeys(this.nodes, exclude)
+    getFirst(exclude: DhtAddress[], wsOnly = false): ContentDeliveryRpcRemote | undefined {
+        const included = getValuesOfIncludedKeys(this.nodes, exclude, wsOnly)
         return included[0]
     }
 
@@ -100,7 +107,8 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     stop(): void {
-        this.nodes.forEach((node) => this.remove(getNodeIdFromPeerDescriptor(node.getPeerDescriptor())))
+        this.nodes.forEach((node) => this.remove(toNodeId(node.getPeerDescriptor())))
         this.removeAllListeners()
     }
+
 }

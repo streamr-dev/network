@@ -1,0 +1,33 @@
+{
+    "extends": "../../tsconfig.browser.json",
+    "compilerOptions": {
+        "composite": true,
+        "noEmit": true,
+        "declarationDir": "dist/types",
+        "outDir": "dist",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true,
+        "baseUrl": ".",
+        "paths": {
+            "stream": ["readable-stream"],
+            "util": ["util"],
+            "buffer": ["buffer/"],
+            "@streamr/protocol/*": ["@streamr/protocol/src/*"],
+            "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
+            "@streamr/dht/src/connection/webrtc/NodeWebrtcConnection.ts": [
+                "@streamr/dht/src/connection/webrtc/BrowserWebrtcConnection.ts"]
+        }
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "src/**/*.json",
+        "src/config.schema.json"
+    ],
+    "exclude": ["src/exports-esm.mjs"],
+    "references": [
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../trackerless-network/tsconfig.browser.json" }
+    ]
+}

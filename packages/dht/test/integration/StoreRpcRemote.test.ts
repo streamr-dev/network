@@ -2,14 +2,14 @@ import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
     StoreDataRequest,
     StoreDataResponse
-} from '../../src/proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, mockStoreRpc } from '../utils/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
-import { createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
+import { randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 
 describe('StoreRpcRemote', () => {
 
@@ -22,7 +22,7 @@ describe('StoreRpcRemote', () => {
     const request: StoreDataRequest = {
         key: data.key,
         data: data.data,
-        creator: getRawFromDhtAddress(createRandomDhtAddress()),
+        creator: toDhtAddressRaw(randomDhtAddress()),
         ttl: 10
     }
 
@@ -30,11 +30,11 @@ describe('StoreRpcRemote', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeData)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            serverRpcCommunicator.handleIncomingMessage(message)
+        clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            clientRpcCommunicator.handleIncomingMessage(message)
+        serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            clientRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
         rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, StoreRpcClient)
     })
@@ -45,9 +45,9 @@ describe('StoreRpcRemote', () => {
 
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.throwStoreDataError)
-        await expect(rpcRemote.storeData(request)).rejects.toThrowError(
+        await expect(rpcRemote.storeData(request)).rejects.toThrow(
             'Could not store data to'
-            + ` ${getNodeIdFromPeerDescriptor(serverPeerDescriptor)} from ${getNodeIdFromPeerDescriptor(clientPeerDescriptor)}`
+            + ` ${toNodeId(serverPeerDescriptor)} from ${toNodeId(clientPeerDescriptor)}`
             + ' Error: Mock'
         )
     })

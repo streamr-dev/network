@@ -5,7 +5,8 @@ const airportsWithCoordinates = fs.readFileSync('./data-generation/intermediate-
 
 // parse the airportsWithCoordinates.csv file into an array of tuples
 const airportsWithCoordinatesLines = airportsWithCoordinates.split('\n')
-let airportsWithCoordinatesTuples = new Array<[code: string, x: string, y: string, number: number | undefined, continent: string, country: string]>()
+let airportsWithCoordinatesTuples = new Array<[code: string, x: string, y: string, 
+    number: number | undefined, continent: string, country: string]>()
 for (const line of airportsWithCoordinatesLines) {
     if (line.length < 3) {
         continue
@@ -56,7 +57,7 @@ for (const tuple of airportsWithCoordinatesTuples) {
 
 for (const country of countries) {
 
-    const clusters: Array<[beginIdex: number, endIndex: number]> = []
+    const clusters: [beginIdex: number, endIndex: number][] = []
     
     // find all the indice of beginnings and ends of the country in the sorted array
 
@@ -174,23 +175,26 @@ for (const tuple of airportsWithCoordinatesTuples) {
 
 // Create a Record<string, number> to map airport codes to their airportNmuber in the array
 
-const airportCodeToIndex: Record<string, number> = {}
+const airportCodeToIndex: Record<string, [regionNumber: number, latitude: string, longitude: string]> = {}
 for (const airportLine of airportsWithCoordinatesTuples) {
-    airportCodeToIndex[airportLine[0]] = airportLine[3]! 
+    airportCodeToIndex[airportLine[0]] = [airportLine[3]!, airportLine[1], airportLine[2]] 
 }
 
 // write the airportCodeToIndex to a generated typescript file 
-// at src/airportCodeToRegionNumber.ts and data-generation/final-data/airportCodeToRegionNumber.ts
+// at src/airportCodeToRegion.ts and data-generation/final-data/airportCodeToRegion.ts
 
-const airportCodeToIndexFile = fs.createWriteStream('./src/airportCodeToRegionNumber.ts')
-const airportCodeToIndexFile2 = fs.createWriteStream('./data-generation/final-data/airportCodeToRegionNumber.ts')
+const airportCodeToIndexFile = fs.createWriteStream('./src/airportCodeToRegion.ts')
+const airportCodeToIndexFile2 = fs.createWriteStream('./data-generation/final-data/airportCodeToRegion.ts')
 
-airportCodeToIndexFile.write('export const airportCodeToRegionNumber: Record<string, number> = {\n')
-airportCodeToIndexFile2.write('export const airportCodeToRegionNumber: Record<string, number> = {\n')
+// eslint-disable-next-line max-len
+const airportCodeToIndexFileHeader = 'export const airportCodeToRegion: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {\n'
+airportCodeToIndexFile.write(airportCodeToIndexFileHeader)
+airportCodeToIndexFile2.write(airportCodeToIndexFileHeader)
 
 for (const key in airportCodeToIndex) {
-    airportCodeToIndexFile.write(`    ${key}: ${airportCodeToIndex[key]},\n`)
-    airportCodeToIndexFile2.write(`    ${key}: ${airportCodeToIndex[key]},\n`)
+    const airportCodeToIndexLine = `    ${key}: [${airportCodeToIndex[key][0]}, ${airportCodeToIndex[key][1]}, ${airportCodeToIndex[key][2]}],\n` 
+    airportCodeToIndexFile.write(airportCodeToIndexLine)
+    airportCodeToIndexFile2.write(airportCodeToIndexLine)
 }
 
 airportCodeToIndexFile.write('}\n')

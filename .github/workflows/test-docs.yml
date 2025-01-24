@@ -1,10 +1,11 @@
+---
 name: Test Building Documentation
 
 on:
   pull_request:
-    branches: [ main, brubeck ]
+    branches: [main, brubeck]
 
-jobs:  
+jobs:
   deploy:
     name: Test building documentation
     runs-on: ubuntu-latest
@@ -21,3 +22,6 @@ jobs:
       - name: Build documentation
         working-directory: ./docs
         run: npm ci && npm run build
+      - name: API docs smoke test
+        working-directory: ./docs
+        run: ./api-docs-smoke-test.sh

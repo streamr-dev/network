@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/sdk/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -17,15 +17,14 @@ Monorepo containing the main components of Streamr Network.
 ## Packages
 
 ### User-Facing
-* [node](packages/broker/README.md) (@streamr/node)
-* [sdk](packages/client/README.md) (@streamr/sdk)
+* [node](packages/node/README.md) (@streamr/node)
+* [sdk](packages/sdk/README.md) (@streamr/sdk)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
 * [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
-* [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
 * [autocertifier-client](packages/autocertifier-client/README.md) (@streamr/autocertifier-client)
 * [dht](packages/dht/README.md) (@streamr/dht)
@@ -145,17 +144,17 @@ npm install
 
 ## Environment variables
 
-| Variable                     | Description                                                                            | Packages                                    |
-|------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
-| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
-| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
-| `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
-| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
-| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                       | _all_                                       |
-| `NOLOG`                      | Set to true to disable all logging                                                     | _all_                                       |
-| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                     | network-node                                |
-| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building client package for browser          | client (compile time)                       |
-| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/broker/configuration.md) used to configure broker | broker                                      |
+| Variable                     | Description                                                                        | Packages                                 |
+|------------------------------|------------------------------------------------------------------------------------|------------------------------------------|
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                        | utils, proto-rpc, dht, network-node, sdk |
+| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests          | sdk, node                                |
+| `LOG_LEVEL`                  | Adjust logging level                                                               | _all_                                    |
+| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead             | _all_                                    |
+| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                   | _all_                                    |
+| `NOLOG`                      | Set to true to disable all logging                                                 | _all_                                    |
+| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                 | network-node                             |
+| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building sdk package for browser         | sdk (compile time)                       |
+| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/node/configuration.md) used to configure node | node                                     |
 
 ## Release
 
@@ -191,20 +190,18 @@ To publish the Docker image, use [release-docker workflow](https://github.com/st
 Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
 the associated Git branch and tag.
 
-### Step 4: Update API docs
+### Step 4: Releasing the docs
 
-Are we still doing this?
+Firstly, ask yourself whether the docs need to be released or not.
 
-```bash
-cd packages/client
-npm run docs
-aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
-```
+To publish the docs, use [Production Documentation workflow](https://github.com/streamr-dev/network/actions/workflows/deploy-docs.yml).
+Click button "Run workflow". Select the right branch and you are good to go.
 
-### Step 5: (optional) Docker image tag `latest`
+### Manually adjusting Docker image tag `latest`
 
-GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
-always refer to the latest _stable_ version.
+GitHub actions will update the `latest` tag if told to do so in the workflow dispatch drop-down menu.
+If for whatever reason you want to manually change the `latest` tag, here are the instructions to do so.
+Keep in mind that `latest` should always refer to the latest _stable_ version.
 
 To update `latest` do the following.
 

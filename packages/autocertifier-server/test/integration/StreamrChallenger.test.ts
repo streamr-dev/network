@@ -8,11 +8,11 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    createRandomDhtAddress,
-    getRawFromDhtAddress
+    randomDhtAddress,
+    toDhtAddressRaw
 } from '@streamr/dht'
 import path from 'path'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { MetricsContext, until } from '@streamr/utils'
 
 describe('StreamrChallenger', () => {
 
@@ -22,7 +22,7 @@ describe('StreamrChallenger', () => {
     let mockTransport: SimulatorTransport
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -50,9 +50,10 @@ describe('StreamrChallenger', () => {
                 },
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 12323, max: 12323 },
-                createLocalPeerDescriptor: () => mockPeerDescriptor1
+                createLocalPeerDescriptor: async () => mockPeerDescriptor1
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowIncomingPrivateConnections: false
         })
         await challengedClientTransport.start()
         challengedClient = new ListeningRpcCommunicator(SERVICE_ID, challengedClientTransport)
@@ -67,7 +68,7 @@ describe('StreamrChallenger', () => {
 
     it('Happy path', async () => {
         await runStreamrChallenge('127.0.0.1', '12323', sessionId)
-        await waitForCondition(() => challengedClientTransport.getConnections().length === 0)
+        await until(() => challengedClientTransport.getConnections().length === 0)
     })
 
 })

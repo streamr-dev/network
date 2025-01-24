@@ -1,43 +1,46 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, wait, until, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
-import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    ContentType,
+    EncryptionType,
+    ProxyDirection,
+    SignatureType,
+    StreamMessage
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { DhtAddress } from '@streamr/dht'
 
-const PROXIED_NODE_USER_ID = randomEthereumAddress()
+const PROXIED_NODE_USER_ID = randomUserId()
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
-const MESSAGE = new StreamMessage({
-    messageId: new MessageID(
-        StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-        StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
-        666,
-        0,
-        randomEthereumAddress(),
-        'msgChainId'
-    ),
-    prevMsgRef: new MessageRef(665, 0),
-    content: utf8ToBinary(JSON.stringify({
-        hello: 'world'
-    })),
-    messageType: StreamMessageType.MESSAGE,
-    encryptionType: EncryptionType.NONE,
+const MESSAGE: StreamMessage = {
+    messageId: {
+        streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+        streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
+        timestamp: 666,
+        sequenceNumber: 0,
+        publisherId: toUserIdRaw(randomUserId()),
+        messageChainId: 'msgChainId'
+    },
+    previousMessageRef: {
+        timestamp: 665,
+        sequenceNumber: 0
+    },
+    body: {
+        oneofKind: 'contentMessage',
+        contentMessage: {
+            content: utf8ToBinary(JSON.stringify({
+                hello: 'world'
+            })),
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+        }
+    },
     signatureType: SignatureType.SECP256K1,
-    signature: hexToBinary('0x1234'),
-    contentType: ContentType.JSON
-})
+    signature: hexToBinary('0x1234')
+}
 
 describe('Proxy connections', () => {
 
@@ -76,7 +79,6 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode1.start()
-        proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxyNode2 = createNetworkNode({
             layer0: {
@@ -89,7 +91,6 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode2.start()
-        proxyNode2.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         proxyNode2.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxiedNode = createNetworkNode({
             layer0: {
@@ -128,7 +129,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false) 
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
 
     it('can leave proxy subscribe connection', async () => {
@@ -137,7 +138,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
 
     it('can open multiple proxy connections', async () => {
@@ -164,7 +165,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
+        await until(() => hasConnectionFromProxy(proxyNode2) === false)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     })
 
@@ -181,8 +182,8 @@ describe('Proxy connections', () => {
 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode2) === false)
     })
 
     it('will reconnect if proxy node goes offline and comes back online', async () => {
@@ -194,10 +195,10 @@ describe('Proxy connections', () => {
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         await proxyNode1.leave(STREAM_PART_ID)
-        await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
         proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
-        await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
         // TODO why wait is needed?
         await wait(100)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)

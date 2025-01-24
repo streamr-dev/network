@@ -1,8 +1,7 @@
 import { ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSignals'
 import range from 'lodash/range'
-import fetch from 'node-fetch'
 
-describe(composeAbortSignals, () => {
+describe('composeAbortSignals', () => {
     let controllers: AbortController[]
     let composedSignal: ComposedAbortSignal
 
@@ -101,17 +100,15 @@ describe(composeAbortSignals, () => {
         })
     })
 
-    it('throws error if composing empty list', () => {
-        expect(() => {
-            composeAbortSignals()
-        }).toThrow('must provide at least one AbortSignal')
+    it('gives a pending signal for an empty list of signals', () => {
+        expect(composeAbortSignals().aborted).toBeFalse()
     })
 
     it('works with "fetch"', async () => {
         const controller = new AbortController()
         const composedSignal = composeAbortSignals(controller.signal)
-        const response = fetch(`https://www.google.com`, { signal: composedSignal as any })
+        const response = fetch(`https://www.google.com`, { signal: composedSignal })
         controller.abort()
-        return expect(response).rejects.toThrow('The user aborted a request.')
+        return expect(response).rejects.toThrow(/aborted/)
     })
 })

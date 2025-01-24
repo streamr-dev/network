@@ -1,11 +1,10 @@
-import { PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { Any } from '../../generated/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { waitForCondition } from '@streamr/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -28,6 +27,7 @@ describe('Joining stream parts on offline nodes', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 transport: entryPointTransport,
+                connectionsView: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -36,6 +36,7 @@ describe('Joining stream parts on offline nodes', () => {
         node1 = new NetworkStack({
             layer0: {
                 transport: node1Transport,
+                connectionsView: node1Transport,
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -44,6 +45,7 @@ describe('Joining stream parts on offline nodes', () => {
         node2 = new NetworkStack({
             layer0: {
                 transport: node2Transport,
+                connectionsView: node2Transport,
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -67,14 +69,14 @@ describe('Joining stream parts on offline nodes', () => {
         let messageReceived = false
 
         // store offline peer descriptors to DHT
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomEthereumAddress())
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         node2.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => messageReceived, 40000)
+        await until(() => messageReceived, 40000)
     }, 60000)
 
 })

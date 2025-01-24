@@ -1,8 +1,8 @@
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import range from 'lodash/range'
 import { Message, Stream } from '@streamr/sdk'
-import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
+import range from 'lodash/range'
+import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
 
 const parseJSONs = (lines: string[]): any[] => {
     return lines.map((line) => JSON.parse(line))
@@ -15,10 +15,10 @@ describe('resend stream', () => {
     const messages: Message[] = []
 
     beforeAll(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
+        privateKey = await createTestPrivateKey({ gas: true })
         const client = createTestClient(privateKey)
         stream = await client.createStream(`/${Date.now()}`)
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { wait: true })
         for (const msgId of range(10)) {
             await wait(10) // to prevent duplicate timestamps (to make test assertions simpler)
             const msg = await stream.publish({ msgId })

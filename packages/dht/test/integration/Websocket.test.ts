@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
 import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
@@ -58,7 +56,7 @@ describe('Websocket', () => {
             })
         })
 
-        clientWebsocket.connect('ws://127.0.0.1:9977')
+        clientWebsocket.connect('ws://127.0.0.1:9977', false)
     })
 
     afterAll(async () => {

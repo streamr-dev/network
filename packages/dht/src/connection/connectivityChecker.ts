@@ -4,26 +4,26 @@ import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
     Message, PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
-import { isMaybeSupportedVersion } from '../helpers/version'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
+import { isMaybeSupportedProtocolVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
-// TODO use config option or named constant?
-export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
-    { url: string, selfSigned: boolean, timeoutMs?: number }
+// TODO use options option or named constant?
+export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs = 1000 }:
+    { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
     const socket = new WebsocketClientConnection()
     let result: RunAndRaceEventsReturnType<ConnectionEvents>
     try {
         result = await runAndRaceEvents3<ConnectionEvents>([
-            () => { socket.connect(url, selfSigned) }],
+            () => { socket.connect(url, allowSelfSignedCertificate) }],
         socket, ['connected', 'error'],
         timeoutMs)
-    } catch (e) {
+    } catch {
         throw new Err.ConnectionFailed('WebSocket connection timed out')
     }
     if (result.winnerName === 'error') {
@@ -50,7 +50,7 @@ export const sendConnectivityRequest = async (
     try {
         outgoingConnection = await connectAsync({
             url,
-            selfSigned: request.selfSigned
+            allowSelfSignedCertificate: request.allowSelfSignedCertificate
         })
     } catch (e) {
         throw new Err.ConnectionFailed(`Failed to connect to entrypoint for connectivity check: ${url}`, e)
@@ -79,13 +79,14 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
-                        const remoteVersion = connectivityResponseMessage.version
+                        const remoteProtocolVersion = connectivityResponseMessage.protocolVersion
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        if (isMaybeSupportedVersion(remoteVersion)) {
+                        if (isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
-                            reject(`Unsupported version: ${remoteVersion}`)
+                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+                            reject(`Unsupported version: ${remoteProtocolVersion}`)
                         }
                     }
                 } catch (err) {

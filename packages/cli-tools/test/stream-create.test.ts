@@ -1,11 +1,11 @@
-import { Wallet } from '@ethersproject/wallet'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
+import { Wallet } from 'ethers'
 import { createTestClient, runCommand } from './utils'
 
 describe('create stream', () => {
 
     it('happy path', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const address = new Wallet(privateKey).address.toLowerCase()
         const path = `/${Date.now()}`
         const streamId = `${address}${path}`
@@ -19,7 +19,7 @@ describe('create stream', () => {
         })
         const client = createTestClient()
         const stream = await client.getStream(streamId)
-        expect(stream.getMetadata().partitions).toBe(1)
+        expect(await stream.getPartitionCount()).toBe(1)
         await client.destroy()
     }, 20 * 1000)
 

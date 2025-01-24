@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "100.2.3",
+  "version": "102.0.0-beta.3",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",
@@ -14,8 +14,8 @@
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
-    "generate-protoc-code": "./proto.sh",
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "prebuild": "./proto.sh",
+    "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -30,26 +30,21 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "100.2.3",
-    "@streamr/proto-rpc": "100.2.3",
-    "@streamr/protocol": "100.2.3",
-    "@streamr/test-utils": "100.2.3",
-    "@streamr/utils": "100.2.3",
+    "@streamr/dht": "102.0.0-beta.3",
+    "@streamr/proto-rpc": "102.0.0-beta.3",
+    "@streamr/utils": "102.0.0-beta.3",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "uuid": "^9.0.1",
-    "yallist": "^4.0.0"
+    "ts-essentials": "^10.0.4",
+    "uuid": "^11.0.5",
+    "yallist": "^5.0.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.202",
-    "@types/uuid": "^9.0.8",
+    "@streamr/test-utils": "102.0.0-beta.3",
+    "@types/lodash": "^4.17.14",
     "@types/yallist": "^4.0.1",
-    "commander": "^12.0.0",
     "expect": "^29.6.2",
-    "express": "^4.19.2",
-    "ts-essentials": "^9.4.1",
-    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2"
   }
 }

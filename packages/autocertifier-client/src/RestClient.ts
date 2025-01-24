@@ -1,11 +1,10 @@
 import { Session } from './data/Session'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
-import request from 'request'
+import request, { Response } from 'request'
 import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
 import { ServerError } from './errors'
 import { Logger } from '@streamr/utils'
-import { Response } from 'request'
 
 const logger = new Logger(module)
 
@@ -70,6 +69,7 @@ export class RestClient {
         return new Promise((resolve, reject) => {
             request.post(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
                 if (error) {
+                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
                     resolve(body)
@@ -85,6 +85,7 @@ export class RestClient {
         return new Promise((resolve, reject) => {
             request.put(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
                 if (error) {
+                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
                     resolve(body)
@@ -100,6 +101,7 @@ export class RestClient {
         return new Promise((resolve, reject) => {
             request.patch(url, { json: body, rejectUnauthorized: false, timeout }, (error: any, response: Response, body: any) => {
                 if (error) {
+                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
                     resolve(body)

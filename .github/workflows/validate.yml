@@ -1,3 +1,4 @@
+---
 name: validate
 
 on:
@@ -40,6 +41,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: utils
+      browser: true
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
@@ -48,16 +50,17 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cdn-location
-  protocol:
+  geoip-location:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: protocol
+      package: geoip-location
   proto-rpc:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: proto-rpc
+      browser: true
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
@@ -71,6 +74,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: dht
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
@@ -88,6 +92,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: trackerless-network
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
@@ -96,56 +101,57 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: autocertifier-server
-  client:
+  sdk:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
       command: |
         npm run test-unit
         npm run test-integration
-        npm run docs
-  client-e2e:
+  sdk-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
-      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
+      package: sdk
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: npm run test-end-to-end
-  broker:
+  node:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: broker
+      package: node
       command: npm run test-unit
-  broker-e2e:
+  node-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: broker
+      package: node
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       command: npm run test-integration
-  client-browser:
+  sdk-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
+      browser: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-unit
         xvfb-run --auto-servernum npm run test-browser-integration
-  client-browser-e2e:
+  sdk-browser-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
+      browser: true
       extra-log-prefix: '-browser'
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-end-to-end
@@ -157,12 +163,12 @@ jobs:
       package: cli-tools
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: npm run test
-  broker-docker-image:
+  node-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
+      docker_file: Dockerfile.node
       image_name: streamr/node
       test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
       build_platforms: linux/amd64

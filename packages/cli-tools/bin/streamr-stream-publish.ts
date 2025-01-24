@@ -1,43 +1,52 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { Writable } from 'stream'
 import { StreamrClient } from '@streamr/sdk'
-import { wait } from '@streamr/utils'
+import { hexToBinary, wait } from '@streamr/utils'
 import es from 'event-stream'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
 
 interface Options extends BaseOptions {
-    partitionKeyField?: string,
-    partition?: string
+    partitionKeyField?: string
+    partition?: number
+}
+
+const isHexadecimal = (str: string): boolean => {
+    return /^[0-9a-fA-F]+$/.test(str)
 }
 
 const publishStream = (
     stream: string,
     partitionKeyField: string | undefined,
-    partition: string | undefined,
-    client: StreamrClient,
+    partition: number | undefined,
+    client: StreamrClient
 ): Writable => {
-    const parser = createFnParseInt('partition')
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
-            let json = null
+            let message = null
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
                 done()
                 return
             }
-            try {
-                json = JSON.parse(data)
-            } catch (e) {
-                console.error(data.toString())
-                done(e)
-                return
+            const trimmedData = String(data).trim()
+            if (isHexadecimal(trimmedData)) {
+                message = hexToBinary(trimmedData)
+            } else {
+                try {
+                    message = JSON.parse(trimmedData)
+                } catch (e) {
+                    console.error(data.toString())
+                    done(e)
+                    return
+                }
             }
-            const partitionKey = (partitionKeyField !== undefined) ? json[partitionKeyField] : undefined
-            const streamOptions = (partition !== undefined) ? {id: stream, partition: parser(partition)} : stream
-            client.publish(streamOptions, json, { partitionKey }).then(
+            const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
+            const streamOptions = (partition !== undefined) ? { id: stream, partition: partition } : stream
+            client.publish(streamOptions, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -67,11 +76,13 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
                 await wait(2000)
                 resolve(undefined)
             })
-            .once('error', (err: any) => reject(err) )
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+            .once('error', (err: any) => reject(err))
     })
 })
     .arguments('<streamId>')
-    .description('publish to a stream by reading JSON messages from stdin line-by-line')
-    .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition')
-    .option('-p, --partition [partition]', 'partition')
+    .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
+    // eslint-disable-next-line max-len
+    .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
+    .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'))
     .parseAsync()

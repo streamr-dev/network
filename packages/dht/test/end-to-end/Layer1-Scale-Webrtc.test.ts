@@ -16,11 +16,19 @@ describe('Layer1 Scale', () => {
     let epLayer1Node: DhtNode
 
     beforeEach(async () => {
-        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
+        epLayer0Node = new DhtNode({
+            peerDescriptor: epPeerDescriptor,
+            websocketServerEnableTls: false
+        })
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ transport: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
+        epLayer1Node = new DhtNode({
+            transport: epLayer0Node,
+            connectionsView: epLayer0Node.getConnectionsView(),
+            peerDescriptor: epPeerDescriptor,
+            serviceId: STREAM_ID
+        })
         await epLayer1Node.start()
         await epLayer1Node.joinDht([epPeerDescriptor])
 
@@ -36,6 +44,7 @@ describe('Layer1 Scale', () => {
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
                 transport: node,
+                connectionsView: node.getConnectionsView(),
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getLocalPeerDescriptor(),
                 serviceId: STREAM_ID,

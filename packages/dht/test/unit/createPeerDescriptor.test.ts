@@ -1,8 +1,8 @@
 import { ipv4ToNumber } from '@streamr/utils'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { isBrowserEnvironment } from '../../src/helpers/browser/isBrowserEnvironment'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
+import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 
 const IP_ADDRESS = '1.2.3.4'
@@ -52,13 +52,13 @@ describe('createPeerDescriptor', () => {
     })
 
     it('explicit nodeId', () => {
-        const nodeId = createRandomDhtAddress()
+        const nodeId = randomDhtAddress()
         const connectivityResponse = {
             ipAddress: ipv4ToNumber(IP_ADDRESS)
         } as any
         const peerDescriptor = createPeerDescriptor(connectivityResponse, region, nodeId)
         expect(peerDescriptor).toEqual({
-            nodeId: getRawFromDhtAddress(nodeId),
+            nodeId: toDhtAddressRaw(nodeId),
             type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
             ipAddress: ipv4ToNumber(IP_ADDRESS),
             publicKey: expect.any(Uint8Array),

@@ -1,6 +1,14 @@
-import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
+import {
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    PingRequest,
+    PingResponse,
+    RouteMessageAck,
+    RouteMessageWrapper,
+    NodeType,
+    PeerDescriptor
+} from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeType, PeerDescriptor } from './proto/TestProtos'
 import { IDhtRpcService } from './proto/TestProtos.server'
 
 interface IDhtRpcWithError extends IDhtRpcService {

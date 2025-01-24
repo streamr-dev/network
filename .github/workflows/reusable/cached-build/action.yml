@@ -1,3 +1,4 @@
+---
 name: "cached build"
 description: "build monorepo and cache result, or restore from cache if present"
 
@@ -25,10 +26,11 @@ runs:
         key: cache-build-${{ github.sha }}
         path: |
           packages/*/dist
-          packages/client/vendor
-          packages/proto-rpc/src/proto
-          packages/dht/src/proto
-          packages/trackerless-network/src/proto
+          packages/sdk/src/generated
+          packages/autocertifier-client/generated
+          packages/proto-rpc/generated
+          packages/dht/generated
+          packages/trackerless-network/generated
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run:

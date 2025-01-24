@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { RpcCommunicator, ProtoCallContext, toProtoRpcClient, RpcError } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/ErrorRpc'
 import { IErrorRpcService } from './proto/ErrorRpc.server'
