@@ -6,7 +6,7 @@ import { createClientCommand } from '../src/command'
 
 createClientCommand(async (client: StreamrClient, storageNodeAddress: string) => {
     const metadata = await client.getStorageNodeMetadata(storageNodeAddress)
-    console.log(JSON.stringify(metadata, null, 2))
+    console.info(JSON.stringify(metadata, null, 2))
 })
     .arguments('<storageNodeAddress>')
     .description('show information about a storage node')
