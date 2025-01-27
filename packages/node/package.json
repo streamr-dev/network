@@ -65,7 +65,7 @@
     "@types/qs": "^6.9.18",
     "@types/stream-to-array": "^2.3.3",
     "@types/supertest": "^6.0.2",
-    "@types/ws": "^8.5.13",
+    "@types/ws": "^8.5.14",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
     "supertest": "^7.0.0"
