@@ -12,6 +12,51 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/node
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/cli-tools
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+
+## [102.0.0] - 2025-01-27
+
+### @streamr/sdk
+
+#### Added
+
 - Add support for arbitrary length user IDs: (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
   - new `StreamrClient#getUserId()` method
@@ -53,8 +98,6 @@ Changes before Tatum release are not documented in this file.
   - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
-#### Deprecated
-
 #### Removed
 
 - **BREAKING CHANGE:** Remove `Stream#detectFields()` method (https://github.com/streamr-dev/network/pull/2864)
@@ -77,8 +120,6 @@ Changes before Tatum release are not documented in this file.
   - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
   - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
-#### Security
-
 ### @streamr/node
 
 #### Added
@@ -89,8 +130,6 @@ Changes before Tatum release are not documented in this file.
 
 - The `environment` config option now applies additional settings if `dev2` value is used (https://github.com/streamr-dev/network/pull/2813)
   - e.g. disables `entryPointDiscovery` and `metrics`
-
-#### Deprecated
 
 #### Removed
 
@@ -103,8 +142,6 @@ Changes before Tatum release are not documented in this file.
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 - Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
-
-#### Security
 
 ### @streamr/cli-tools
 
@@ -120,14 +157,6 @@ Changes before Tatum release are not documented in this file.
   - the `--env` flag supports multiple environments
   - if there is a value for `environment` in a config file, this overrides it
   - use `--env dev2` for the development environment
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 
 ## [101.1.2] - 2024-09-04
@@ -335,7 +364,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.0.0...HEAD
+[102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
 [101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
 [101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
