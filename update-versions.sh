@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq command not found. Please install jq to run this script."
+    exit 1
+fi
+
 VERSION=$1
 FILE_NAME=package.json
 
