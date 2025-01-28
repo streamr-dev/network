@@ -144,10 +144,6 @@ export const toReadableStream = (...args: unknown[]): Readable => {
     return rs
 }
 
-export function fastPrivateKey(): string {
-    return binaryToHex(crypto.randomBytes(32), true)
-}
-
 export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
@@ -271,6 +267,10 @@ const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: stri
 
 const getTestAdminWallet = (provider: Provider): Wallet => {
     return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
+}
+
+const fastPrivateKey = (): string => {
+    return binaryToHex(crypto.randomBytes(32), true)
 }
 
 export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
