@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -17,8 +18,8 @@ import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } 
  */
 describe('resend with existing key', () => {
 
-    const subscriberWallet = fastWallet()
-    const publisherWallet = fastWallet()
+    let subscriberWallet: Wallet
+    let publisherWallet: Wallet
     let subscriber: StreamrClient
     let stream: Stream
     let initialKey: GroupKey
@@ -71,6 +72,11 @@ describe('resend with existing key', () => {
             code: 'DECRYPT_ERROR'
         })
     }
+
+    beforeAll(async () => {
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet()
+    })
 
     beforeEach(async () => {
         const streamId = toStreamID(createRelativeTestStreamId(module), toEthereumAddress(publisherWallet.address))

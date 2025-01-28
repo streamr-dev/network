@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { createTestWallet, fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { hexToBinary, toStreamID, toStreamPartID, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
@@ -12,7 +12,6 @@ import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
 
-const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
 interface MessageOptions {
@@ -21,29 +20,35 @@ interface MessageOptions {
     signature?: Uint8Array
 }
 
-const validate = async (messageOptions: MessageOptions) => {
-    let msg = await createMockMessage({
-        streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
-        publisher: messageOptions.publisher ?? publisherWallet,
-    })
-    if (messageOptions.signature !== undefined) {
-        msg = new StreamMessage({
-            ...msg,
-            signature: messageOptions.signature
-        })
-    }
-    const streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'isStreamPublisher'> = {
-        getStreamMetadata: async (): Promise<StreamMetadata> => ({
-            partitions: PARTITION_COUNT
-        }),
-        isStreamPublisher: async (_streamIdOrPath: string, userId: UserID) => {
-            return userId === publisherWallet.address.toLowerCase()
-        }
-    }
-    await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
-}
-
 describe('Validator', () => {
+
+    let publisherWallet: Wallet
+
+    const validate = async (messageOptions: MessageOptions) => {
+        let msg = await createMockMessage({
+            streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
+            publisher: messageOptions.publisher ?? publisherWallet,
+        })
+        if (messageOptions.signature !== undefined) {
+            msg = new StreamMessage({
+                ...msg,
+                signature: messageOptions.signature
+            })
+        }
+        const streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'isStreamPublisher'> = {
+            getStreamMetadata: async (): Promise<StreamMetadata> => ({
+                partitions: PARTITION_COUNT
+            }),
+            isStreamPublisher: async (_streamIdOrPath: string, userId: UserID) => {
+                return userId === publisherWallet.address.toLowerCase()
+            }
+        }
+        await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
+    }
+
+    beforeAll(async () => {
+        publisherWallet = await createTestWallet()
+    })
 
     describe('StreamMessage', () => {
 

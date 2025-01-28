@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -18,8 +19,8 @@ import { nextValue } from './../../src/utils/iterators'
  */
 describe('resend and subscribe', () => {
 
-    const subscriberWallet = fastWallet()
-    const publisherWallet = fastWallet()
+    let subscriberWallet: Wallet
+    let publisherWallet: Wallet
     let subscriber: StreamrClient
     let stream: Stream
     let storageNode: FakeStorageNode
@@ -27,6 +28,8 @@ describe('resend and subscribe', () => {
 
     beforeAll(async () => {
         environment = new FakeEnvironment()
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet()
         subscriber = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
