@@ -1,6 +1,6 @@
 import { StreamID } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
-import { until, wait } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import 'jest-extended'
 import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
 
