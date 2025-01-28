@@ -40,6 +40,10 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
+
 #### Changed
 
 #### Deprecated
