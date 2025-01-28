@@ -148,10 +148,6 @@ export function fastPrivateKey(): string {
     return binaryToHex(crypto.randomBytes(32), true)
 }
 
-export function fastWallet(): Wallet {
-    return new Wallet(fastPrivateKey())
-}
-
 export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
@@ -279,7 +275,7 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
 
 export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
-    const newWallet = fastWallet()
+    const newWallet = new Wallet(fastPrivateKey())
     if (opts?.gas || opts?.tokens) {
         const adminWallet = getTestAdminWallet(provider)
         const token = getTestTokenContract(adminWallet)
