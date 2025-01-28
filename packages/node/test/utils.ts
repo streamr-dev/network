@@ -57,7 +57,7 @@ export const formConfig = ({
             }
         },
         httpServer: {
-            port: httpPort ? httpPort : 7171
+            port: httpPort ?? 7171
         },
         apiAuthentication,
         plugins

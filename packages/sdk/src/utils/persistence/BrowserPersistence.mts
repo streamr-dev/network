@@ -1,5 +1,4 @@
 import { openDB, IDBPDatabase } from 'idb'
-// eslint-disable-next-line import/no-unresolved
 import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext.js'
 
 /**

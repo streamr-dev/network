@@ -119,7 +119,8 @@ export const createMockConnectionLayer1Node = async (
         peerDescriptor: descriptor,
         transport: layer0Node,
         connectionsView: layer0Node.getConnectionsView(),
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket,
+        serviceId: serviceId ?? 'layer1',
+        numberOfNodesPerKBucket,
         rpcRequestTimeout: 10000
     })
     await node.start()
