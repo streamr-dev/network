@@ -1,4 +1,4 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry, binaryToHex } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
@@ -145,7 +145,7 @@ export const toReadableStream = (...args: unknown[]): Readable => {
 }
 
 export function fastPrivateKey(): string {
-    return crypto.randomBytes(32).toString('hex')
+    return binaryToHex(crypto.randomBytes(32), true)
 }
 
 export function fastWallet(): Wallet {

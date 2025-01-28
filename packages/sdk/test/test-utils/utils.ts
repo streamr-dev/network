@@ -178,7 +178,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomAuthentication = (): Authentication => {
-    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`)
+    return createPrivateKeyAuthentication(fastPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {
