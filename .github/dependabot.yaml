@@ -17,8 +17,11 @@ updates:
       include: scope
     labels:
       - ci
-    assignees:
+    reviewers:
       - DaisyDomergue
+      - harbu
+      - teogeb
+      - juslesan
   - package-ecosystem: npm
     directory: /
     open-pull-requests-limit: 20
@@ -31,6 +34,8 @@ updates:
           - "*"
     reviewers:
       - harbu
+      - teogeb
+      - juslesan
   - package-ecosystem: docker
     directory: /
     open-pull-requests-limit: 5
