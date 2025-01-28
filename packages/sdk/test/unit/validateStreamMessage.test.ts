@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet, fastWallet } from '@streamr/test-utils'
 import { hexToBinary, toStreamID, toStreamPartID, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
@@ -64,7 +64,7 @@ describe('Validator', () => {
         })
 
         it('invalid publisher', async () => {
-            const otherWallet = fastWallet()
+            const otherWallet = await createTestWallet()
             await expect(() => validate({
                 publisher: otherWallet
             })).rejects.toThrow('is not a publisher on stream streamId')

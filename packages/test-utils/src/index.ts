@@ -307,6 +307,10 @@ export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean 
 }
 
 export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<string> => {
-    const wallet = await createTestWallet(opts)
-    return wallet.privateKey
+    if (opts?.gas || opts?.tokens) {
+        const wallet = await createTestWallet(opts)
+        return wallet.privateKey
+    } else {
+        return fastPrivateKey()
+    }
 }
