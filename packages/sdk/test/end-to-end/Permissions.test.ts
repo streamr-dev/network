@@ -1,4 +1,4 @@
-import { createTestWallet, fastWallet, randomUserId } from '@streamr/test-utils'
+import { createTestWallet, randomUserId } from '@streamr/test-utils'
 import { toUserId } from '@streamr/utils'
 import { randomBytes } from 'crypto'
 import { Wallet } from 'ethers'
@@ -17,7 +17,7 @@ describe('Stream permissions', () => {
 
     beforeAll(async () => {
         const wallet = await createTestWallet({ gas: true })
-        otherUser = fastWallet()
+        otherUser = await createTestWallet()
         client = new StreamrClient({
             environment: 'dev2',
             auth: {

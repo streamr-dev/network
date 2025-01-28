@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -21,8 +21,8 @@ describe('Subscriber', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        subscriberWallet = fastWallet()
-        publisherWallet = fastWallet()
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet()
         environment = new FakeEnvironment()
         subscriber = environment.createClient({
             auth: {

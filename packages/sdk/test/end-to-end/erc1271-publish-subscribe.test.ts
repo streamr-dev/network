@@ -1,4 +1,4 @@
-import { createTestPrivateKey, createTestWallet, fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { MessageMetadata } from '../../src'
@@ -16,7 +16,7 @@ describe('ERC-1271: publish', () => {
     let erc1271ContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
+        subscriberWallet = await createTestWallet()
         publisherWallet = await createTestWallet({ gas: true })
         erc1271ContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])
     }, TIMEOUT)
@@ -82,7 +82,7 @@ describe('ERC-1271: subscribe', () => {
     let erc1271ContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
+        subscriberWallet = await createTestWallet()
         publisherWallet = await createTestWallet({ gas: true })
         erc1271ContractAddress = await deployTestERC1271Contract([toEthereumAddress(subscriberWallet.address)])
     }, TIMEOUT)
@@ -143,7 +143,7 @@ describe('ERC-1271: publish and subscribe', () => {
     let erc1271PublisherContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
+        subscriberWallet = await createTestWallet()
         publisherWallet = await createTestWallet({ gas: true })
         erc1271SubscriberContractAddress = await deployTestERC1271Contract([toEthereumAddress(subscriberWallet.address)])
         erc1271PublisherContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])

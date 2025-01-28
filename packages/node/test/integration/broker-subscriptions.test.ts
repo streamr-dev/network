@@ -1,5 +1,5 @@
 import { Stream, StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
-import { createTestPrivateKey, fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { until, wait } from '@streamr/utils'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { Wallet } from 'ethers'
@@ -41,8 +41,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
-        const broker1User = fastWallet()
-        const broker2User = fastWallet()
+        const broker1User = await createTestWallet()
+        const broker2User = await createTestWallet()
         broker1 = await startBroker({
             privateKey: broker1User.privateKey,
             extraPlugins: {

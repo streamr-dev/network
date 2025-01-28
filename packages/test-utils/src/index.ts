@@ -280,27 +280,29 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
 export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
     const newWallet = fastWallet()
-    const adminWallet = getTestAdminWallet(provider)
-    const token = getTestTokenContract(adminWallet)
-    await retry(
-        async () => {
-            if (opts?.gas) {
-                await (await adminWallet.sendTransaction({
-                    to: newWallet.address,
-                    value: parseEther('1')
-                })).wait()
-            }
-            if (opts?.tokens) {
-                await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
-            }
-        },
-        (message: string, err: any) => {
-            logger.debug(message, { err })
-        },
-        'Token minting',
-        10,
-        100
-    )
+    if (opts?.gas || opts?.tokens) {
+        const adminWallet = getTestAdminWallet(provider)
+        const token = getTestTokenContract(adminWallet)
+        await retry(
+            async () => {
+                if (opts?.gas) {
+                    await (await adminWallet.sendTransaction({
+                        to: newWallet.address,
+                        value: parseEther('1')
+                    })).wait()
+                }
+                if (opts?.tokens) {
+                    await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+                }
+            },
+            (message: string, err: any) => {
+                logger.debug(message, { err })
+            },
+            'Token minting',
+            10,
+            100
+        )
+    }
     return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
 }
 

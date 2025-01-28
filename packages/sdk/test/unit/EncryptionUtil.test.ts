@@ -1,11 +1,11 @@
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toStreamID, toStreamPartID, utf8ToBinary } from '@streamr/utils'
 import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamrClientError } from '../../src/StreamrClientError'
 import { createMockMessage } from '../test-utils/utils'
 import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -39,7 +39,7 @@ describe('EncryptionUtil', () => {
         const nextKey = GroupKey.generate()
         const streamMessage = await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
-            publisher: fastWallet(),
+            publisher: await createTestWallet(),
             content: {
                 foo: 'bar'
             },
@@ -54,7 +54,7 @@ describe('EncryptionUtil', () => {
     it('StreamMessage decryption throws if newGroupKey invalid', async () => {
         const key = GroupKey.generate()
         const msg = await createMockMessage({
-            publisher: fastWallet(),
+            publisher: await createTestWallet(),
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key
         })

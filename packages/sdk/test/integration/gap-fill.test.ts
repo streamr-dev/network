@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
+import { createTestWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
@@ -31,7 +31,7 @@ describe('gap fill', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = fastWallet()
+        publisherWallet = await createTestWallet()
         environment = new FakeEnvironment()
         const publisher = environment.createClient({
             auth: {
