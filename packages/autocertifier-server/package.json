@@ -42,8 +42,6 @@
   },
   "devDependencies": {
     "@types/dns2": "^2.0.9",
-    "@types/express": "^4.17.21",
-    "@types/request": "^2.48.8",
-    "request": "^2.88.2"
+    "@types/express": "^4.17.21"
   }
 }
