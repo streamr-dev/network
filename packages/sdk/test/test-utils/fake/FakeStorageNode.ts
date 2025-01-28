@@ -1,4 +1,4 @@
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import {
     EthereumAddress, Multimap,
     StreamID,
@@ -67,12 +67,11 @@ export class FakeStorageNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private server?: Server
-    private readonly wallet: Wallet
+    private wallet?: Wallet
     private readonly node: NetworkNodeFacade
     private readonly chain: FakeChain
 
     constructor(environment: FakeEnvironment) {
-        this.wallet = fastWallet()
         this.node = environment.createNode()
         this.chain = environment.getChain()
         this.chain.on('streamAddedToStorageNode', (event) => {
@@ -86,10 +85,11 @@ export class FakeStorageNode {
     }
 
     getAddress(): EthereumAddress {
-        return toEthereumAddress(this.wallet.address)
+        return toEthereumAddress(this.wallet!.address)
     }
 
     async start(): Promise<void> {
+        this.wallet = await createTestWallet()
         this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
             switch (resendType) {
                 case 'last':
@@ -149,7 +149,7 @@ export class FakeStorageNode {
                 await this.node.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
-                    publisher: this.wallet,
+                    publisher: this.wallet!,
                     content: {
                         streamPart: streamPartId,
                     }
