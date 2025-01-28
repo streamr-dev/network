@@ -151,9 +151,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
-- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
-- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
 - Add binary data support to `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
 - Add binary data support to `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
 - Add binary data support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
