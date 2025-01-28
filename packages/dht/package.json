@@ -51,9 +51,9 @@
     "@streamr/test-utils": "102.0.0",
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.17.14",
+    "@types/lodash": "^4.17.15",
     "@types/websocket": "^1.0.10",
-    "@types/ws": "^8.5.13",
+    "@types/ws": "^8.5.14",
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^29.7.0",
     "ts-essentials": "^10.0.4"
