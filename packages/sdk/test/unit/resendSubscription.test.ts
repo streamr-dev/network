@@ -51,7 +51,7 @@ describe('resend subscription', () => {
 
     beforeEach(async () => {
         outputMessages = new Queue<Message>
-        const authentication = createRandomAuthentication()
+        const authentication = await createRandomAuthentication()
         messageFactory = new MessageFactory({
             authentication,
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),

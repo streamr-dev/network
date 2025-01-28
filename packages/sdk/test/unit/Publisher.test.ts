@@ -9,7 +9,7 @@ import { createGroupKeyManager, createRandomAuthentication } from '../test-utils
 
 describe('Publisher', () => {
     it('error message', async () => {
-        const authentication = createRandomAuthentication()
+        const authentication = await createRandomAuthentication()
         const streamIdBuilder = new StreamIDBuilder(authentication)
         const streamRegistry = {
             isStreamPublisher: async () => false,
@@ -18,7 +18,7 @@ describe('Publisher', () => {
         const publisher = new Publisher(
             undefined as any,
             streamRegistry as any,
-            createGroupKeyManager(undefined, authentication),
+            await createGroupKeyManager(undefined, authentication),
             streamIdBuilder,
             authentication,
             mock<SignatureValidator>(),
