@@ -21,6 +21,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
+        maxPropagationBufferSize?: number
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
@@ -34,6 +35,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     const minPropagationTargets = options.minPropagationTargets ?? 2
     const acceptProxyConnections = options.acceptProxyConnections ?? false
     const neighborUpdateInterval = options.neighborUpdateInterval ?? 10000
+    const maxPropagationBufferSize = options.maxPropagationBufferSize ?? 150
     const neighbors = options.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const leftNodeView = options.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = options.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
@@ -54,6 +56,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     }) : undefined
     const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,
+        maxMessages: maxPropagationBufferSize,
         sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
             const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)

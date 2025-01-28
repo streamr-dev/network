@@ -7,11 +7,10 @@ type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
     minPropagationTargets: number
+    maxMessages: number
     ttl?: number
-    maxMessages?: number
 }
 
-const DEFAULT_MAX_MESSAGES = 150
 const DEFAULT_TTL = 10 * 1000
 
 /**
@@ -30,8 +29,8 @@ export class Propagation {
     constructor({
         sendToNeighbor,
         minPropagationTargets,
+        maxMessages,
         ttl = DEFAULT_TTL,
-        maxMessages = DEFAULT_MAX_MESSAGES
     }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
