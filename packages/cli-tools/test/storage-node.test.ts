@@ -41,9 +41,9 @@ describe('storage node', () => {
             privateKey
         })
 
-        const outputLines = await runCommand(`storage-node show ${publicAddress}`)
-        expect(outputLines.join()).toContain('http://foobar.com')
-        expect(outputLines.join()).toContain('http://foobar.org')
+        const outputLines1 = await runCommand(`storage-node show ${publicAddress}`)
+        expect(outputLines1.join()).toContain('http://foobar.com')
+        expect(outputLines1.join()).toContain('http://foobar.org')
 
         await runCommand('storage-node unregister', {
             privateKey
