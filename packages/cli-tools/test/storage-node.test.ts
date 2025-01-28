@@ -1,9 +1,8 @@
 import { StreamID } from '@streamr/sdk'
-import { createTestPrivateKey } from '@streamr/test-utils'
-import { until } from '@streamr/utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { until, wait } from '@streamr/utils'
 import 'jest-extended'
 import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
-import { Wallet } from 'ethers'
 
 const isStored = async (streamId: StreamID): Promise<boolean> => {
     const output = await runCommand(`storage-node list-streams ${DOCKER_DEV_STORAGE_NODE}`)
@@ -33,22 +32,31 @@ describe('storage node', () => {
     })
 
     it('register storage node, show info, and finally unregister', async () => {
-        const privateKey = await createTestPrivateKey({ gas: true })
-        const publicAddress = new Wallet(privateKey).address
+        const { privateKey, address } = await createTestWallet({ gas: true })
 
         const urls = 'http://foobar.com,http://foobar.org'
         await runCommand(`storage-node register ${urls}`, {
             privateKey
         })
 
-        const outputLines1 = await runCommand(`storage-node show ${publicAddress}`)
-        expect(outputLines1.join()).toContain('http://foobar.com')
-        expect(outputLines1.join()).toContain('http://foobar.org')
+        // account for The Graph delay
+        await until(async () => {
+            const outputLines = await runCommand('storage-node list')
+            return outputLines.join().includes(address.toLowerCase())
+        }, 10 * 1000, 500)
+
+        const outputLines = await runCommand(`storage-node show ${address}`)
+        expect(outputLines.join()).toContain('http://foobar.com')
+        expect(outputLines.join()).toContain('http://foobar.org')
 
         await runCommand('storage-node unregister', {
             privateKey
         })
-        const outputLines2 = await runCommand('storage-node list')
-        expect(outputLines2.join()).not.toContain(publicAddress.toLowerCase())
+
+        // account for The Graph delay
+        await until(async () => {
+            const outputLines = await runCommand('storage-node list')
+            return !outputLines.join().includes(address.toLowerCase())
+        }, 10 * 1000, 500)
     }, 80 * 1000)
 })
