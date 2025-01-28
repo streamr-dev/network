@@ -1,5 +1,5 @@
 import { StreamPermission } from '@streamr/sdk'
-import { createTestPrivateKey, fastPrivateKey, Queue } from '@streamr/test-utils'
+import { createTestPrivateKey, Queue } from '@streamr/test-utils'
 import { until, wait, waitForEvent } from '@streamr/utils'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import range from 'lodash/range'
@@ -135,7 +135,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = createClient(fastPrivateKey())
+        const subscriber = createClient()
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })

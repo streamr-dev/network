@@ -1,7 +1,7 @@
 import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, fastPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -56,7 +56,7 @@ describe('MaintainTopologyService', () => {
     let operatorFleetState: OperatorFleetState
 
     beforeEach(() => {
-        client = createClient(fastPrivateKey())
+        client = createClient()
     })
 
     afterEach(async () => {

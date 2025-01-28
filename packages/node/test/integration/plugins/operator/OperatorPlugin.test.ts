@@ -5,7 +5,7 @@ import {
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, fastPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet, parseEther } from 'ethers'
 import { cloneDeep, set } from 'lodash'
@@ -45,7 +45,7 @@ describe('OperatorPlugin', () => {
     })
 
     async function waitForHeartbeatMessage(operatorContractAddress: EthereumAddress): Promise<void> {
-        const client = createClient(fastPrivateKey())
+        const client = createClient()
         const sub = await client.subscribe(formCoordinationStreamId(operatorContractAddress))
         await collect(sub, 1)
         await client.destroy()
@@ -61,7 +61,7 @@ describe('OperatorPlugin', () => {
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
         await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
 
-        const publisher = createClient(fastPrivateKey())
+        const publisher = createClient()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             userId: await publisher.getUserId()

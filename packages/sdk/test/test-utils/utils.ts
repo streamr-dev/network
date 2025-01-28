@@ -248,12 +248,10 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (privateKey?: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
-        auth: {
-            privateKey
-        },
+        auth: (privateKey !== undefined) ? { privateKey } : undefined,
         network: {
             controlLayer: {
                 websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
