@@ -62,6 +62,7 @@ export interface ContentDeliveryManagerOptions {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
+    streamPartitionMaxPropagationBufferSize?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
@@ -269,6 +270,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
@@ -323,7 +325,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize
         })
     }
 
