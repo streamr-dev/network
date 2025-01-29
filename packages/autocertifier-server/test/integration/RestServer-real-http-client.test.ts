@@ -1,5 +1,5 @@
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain, ApiError, Session } from '@streamr/autocertifier-client'
+import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import path from 'path'
 import * as https from 'https'
