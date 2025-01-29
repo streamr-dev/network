@@ -105,9 +105,8 @@ export class ProxyClient extends EventEmitter<Events> {
             markForInspection: () => {}
         })
         this.propagation = new Propagation({
-            // TODO use options option or named constant?
-            minPropagationTargets: options.minPropagationTargets ?? 2,
-            maxMessages: options.maxPropagationBufferSize ?? 150,
+            minPropagationTargets: options.minPropagationTargets,
+            maxMessages: options.maxPropagationBufferSize,
             sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
                 const remote = this.neighbors.get(neighborId)
                 if (remote) {

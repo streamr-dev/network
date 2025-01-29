@@ -32,10 +32,10 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     )
     const neighborTargetCount = options.neighborTargetCount ?? 4
     const maxContactCount = options.maxContactCount ?? 20
-    const minPropagationTargets = options.minPropagationTargets ?? 2
     const acceptProxyConnections = options.acceptProxyConnections ?? false
     const neighborUpdateInterval = options.neighborUpdateInterval ?? 10000
-    const maxPropagationBufferSize = options.maxPropagationBufferSize ?? 150
+    const minPropagationTargets = options.minPropagationTargets
+    const maxPropagationBufferSize = options.maxPropagationBufferSize
     const neighbors = options.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const leftNodeView = options.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = options.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
