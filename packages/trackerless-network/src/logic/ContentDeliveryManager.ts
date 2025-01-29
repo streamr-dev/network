@@ -325,8 +325,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
-            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets ?? DEFAULT_MIN_PROPAGATION_TARGETS,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize ?? DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+            propagationBufferTtl: DEFAULT_PROPAGATION_BUFFER_TTL
         })
     }
 
