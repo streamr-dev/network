@@ -1,4 +1,4 @@
-import { createTestPrivateKey, fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { areEqualBinaries, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
@@ -20,7 +20,7 @@ describe('binary publish', () => {
     const TIMEOUT = 15 * 1000
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
+        subscriberWallet = await createTestWallet()
         publisherPk = await createTestPrivateKey({ gas: true })
     }, 30 * 1000)
 

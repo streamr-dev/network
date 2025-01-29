@@ -1,4 +1,4 @@
-import { createTestPrivateKey, describeOnlyInNodeJs, fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, describeOnlyInNodeJs } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -15,12 +15,12 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
 
     let stream: Stream
     let client: StreamrClient
-    let proxyUser: Wallet = fastWallet()
+    let proxyUser: Wallet
 
     beforeEach(async () => {
         client = createTestClient(await createTestPrivateKey({ gas: true }))
         stream = await createTestStream(client, module)
-        proxyUser = fastWallet()
+        proxyUser = await createTestWallet()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
             userId: proxyUser.address

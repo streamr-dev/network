@@ -75,15 +75,13 @@ export const createEthereumAddress = (id: number): EthereumAddress => {
 }
 
 export const createClient = (
-    privateKey: string,
+    privateKey?: string,
     clientOptions?: StreamrClientConfig
 ): StreamrClient => {
     const opts = merge<StreamrClientConfig>(
         {
             environment: 'dev2',
-            auth: {
-                privateKey
-            }
+            auth: (privateKey !== undefined) ? { privateKey } : undefined
         },
         clientOptions
     )

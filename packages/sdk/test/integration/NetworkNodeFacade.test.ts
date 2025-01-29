@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
 import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
@@ -28,11 +27,7 @@ describe('NetworkNodeFacade', () => {
         }
 
         beforeEach(async () => {
-            client = environment.createClient({
-                auth: {
-                    privateKey: fastPrivateKey()
-                }
-            })
+            client = environment.createClient()
         })
 
         it('caches node', async () => {

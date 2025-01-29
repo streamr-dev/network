@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { createTestPrivateKey, fastPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import {
     DEFAULT_PARTITION_COUNT,
     Logger,
@@ -177,8 +177,8 @@ export const startPublisherKeyExchangeSubscription = async (
     await node.join(streamPartId)
 }
 
-export const createRandomAuthentication = (): Authentication => {
-    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`)
+export const createRandomAuthentication = async (): Promise<Authentication> => {
+    return createPrivateKeyAuthentication(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {
@@ -204,10 +204,10 @@ export const createStreamRegistry = (opts?: {
     } as any
 }
 
-export const createGroupKeyManager = (
+export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    authentication = createRandomAuthentication()
-): GroupKeyManager => {
+    authentication?: Authentication 
+): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
         mock<LitProtocolFacade>(),
@@ -221,7 +221,7 @@ export const createGroupKeyManager = (
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
             }
         },
-        authentication,
+        authentication ?? await createRandomAuthentication(),
         new StreamrClientEventEmitter(),
         new DestroySignal()
     )
@@ -231,7 +231,7 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
         authentication,
-        createGroupKeyManager(undefined, authentication)
+        await createGroupKeyManager(undefined, authentication)
     )
     if (current !== undefined) {
         await queue.rekey(current)
@@ -248,12 +248,10 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (privateKey?: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
-        auth: {
-            privateKey
-        },
+        auth: (privateKey !== undefined) ? { privateKey } : undefined,
         network: {
             controlLayer: {
                 websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined

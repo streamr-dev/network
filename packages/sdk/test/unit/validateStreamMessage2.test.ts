@@ -41,13 +41,13 @@ const groupKeyMessageToStreamMessage = async (
     }, SignatureType.SECP256K1)
 }
 
-const publisherAuthentication = createRandomAuthentication()
-const subscriberAuthentication = createRandomAuthentication()
-
 describe('Validator2', () => {
+
     let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
+    let publisherAuthentication: Authentication
+    let subscriberAuthentication: Authentication
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -63,6 +63,11 @@ describe('Validator2', () => {
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
+
+    beforeAll(async () => {
+        publisherAuthentication = await createRandomAuthentication()
+        subscriberAuthentication = await createRandomAuthentication()
+    })
 
     beforeEach(async () => {
         const publisher = await publisherAuthentication.getUserId()

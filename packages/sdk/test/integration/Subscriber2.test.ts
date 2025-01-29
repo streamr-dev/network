@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
-import { Defer, StreamID, collect, utf8ToBinary, until, toUserId } from '@streamr/utils'
+import { createTestWallet } from '@streamr/test-utils'
+import { Defer, StreamID, collect, toUserId, until, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -63,7 +63,7 @@ describe('Subscriber', () => {
 
     beforeAll(async () => {
         environment = new FakeEnvironment()
-        const publisherWallet = fastWallet()
+        const publisherWallet = await createTestWallet()
         publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { collect, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
@@ -26,22 +26,22 @@ interface PublisherInfo {
     client?: StreamrClient
 }
 
-const PUBLISHERS: PublisherInfo[] = range(PUBLISHER_COUNT).map(() => ({
-    wallet: fastWallet(),
-    groupKey: GroupKey.generate()
-}))
-
 describe('parallel key exchange', () => {
 
     let environment: FakeEnvironment
     let stream: Stream
     let subscriber: StreamrClient
+    let publishers: PublisherInfo[]
 
     beforeAll(async () => {
         environment = new FakeEnvironment()
         subscriber = environment.createClient()
         stream = await subscriber.createStream('/path')
-        await Promise.all(PUBLISHERS.map(async (publisher) => {
+        publishers = await Promise.all(range(PUBLISHER_COUNT).map(async () => ({
+            wallet: await createTestWallet(),
+            groupKey: GroupKey.generate()
+        })))
+        await Promise.all(publishers.map(async (publisher) => {
             await stream.grantPermissions({
                 userId: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
@@ -62,7 +62,7 @@ describe('parallel key exchange', () => {
     it('happy path', async () => {
         const sub = await subscriber.subscribe(stream.id)
 
-        for (const publisher of PUBLISHERS) {
+        for (const publisher of publishers) {
             const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
