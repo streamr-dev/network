@@ -57,7 +57,7 @@ describe('utils', () => {
             await until(() => serverResponseClosed === true)
             await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
             await server.stop()
-        })
+        }, 10 * 1000) // address flaky-ness (NET-1416)
 
         it('error response', async () => {
             const server = await startTestServer('/foo', async () => {})
