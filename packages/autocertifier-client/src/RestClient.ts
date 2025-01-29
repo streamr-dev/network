@@ -1,14 +1,45 @@
 import { Session } from './data/Session'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
-import request, { Response } from 'request'
 import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
-import { ServerError } from './errors'
+import { Err, ErrorCode, ServerError } from './errors'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-// TODO: use a non-deprecated HTTP client that support async/await instead of request
+async function post<T>(url: string, body: any): Promise<T> {
+    return request<T>('POST', url, body)
+}
+
+async function put<T>(url: string, body: any): Promise<T> {
+    return request<T>('PUT', url, body)
+}
+
+async function patch<T>(url: string, body: any, timeout?: number): Promise<T> {
+    return request<T>('PATCH', url, body, timeout)
+}
+
+async function request<T>(method: string, url: string, body: any, timeout?: number): Promise<T> {
+    const signal = timeout !== undefined ? AbortSignal.timeout(timeout) : undefined
+
+    const response = await fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body),
+        signal
+    })
+
+    const responseBody = await response.json() as T
+
+    if (response.ok) {
+        return responseBody
+    } else {
+        throw new ServerError(new Err(ErrorCode.SERVER_ERROR, response.status, JSON.stringify(response.body)))
+    }
+}
+
 export class RestClient {
 
     private readonly baseUrl: string
@@ -23,7 +54,7 @@ export class RestClient {
     public async createSession(): Promise<string> {
         const url = this.baseUrl + '/sessions'
         try {
-            const response = await this.post<Session>(url, {})
+            const response = await post<Session>(url, {})
             return response.id
         } catch (err) {
             logger.debug(err)
@@ -37,8 +68,7 @@ export class RestClient {
             streamrWebSocketPort,
             sessionId
         }
-        const response = await this.patch<CertifiedSubdomain>(url, body, 2 * 60 * 1000)
-        return response
+        return await patch<CertifiedSubdomain>(url, body, 2 * 60 * 1000)
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<CertifiedSubdomain> {
@@ -48,8 +78,7 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        const response = await this.patch<CertifiedSubdomain>(url, body)
-        return response
+        return await patch<CertifiedSubdomain>(url, body)
     }
 
     public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
@@ -61,54 +90,6 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        await this.put<any>(url, body)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private post<T>(url: string, body: any): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.post(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private put<T>(url: string, body: any): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.put(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private patch<T>(url: string, body: any, timeout?: number): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.patch(url, { json: body, rejectUnauthorized: false, timeout }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
+        await put<undefined>(url, body)
     }
 }
