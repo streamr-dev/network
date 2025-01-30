@@ -32,13 +32,13 @@ It should be noted that the roles are independent of each other and can be mixed
 
 ## Technical description
 
-The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the stakers.
+The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the staked Operators.
 
-Stakers are Operator contracts controlled by their operators. The DATA tokens held by the Operator contract are the funds that the operator can `stake` into Sponsorship contracts. By staking into Sponsorship, the operator commits to servicing the sponsored stream.
+Operator contracts are controlled by their operators. The DATA tokens held by the Operator contract are the funds that the controlling operator can `stake` into whichever Sponsorship contracts they like. By staking into a Sponsorship, the operator commits to servicing the sponsored stream.
 
-Stakers may `reduceStakeTo` a lower staked DATA amount, or `unstake` entirely. By unstaking they remove their commitment to servicing the sponsored stream.
+The staked operators may `reduceStakeTo` a lower staked DATA amount, or `unstake` entirely. By unstaking they remove their commitment to servicing the sponsored stream.
 
-Stakers earn from the Sponsorship contract, and those earnings they can `withdraw`. The withdrawn profits are split between protocol, delegators, and the operator (see [Profit sharing](#profit-sharing)).
+Operators earn from each "running" Sponsorship contract that they're staked to, and those earnings they can `withdraw`. The withdrawn profits are split between protocol, delegators, and the operator (see [Profit sharing](#profit-sharing)). Some Sponsorship contracts start paying out earnings (*running*) once there are enough operators staked (minOperatorCount), some always pay when there is at least one.
 
 It is for this profit share that [the delegators](../network-roles/delegators.md) will want to `delegate` their DATA tokens to the Operator contract. The operator can then use those delegated tokens to stake more DATA into Sponsorship contracts, increasing their share of the sponsorship earnings.
 
@@ -62,16 +62,16 @@ A `forceUnstake` is an exceptional DATA token flow, not pictured in the diagram 
 
 <!-- above list should be exhaustive in order to be a useful reference! If some other flow/transfer is found, add here! -->
 
-![Sponsor's DATA is sent to stakers via withdraws, earnings in Sponsorship contract become profit in Operator contract, profit is shared between delegators](@site/static/img/DATA-flows-high-level.jpg)
+![Sponsor's DATA is sent to Operators via withdraws, earnings in Sponsorship contract become profit in Operator contract, profit is shared between delegators](@site/static/img/DATA-flows-high-level.jpg)
 
 ### DATA token flows
 
 There are two processes in the normal operation of Streamr tokenomics: the staking process and the delegation process.
 
 Staking process DATA flows:
-- Stakers send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
+- Operators send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
 - Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`, or simply transferring (not recommended, the system will lose track of who sponsored)
-- Every second, the remaining sponsorship is allocated to the stakers in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy
+- Every second, the remaining sponsorship is allocated to the Operators in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy
 - Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called
     - Unstaking also returns the earnings
 - Sponsorship sends DATA token earnings to the Operator contract when `withdraw` is called
@@ -115,13 +115,13 @@ And finally the operator's income would be 1049.5 DATA - 500 DATA = **549.5 DATA
 Sponsorship contracts hold different kinds of DATA that are internally kept separate:
 - `totalStakedWei`: total amount of tokens staked by all operators
   - each operator has their `stakedWei`, part of which can be `lockedStakeWei` if there are flags on/by them
-  - stake belongs to the stakers, they can claim it via `unstake`, `forceUnstake` and `reduceStakeTo` methods
+  - stake belongs to the Operators, they can claim it via `unstake`, `forceUnstake` and `reduceStakeTo` methods
   - the contract can slash the stake for early leaving or getting kicked after a vote
 - `remainingWei` that comes from the sponsor: part of the sponsorship that hasn't been paid out yet
   - remaining sponsorship doesn't belong to anybody
-  - will be allocated to stakers according to the `StakeWeightedAllocationPolicy` when the contract is running
-- `earningsWei`: the part of the sponsorship that has been allocated to stakers but not yet withdrawn
-  - belongs to the stakers, they can claim it via `withdraw` method
+  - will be allocated to Operators according to the `StakeWeightedAllocationPolicy` when the contract is running
+- `earningsWei`: the part of the sponsorship that has been allocated to Operators but not yet withdrawn
+  - belongs to the Operators, they can claim it via `withdraw` method
 - `forfeitedStakeWei`: stakes that were locked to pay for a flag by a past operator who `forceUnstake`d (or was kicked)
   - should be zero when there are no active flags
 
@@ -131,7 +131,7 @@ The ERC-20 "delegation token" works in a manner similar to a liquidity pool: dur
 
 Being an ERC-20, the Operator contract address can be added to wallet and its delegation tokens transferred, albeit with two restrictions: one for the operator and one for the rest of the delegators. The operator's self-delegation must remain above the [`minimumSelfDelegationFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) of the total "delegation token" supply. Other delegations must still be above [`minimumDelegationWei`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 1 delegation token), or completely undelegate to zero. The value of 1 delegation token starts at 1 DATA, but appreciates as profits accumulate. This limitation prevents rounding error shenanigans in contracts with very low self-delegation.
 
-The outcome of the linear exchange rate between DATA and delegation token is: in the user interfaces we can ignore the delegation token and just convert the values to DATA by simple multiplication. The profits are shared in direct proportion to delegations, much like in Sponsorships where stakers share the sponsorship in direct proportion to their stake. Should a non-linear bonding curve be introduced later, the interpretation should remain the same: the value of the delegation tokens is the amount of DATA tokens the delegator would receive after undelegating them. Note that the DATA tokens themselves might not exist in the contract yet, since mostly we expect the Operator contract's value be staked out into Sponsorship contracts. But delegation bookkeeping is still done in the form of the ERC-20 delegation token.
+The outcome of the linear exchange rate between DATA and delegation token is: in the user interfaces we can ignore the delegation token and just convert the values to DATA by simple multiplication. The profits are shared in direct proportion to delegations, much like in Sponsorships where Operators share the continuous sponsorship payment in direct proportion to their stake. Should a non-linear bonding curve be introduced later, the interpretation should remain the same: the value of the delegation tokens is the amount of DATA tokens the delegator would receive after undelegating them. Note that the DATA tokens themselves might not exist in the contract yet, since mostly we expect the Operator contract's value be staked out into Sponsorship contracts. But delegation bookkeeping is still done in the form of the ERC-20 delegation token.
 
 <!-- TODO - re-add these images -->
 
