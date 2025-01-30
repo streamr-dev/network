@@ -26,9 +26,31 @@ For the sake of clarity, the Streamr Network tokenomics should not be confused w
 ### The roles in the Streamr tokenomics
 Publishers and Subscribers are already familiar roles in the Streamr Network. These roles are only related to the data flows in the network, meaning these roles could be seen as being one layer ‘below’ the tokenomics.
 
-The introduction of token economics defines three new roles: [Sponsor](../network-roles/sponsors.md), [Operator](../network-roles/operators.md), and [Delegator](../network-roles/delegators.md). These roles use DATA tokens to participate in the incentive mechanisms.
+The introduction of token economics defines three new roles: [Sponsor](../network-roles/sponsors.md), [Operator](../network-roles/operators.md), and [Delegator](../network-roles/delegators.md). These roles use DATA tokens to participate in the incentive mechanisms:
+* Sponsors fund the network by creating and funding Sponsorship contracts
+* Operators run the network and get paid by the Sponsorships; but they can only participate to the extent they have staked DATA tokens to those Sponsorships
+* Delegators signal trust in the Operators by funding their stakings.
 
 It should be noted that the roles are independent of each other and can be mixed and matched by all actors depending on their goals, for example, the same person could be a Sponsor, Publisher, and a Delegator.
+
+### Example scenario
+
+There is a stream of data that is important to you. You want to make sure that the data is delivered reliably and securely. You decide to sponsor the stream by creating a Sponsorship contract and funding it with **5000 DATA** tokens, paying out 1 DATA per minute.
+
+Operators stake their DATA tokens to the Sponsorship contract to signal their promise to keep their Streamr nodes online relaying your stream's data. The more DATA tokens an operator stakes, the bigger share they receive from 1 DATA/minute payout. Let's say an operator stakes **50000 DATA** to your Sponsorship contract. These tokens belong to them, and they will receive them back when they leave, as long as they play by the rules. This stake can get slashed if the operator is found to e.g. not have their nodes online.
+
+Every operator may also have delegators that originally gave some of those staked 50000 DATA tokens. Let's say our operator's stakes are funded exactly half by external delegator and half by the operator themselves (**self-delegation**).
+
+After 2000 minutes, our operator withdraws their earnings so far. Those **2000 DATA** are split between stakeholders as follows:
+- protocol treasury gets **100 DATA**
+- operator gets a cut to cover the cost of operating the nodes, in our example 10%: **199 DATA**
+- the remaining **1701 DATA** is split between the operator and external delegators
+
+Summing up:
+- The operator gets 50% * 1701 DATA + 199 DATA = **1049.5 DATA** in total
+- External delegators get 50% * 1701 DATA = **850.5 DATA** in proportion to their delegation amounts.
+
+After this, the operator will continue to operate the nodes and earn. When they want to leave (e.g. when your Sponsorship runs out of DATA) they will withdraw what they got, unstake their 50000 DATA tokens, and find another Sponsorship to stake them to.
 
 ## Technical description
 
@@ -92,7 +114,7 @@ Since the smart contracts can't know about the nodes' performance, the nodes the
 Earnings enter the Operator contract during `unstake`, `forceUnstake` and `withdrawEarningsFromSponsorships` method calls. When unstaking, what is returned in addition to the staked DATA tokens are assumed to be the earnings that have accumulated in the Sponsorship contract. When withdrawing, all received DATA tokens are assumed to be earnings.
 
 Earnings are split between stakeholders, for example **2000 DATA** would be split as follows:
-- first [`protocolFeeFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) is send to the protocol treasury: **100 DATA**
+- first [`protocolFeeFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) is sent to the protocol treasury: **100 DATA**
 - then the operator gets their cut, for example 10%: **199 DATA**
 - the remaining **1701 DATA** is profit that is split between the delegators (including operator themselves!) in proportion to their stake
 
@@ -108,7 +130,7 @@ So the split of **2000 DATA** in case of fisherman-initiated withdraw would be:
 - profit: **1701 DATA**
 - fisherman's reward: 25% of earnings, or **500 DATA**
 
-And finally the operator's income would be 1049.5 DATA - 500 DATA = **549.5 DATA**. The fisherman's reward could even take the operator's income negative if the operator's cut is low enough.
+And finally the operator's total income would be 1049.5 DATA - 500 DATA = **549.5 DATA**. The fisherman's reward could even take the operator's income negative if the operator's cut is low enough.
 
 ### Contract internal bookkeeping
 
