@@ -9,9 +9,15 @@ const agent = new https.Agent({
     rejectUnauthorized: false
 })
 
-const makeRequest = (url: string, options: https.RequestOptions, body?: any): Promise<{ status: number, body: any }> => {
+const makeRequest = (url: string, method: string, body?: any): Promise<{ status: number, body: any }> => {
     return new Promise((resolve, reject) => {
-        const req = https.request(url, { ...options, agent }, (res) => {
+        const req = https.request(url, {
+            method,
+            agent,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }, (res) => {
             let data = ''
             res.on('data', (chunk) => data += chunk)
             res.on('end', () => {
@@ -69,12 +75,7 @@ describe('RestServer', () => {
 
     describe('POST /sessions', () => {
         it('should return session with sessionId', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/sessions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
+            const response = await makeRequest('https://127.0.0.1:9877/sessions', 'POST')
 
             expect(response.status).toEqual(200)
             expect(response.body).toEqual({ id: sessionId })
@@ -83,12 +84,7 @@ describe('RestServer', () => {
 
     describe('PATCH /certificates', () => {
         it('should return a certified subdomain', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }, {
+            const response = await makeRequest('https://127.0.0.1:9877/certificates', 'PATCH', {
                 streamrWebSocketPort: '1234'
             })
 
@@ -97,12 +93,7 @@ describe('RestServer', () => {
         })
 
         it('should return an error if streamrWebSocketPort is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }, {})
+            const response = await makeRequest('https://127.0.0.1:9877/certificates', 'PATCH', {})
 
             expect(response.status).toEqual(400)
             expect(response.body.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
@@ -111,12 +102,7 @@ describe('RestServer', () => {
 
     describe('PUT /certificates/:subdomain/ip', () => {
         it('should update the subdomain IP and port', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }, {
+            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
                 streamrWebSocketPort: '1234',
                 token: 'token'
             })
@@ -126,12 +112,7 @@ describe('RestServer', () => {
         })
 
         it('should return an error if streamrWebSocketPort is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }, {
+            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
                 token: 'token'
             })
 
@@ -140,12 +121,7 @@ describe('RestServer', () => {
         })
 
         it('should return an error if token is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }, {
+            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
                 streamrWebSocketPort: '1234'
             })
 
