@@ -28,8 +28,11 @@ async function request<T>(method: string, url: string, body: any, timeout?: numb
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body),
-        signal
-    })
+        signal,
+        agent: new (require('https').Agent)({
+            rejectUnauthorized: false
+        })
+    } as any)
 
     const responseBody = await response.json() as T
 
