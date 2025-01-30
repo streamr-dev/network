@@ -1,4 +1,13 @@
-import { DhtAddress, PeerDescriptor, RingContacts } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, RingContacts, ServiceID } from '@streamr/dht'
+import { StreamPartID } from '@streamr/utils'
+
+export const DEFAULT_DISCOVERY_LAYER_KBUCKET_SIZE = 4
+export const DEFAULT_DISCOVERY_LAYER_JOIN_TIMEOUT = 20000
+export const DEFAULT_DISCOVERY_LAYER_NEIGHBOR_PING_LIMIT = 16
+export const DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_NEIGHBORS = true
+export const DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_RING_CONTACTS = true
+
+export const formDiscoveryLayerServiceId = (streamPartId: StreamPartID): ServiceID => 'layer1::' + streamPartId
 
 export interface DiscoveryLayerNodeEvents {
     manualRejoinRequired: () => void
