@@ -88,9 +88,9 @@ A `forceUnstake` is an exceptional DATA token flow, not pictured in the diagram 
 
 ### DATA token flows
 
-There are two processes in the normal operation of Streamr tokenomics: the staking process and the delegation process.
+There are two DATA token flow processes in the normal operation of Streamr tokenomics: the staking process and the delegation process.
 
-Staking process DATA flows:
+Staking process where Operators stake to earn from Sponsorships:
 - Operators send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
 - Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`
   - simply using `transfer` is not recommended, since the system will lose track of who funded the Sponsorship
@@ -99,14 +99,15 @@ Staking process DATA flows:
     - Unstaking also returns the earnings
 - Sponsorship sends DATA token earnings to the Operator contract when `withdraw` is called
 
-Delegation process DATA flows:
-- Delegators send DATA tokens to the Operator contract by sending the tokens by calling [the `transferAndCall` method](https://github.com/streamr-dev/DATAv2/blob/main/contracts/DATAv2.sol#L57) or [the `delegate` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L315)
+Delegation process where delegators fund the Operators' stakes and share the profits:
+- Delegators send DATA tokens to the Operator contract by calling [the `transferAndCall` method](https://github.com/streamr-dev/DATAv2/blob/main/contracts/DATAv2.sol#L57) or [the `delegate` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L315)
+  - **Warning:** simply using ERC20 `transfer` will lead to ***loss of tokens***: the contract can't tell who sent them, they will effectively be shared in proportion to delegations
 - When Operator contract receives DATA tokens, if there is a delegator in the undelegation queue, the DATA tokens are sent forward to the delegator
 - The DATA tokens the Operator contract receives during `unstake`, `reduceStake`, or `withdraw` calls go through the profit sharing process (see [below section](#profit-sharing))
 
 ![Ordinary staking, allocation, and withdrawing; exceptional flagging, voting, and kicking DATA token flows](@site/static/img/DATA-flows-Sponsorship-contract.jpg)
 
-Additionally in the picture you can see the flagging (voting and kicking) process. It provides the smart contract support for the peer-reviewing of the network. The process is not directly related to the tokenomics, but it does cause DATA transfers.
+The diagram also illustrates the flagging (voting and kicking) process. It provides the smart contract support for the peer-reviewing of the network. The process is not directly related to the tokenomics, but it does cause DATA transfers.
 
 Since the smart contracts can't know about the nodes' performance, the nodes themselves have to [monitor and inspect each other](./node-inspection.md). Reviewer can flag a suspected target. Reviewers who vote with the majority receive a reward. If the vote concludes with "kick", we call the flag successful, and the flagger receives a reward as well. The kicked node loses the [`slashingFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 1%) of its stake.
 
