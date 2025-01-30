@@ -23,7 +23,15 @@ import { sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
-import { DiscoveryLayerNode } from './DiscoveryLayerNode'
+import { 
+    formDiscoveryLayerServiceId,
+    DEFAULT_DISCOVERY_LAYER_JOIN_TIMEOUT,
+    DEFAULT_DISCOVERY_LAYER_KBUCKET_SIZE,
+    DEFAULT_DISCOVERY_LAYER_NEIGHBOR_PING_LIMIT,
+    DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_NEIGHBORS,
+    DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_RING_CONTACTS,
+    DiscoveryLayerNode
+} from './DiscoveryLayerNode'
 import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
 import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 import { StreamPartReconnect } from './StreamPartReconnect'
@@ -31,6 +39,7 @@ import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode
 import { ProxyClient } from './proxy/ProxyClient'
 import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
+import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './propagation/Propagation'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -245,15 +254,15 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         return new DhtNode({
             transport: this.controlLayerNode!,
             connectionsView: this.controlLayerNode!.getConnectionsView(),
-            serviceId: 'layer1::' + streamPartId,
+            serviceId: formDiscoveryLayerServiceId(streamPartId),
             peerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,  // TODO use options option or named constant?
+            numberOfNodesPerKBucket: DEFAULT_DISCOVERY_LAYER_KBUCKET_SIZE,
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000,  // TODO use options option or named constant?
-            periodicallyPingNeighbors: true,
-            periodicallyPingRingContacts: true,
-            neighborPingLimit: 16
+            dhtJoinTimeout: DEFAULT_DISCOVERY_LAYER_JOIN_TIMEOUT,
+            periodicallyPingNeighbors: DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_NEIGHBORS,
+            periodicallyPingRingContacts: DEFAULT_DISCOVERY_LAYER_PERIODICALLY_PING_RING_CONTACTS,
+            neighborPingLimit: DEFAULT_DISCOVERY_LAYER_NEIGHBOR_PING_LIMIT
         })
     }
 

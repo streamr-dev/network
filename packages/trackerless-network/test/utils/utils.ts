@@ -7,14 +7,19 @@ import {
     SimulatorTransport,
     randomDhtAddress,
     getRandomRegion,
-    toDhtAddressRaw
+    toDhtAddressRaw,
+    EXISTING_CONNECTION_TIMEOUT
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { 
+    DEFAULT_DISCOVERY_LAYER_KBUCKET_SIZE,
+    DEFAULT_DISCOVERY_LAYER_NEIGHBOR_PING_LIMIT, 
+    DiscoveryLayerNode
+} from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import {
@@ -48,10 +53,10 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         transport: mockCm,
         connectionsView: mockCm,
         peerDescriptor: localPeerDescriptor,
-        numberOfNodesPerKBucket: 4,
+        numberOfNodesPerKBucket: DEFAULT_DISCOVERY_LAYER_KBUCKET_SIZE,
         entryPoints: [entryPointDescriptor],
-        rpcRequestTimeout: 5000,
-        neighborPingLimit: 16
+        rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
+        neighborPingLimit: DEFAULT_DISCOVERY_LAYER_NEIGHBOR_PING_LIMIT
     })
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
