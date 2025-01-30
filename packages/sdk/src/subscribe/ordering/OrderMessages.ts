@@ -1,9 +1,8 @@
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, executeSafePromise } from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { Mapping } from '../../utils/Mapping'
+import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CacheAsyncFn } from '../../utils/caches'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
@@ -34,10 +33,7 @@ const createMessageChain = (
     const gapFiller = new GapFiller({
         chain,
         resend,
-        // TODO maybe caching should be configurable? (now uses 30 min maxAge, which is the default of CacheAsyncFn)
-        // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-        // - also not that this is a cache which contains just one item (as streamPartId always the same)
-        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId))),
+        getStorageNodeAddresses: () => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
@@ -55,7 +51,7 @@ const createMessageChain = (
  */
 export class OrderMessages {
 
-    private readonly chains: Mapping<[EthereumAddress, string], OrderedMessageChain>
+    private readonly chains: Mapping<[UserID, string], OrderedMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly abortController = new AbortController()
 
@@ -66,21 +62,23 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
-            const chain = createMessageChain(
-                {
-                    streamPartId, 
-                    publisherId, 
-                    msgChainId
-                },
-                getStorageNodes,
-                onUnfillableGap,
-                resends,
-                config,
-                this.abortController.signal
-            )
-            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
-            return chain
+        this.chains = createLazyMap({
+            valueFactory: async ([publisherId, msgChainId]) => {
+                const chain = createMessageChain(
+                    {
+                        streamPartId, 
+                        publisherId, 
+                        msgChainId
+                    },
+                    getStorageNodes,
+                    onUnfillableGap,
+                    resends,
+                    config,
+                    this.abortController.signal
+                )
+                chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+                return chain
+            }
         })
     }
 
@@ -101,10 +99,10 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get([msg.getPublisherId(), msg.getMsgChainId()])
                 chain.addMessage(msg)
             }
-            await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
+            await Promise.all([...this.chains.values()].map((chain) => chain.waitUntilIdle()))
             this.outBuffer.endWrite()
         } catch (err) {
             this.outBuffer.endWrite(err)

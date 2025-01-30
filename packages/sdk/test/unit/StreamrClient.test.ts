@@ -3,14 +3,14 @@ import 'reflect-metadata'
 import merge from 'lodash/merge'
 import { container } from 'tsyringe'
 import { StreamrClientConfig } from '../../src/Config'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClient } from '../../src/StreamrClient'
 
 const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(
-        {},
-        CONFIG_TEST,
+        {
+            environment: 'dev2'
+        },
         opts
     ), container)
 }
@@ -61,7 +61,7 @@ describe('StreamrClient', () => {
                     distributionMethod: 'rotate',
                     key: GroupKey.generate()
                 })
-            }).rejects.toThrowStreamrError({
+            }).rejects.toThrowStreamrClientError({
                 message: 'cannot pass "key" when Lit Protocol is enabled',
                 code: 'UNSUPPORTED_OPERATION'
             })

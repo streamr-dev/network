@@ -2,7 +2,8 @@
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
-export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
+export { Stream } from './Stream'
+export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
@@ -38,11 +39,12 @@ export {
     NetworkNodeType,
     StrictStreamrClientConfig,
     EnvironmentId,
+    ENVIRONMENT_IDS,
+    DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-export { CONFIG_TEST } from './ConfigTest'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
@@ -64,6 +66,7 @@ export type {
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
+export type { UserID } from '@streamr/utils'
 export type { EncryptedGroupKey } from './protocol/EncryptedGroupKey'
 export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
@@ -77,8 +80,6 @@ export {
     StreamMessageType
 } from './protocol/StreamMessage'
 
-export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
-
 // These are exported for the internal Operator class
 export {
     Operator,
@@ -90,6 +91,7 @@ export {
 } from './contracts/Operator'
 import {
     delegate,
+    undelegate,
     deploySponsorshipContract,
     setupOperatorContract,
     SetupOperatorContractOpts,
@@ -98,8 +100,8 @@ import {
     DeployOperatorContractOpts,
     sponsor,
     stake,
+    unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
     getTestTokenContract,
     getTestAdminWallet,
@@ -112,20 +114,20 @@ import {
 // eslint-disable-next-line no-underscore-dangle
 const _operatorContractUtils = {
     delegate,
+    undelegate,
     deploySponsorshipContract,
     setupOperatorContract,
     sponsor,
     stake,
+    unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     deployOperatorContract,
     getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
 }
-// eslint-disable-next-line no-underscore-dangle
 export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
-export type { Signer, Eip1193Provider, Overrides } from 'ethers'
+export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

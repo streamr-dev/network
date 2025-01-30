@@ -20,8 +20,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fixed flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
-
 #### Security
 
 ### @streamr/node
@@ -42,6 +40,10 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
+
 #### Changed
 
 #### Deprecated
@@ -51,6 +53,114 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [102.0.0] - 2025-01-27
+
+### @streamr/sdk
+
+#### Added
+
+- Add support for arbitrary length user IDs: (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
+  - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
+  - new `StreamrClient#getUserId()` method
+- Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add accessors for stream metadata fields: (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845, https://github.com/streamr-dev/network/pull/2883)
+  - `Stream#getPartitionCount()`
+  - `Stream#getDescription()` and `Stream#setDescription()`
+  - `Stream#getStorageDayCount()` and `Stream#setStorageDayCount()`
+- Add method `StreamrClient#getStreamMetadata()` (https://github.com/streamr-dev/network/pull/2883)
+- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
+- Add `opts` parameter to `StreamrClient#addStreamToStorageNode` (https://github.com/streamr-dev/network/pull/2858)
+  - controls how long to wait for storage node to pick up on assignment
+
+#### Changed
+
+- **BREAKING CHANGE:** Rename `user` to `userId` in these interfaces: (https://github.com/streamr-dev/network/pull/2811)
+  - `UserPermissionAssignment`
+    - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
+  - `UserPermissionQuery`
+    - used in `hasPermission()`
+  - `SearchStreamsPermissionFilter`
+    - used in `searchStreams()`
+- **BREAKING CHANGE:** Type `StreamMetadata` is `Record<string, unknown>` (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
+  - some new accessors available, see above
+  - no default values are injected (https://github.com/streamr-dev/network/pull/2851)
+- **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
+- **BREAKING CHANGE:** Replace methods `StreamrClient#updateStream()` and `Stream#update()`: (https://github.com/streamr-dev/network/pull/2826, https://github.com/streamr-dev/network/pull/2855, https://github.com/streamr-dev/network/pull/2859, https://github.com/streamr-dev/network/pull/2862)
+  - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
+  - both methods overwrite metadata instead of merging it
+- **BREAKING CHANGE:** Methods `Stream#getMetadata()` and `Stream#getStreamParts()` are async (https://github.com/streamr-dev/network/pull/2883)
+- **BREAKING CHANGE:** Rename event `streamRemovedFromFromStorageNode` to `streamRemovedFromStorageNode` (https://github.com/streamr-dev/network/pull/2930)
+- **BREAKING CHANGE:** Replace custom errors with `StreamrClientError`: (https://github.com/streamr-dev/network/pull/2895, https://github.com/streamr-dev/network/pull/2927)
+  - `StreamrClientError` contains `MessageID` instead of `StreamMessage`
+- Caching changes:
+  - storage node addresses (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
+  - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
+- Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
+- Network-level changes:
+  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
+
+#### Removed
+
+- **BREAKING CHANGE:** Remove `Stream#detectFields()` method (https://github.com/streamr-dev/network/pull/2864)
+- **BREAKING CHANGE:** Remove `Stream#delete()` method (https://github.com/streamr-dev/network/pull/2863)
+  - use `StreamrClient#deleteStream()` instead
+- **BREAKING CHANGE:** Remove `StreamrClient#findOperators()` method (https://github.com/streamr-dev/network/pull/2876)
+- Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
+- Remove obsolete config options:
+  - `network.node.id` (https://github.com/streamr-dev/network/pull/2777)
+  - `network.controlLayer.webNewrtcConnectionTimeout` (https://github.com/streamr-dev/network/pull/2776)
+
+#### Fixed
+
+- Fix WebRTC connections in Firefox (https://github.com/streamr-dev/network/pull/2746)
+- Fix flag expiration time in `Operator#getExpiredFlags()` (https://github.com/streamr-dev/network/pull/2739)
+- Network-level fixes:
+  - fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
+  - fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
+  - make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
+  - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
+  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
+
+### @streamr/node
+
+#### Added
+
+- Add new operator plugin config options (for testing purposes) (https://github.com/streamr-dev/network/pull/2742)
+
+#### Changed
+
+- The `environment` config option now applies additional settings if `dev2` value is used (https://github.com/streamr-dev/network/pull/2813)
+  - e.g. disables `entryPointDiscovery` and `metrics`
+
+#### Removed
+
+- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command) (https://github.com/streamr-dev/network/pull/2830)
+  - use `streamr-node-init` command instead
+- **BREAKING CHANGE:** Remove deprecated command `streamr-broker` (https://github.com/streamr-dev/network/pull/2881)
+  - use `streamr-node` command instead
+
+#### Fixed
+
+- Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
+- Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
+
+### @streamr/cli-tools
+
+#### Added
+
+- Add binary data support to `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
+- Add binary data support to `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
+- Add binary data support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
+
+#### Changed
+
+- **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
+  - the `--env` flag supports multiple environments
+  - if there is a value for `environment` in a config file, this overrides it
+  - use `--env dev2` for the development environment
 
 
 ## [101.1.2] - 2024-09-04
@@ -258,7 +368,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.0.0...HEAD
+[102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
 [101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
 [101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0

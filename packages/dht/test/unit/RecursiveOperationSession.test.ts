@@ -1,11 +1,11 @@
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { range } from 'lodash'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
 import { RecursiveOperationSessionRpcRemote } from '../../src/dht/recursive-operation/RecursiveOperationSessionRpcRemote'
 import { ServiceID } from '../../src/types/ServiceID'
-import { createRandomDhtAddress } from '../../src/identifiers'
-import { Message, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RecursiveOperationSessionRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { randomDhtAddress } from '../../src/identifiers'
+import { Message, PeerDescriptor, RecursiveOperation } from '../../generated/packages/dht/protos/DhtRpc'
+import { RecursiveOperationSessionRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -36,7 +36,7 @@ describe('RecursiveOperationSession', () => {
         const doRouteRequest = jest.fn()
         const session = new RecursiveOperationSession({
             transport: environment.createTransport(localPeerDescriptor),
-            targetId: createRandomDhtAddress(),
+            targetId: randomDhtAddress(),
             localPeerDescriptor,
             waitedRoutingPathCompletions: 3,
             operation: RecursiveOperation.FIND_CLOSEST_NODES,
@@ -59,7 +59,7 @@ describe('RecursiveOperationSession', () => {
 
         // TODO now waits for the 4s timeout, could setup test so that it completes by receiving
         // all data it wants
-        await waitForCondition(() => onCompleted.mock.calls.length > 0)
+        await until(() => onCompleted.mock.calls.length > 0)
         const result = session.getResults()
         // TODO assert peer descriptors
         expect(result.closestNodes).toHaveLength(6)

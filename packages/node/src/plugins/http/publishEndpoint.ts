@@ -19,7 +19,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
             content = PAYLOAD_FORMAT.createMessage(req.body.toString()).content
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
             partition = parseQueryParameter<number>('partition', req.query, parsePositiveInteger)
-            partitionKey = req.query['partitionKey'] as string
+            partitionKey = req.query.partitionKey as string
         } catch (e) {
             res.status(400).send({
                 error: e.message
@@ -43,10 +43,10 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
                 partitionKey,
                 msgChainId
             })
-            return res.sendStatus(200)
+            res.sendStatus(200)
         } catch (err) {
             logger.error('Unable to publish to message', { streamId, err })
-            return res.sendStatus(500)
+            res.sendStatus(500)
         }
     }
 }

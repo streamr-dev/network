@@ -1,19 +1,19 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
 type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>
 
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
-    minPropagationTargets: number
-    ttl?: number
+    minPropagationTargets?: number
     maxMessages?: number
+    ttl?: number
 }
 
-const DEFAULT_MAX_MESSAGES = 150
 const DEFAULT_TTL = 10 * 1000
-
+const DEFAULT_MIN_PROPAGATION_TARGETS = 2
+const DEFAULT_MAX_MESSAGES = 150
 /**
  * Message propagation logic of a node. Given a message, this class will actively attempt to propagate it to
  * `minPropagationTargets` neighbors until success or TTL expiration.
@@ -29,9 +29,9 @@ export class Propagation {
 
     constructor({
         sendToNeighbor,
-        minPropagationTargets,
+        minPropagationTargets = DEFAULT_MIN_PROPAGATION_TARGETS,
+        maxMessages = DEFAULT_MAX_MESSAGES,
         ttl = DEFAULT_TTL,
-        maxMessages = DEFAULT_MAX_MESSAGES
     }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
@@ -65,7 +65,6 @@ export class Propagation {
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             (async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)

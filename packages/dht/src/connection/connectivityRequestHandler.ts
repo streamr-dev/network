@@ -4,7 +4,7 @@ import {
     ConnectivityRequest,
     ConnectivityResponse,
     Message
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
@@ -54,7 +54,7 @@ const handleIncomingConnectivityRequest = async (
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: LOCAL_PROTOCOL_VERSION
+            protocolVersion: LOCAL_PROTOCOL_VERSION
         }
     }
     if (geoIpLocator !== undefined) {
@@ -97,7 +97,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
             ipAddress: ipv4ToNumber(ipAddress),
-            version: LOCAL_PROTOCOL_VERSION
+            protocolVersion: LOCAL_PROTOCOL_VERSION
         }
     } catch (err) {
         logger.debug('error', { err })
@@ -105,7 +105,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: LOCAL_PROTOCOL_VERSION
+            protocolVersion: LOCAL_PROTOCOL_VERSION
         }
     }
     if (outgoingConnection) {

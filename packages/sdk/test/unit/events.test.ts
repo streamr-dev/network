@@ -13,7 +13,7 @@ describe('events', () => {
             const stream = await client.createStream('/test')
             await client.publish(stream.id, {})
             await stream.publish({})
-            expect(onEmit).toBeCalledTimes(2)
+            expect(onEmit).toHaveBeenCalledTimes(2)
         })
     })
 })

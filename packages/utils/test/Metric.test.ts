@@ -1,6 +1,6 @@
 import { wait } from '../src/wait'
 import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
-import { waitForCondition } from '../src/waitForCondition'
+import { until } from '../src/until'
 
 const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000
@@ -30,7 +30,7 @@ describe('metrics', () => {
         })
     
         afterEach(() => {
-            abortController?.abort()
+            abortController.abort()
         })
     
         it('happy path', async () => {
@@ -59,7 +59,7 @@ describe('metrics', () => {
             metricThree.rate.record(2000)
             metricThree.rate.record(4000)
     
-            await waitForCondition(() => getReport(inputTime1) !== undefined)
+            await until(() => getReport(inputTime1) !== undefined)
             expect(getReport(inputTime1)).toMatchObject({
                 metricOne: {
                     count: 7 + 2
@@ -80,7 +80,7 @@ describe('metrics', () => {
             metricThree.level.record(39)
             metricThree.rate.record(1000)
     
-            await waitForCondition(() => getReport(inputTime2) !== undefined)
+            await until(() => getReport(inputTime2) !== undefined)
             expect(getReport(inputTime2)).toMatchObject({
                 metricOne: {
                     count: 3
@@ -100,7 +100,7 @@ describe('metrics', () => {
             context.addMetrics('foo', {
                 bar: new CountMetric()
             })
-            await waitForCondition(() => reports.length > 0)
+            await until(() => reports.length > 0)
             expect(reports[0]).toMatchObject({
                 foo: {
                     bar: 0
@@ -211,6 +211,6 @@ describe('metrics', () => {
         context.addMetrics('mockNamespace', metric)
         expect(() => {
             context.addMetrics('mockNamespace', metric)
-        }).toThrowError('Metrics "mockNamespace.foo" already created')
+        }).toThrow('Metrics "mockNamespace.foo" already created')
     })
 })

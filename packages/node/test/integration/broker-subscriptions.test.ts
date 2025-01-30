@@ -1,10 +1,10 @@
-import { Wallet } from 'ethers'
+import { Stream, StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { until, wait } from '@streamr/utils'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { createClient, createTestStream, startBroker } from '../utils'
 
 jest.setTimeout(50000)
 
@@ -16,15 +16,15 @@ const createMqttClient = (mqttPort: number) => {
 }
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
-    for await (const s of streams) {
+    for (const s of streams) {
         const assignments = brokerUsers.map((user) => {
-            return { permissions: [StreamPermission.SUBSCRIBE], user: user.address }
+            return { permissions: [StreamPermission.SUBSCRIBE], userId: user.address }
         })
         await s.grantPermissions(...assignments)
     }
 }
 
-export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
+const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
     const client = broker.getStreamrClient()
     const subs = await client.getSubscriptions()
     return subs.map((s) => s.streamPartId)
@@ -41,8 +41,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
-        const broker1User = fastWallet()
-        const broker2User = fastWallet()
+        const broker1User = await createTestWallet()
+        const broker2User = await createTestWallet()
         broker1 = await startBroker({
             privateKey: broker1User.privateKey,
             extraPlugins: {
@@ -60,8 +60,8 @@ describe('broker subscriptions', () => {
             }
         })
 
-        client1 = createClient(await fetchPrivateKeyWithGas())
-        client2 = createClient(await fetchPrivateKeyWithGas())
+        client1 = createClient(await createTestPrivateKey({ gas: true }))
+        client2 = createClient(await createTestPrivateKey({ gas: true }))
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
@@ -74,25 +74,25 @@ describe('broker subscriptions', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            mqttClient1?.end(true),
-            mqttClient2?.end(true),
-            client1?.destroy(),
-            client2?.destroy(),
-            broker1?.stop(),
-            broker2?.stop(),
+            mqttClient1.end(true),
+            mqttClient2.end(true),
+            client1.destroy(),
+            client2.destroy(),
+            broker1.stop(),
+            broker2.stop(),
         ])
 
     })
 
     it('manage list of subscribed stream partitions when plugins subscribe/unsubscribe', async () => {
-        await waitForCondition(() => mqttClient1.connected)
-        await waitForCondition(() => mqttClient2.connected)
+        await until(() => mqttClient1.connected)
+        await until(() => mqttClient2.connected)
 
         await mqttClient1.subscribe(freshStream1.id)
         await mqttClient2.subscribe(freshStream2.id)
 
-        await waitForCondition(async () => (await getStreamParts(broker1)).length === 1)
-        await waitForCondition(async () => (await getStreamParts(broker2)).length === 1)
+        await until(async () => (await getStreamParts(broker1)).length === 1)
+        await until(async () => (await getStreamParts(broker2)).length === 1)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream1.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream2.id + '#0'])
@@ -100,8 +100,8 @@ describe('broker subscriptions', () => {
         await mqttClient1.subscribe(freshStream2.id)
         await mqttClient2.subscribe(freshStream1.id)
 
-        await waitForCondition(async () => (await getStreamParts(broker1)).length === 2)
-        await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
+        await until(async () => (await getStreamParts(broker1)).length === 2)
+        await until(async () => (await getStreamParts(broker2)).length === 2)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
@@ -118,14 +118,14 @@ describe('broker subscriptions', () => {
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
+        await until(async () => (await getStreamParts(broker2)).length === 2)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream2.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
-        await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
+        await until(async () => (await getStreamParts(broker2)).length === 2)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])

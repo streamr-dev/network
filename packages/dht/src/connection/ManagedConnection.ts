@@ -1,10 +1,10 @@
 import { ConnectionID, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, toNodeId } from '../identifiers'
 import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
@@ -26,6 +26,11 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     private lastUsedTimestamp: number = Date.now()
     private replacedAsDuplicate = false
     private stopped = false
+    private openedAt = Date.now()
+    private bytesSent = 0
+    private bytesReceived = 0
+    private messagesSent = 0
+    private messagesReceived = 0
 
     constructor(peerDescriptor: PeerDescriptor, connection: IConnection) {
         super()
@@ -34,6 +39,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
 
         connection.on('data', (bytes: Uint8Array) => {
             this.lastUsedTimestamp = Date.now()
+            this.messagesReceived += 1
+            this.bytesReceived += bytes.length
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
         connection.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
@@ -62,6 +69,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
         this.lastUsedTimestamp = Date.now()
+        this.messagesSent += 1
+        this.bytesSent += data.length
         this.connection.send(data)
     }
 
@@ -74,7 +83,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+        return toNodeId(this.remotePeerDescriptor)
     }
 
     getLastUsedTimestamp(): number {
@@ -83,6 +92,22 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
 
     getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            remotePeerDescriptor: this.remotePeerDescriptor,
+            lastUsedTimestamp: this.lastUsedTimestamp,
+            replacedAsDuplicate: this.replacedAsDuplicate,
+            stopped: this.stopped,
+            openedAt: this.openedAt,
+            bytesSent: this.bytesSent,
+            bytesReceived: this.bytesReceived,
+            messagesSent: this.messagesSent,
+            messagesReceived: this.messagesReceived
+            // Add connection type?
+        }
+
     }
 
 }

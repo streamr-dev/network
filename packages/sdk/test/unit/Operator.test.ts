@@ -14,23 +14,23 @@ import { mockLoggerFactory } from '../test-utils/utils'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
-        expect(() => parsePartitionFromReviewRequestMetadata(undefined)).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata(undefined)).toThrow(ParseError)
     })
 
     it('throws given invalid json', () => {
-        expect(() => parsePartitionFromReviewRequestMetadata('invalidjson')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('invalidjson')).toThrow(ParseError)
     })
 
     it('throws given valid json without field "partition"', () => {
-        expect(() => parsePartitionFromReviewRequestMetadata('{}')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{}')).toThrow(ParseError)
     })
 
     it('throws given valid json with field "partition" but not as a number', () => {
-        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": "foo" }')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": "foo" }')).toThrow(ParseError)
     })
 
     it('throws given valid json with field "partition" but outside integer range', () => {
-        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": -50 }')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": -50 }')).toThrow(ParseError)
     })
 
     it('returns partition given valid json with field "partition" within integer range', () => {
@@ -46,7 +46,7 @@ const EVENT_BLOCK_NUMBER = 222
 
 const createOperator = (eventName: string, args: any[]) => {
     const fakeContract = {
-        queryFilter: (eventNames: string[], fromBlock: number) => {
+        queryFilter: (eventNames: string[][], fromBlock: number) => {
             if ((eventNames[0][0] === eventName) && (fromBlock <= EVENT_BLOCK_NUMBER)) {
                 return [{
                     fragment: {

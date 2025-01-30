@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toEthereumAddress, toStreamID, utf8ToBinary, wait } from '@streamr/utils'
+import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
+import { collect, toStreamID, utf8ToBinary, wait } from '@streamr/utils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'
@@ -12,7 +12,7 @@ import { createRandomAuthentication } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = randomUserId()
 
 describe('PushPipeline', () => {
 
@@ -32,7 +32,7 @@ describe('PushPipeline', () => {
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        messageSigner = new MessageSigner(createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomAuthentication())
     })
 
     afterEach(async () => {

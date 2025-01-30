@@ -2,11 +2,11 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     PeerDescriptor,
     WebsocketConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebsocketClientConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { IWebsocketClientConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { Empty } from '../../proto/google/protobuf/empty'
-import { getNodeIdFromPeerDescriptor, DhtAddress } from '../../identifiers'
+import { Empty } from '../../../generated/google/protobuf/empty'
+import { toNodeId, DhtAddress } from '../../identifiers'
 import { PendingConnection } from '../PendingConnection'
 
 interface WebsocketClientConnectorRpcLocalOptions {
@@ -29,7 +29,7 @@ export class WebsocketClientConnectorRpcLocal implements IWebsocketClientConnect
             return {}
         }
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (!this.options.hasConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor))) {
+        if (!this.options.hasConnection(toNodeId(senderPeerDescriptor))) {
             const connection = this.options.connect(senderPeerDescriptor)
             this.options.onNewConnection(connection)
         }

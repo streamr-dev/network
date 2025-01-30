@@ -1,5 +1,5 @@
 import { ListeningRpcCommunicator, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcLocal'
@@ -72,7 +72,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
         requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
-        await waitForCondition(() => 
+        await until(() => 
             requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 
             && otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1
             && requesteStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
@@ -89,15 +89,19 @@ describe('NetworkStack NodeInfoRpc', () => {
                 {
                     id: streamPartId1,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 },
                 {
                     id: streamPartId2,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 }
             ],
-            version: expect.any(String)
+            applicationVersion: expect.any(String)
         })
         expect(result.streamPartitions.length).toEqual(2)
     })

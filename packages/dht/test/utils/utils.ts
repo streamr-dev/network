@@ -11,27 +11,27 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     ClosestRingPeersResponse
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import {
     IDhtNodeRpc,
     IRouterRpc,
     IStoreRpc,
     IWebsocketClientConnectorRpc
-} from '../../src/proto/packages/dht/protos/DhtRpc.server'
+} from '../../generated/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { Empty } from '../../src/proto/google/protobuf/empty'
-import { Any } from '../../src/proto/google/protobuf/any'
-import { wait, waitForCondition } from '@streamr/utils'
+import { Empty } from '../../generated/google/protobuf/empty'
+import { Any } from '../../generated/google/protobuf/any'
+import { wait, until } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         ...opts
     }
@@ -46,7 +46,7 @@ export const createMockRingNode = async (
     const dhtJoinTimeout = 45000
 
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region
         //ipAddress: ipv4ToNumber(ipAddress)
@@ -80,7 +80,7 @@ export const createMockConnectionDhtNode = async (
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -119,7 +119,8 @@ export const createMockConnectionLayer1Node = async (
         peerDescriptor: descriptor,
         transport: layer0Node,
         connectionsView: layer0Node.getConnectionsView(),
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket,
+        serviceId: serviceId ?? 'layer1',
+        numberOfNodesPerKBucket,
         rpcRequestTimeout: 10000
     })
     await node.start()
@@ -258,7 +259,7 @@ export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount
     await Promise.all(connectionManagers.map(async (connectionManager) => {
         connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
         try {
-            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
+            await until(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
         } catch {
             // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
             // locked connections and therefore it is ok to that garbage collector was not able to remove any of those

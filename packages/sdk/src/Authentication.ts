@@ -1,25 +1,27 @@
-import { BrowserProvider, AbstractSigner, Provider, computeAddress, Wallet } from 'ethers'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
+import { createSignature, hexToBinary, toUserId, UserID, wait } from '@streamr/utils'
+import { AbstractSigner, BrowserProvider, computeAddress, Provider, Wallet } from 'ethers'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
-import { pLimitFn } from './utils/promises'
 import { RpcProviderSource } from './RpcProviderSource'
+import { pLimitFn } from './utils/promises'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
+/**
+ * The {@link https://docs.ethers.org/v6/api/providers/abstract-signer/#AbstractSigner AbstractSigner} type is from the `ethers` library.
+ */
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
-    // always in lowercase
-    getAddress: () => Promise<EthereumAddress>
+    getUserId: () => Promise<UserID>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
-    const address = toEthereumAddress(computeAddress(key))
+    const userId = toUserId(computeAddress(key))
     return {
-        getAddress: async () => address,
+        getUserId: async () => userId,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
             const primaryProvider = rpcProviderSource.getProvider()
@@ -40,16 +42,8 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const provider = new BrowserProvider(ethereum)
         const signer = provider.getSigner()
         return {
-            getAddress: pMemoize(async () => {
-                try {
-                    if (!('request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereum}`)
-                    }
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    return toEthereumAddress(accounts[0])
-                } catch {
-                    throw new Error('no addresses connected and selected in the custom authentication provider')
-                }
+            getUserId: pMemoize(async () => {
+                return toUserId(await (await signer).getAddress())
             }),
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
@@ -66,7 +60,6 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 const actualChainId = (await provider.getNetwork()).chainId
                 if (actualChainId !== BigInt(expectedChainId)) {
                     throw new Error(
-                        // eslint-disable-next-line max-len
                         `Please connect the custom authentication provider with chainId ${expectedChainId} (current chainId is ${actualChainId})`
                     )
                 }

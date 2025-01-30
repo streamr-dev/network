@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, waitForEvent } from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils, UserID, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -40,7 +40,7 @@ export class GroupKeyManager {
         this.destroySignal = destroySignal
     }
 
-    async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: EthereumAddress): Promise<GroupKey> {
+    async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserID): Promise<GroupKey> {
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
 
         // 1st try: local storage
@@ -72,16 +72,16 @@ export class GroupKeyManager {
         return groupKey!
     }
 
-    async fetchLatestEncryptionKey(publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey | undefined> {
-        if (publisherId !== (await this.authentication.getAddress())) {
+    async fetchLatestEncryptionKey(publisherId: UserID, streamId: StreamID): Promise<GroupKey | undefined> {
+        if (publisherId !== (await this.authentication.getUserId())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
         const keyId = await this.localGroupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
         return keyId !== undefined ? this.localGroupKeyStore.get(keyId, publisherId) : undefined
     }
 
-    async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> {
-        if (publisherId !== (await this.authentication.getAddress())) { // TODO: unit test?
+    async storeKey(groupKey: GroupKey | undefined, publisherId: UserID, streamId: StreamID): Promise<GroupKey> {
+        if (publisherId !== (await this.authentication.getUserId())) { // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {
@@ -99,7 +99,7 @@ export class GroupKeyManager {
         return groupKey
     }
 
-    addKeyToLocalStore(groupKey: GroupKey, publisherId: EthereumAddress): Promise<void> {
+    addKeyToLocalStore(groupKey: GroupKey, publisherId: UserID): Promise<void> {
         return this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)
     }
 }

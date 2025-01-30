@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -42,7 +42,7 @@ export class SubscriberKeyExchange {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
-    requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
+    requestGroupKey: (groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => Promise<void>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -64,17 +64,16 @@ export class SubscriberKeyExchange {
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            // eslint-disable-next-line no-underscore-dangle
             this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
+        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, config.encryption.maxKeyRequestsPerSecond)
     }
 
-    private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
         const request = await this.createRequest(
@@ -95,7 +94,7 @@ export class SubscriberKeyExchange {
     private async createRequest(
         groupKeyId: string,
         streamPartId: StreamPartID,
-        publisherId: EthereumAddress,
+        publisherId: UserID,
         rsaPublicKey: string,
         requestId: string
     ): Promise<StreamMessage> {
@@ -112,7 +111,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getAddress() : erc1271contract,
+                erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyRequestToBytes(requestContent),
@@ -141,11 +140,11 @@ export class SubscriberKeyExchange {
         }
     }
 
-    private async isAssignedToMe(streamPartId: StreamPartID, recipient: EthereumAddress, requestId: string): Promise<boolean> {
+    private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.authentication.getAddress()
+            const authenticatedUser = await this.authentication.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipient === authenticatedUser) || (recipient === erc1271Contract)
+            return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }
         return false
     }

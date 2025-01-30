@@ -57,7 +57,7 @@ for (const tuple of airportsWithCoordinatesTuples) {
 
 for (const country of countries) {
 
-    const clusters: Array<[beginIdex: number, endIndex: number]> = []
+    const clusters: [beginIdex: number, endIndex: number][] = []
     
     // find all the indice of beginnings and ends of the country in the sorted array
 

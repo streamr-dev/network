@@ -23,7 +23,7 @@ export class GroupKeyQueue {
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
         instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
-            await authentication.getAddress(),
+            await authentication.getUserId(),
             streamId,
         )
         return instance
@@ -38,7 +38,7 @@ export class GroupKeyQueue {
     async useGroupKey(): Promise<GroupKeySequence> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
-            this.currentGroupKey = this.queuedGroupKey || await this.rekey()
+            this.currentGroupKey = this.queuedGroupKey ?? await this.rekey()
             this.queuedGroupKey = undefined
         }
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
@@ -55,14 +55,14 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.authentication.getAddress()
+        const publisherId = await this.authentication.getUserId()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.queuedGroupKey = newKey
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.authentication.getAddress()
+        const publisherId = await this.authentication.getUserId()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined

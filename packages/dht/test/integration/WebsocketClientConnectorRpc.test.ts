@@ -1,9 +1,9 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebsocketClientConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { WebsocketClientConnectorRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { createMockPeerDescriptor, mockWebsocketClientConnectorRpc } from '../utils/utils'
-import { WebsocketConnectionRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
+import { WebsocketConnectionRequest } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { Empty } from '../../generated/google/protobuf/empty'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebsocketClientConnectorRpc', () => {
@@ -32,12 +32,12 @@ describe('WebsocketClientConnectorRpc', () => {
             mockWebsocketClientConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
-            rpcCommunicator2.handleIncomingMessage(message)
+        rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
+            rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage) => {
-            rpcCommunicator1.handleIncomingMessage(message)
+        rpcCommunicator2.setOutgoingMessageListener(async (message: RpcMessage) => {
+            rpcCommunicator1.handleIncomingMessage(message, new DhtCallContext())
         })
 
         client1 = toProtoRpcClient(new WebsocketClientConnectorRpcClient(rpcCommunicator1.getRpcClientTransport()))

@@ -5,7 +5,7 @@ import {
     RouteMessageError,
     RouteMessageWrapper,
     RecursiveOperationRequest
-} from '../../src/proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import {
     createWrappedClosestPeersRequest,
     createMockPeerDescriptor
@@ -18,7 +18,7 @@ import { MockTransport } from '../utils/mock/MockTransport'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/transport/ITransport'
-import { areEqualPeerDescriptors, createRandomDhtAddress } from '../../src/identifiers'
+import { areEqualPeerDescriptors, randomDhtAddress } from '../../src/identifiers'
 import { MockConnectionsView } from '../utils/mock/MockConnectionsView'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
@@ -94,7 +94,7 @@ describe('RecursiveOperationManager', () => {
 
     it('find closest nodes returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_CLOSEST_NODES)
+        const res = await recursiveOperationManager.execute(randomDhtAddress(), RecursiveOperation.FIND_CLOSEST_NODES)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })

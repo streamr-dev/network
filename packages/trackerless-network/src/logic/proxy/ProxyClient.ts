@@ -4,9 +4,9 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    getNodeIdFromPeerDescriptor
+    toNodeId
 } from '@streamr/dht'
-import { EthereumAddress, Logger, StreamPartID, addManagedEventListener, wait } from '@streamr/utils'
+import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import {
@@ -15,8 +15,8 @@ import {
     MessageRef,
     ProxyDirection,
     StreamMessage
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
@@ -28,7 +28,6 @@ import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 // TODO use options option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             const result = await task()
@@ -47,14 +46,16 @@ interface ProxyClientOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
+    // TODO could be required options if we apply all defaults somewhere at higher level
+    maxPropagationBufferSize?: number
+    minPropagationTargets?: number
 }
 
 interface ProxyDefinition {
     nodes: Map<DhtAddress, PeerDescriptor>
     connectionCount: number
     direction: ProxyDirection
-    userId: EthereumAddress
+    userId: UserID
 }
 
 interface ProxyConnection {
@@ -87,7 +88,7 @@ export class ProxyClient extends EventEmitter<Events> {
         this.options = options
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(options.streamPartId), options.transport)
         // TODO use options option or named constant?
-        this.neighbors = new NodeList(getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor), 1000)
+        this.neighbors = new NodeList(toNodeId(this.options.localPeerDescriptor), 1000)
         this.contentDeliveryRpcLocal = new ContentDeliveryRpcLocal({
             localPeerDescriptor: this.options.localPeerDescriptor,
             streamPartId: this.options.streamPartId,
@@ -104,8 +105,8 @@ export class ProxyClient extends EventEmitter<Events> {
             markForInspection: () => {}
         })
         this.propagation = new Propagation({
-            // TODO use options option or named constant?
-            minPropagationTargets: options.minPropagationTargets ?? 2,
+            minPropagationTargets: options.minPropagationTargets,
+            maxMessages: options.maxPropagationBufferSize,
             sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
                 const remote = this.neighbors.get(neighborId)
                 if (remote) {
@@ -128,7 +129,7 @@ export class ProxyClient extends EventEmitter<Events> {
     async setProxies(
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId: this.options.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
@@ -137,7 +138,7 @@ export class ProxyClient extends EventEmitter<Events> {
         }
         const nodesIds = new Map<DhtAddress, PeerDescriptor>()
         nodes.forEach((peerDescriptor) => {
-            nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
+            nodesIds.set(toNodeId(peerDescriptor), peerDescriptor)
         })
         this.definition = {
             nodes: nodesIds,
@@ -176,7 +177,7 @@ export class ProxyClient extends EventEmitter<Events> {
         ))
     }
 
-    private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
+    private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: UserID): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const rpcRemote = new ProxyConnectionRpcRemote(
             this.options.localPeerDescriptor,
@@ -225,7 +226,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private removeConnection(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         this.connections.delete(nodeId)
         this.neighbors.remove(nodeId)
         this.options.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
@@ -248,7 +249,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.options.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
             this.removeConnection(peerDescriptor)
@@ -265,6 +266,12 @@ export class ProxyClient extends EventEmitter<Events> {
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
         )
+    }
+
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            neighbors: this.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+        }
     }
 
     stop(): void {

@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
 import { convertStreamMessageToMessage } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -12,8 +11,9 @@ import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { MOCK_CONTENT, createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { randomUserId } from '@streamr/test-utils'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = randomUserId()
 
 describe('waitForStorage', () => {
 
@@ -24,7 +24,7 @@ describe('waitForStorage', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomAuthentication())
         environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await client.createStream({
@@ -39,7 +39,7 @@ describe('waitForStorage', () => {
     })
 
     it('happy path', async () => {
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         const content = {
             foo: Date.now()
         }
@@ -48,7 +48,7 @@ describe('waitForStorage', () => {
     })
 
     it('no match', async () => {
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         const content = {
             foo: Date.now()
         }
@@ -66,7 +66,7 @@ describe('waitForStorage', () => {
     })
 
     it('no message', async () => {
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         const msg = convertStreamMessageToMessage(await messageSigner.createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
@@ -96,6 +96,6 @@ describe('waitForStorage', () => {
             messageMatchFn: () => {
                 return true
             }
-        })).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
+        })).rejects.toThrowStreamrClientError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
     })
 })

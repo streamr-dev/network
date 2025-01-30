@@ -4,7 +4,7 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -16,8 +16,8 @@ import {
     StreamMessage,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -31,6 +31,7 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
+import { ContentDeliveryLayerNeighborInfo } from '../types'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -75,6 +76,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private options: StrictContentDeliveryLayerNodeOptions
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
+    private messagesPropagated = 0
 
     constructor(options: StrictContentDeliveryLayerNodeOptions) {
         super()
@@ -91,9 +93,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     return
                 }
                 const contact = this.options.nearbyNodeView.get(remoteNodeId)
-                || this.options.randomNodeView.get(remoteNodeId)
-                || this.options.neighbors.get(remoteNodeId)
-                || this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
+                ?? this.options.randomNodeView.get(remoteNodeId)
+                ?? this.options.neighbors.get(remoteNodeId)
+                ?? this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.options.discoveryLayerNode.removeContact(remoteNodeId)
@@ -164,7 +166,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             (id, remote) => {
                 this.options.propagation.onNeighborJoined(id)
                 this.options.connectionLocker.weakLockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
                 this.emit('neighborConnected', id)
@@ -176,7 +178,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             'nodeRemoved',
             (_id, remote) => {
                 this.options.connectionLocker.weakUnlockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
             },
@@ -315,7 +317,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         if (this.options.neighbors.has(nodeId)) {
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
@@ -339,7 +341,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.options.neighbors.getAll().map((remote) => {
             remote.leaveStreamPartNotice(this.options.streamPartId, this.options.isLocalNodeEntryPoint())
             this.options.connectionLocker.weakUnlockConnection(
-                getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                toNodeId(remote.getPeerDescriptor()),
                 this.options.streamPartId
             )
         })
@@ -360,6 +362,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.emit('message', msg)
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
+        this.messagesPropagated += 1
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
@@ -376,7 +379,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     getOwnNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        return toNodeId(this.options.localPeerDescriptor)
     }
 
     getOutgoingHandshakeCount(): number {
@@ -390,11 +393,32 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         return this.options.neighbors.getAll().map((n) => n.getPeerDescriptor())
     }
 
+    getInfos(): ContentDeliveryLayerNeighborInfo[] {
+        return this.options.neighbors.getAll().map((n) => {
+            return {
+                peerDescriptor: n.getPeerDescriptor(),
+                rtt: n.getRtt()
+            }
+        })
+    }
+
     getNearbyNodeView(): NodeList {
         return this.options.nearbyNodeView
+    }
+
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            neighborCount: this.options.neighbors.size(),
+            nearbyNodeViewCount: this.options.nearbyNodeView.size(),
+            randomNodeViewCount: this.options.randomNodeView.size(),
+            leftNodeViewCount: this.options.leftNodeView.size(),
+            rightNodeViewCount: this.options.rightNodeView.size(),
+            messagesPropagated: this.messagesPropagated
+        }
     }
 
     private isStopped() {
         return this.abortController.signal.aborted
     }
+
 }

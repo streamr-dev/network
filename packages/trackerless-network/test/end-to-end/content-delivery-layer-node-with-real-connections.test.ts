@@ -1,11 +1,11 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('content delivery layer node with real connections', () => {
 
@@ -106,10 +106,15 @@ describe('content delivery layer node with real connections', () => {
             dhtNode2.stop(),
             dhtNode3.stop(),
             dhtNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode1.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode2.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode3.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode4.stop(),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             contentDeliveryLayerNode5.stop(),
             (epDhtNode.getTransport() as ConnectionManager).stop(),
             (dhtNode1.getTransport() as ConnectionManager).stop(),
@@ -120,7 +125,7 @@ describe('content delivery layer node with real connections', () => {
     })
 
     it('can fully connected topologies ', async () => {
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -141,7 +146,7 @@ describe('content delivery layer node with real connections', () => {
         contentDeliveryLayerNode4.on('message', () => receivedMessageCount += 1)
         contentDeliveryLayerNode5.on('message', () => receivedMessageCount += 1)
 
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -152,9 +157,9 @@ describe('content delivery layer node with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomUserId()
         )
         contentDeliveryLayerNode1.broadcast(msg)
-        await waitForCondition(() => receivedMessageCount >= 4)
+        await until(() => receivedMessageCount >= 4)
     })
 })

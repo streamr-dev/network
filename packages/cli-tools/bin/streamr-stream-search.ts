@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { StreamrClient, SearchStreamsPermissionFilter, StreamPermission } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { Option } from 'commander'
@@ -22,7 +23,7 @@ const createPermissionFilter = async (
 ): Promise<SearchStreamsPermissionFilter | undefined> => {
     if (user !== undefined) {
         return {
-            user: (getOptionType(user) === OptionType.ARGUMENT) ? user as string : await client.getAddress(),
+            userId: (getOptionType(user) === OptionType.ARGUMENT) ? user as string : await client.getUserId(),
             allowPublic: allowPublic ?? false,
             allOf,
             anyOf
@@ -49,7 +50,7 @@ createClientCommand(async (client: StreamrClient, term: string | undefined, opti
     )
     const streams = client.searchStreams(term, permissionFilter)
     for await (const stream of streams) {
-        console.log(stream.id)
+        console.info(stream.id)
     }
 })
     .arguments('[term]')

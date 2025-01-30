@@ -27,7 +27,7 @@ import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
-import { waitForCondition } from './waitForCondition'
+import { until } from './until'
 import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
@@ -36,14 +36,14 @@ import { addManagedEventListener } from './addManagedEventListener'
 import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
-import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
+import { TheGraphClient, GraphQLQuery } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { verifySignature, createSignature, recoverAddress, hash } from './signingUtils'
+import { verifySignature, createSignature, recoverSignerUserId, hash } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
@@ -72,7 +72,7 @@ export {
     toEthereumAddress,
     toEthereumAddressOrENSName,
     wait,
-    waitForCondition,
+    until,
     waitForEvent,
     withRateLimit,
     withTimeout,
@@ -90,7 +90,6 @@ export {
     Gate,
     TheGraphClient,
     GraphQLQuery,
-    FetchResponse,
     Heap,
     executeSafePromise,
     binaryToHex,
@@ -104,7 +103,7 @@ export {
     toLengthPrefixedFrame,
     createSignature,
     verifySignature,
-    recoverAddress,
+    recoverSignerUserId,
     ipv4ToNumber,
     numberToIpv4,
     hash,
@@ -123,5 +122,9 @@ export {
 }
 
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
-export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
+export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
+export { HexString } from './HexString'
+export { ChangeFieldType, MapKey } from './types'
+export { WeiAmount, multiplyWeiAmount } from './WeiAmount'

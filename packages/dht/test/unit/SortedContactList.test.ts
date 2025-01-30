@@ -1,9 +1,9 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
+import { DhtAddress, DhtAddressRaw, randomDhtAddress, toDhtAddress } from '../../src/identifiers'
 
 const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress } => {
     return { 
-        getNodeId: () => getDhtAddressFromRaw(nodeId)
+        getNodeId: () => toDhtAddress(nodeId)
     }
 }
 
@@ -38,7 +38,7 @@ describe('SortedContactList', () => {
         expect(list.getSize()).toEqual(3)
         expect(list.getClosestContacts()).toEqual([item1, item2, item3])
         expect(list.getContactIds()).toEqual([item1.getNodeId(), item2.getNodeId(), item3.getNodeId()])
-        expect(onContactRemoved).toBeCalledWith(item4)
+        expect(onContactRemoved).toHaveBeenCalledWith(item4)
         expect(list.getContact(item4.getNodeId())).toBeFalsy()
     })
 
@@ -46,7 +46,7 @@ describe('SortedContactList', () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
-        list.removeContact(createRandomDhtAddress())
+        list.removeContact(randomDhtAddress())
         list.addContact(item3)
         list.removeContact(item3.getNodeId())
         list.addContact(item4)
@@ -58,10 +58,10 @@ describe('SortedContactList', () => {
         expect(list.getContact(item2.getNodeId())).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
         expect(list.getClosestContacts()).toEqual([item1, item3, item4])
-        const ret = list.removeContact(getDhtAddressFromRaw(Buffer.from([0, 0, 0, 6])))
+        const ret = list.removeContact(toDhtAddress(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
         list.removeContact(item3.getNodeId())
-        list.removeContact(createRandomDhtAddress())
+        list.removeContact(randomDhtAddress())
         expect(list.getClosestContacts()).toEqual([item1, item4])
         expect(onContactRemoved).toHaveBeenNthCalledWith(1, item3)
         expect(onContactRemoved).toHaveBeenNthCalledWith(2, item2)
@@ -106,9 +106,9 @@ describe('SortedContactList', () => {
         list.on('contactAdded', onContactAdded)
         list.addContact(item1)
         list.addContact(item2)
-        expect(onContactAdded).toBeCalledTimes(2)
+        expect(onContactAdded).toHaveBeenCalledTimes(2)
         list.addContact(item3)
-        expect(onContactAdded).toBeCalledTimes(2)
+        expect(onContactAdded).toHaveBeenCalledTimes(2)
         expect(list.getClosestContacts().length).toEqual(2)
     })
 

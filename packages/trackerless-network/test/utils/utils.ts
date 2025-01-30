@@ -5,12 +5,12 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    createRandomDhtAddress,
+    randomDhtAddress,
     getRandomRegion,
-    getRawFromDhtAddress
+    toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -23,8 +23,8 @@ import {
     MessageID,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -50,7 +50,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
+        neighborPingLimit: 16
     })
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
@@ -67,7 +68,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
@@ -76,7 +77,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId: toUserIdRaw(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
@@ -98,7 +99,7 @@ export const createStreamMessage = (
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

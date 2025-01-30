@@ -1,4 +1,4 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import {
     EthereumAddress,
     StreamID,
@@ -6,7 +6,7 @@ import {
     StreamPartIDUtils,
     collect, hexToBinary,
     toStreamID,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
@@ -21,7 +21,7 @@ import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomEthereumAddress()
+const PUBLISHER_ID = randomUserId()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
 
 const CONFIG = {
@@ -118,7 +118,7 @@ describe('OrderMessages', () => {
         const orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
         expect(await collect(orderMessages)).toEqual(msgs)
-        expect(resends.resend).toBeCalledWith(
+        expect(resends.resend).toHaveBeenCalledWith(
             STREAM_PART_ID,
             {
                 from: new MessageRef(2000, 1),
@@ -141,7 +141,7 @@ describe('OrderMessages', () => {
         const orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
         expect(await collect(orderMessages)).toEqual(msgs)
-        expect(resends.resend).toBeCalledWith(
+        expect(resends.resend).toHaveBeenCalledWith(
             STREAM_PART_ID,
             {
                 from: new MessageRef(2000, 1),
@@ -202,7 +202,7 @@ describe('OrderMessages', () => {
         const orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
         expect(await collect(orderMessages)).toEqual(without(msgs, ...missing))
-        expect(resends.resend).toBeCalledTimes(CONFIG.maxGapRequests)
+        expect(resends.resend).toHaveBeenCalledTimes(CONFIG.maxGapRequests)
     })
 
     it('ignore missing message if gap filling disable', async () => {
@@ -216,7 +216,7 @@ describe('OrderMessages', () => {
         } as any)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
         expect(await collect(orderMessages)).toEqual(without(msgs, ...missing))
-        expect(resends.resend).toBeCalledTimes(0)
+        expect(resends.resend).toHaveBeenCalledTimes(0)
     })
 
     it('aborts resends when destroyed', async () => {
@@ -266,7 +266,7 @@ describe('OrderMessages', () => {
         const addMessages = async (orderMessages: OrderMessages) => {
             await orderMessages.addMessages(async function* () {
                 yield* allMessages.filter((m) => CHUNK1.includes(m.getTimestamp()))
-                await waitForCondition(() => {
+                await until(() => {
                     return outputMessages.some((m) => (m.getTimestamp() === last(CHUNK1)))
                 })
                 yield* allMessages.filter((m) => CHUNK2.includes(m.getTimestamp()))
@@ -288,8 +288,8 @@ describe('OrderMessages', () => {
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 expect(outputMessages).toEqual(availableMessages)
-                expect(resends.resend).toBeCalledTimes(3 + CONFIG.maxGapRequests)
-                expect(onUnfillableGap).toBeCalledTimes(1)
+                expect(resends.resend).toHaveBeenCalledTimes(3 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toHaveBeenCalledTimes(1)
                 expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
                 expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
             })
@@ -307,8 +307,8 @@ describe('OrderMessages', () => {
                 startConsuming(orderMessages)
                 await addMessages(orderMessages)
                 expect(outputMessages).toEqual(availableMessages)
-                expect(resends.resend).toBeCalledTimes(3 + CONFIG.maxGapRequests)
-                expect(onUnfillableGap).toBeCalledTimes(1)
+                expect(resends.resend).toHaveBeenCalledTimes(3 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toHaveBeenCalledTimes(1)
                 expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(3000)
                 expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(8000)
             })
@@ -334,8 +334,8 @@ describe('OrderMessages', () => {
                     (m) => !UNAVAILABLE.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
                 )
                 expect(outputMessages).toEqual(expectedMessages)
-                expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
-                expect(onUnfillableGap).toBeCalledTimes(2)
+                expect(resends.resend).toHaveBeenCalledTimes(2 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toHaveBeenCalledTimes(2)
                 expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
                 expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
                 expect(onUnfillableGap.mock.calls[1][0].from.messageId.timestamp).toBe(8000)
@@ -360,8 +360,8 @@ describe('OrderMessages', () => {
                     (m) => !ERROR.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
                 )
                 expect(outputMessages).toEqual(expectedMessages)
-                expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
-                expect(onUnfillableGap).toBeCalledTimes(2)
+                expect(resends.resend).toHaveBeenCalledTimes(2 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toHaveBeenCalledTimes(2)
                 expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(3000)
                 expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(8000)
                 expect(onUnfillableGap.mock.calls[1][0].from.messageId.timestamp).toBe(8000)
@@ -377,7 +377,7 @@ describe('OrderMessages', () => {
             const orderMessages = createOrderMessages(undefined as any, undefined, getStorageNodes)
             await orderMessages.addMessages(fromArray(await createMessages(5)))
             await collect(orderMessages)
-            expect(getStorageNodes).not.toBeCalled()
+            expect(getStorageNodes).not.toHaveBeenCalled()
         })
 
         it('multiple gaps', async () => {
@@ -391,7 +391,7 @@ describe('OrderMessages', () => {
             )
             await orderMessages.addMessages(fromArray(messages))
             await collect(orderMessages)
-            expect(getStorageNodes).toBeCalledTimes(1)
+            expect(getStorageNodes).toHaveBeenCalledTimes(1)
         })
     })
 })

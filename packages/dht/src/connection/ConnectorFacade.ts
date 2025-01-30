@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import {
     ConnectivityResponse,
     PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { Simulator } from './simulator/Simulator'

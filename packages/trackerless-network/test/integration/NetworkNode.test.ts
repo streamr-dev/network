@@ -1,7 +1,8 @@
 import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -62,7 +63,7 @@ describe('NetworkNode', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: 666,
                 sequenceNumber: 0,
-                publisherId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                publisherId: toUserIdRaw(randomUserId()),
                 messageChainId: 'msgChainId'
             },
             previousMessageRef: {
@@ -91,7 +92,7 @@ describe('NetworkNode', () => {
             msgCount += 1
         })
         await node2.broadcast(streamMessage)
-        await waitForCondition(() => msgCount === 1)
+        await until(() => msgCount === 1)
     })
 
     it('fetchNodeInfo', async () => {

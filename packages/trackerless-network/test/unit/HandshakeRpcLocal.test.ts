@@ -1,8 +1,8 @@
-import { DhtAddress, NodeType, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '@streamr/dht'
+import { DhtAddress, NodeType, toNodeId, toDhtAddressRaw } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
-import { InterleaveRequest, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { InterleaveRequest, StreamPartHandshakeRequest } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockContentDeliveryRpcRemote, createMockHandshakeRpcRemote, createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -19,7 +19,7 @@ describe('HandshakeRpcLocal', () => {
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        neighbors = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), 10)
+        neighbors = new NodeList(toNodeId(localPeerDescriptor), 10)
         ongoingHandshakes = new Set()
         ongoingInterleaves = new Set()
         handshakeWithInterleaving = jest.fn()
@@ -86,20 +86,7 @@ describe('HandshakeRpcLocal', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
-                nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
-                type: NodeType.NODEJS
-            }
-        }
-        await rpcLocal.interleaveRequest(req, {
-            incomingSourceDescriptor: createMockPeerDescriptor()
-        } as any)
-        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
-    })
-
-    it('handshakeWithInterleaving success', async () => {
-        const req: InterleaveRequest = {
-            interleaveTargetDescriptor: {
-                nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
+                nodeId: toDhtAddressRaw('0x2222' as DhtAddress),
                 type: NodeType.NODEJS
             }
         }
@@ -115,7 +102,7 @@ describe('HandshakeRpcLocal', () => {
         neighbors.add(createMockContentDeliveryRpcRemote())
         neighbors.add(createMockContentDeliveryRpcRemote())
         const requestor = createMockPeerDescriptor()
-        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(requestor))
+        ongoingInterleaves.add(toNodeId(requestor))
         const req = StreamPartHandshakeRequest.create({
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
@@ -134,9 +121,9 @@ describe('HandshakeRpcLocal', () => {
         neighbors.add(createMockContentDeliveryRpcRemote(interleavingPeer2))
         neighbors.add(createMockContentDeliveryRpcRemote(interleavingPeer3))
         neighbors.add(createMockContentDeliveryRpcRemote())
-        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer1))
-        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer2))
-        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer3))
+        ongoingInterleaves.add(toNodeId(interleavingPeer1))
+        ongoingInterleaves.add(toNodeId(interleavingPeer2))
+        ongoingInterleaves.add(toNodeId(interleavingPeer3))
         const req = StreamPartHandshakeRequest.create({
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'

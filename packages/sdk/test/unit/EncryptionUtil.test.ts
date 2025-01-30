@@ -1,10 +1,12 @@
-import { fastWallet } from '@streamr/test-utils'
-import { StreamPartIDUtils, binaryToUtf8, hexToBinary, toStreamID, toStreamPartID } from '@streamr/utils'
+import { createTestWallet } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toStreamID, toStreamPartID, utf8ToBinary } from '@streamr/utils'
 import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamrClientError } from '../../src/StreamrClientError'
 import { createMockMessage } from '../test-utils/utils'
 import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {
@@ -37,7 +39,7 @@ describe('EncryptionUtil', () => {
         const nextKey = GroupKey.generate()
         const streamMessage = await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
-            publisher: fastWallet(),
+            publisher: await createTestWallet(),
             content: {
                 foo: 'bar'
             },
@@ -45,15 +47,14 @@ describe('EncryptionUtil', () => {
             nextEncryptionKey: nextKey
         }) as StreamMessageAESEncrypted
         const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-        // Coparing this way as jest does not like comparing buffers to Uint8Arrays
-        expect(binaryToUtf8(content)).toStrictEqual('{"foo":"bar"}')
+        expect(content).toEqualBinary(utf8ToBinary('{"foo":"bar"}'))
         expect(newGroupKey).toEqual(nextKey)
     })
 
     it('StreamMessage decryption throws if newGroupKey invalid', async () => {
         const key = GroupKey.generate()
         const msg = await createMockMessage({
-            publisher: fastWallet(),
+            publisher: await createTestWallet(),
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key
         })
@@ -61,6 +62,8 @@ describe('EncryptionUtil', () => {
             ...msg,
             newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
         }) as StreamMessageAESEncrypted
-        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrow('Could not decrypt new group key')
+        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError(
+            new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', msg2)
+        )
     })
 })

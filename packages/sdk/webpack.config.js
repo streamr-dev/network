@@ -38,7 +38,7 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /(\.jsx|\.js|\.ts)$/,
+                    test: /(\.jsx|\.js|\.ts|\.mts)$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
                         loader: 'babel-loader',
@@ -52,7 +52,7 @@ module.exports = (env, argv) => {
             ]
         },
         resolve: {
-            modules: ['node_modules', ...require.resolve.paths(''), path.resolve('./vendor')],
+            modules: ['node_modules', ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
@@ -98,10 +98,7 @@ module.exports = (env, argv) => {
             alias: {
                 stream: 'readable-stream',
                 util: 'util',
-                http: path.resolve('./src/shim/http-https.ts'),
-                https: path.resolve('./src/shim/http-https.ts'),
                 buffer: require.resolve('buffer/'),
-                'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
                 '@streamr/utils': path.resolve('../utils/src/exports.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
@@ -116,7 +113,7 @@ module.exports = (env, argv) => {
                     path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
-                    path.resolve('./src/utils/persistence/BrowserPersistence.ts')
+                    path.resolve('./src/utils/persistence/BrowserPersistence.mts')
                 )
             },
             fallback: {
@@ -177,14 +174,15 @@ module.exports = (env, argv) => {
                             ecma: 2018,
                             output: {
                                 comments: false,
-                            },
-                        },
-                    }),
-                ],
+                                ascii_only: true
+                            }
+                        }
+                    })
+                ]
             },
             output: {
                 filename: '[name].web.min.js',
-            },
+            }
         })
     }
 }

@@ -4,21 +4,21 @@ import {
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebrtcConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
-import { isMaybeSupportedVersion } from '../../helpers/version'
+import { isMaybeSupportedProtocolVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
@@ -31,6 +31,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     }
     return parsed.join(' ')
 }
+
+export const EARLY_TIMEOUT = 5000
 
 export interface WebrtcConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
@@ -127,9 +129,9 @@ export class WebrtcConnector {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
-        logger.trace(`Opening WebRTC connection to ${getNodeIdFromPeerDescriptor(targetPeerDescriptor)}`)
+        logger.trace(`Opening WebRTC connection to ${toNodeId(targetPeerDescriptor)}`)
 
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const nodeId = toNodeId(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(nodeId)
         if (existingConnection) {
             return existingConnection.managedConnection
@@ -137,8 +139,8 @@ export class WebrtcConnector {
 
         const connection = this.createConnection(targetPeerDescriptor)
 
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
-        const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const localNodeId = toNodeId(this.localPeerDescriptor!)
+        const targetNodeId = toNodeId(targetPeerDescriptor)
         const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
         let pendingConnection: PendingConnection
         const remoteConnector = new WebrtcConnectorRpcRemote(
@@ -167,8 +169,8 @@ export class WebrtcConnector {
                 remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
             handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
-                if (!isMaybeSupportedVersion(remoteVersion)) {
-                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                if (!isMaybeSupportedProtocolVersion(remoteVersion)) {
+                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
                 } else {
                     acceptHandshake(handshaker, pendingConnection, connection)
                 }
@@ -224,7 +226,7 @@ export class WebrtcConnector {
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map(async (conn) => {
             conn.connection.destroy()
-            await conn.managedConnection.close(false)
+            conn.managedConnection.close(false)
         }))
 
         this.rpcCommunicator.destroy()

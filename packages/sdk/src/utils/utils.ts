@@ -1,14 +1,12 @@
-import { DhtAddress, NodeType, PeerDescriptor, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
+import { DhtAddress, NodeType, PeerDescriptor, toDhtAddress, toDhtAddressRaw } from '@streamr/dht'
 import {
     LengthPrefixedFrameDecoder,
     Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
-import compact from 'lodash/compact'
-import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
-import LRU from '../../vendor/quick-lru'
+import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
@@ -92,12 +90,12 @@ export function formStorageNodeAssignmentStreamId(clusterAddress: string): Strea
     return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
-export class MaxSizedSet<T> {
+export class MaxSizedSet<T extends string> {
 
-    private readonly delegate: LRU<T, true>
+    private readonly delegate: LRUCache<T, true>
 
     constructor(maxSize: number) {
-        this.delegate = new LRU<T, true>({ maxSize })
+        this.delegate = new LRUCache<T, true>({ maxSize, sizeCalculation: () => 1 })
     }
 
     add(value: T): void {
@@ -130,7 +128,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
+        nodeId: toDhtAddressRaw((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
     }
@@ -143,7 +141,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
     // TODO maybe we should copy most/all fields of PeerDescription (NET-1255)
     return {
-        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
+        nodeId: toDhtAddress(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
         websocket: descriptor.websocket,
         region: descriptor.region
@@ -154,10 +152,14 @@ export function generateClientId(): string {
     return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
+export type LookupKeyType = (string | number | symbol) | (string | number | symbol)[]
+
 // A unique internal identifier to some list of primitive values. Useful
 // e.g. as a map key or a cache key.
-export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
-    return args.join('|')
+export const formLookupKey = <K extends LookupKeyType>(key: K): string => {
+    return Array.isArray(key)
+        ? key.map((a) => a.toString()).join('|')
+        : key.toString()
 }
 
 /** @internal */
@@ -170,7 +172,20 @@ export const createTheGraphClient = (
         fetch: (url: string, init?: Record<string, unknown>) => {
             // eslint-disable-next-line no-underscore-dangle
             const timeout = config._timeouts.theGraph.fetchTimeout
-            return fetch(url, merge({ timeout }, init))
+
+            const signals = [AbortSignal.timeout(timeout)]
+
+            if (init?.signal instanceof AbortSignal) {
+                signals.push(init.signal)
+            }
+
+            const signal = composeAbortSignals(...signals)
+
+            try {
+                return fetch(url, merge(init, { signal }))
+            } finally {
+                signal.destroy()
+            }
         },
         // eslint-disable-next-line no-underscore-dangle
         indexTimeout: config._timeouts.theGraph.indexTimeout,
@@ -206,36 +221,39 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
 ): AsyncGenerator<Uint8Array, void, undefined> {
     logger.debug('Send HTTP request', { url })
     const abortController = new AbortController()
-    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
-    const response: Response = await fetch(url, {
-        signal: fetchAbortSignal
-    })
-    logger.debug('Received HTTP response', {
-        url,
-        status: response.status,
-    })
-    if (!response.ok) {
-        throw new FetchHttpStreamResponseError(response)
-    }
-    if (!response.body) {
-        throw new Error('No Response Body')
-    }
 
-    let stream: Readable | undefined
+    const fetchAbortSignal = composeAbortSignals(abortController.signal, abortSignal)
     try {
-        // in the browser, response.body will be a web stream. Convert this into a node stream.
-        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
-        stream = source.pipe(new LengthPrefixedFrameDecoder())
-        source.on('error', (err: Error) => stream!.destroy(err))
-        stream.once('close', () => {
-            abortController.abort()
+        const response: Response = await fetch(url, {
+            signal: fetchAbortSignal
         })
-        yield* stream
-    } catch (err) {
-        abortController.abort()
-        throw err
+        logger.debug('Received HTTP response', {
+            url,
+            status: response.status,
+        })
+        if (!response.ok) {
+            throw new FetchHttpStreamResponseError(response)
+        }
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+        let stream: Readable | undefined
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body)
+            stream = source.pipe(new LengthPrefixedFrameDecoder())
+            source.on('error', (err: Error) => stream!.destroy(err))
+            stream.once('close', () => {
+                abortController.abort()
+            })
+            yield* stream
+        } catch (err) {
+            abortController.abort()
+            throw err
+        } finally {
+            stream?.destroy()
+        }
     } finally {
-        stream?.destroy()
         fetchAbortSignal.destroy()
     }
 }

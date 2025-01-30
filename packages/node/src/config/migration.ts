@@ -39,7 +39,7 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     }
     const isMetricsPluginEnabled = (source.plugins.metrics !== undefined) && (source.plugins.metrics.nodeMetrics !== null)
     if (isMetricsPluginEnabled) {
-        const streamIdPrefix = source.plugins.metrics.nodeMetrics?.streamIdPrefix
+        const streamIdPrefix: string | undefined = source.plugins.metrics.nodeMetrics?.streamIdPrefix
         if (streamIdPrefix !== undefined) {
             target.client.metrics = {
                 periods: [
@@ -138,7 +138,6 @@ const formBackupFileName = (originalFileName: string) => {
         return name
     } else {
         let suffix = 1
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             const suffixedName = `${name}-${suffix}`
             if (!fs.existsSync(suffixedName)) {

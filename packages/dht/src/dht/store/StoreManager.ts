@@ -3,19 +3,19 @@ import { Logger } from '@streamr/utils'
 import {
     DhtAddress,
     areEqualPeerDescriptors,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor,
-    getRawFromDhtAddress
+    toDhtAddress,
+    toNodeId,
+    toDhtAddressRaw
 } from '../../identifiers'
-import { Any } from '../../proto/google/protobuf/any'
-import { Timestamp } from '../../proto/google/protobuf/timestamp'
+import { Any } from '../../../generated/google/protobuf/any'
+import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import {
     DataEntry,
     PeerDescriptor,
     RecursiveOperation,
     ReplicateDataRequest,
     StoreDataRequest, StoreDataResponse
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../../types/ServiceID'
 import { getClosestNodes } from '../contact/getClosestNodes'
@@ -32,7 +32,7 @@ interface StoreManagerOptions {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
@@ -99,8 +99,8 @@ export class StoreManager {
         const ttl = this.options.highestTtl // ToDo: make TTL decrease according to some nice curve
         const createdAt = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.options.redundancyFactor; i++) {
-            const keyRaw = getRawFromDhtAddress(key)
-            const creatorRaw = getRawFromDhtAddress(creator)
+            const keyRaw = toDhtAddressRaw(key)
+            const creatorRaw = toDhtAddressRaw(creator)
             if (areEqualPeerDescriptors(this.options.localPeerDescriptor, closestNodes[i])) {
                 this.options.localDataStore.storeEntry({
                     key: keyRaw,
@@ -136,7 +136,7 @@ export class StoreManager {
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.options.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const dataKey = getDhtAddressFromRaw(dataEntry.key)
+            const dataKey = toDhtAddress(dataEntry.key)
             const neighbors = getClosestNodes(
                 dataKey,
                 this.options.getNeighbors(),
@@ -159,7 +159,7 @@ export class StoreManager {
             [...this.options.getNeighbors(), this.options.localPeerDescriptor],
             { 
                 maxCount: this.options.redundancyFactor,
-                excludedNodeIds: excludedNode !== undefined ? new Set([getNodeIdFromPeerDescriptor(excludedNode)]) : undefined
+                excludedNodeIds: excludedNode !== undefined ? new Set([toNodeId(excludedNode)]) : undefined
             }
         )
     }

@@ -1,9 +1,12 @@
+import { randomUserId } from '@streamr/test-utils'
 import {
     StreamPartIDUtils,
-    hexToBinary, toEthereumAddress, waitForEvent3
+    hexToBinary,
+    toUserIdRaw,
+    waitForEvent3
 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ProxyDirection, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
@@ -15,8 +18,8 @@ describe('proxy group key exchange', () => {
     const publisherDescriptor = createMockPeerDescriptor()
     const subscriberDescriptor = createMockPeerDescriptor()
 
-    const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
-    const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
+    const publisherUserId = randomUserId()
+    const subscriberUserId = randomUserId()
 
     let proxyNode: NetworkNode
     let publisher: NetworkNode
@@ -34,7 +37,6 @@ describe('proxy group key exchange', () => {
             }
         })
         await proxyNode.start()
-        proxyNode.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor])
         proxyNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         publisher = createNetworkNode({
             layer0: {
@@ -69,14 +71,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(subscriberUserId),
+                publisherId: toUserIdRaw(subscriberUserId),
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyRequest' as const,
                 groupKeyRequest: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: toUserIdRaw(publisherUserId),
                     rsaPublicKey: new Uint8Array(),
                     groupKeyIds: ['mock']
                 }
@@ -101,14 +103,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(publisherUserId),
+                publisherId: toUserIdRaw(publisherUserId),
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyResponse' as const,
                 groupKeyResponse: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: toUserIdRaw(publisherUserId),
                     groupKeys: []
                 }
             },

@@ -5,21 +5,22 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor
+    toDhtAddress,
+    toNodeId
 } from '@streamr/dht'
 import {
-    EthereumAddress,
     Logger,
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric, StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID
+    RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
+    UserID,
+    toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -28,6 +29,8 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { ConnectionManager } from '@streamr/dht/src/exports'
+import { StreamPartitionInfo } from '../types'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -37,9 +40,11 @@ export type StreamPartDelivery = {
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
+    getDiagnosticInfo: () => Record<string, unknown>
 } | {
     proxied: true
     client: ProxyClient
+    getDiagnosticInfo: () => Record<string, unknown>
 })
 
 export interface Events {
@@ -57,12 +62,14 @@ export interface ContentDeliveryManagerOptions {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
+    streamPartitionMaxPropagationBufferSize?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
+    neighborUpdateInterval?: number
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
+    return toDhtAddress(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 export class ContentDeliveryManager extends EventEmitter<Events> {
@@ -169,7 +176,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 await peerDescriptorStoreManager.destroy()
                 node.stop()
                 await discoveryLayerNode.stop()
-            }
+            },
+            getDiagnosticInfo: () => node.getDiagnosticInfo()
         }
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
@@ -207,6 +215,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             // leaveStreamPart has been called (or leaveStreamPart called, and then setProxies called)
             return
         }
+        if ((this.transport! as ConnectionManager).isPrivateClientMode()) {
+            await (this.transport! as ConnectionManager).disablePrivateClientMode()
+        }
         await streamPart.discoveryLayerNode.start()
         await streamPart.node.start()
         const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
@@ -241,7 +252,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
             dhtJoinTimeout: 20000,  // TODO use options option or named constant?
             periodicallyPingNeighbors: true,
-            periodicallyPingRingContacts: true
+            periodicallyPingRingContacts: true,
+            neighborPingLimit: 16
         })
     }
 
@@ -258,8 +270,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
+            neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint
         })
     }
@@ -268,7 +282,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required
@@ -287,11 +301,15 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                     proxied: true,
                     client,
                     broadcast: (msg: StreamMessage) => client.broadcast(msg),
-                    stop: async () => client.stop()
+                    stop: async () => client.stop(),
+                    getDiagnosticInfo: () => client.getDiagnosticInfo()
                 })
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
                 })
+                if (Array.from(this.streamParts.values()).every((streamPart) => streamPart.proxied)) {
+                    await (this.transport! as ConnectionManager).enablePrivateClientMode()
+                }
                 await client.start()
             }
             await client.setProxies(nodes, direction, userId, connectionCount)
@@ -307,7 +325,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize
         })
     }
 
@@ -327,7 +346,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.discoveryLayerNode.getNeighbors(),
-                contentDeliveryLayerNeighbors: stream.node.getNeighbors()
+                deprecatedContentDeliveryLayerNeighbors: [],
+                contentDeliveryLayerNeighbors: stream.node.getInfos()
             }
         })
 
@@ -357,17 +377,28 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.controlLayerNode!.getLocalPeerDescriptor())
+        return toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            ? streamPart.node.getNeighbors().map((n) => toNodeId(n))
             : []
     }
 
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            streamParts: this.getStreamParts().map((id) => { 
+                return {
+                    id,
+                    info: this.getStreamPartDelivery(id)!.getDiagnosticInfo()
+                }
+            })
+        }
     }
 }

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { isRunningInElectron, randomEthereumAddress, startTestServer } from '@streamr/test-utils'
+import { isRunningInElectron, randomEthereumAddress, randomUserId, startTestServer } from '@streamr/test-utils'
 import { StreamPartIDUtils, collect, hexToBinary, toLengthPrefixedFrame, toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
@@ -33,7 +33,7 @@ describe('Resends', () => {
         await expect(async () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             message: `Storage node fetch failed: Mock error, httpStatus=400, url=${requestUrl}`,
             code: 'STORAGE_NODE_ERROR'
         })
@@ -45,11 +45,10 @@ describe('Resends', () => {
         await expect(async () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             message: isRunningInElectron()
                 ? 'Failed to fetch'
-                // eslint-disable-next-line max-len
-                : 'request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test',
+                : 'fetch failed (code=STORAGE_NODE_ERROR)',
             code: 'STORAGE_NODE_ERROR'
         })
     })
@@ -59,7 +58,7 @@ describe('Resends', () => {
         const MESSAGE_COUNT = 257
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
-            const publisherId = randomEthereumAddress()
+            const publisherId = randomUserId()
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),

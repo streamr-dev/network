@@ -1,8 +1,7 @@
 {
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
-        "outDir": "dist",
-        "declarationDir": "dist/types",
+        "noEmit": true,
         "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
@@ -13,7 +12,7 @@
         "package.json",
         "src/**/*",
         "src/**/*.json",
-        "vendor/**/*",
+        "bin/generate-config-validator.js",
         "src/config.schema.json",
         "test/**/*",
         "test/**/*.json"
@@ -22,8 +21,7 @@
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/exports-esm.mjs",
-        "src/utils/persistence/BrowserPersistence.ts"
+        "src/exports-esm.mjs"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },

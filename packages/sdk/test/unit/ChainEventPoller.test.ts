@@ -1,4 +1,4 @@
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, until } from '@streamr/utils'
 import { Contract, EventLog, Provider } from 'ethers'
 import { ChainEventPoller, POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD } from './../../src/contracts/ChainEventPoller'
 import range from 'lodash/range'
@@ -36,13 +36,13 @@ describe('ChainEventPoller', () => {
         poller.on(EVENT_NAME, listener1)
 
         // poller starts
-        await waitForCondition(() => listener1.mock.calls.length === 1)
+        await until(() => listener1.mock.calls.length === 1)
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(1)
         expect(contract.queryFilter).toHaveBeenCalledTimes(1)
         expect(contract.queryFilter).toHaveBeenCalledWith([[EVENT_NAME]], INITIAL_BLOCK_NUMBER)
         expect(listener1).toHaveBeenCalledTimes(1)
         expect(listener1).toHaveBeenCalledWith(...EVENT_ARGS, INITIAL_BLOCK_NUMBER)
-        await waitForCondition(() => listener1.mock.calls.length === 2)
+        await until(() => listener1.mock.calls.length === 2)
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(1)
         expect(contract.queryFilter).toHaveBeenCalledTimes(2)
         expect(contract.queryFilter).toHaveBeenNthCalledWith(2, [[EVENT_NAME]], INITIAL_BLOCK_NUMBER + 1)
@@ -61,7 +61,7 @@ describe('ChainEventPoller', () => {
         poller.on(EVENT_NAME, listener2)
 
         // poller restarts
-        await waitForCondition(() => listener2.mock.calls.length === 1)
+        await until(() => listener2.mock.calls.length === 1)
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(2)
         expect(contract.queryFilter).toHaveBeenCalledTimes(3)
         expect(listener2).toHaveBeenCalledTimes(1)
@@ -117,7 +117,7 @@ describe('ChainEventPoller', () => {
         poller.on(EVENT_NAME_2, listener2)
         poller.on(EVENT_NAME_2, listener3)
 
-        await waitForCondition(
+        await until(
             () => {
                 return (listener1.mock.calls.length > 0) && (listener2.mock.calls.length > 0) && (listener3.mock.calls.length > 0)
             }
@@ -160,6 +160,7 @@ describe('ChainEventPoller', () => {
                     provider
                 },
                 queryFilter: async (eventName, blockNumber) => {
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     invocationHistory.push(`queryFilter(${eventName}, ${blockNumber})`)
                     return onQueryFilter(queryFilterCallCount++)
                 }
@@ -176,7 +177,7 @@ describe('ChainEventPoller', () => {
             const eventCb = () => {}
             poller.on('event', eventCb)
             const expectedLength = 3 * POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD + 6
-            await waitForCondition(() => invocationHistory.length >= expectedLength)
+            await until(() => invocationHistory.length >= expectedLength)
             expect(invocationHistory.slice(0, expectedLength)).toEqual([
                 'getBlockNumber',
                 ...range(POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD).map(() => 'queryFilter(event, 10)'),

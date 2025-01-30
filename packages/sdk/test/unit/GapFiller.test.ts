@@ -1,14 +1,24 @@
-import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import {
+    Defer,
+    EthereumAddress,
+    StreamPartIDUtils,
+    hexToBinary,
+    toEthereumAddress,
+    utf8ToBinary,
+    wait,
+    until
+} from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { randomUserId } from '@streamr/test-utils'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),
-    publisherId: toEthereumAddress('0x0000000000000000000000000000000000000001'),
+    publisherId: randomUserId(),
     msgChainId: 'msgChainId'
 }
 const STORAGE_NODE_ADDRESS = toEthereumAddress('0x0000000000000000000000000000000000000002')
@@ -20,7 +30,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            CONTEXT.publisherId, 
+            CONTEXT.publisherId,
             CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
@@ -87,7 +97,7 @@ describe('GapFiller', () => {
     }
     
     const expectOrderedMessages = async (expectedTimestamps: number[]) => {
-        await waitForCondition(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
+        await until(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
         const actualTimestamps = onOrderedMessageAdded.mock.calls.map((call) => call[0].getTimestamp())
         expect(actualTimestamps).toEqual(expectedTimestamps)
     }
@@ -104,8 +114,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 4])
             await expectOrderedMessages([1, 2, 3, 4])
-            expect(getStorageNodeAddresses).toBeCalledTimes(1)
-            expect(resend).toBeCalledTimes(1)
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(1)
+            expect(resend).toHaveBeenCalledTimes(1)
             expect(resend).toHaveBeenCalledWith(
                 {
                     from: createMessage(1),
@@ -133,8 +143,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 2, 3, 4, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(2)
-            expect(resend).toBeCalledTimes(2)
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
+            expect(resend).toHaveBeenCalledTimes(2)
         })
 
         it('partial fill', async () => {
@@ -147,7 +157,7 @@ describe('GapFiller', () => {
             )
             addMessages([1, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(resend).toBeCalledTimes(MAX_REQUESTS_PER_GAP)
+            expect(resend).toHaveBeenCalledTimes(MAX_REQUESTS_PER_GAP)
         })
 
         it('realtime data resolves gap', async () => {
@@ -159,8 +169,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 2])
             await expectOrderedMessages([1, 2, 3])
-            expect(getStorageNodeAddresses).not.toBeCalled()
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).not.toHaveBeenCalled()
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('no storage nodes', async () => {
@@ -173,8 +183,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(2)
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('destroy while waiting', async () => {
@@ -187,8 +197,8 @@ describe('GapFiller', () => {
             addMessages([1, 3])
             abortController.abort()
             await expectOrderedMessages([1])
-            expect(getStorageNodeAddresses).not.toBeCalled()
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).not.toHaveBeenCalled()
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('destroy while ongoing gap fill', async () => {

@@ -1,15 +1,16 @@
+import { DhtAddress } from '@streamr/dht'
+import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
+import { Propagation } from '../../src/logic/propagation/Propagation'
 import {
     ContentType,
     EncryptionType,
     MessageID,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { Propagation } from '../../src/logic/propagation/Propagation'
-import { hexToBinary, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
-import { DhtAddress } from '@streamr/dht'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { randomUserId } from '@streamr/test-utils'
 
-const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
+const PUBLISHER_ID = randomUserId()
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     const messageId: MessageID = {
@@ -18,7 +19,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: utf8ToBinary(PUBLISHER_ID)
+        publisherId: toUserIdRaw(PUBLISHER_ID)
     }
     return {
         messageId,
@@ -44,7 +45,7 @@ const N4 = 'n4' as DhtAddress
 const N5 = 'n5' as DhtAddress
 
 describe(Propagation, () => {
-    let getNeighbors: jest.Mock<ReadonlyArray<DhtAddress>, [string]>
+    let getNeighbors: jest.Mock<readonly DhtAddress[], [string]>
     let sendToNeighbor: jest.Mock<Promise<void>, [DhtAddress, StreamMessage]>
     let propagation: Propagation
 

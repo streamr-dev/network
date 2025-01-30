@@ -1,6 +1,6 @@
 /*
 import { ProtobufMessage } from '../../src/protobufclasses/ProtobufMessage'
-import { Message, RpcMessage } from '../../src/proto/DhtRpc'
+import { Message, RpcMessage } from '../../generated/DhtRpc'
 import { v4 } from 'uuid'
 import { MessageType } from '@protobuf-ts/runtime'
 */

@@ -1,14 +1,14 @@
-import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import {
     InterleaveRequest,
     InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import {
     ContentDeliveryRpcClient, HandshakeRpcClient
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { NodeList } from '../NodeList'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
@@ -70,7 +70,7 @@ export class Handshaker {
     private async selectParallelTargetsAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         const exclude = excludedIds.concat(this.options.neighbors.getIds())
         const neighbors = this.selectParallelTargets(exclude)
-        neighbors.forEach((contact) => this.options.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
+        neighbors.forEach((contact) => this.options.ongoingHandshakes.add(toNodeId(contact.getPeerDescriptor())))
         return this.doParallelHandshakes(neighbors, exclude)
     }
 
@@ -83,7 +83,7 @@ export class Handshaker {
                 true
             )
             if (wsNode) {
-                const wsNodeId = getNodeIdFromPeerDescriptor(wsNode.getPeerDescriptor())
+                const wsNodeId = toNodeId(wsNode.getPeerDescriptor())
                 excludedIds.push(wsNodeId)
                 neighbors.set(wsNodeId, wsNode)
             }   
@@ -92,21 +92,21 @@ export class Handshaker {
         const left = this.options.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         const right = this.options.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         if (left) {
-            neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
+            neighbors.set(toNodeId(left.getPeerDescriptor()), left)
         }
         if (right) {
-            neighbors.set(getNodeIdFromPeerDescriptor(right.getPeerDescriptor()), right)
+            neighbors.set(toNodeId(right.getPeerDescriptor()), right)
         }
         // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
             const first = this.options.nearbyNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (first) {
-                neighbors.set(getNodeIdFromPeerDescriptor(first.getPeerDescriptor()), first)
+                neighbors.set(toNodeId(first.getPeerDescriptor()), first)
             }
         }
         const getExcludedFromRandomView = () => [
             ...excludedIds,
-            ...Array.from(neighbors.values()).map((neighbor) => getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()))
+            ...Array.from(neighbors.values()).map((neighbor) => toNodeId(neighbor.getPeerDescriptor()))
         ]
         // If there is still room add a random contact until PARALLEL_HANDSHAKE_COUNT is reached
         while (
@@ -115,7 +115,7 @@ export class Handshaker {
         ) {
             const random = this.options.randomNodeView.getRandom([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (random) {
-                neighbors.set(getNodeIdFromPeerDescriptor(random.getPeerDescriptor()), random)
+                neighbors.set(toNodeId(random.getPeerDescriptor()), random)
             }
         }
         return Array.from(neighbors.values()).map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
@@ -126,13 +126,13 @@ export class Handshaker {
             Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
                 // TODO better check (currently this condition is always true)
-                const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
+                const otherNodeId = otherNode ? toNodeId(otherNode.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherNodeId)
             })
         )
         results.forEach((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(getNodeIdFromPeerDescriptor(targets[i].getPeerDescriptor()))
+                excludedIds.push(toNodeId(targets[i].getPeerDescriptor()))
             }
         })
         return excludedIds
@@ -147,14 +147,14 @@ export class Handshaker {
         if (neighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(neighbor.getPeerDescriptor()))
             if (!accepted) {
-                excludedIds.push(getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()))
+                excludedIds.push(toNodeId(neighbor.getPeerDescriptor()))
             }
         }
         return excludedIds
     }
 
     private async handshakeWithTarget(neighbor: HandshakeRpcRemote, concurrentNodeId?: DhtAddress): Promise<boolean> {
-        const targetNodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
+        const targetNodeId = toNodeId(neighbor.getPeerDescriptor())
         this.options.ongoingHandshakes.add(targetNodeId)
         const result = await neighbor.handshake(
             this.options.streamPartId,
@@ -173,7 +173,7 @@ export class Handshaker {
 
     private async handshakeWithInterleaving(target: PeerDescriptor, remoteNodeId: DhtAddress): Promise<boolean> {
         const neighbor = this.createRpcRemote(target)
-        const targetNodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
+        const targetNodeId = toNodeId(neighbor.getPeerDescriptor())
         this.options.ongoingHandshakes.add(targetNodeId)
         const result = await neighbor.handshake(
             this.options.streamPartId,

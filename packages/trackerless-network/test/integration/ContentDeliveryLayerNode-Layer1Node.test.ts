@@ -1,5 +1,5 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { Logger, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, toNodeId, getRandomRegion } from '@streamr/dht'
+import { Logger, StreamPartIDUtils, until } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
@@ -92,7 +92,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
         await otherContentDeliveryLayerNodes[0].start()
         await otherDiscoveryLayerNodes[0].joinDht([entrypointDescriptor])
 
-        await waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
+        await until(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
         expect(otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
         expect(otherContentDeliveryLayerNodes[0].getNeighbors().length).toEqual(1)
     })
@@ -103,7 +103,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
 
-        await waitForCondition(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length === 4))
+        await until(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length === 4))
         range(4).forEach((i) => {
             expect(otherContentDeliveryLayerNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(otherContentDeliveryLayerNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
@@ -117,7 +117,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })
-                const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                 expect(neighborNodeIds.includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
@@ -129,7 +129,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            waitForCondition(() => node.getNeighbors().length >= 4, 10000)
+            until(() => node.getNeighbors().length >= 4, 10000)
         ))
 
         const avg = otherContentDeliveryLayerNodes.reduce((acc, curr) => {
@@ -138,17 +138,17 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
+            until(() => node.getOutgoingHandshakeCount() === 0)
         ))
-        await waitForCondition(() => {
+        await until(() => {
             let mismatchCounter = 0
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
+                    const neighborId = toNodeId(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                         if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }

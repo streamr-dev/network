@@ -1,11 +1,9 @@
 {
     "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
     "include": [
         "src/**/*",
         "src/**/*.json",
+        "bin/*.ts",
         "package.json",
         "test/**/*"
     ],

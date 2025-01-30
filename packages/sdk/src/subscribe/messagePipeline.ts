@@ -8,7 +8,7 @@ import { StreamRegistry } from '../contracts/StreamRegistry'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { decrypt } from '../encryption/decrypt'
 import { StreamMessage } from '../protocol/StreamMessage'
-import { StreamMessageError } from '../protocol/StreamMessageError'
+
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
@@ -16,6 +16,8 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
 import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
+import { StreamrClientError } from '../StreamrClientError'
+import { MessageID } from '../protocol/MessageID'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
@@ -34,15 +36,13 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const logger = opts.loggerFactory.createLogger(module)
 
-    /* eslint-enable object-curly-newline */
-
-    const onError = (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
+    const onError = (error: Error | StreamrClientError, streamMessage?: StreamMessage) => {
         if (streamMessage) {
-            ignoreMessages.add(streamMessage)
+            ignoreMessages.add(streamMessage.messageId)
         }
 
-        if (error && 'streamMessage' in error && error.streamMessage) {
-            ignoreMessages.add(error.streamMessage)
+        if (error && 'messageId' in error && error.messageId) {
+            ignoreMessages.add(error.messageId)
         }
 
         throw error
@@ -59,7 +59,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.messageId, err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
-                opts.streamRegistry.clearStreamCache(msg.getStreamId())
+                opts.streamRegistry.invalidatePermissionCaches(msg.getStreamId())
                 throw err
             }
         } else {
@@ -72,7 +72,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
-    const ignoreMessages = new WeakSet()
+    const ignoreMessages = new WeakSet<MessageID>()
     messageStream.onError.listen(onError)
     if (opts.config.orderMessages) {
         // order messages and fill gaps
@@ -111,7 +111,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         })
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {
-            return !ignoreMessages.has(streamMessage)
+            return !ignoreMessages.has(streamMessage.messageId)
         })
     return messageStream
 }

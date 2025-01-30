@@ -54,7 +54,7 @@ describe('MetricsPublisher', () => {
     const assertPublisherDisabled = async (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>) => {
         startMetricsPublisher(config)
         await wait(10)
-        expect(metricsContext.createReportProducer).not.toBeCalled()
+        expect(metricsContext.createReportProducer).not.toHaveBeenCalled()
     }
     
     beforeEach(() => {
@@ -70,7 +70,7 @@ describe('MetricsPublisher', () => {
     })
 
     afterEach(() => {
-        destroySignal?.destroy()
+        destroySignal.destroy()
     })
 
     it('happy path', async () => {

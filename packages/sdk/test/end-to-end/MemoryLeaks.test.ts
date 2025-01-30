@@ -1,27 +1,26 @@
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { createTestPrivateKey, describeOnlyInNodeJs } from '@streamr/test-utils'
+import { Defer, merge, TheGraphClient, wait } from '@streamr/utils'
 import 'reflect-metadata'
-import { describeOnlyInNodeJs, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Defer, wait, merge, TheGraphClient } from '@streamr/utils'
-import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { StreamrClient } from '../../src/StreamrClient'
-import { container as rootContainer, DependencyContainer } from 'tsyringe'
+import { DependencyContainer, container as rootContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
-import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
-import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
-import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
-import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
-import { StreamRegistry } from '../../src/contracts/StreamRegistry'
-import { Resends } from '../../src/subscribe/Resends'
-import { Publisher } from '../../src/publish/Publisher'
-import { Subscriber } from '../../src/subscribe/Subscriber'
-import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { ConfigInjectionToken, createStrictConfig, StreamrClientConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
-import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
+import { StreamrClient } from '../../src/StreamrClient'
+import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
-import { config as CHAIN_CONFIG } from '@streamr/config'
+import { Publisher } from '../../src/publish/Publisher'
+import { Resends } from '../../src/subscribe/Resends'
+import { Subscriber } from '../../src/subscribe/Subscriber'
+import { Subscription } from '../../src/subscribe/Subscription'
+import { counterId, createTheGraphClient, instanceId } from '../../src/utils/utils'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -74,11 +73,11 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 childContainer: DependencyContainer
             }> => {
                 const config = createStrictConfig(
-                    merge(
-                        CONFIG_TEST,
+                    merge<StreamrClientConfig>(
                         {
+                            environment: 'dev2',
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await createTestPrivateKey({ gas: true }),
                             }
                         },
                         opts
@@ -122,11 +121,11 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient(
-                    merge(
-                        CONFIG_TEST,
+                    merge<StreamrClientConfig>(
                         {
+                            environment: 'dev2',
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await createTestPrivateKey({ gas: true }),
                             }
                         },
                         opts

@@ -1,21 +1,20 @@
-import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import WebSocket from 'ws'
-import fetch from 'node-fetch'
 import { StreamPermission } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, Queue, fastPrivateKey } from '@streamr/test-utils'
-import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
-import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
-import sample from 'lodash/sample'
+import { createTestPrivateKey, Queue } from '@streamr/test-utils'
+import { until, wait, waitForEvent } from '@streamr/utils'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import range from 'lodash/range'
+import sample from 'lodash/sample'
+import WebSocket from 'ws'
+import { Broker } from '../../src/broker'
+import { createClient, createTestStream, startBroker } from '../utils'
 
 const MESSAGE_COUNT = 120
 const mqttPort = 13611
 const wsPort = 13612
 const httpPort = 13613
 
-const sendPostRequest = (url: string, content: object): Promise<unknown> => {
-    return fetch(url, {
+const sendPostRequest = async (url: string, content: object): Promise<void> => {
+    await fetch(url, {
         method: 'POST',
         body: JSON.stringify(content),
         headers: { 'Content-Type': 'application/json' }
@@ -24,7 +23,7 @@ const sendPostRequest = (url: string, content: object): Promise<unknown> => {
 
 interface PluginPublisher {
     connect: (streamId: string) => Promise<void>
-    publish: (msg: object, streamId: string) => Promise<unknown>
+    publish: (msg: object, streamId: string) => Promise<void>
     close: () => Promise<void>
 }
 
@@ -33,7 +32,7 @@ class MqttPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
         this.client = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
     }
-    publish(msg: object, streamId: string): Promise<unknown> {
+    publish(msg: object, streamId: string): Promise<void> {
         return this.client!.publish(streamId, JSON.stringify(msg))
     }
     close(): Promise<void> {
@@ -47,11 +46,11 @@ class WebsocketPluginPublisher implements PluginPublisher {
         this.client = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
         await waitForEvent(this.client, 'open')
     }
-    async publish(msg: object): Promise<unknown> {
-        return this.client!.send(JSON.stringify(msg))
+    async publish(msg: object): Promise<void> {
+        this.client!.send(JSON.stringify(msg))
     }
     async close(): Promise<void> {
-        return this.client!.close()
+        this.client!.close()
     }
 }
 
@@ -59,7 +58,7 @@ class WebsocketPluginPublisher implements PluginPublisher {
 class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }
-    async publish(msg: object, streamId: string): Promise<unknown> {
+    async publish(msg: object, streamId: string): Promise<void> {
         return sendPostRequest(`http://127.0.0.1:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
     }
     async close(): Promise<void> {
@@ -102,7 +101,7 @@ describe('multiple publisher plugins', () => {
     let streamId: string
 
     beforeAll(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
+        privateKey = await createTestPrivateKey({ gas: true })
         const client = createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
@@ -130,20 +129,20 @@ describe('multiple publisher plugins', () => {
     })
 
     afterEach(async () => {
-        await broker?.stop()
+        await broker.stop()
     })
 
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = createClient(fastPrivateKey())
+        const subscriber = createClient()
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })
 
         const messages = await publishMessages(streamId)
 
-        await waitForCondition(() => receivedMessages.size() >= messages.length)
+        await until(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.destroy()
 
@@ -160,7 +159,7 @@ describe('multiple publisher plugins', () => {
 
         const messages = await publishMessages(streamId)
 
-        await waitForCondition(() => receivedMessages.size() >= messages.length)
+        await until(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.values()).toIncludeSameMembers(messages)
         subscriber.close()
 
@@ -179,7 +178,7 @@ describe('multiple publisher plugins', () => {
 
         const messages = await publishMessages(streamId)
 
-        await waitForCondition(() => receivedMessages.size() >= messages.length)
+        await until(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.end(true)
     })

@@ -3,10 +3,7 @@ import { EthereumAddress, toEthereumAddress, toStreamID, wait } from '@streamr/u
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 
 const MOCK_STREAM = {
-    id: 'streamId',
-    getMetadata: () => ({
-        partitions: 3
-    })
+    id: 'streamId'
 } as Stream
 const clusterId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
@@ -14,7 +11,7 @@ const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>
     const storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => any)> = new Map()
-    let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
+    let onEvent: jest.Mock<Promise<void>, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
     beforeEach(() => {
@@ -32,7 +29,7 @@ describe(StorageEventListener, () => {
     })
 
     afterEach(() => {
-        listener?.destroy()
+        listener.destroy()
     })
 
     it('start() registers storage event listener on client', async () => {

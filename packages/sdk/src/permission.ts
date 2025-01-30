@@ -1,5 +1,6 @@
-import { MaxInt256 } from 'ethers'
-import { EthereumAddress } from '@streamr/utils'
+import { ChangeFieldType, HexString, StreamID, toUserId, UserID } from '@streamr/utils'
+import { MaxUint256 } from 'ethers'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 export enum StreamPermission {
     EDIT = 'edit',
@@ -12,7 +13,7 @@ export enum StreamPermission {
 export interface UserPermissionQuery {
     streamId: string
     permission: StreamPermission
-    user: string
+    userId: HexString
     allowPublic: boolean
 }
 
@@ -24,9 +25,13 @@ export interface PublicPermissionQuery {
 
 export type PermissionQuery = UserPermissionQuery | PublicPermissionQuery
 
+export type InternalUserPermissionQuery = ChangeFieldType<ChangeFieldType<UserPermissionQuery, 'streamId', StreamID>, 'userId', UserID>
+export type InternalPublicPermissionQuery = ChangeFieldType<PublicPermissionQuery, 'streamId', StreamID>
+export type InternalPermissionQuery = InternalUserPermissionQuery | InternalPublicPermissionQuery
+
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
-    user: string
+    userId: HexString
 }
 
 export interface PublicPermissionAssignment {
@@ -36,11 +41,13 @@ export interface PublicPermissionAssignment {
 
 export type PermissionAssignment = UserPermissionAssignment | PublicPermissionAssignment
 
-export const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
+export type InternalPermissionAssignment = ChangeFieldType<UserPermissionAssignment, 'userId', UserID> | PublicPermissionAssignment
+
+export const PUBLIC_PERMISSION_USER_ID = '0x0000000000000000000000000000000000000000'
 
 export type PermissionQueryResult = {
     id: string
-    userAddress: EthereumAddress
+    userId: string
 } & ChainPermissions
 
 export interface ChainPermissions {
@@ -51,12 +58,28 @@ export interface ChainPermissions {
     canGrant: boolean
 }
 
-export const isPublicPermissionQuery = (query: PermissionQuery): query is PublicPermissionQuery => {
-    return (query as PublicPermissionQuery).public === true
+export const isPublicPermissionQuery = (query: InternalPermissionQuery): query is InternalPublicPermissionQuery => {
+    return (query as InternalPublicPermissionQuery).public === true
 }
 
-export const isPublicPermissionAssignment = (query: PermissionAssignment): query is PublicPermissionAssignment => {
-    return (query as PublicPermissionAssignment).public === true
+export const toInternalPermissionQuery = async (query: PermissionQuery, streamIdBuilder: StreamIDBuilder): Promise<InternalPermissionQuery> => {
+    const typedBaseQuery = {
+        ...query,
+        streamId: await streamIdBuilder.toStreamID(query.streamId)
+    }
+    return ('userId' in typedBaseQuery)
+        ? { ...typedBaseQuery, userId: toUserId(typedBaseQuery.userId) }
+        : typedBaseQuery
+}
+
+export const isPublicPermissionAssignment = (assignment: InternalPermissionAssignment): assignment is PublicPermissionAssignment => {
+    return (assignment as PublicPermissionAssignment).public === true
+}
+
+export const toInternalPermissionAssignment = (assignment: PermissionAssignment): InternalPermissionAssignment => {
+    return ('userId' in assignment) 
+        ? { ...assignment, userId: toUserId(assignment.userId) }
+        : assignment
 }
 
 export const streamPermissionToSolidityType = (permission: StreamPermission): bigint => {
@@ -102,8 +125,8 @@ export const convertStreamPermissionsToChainPermission = (permissions: StreamPer
     return {
         canEdit: permissions.includes(StreamPermission.EDIT),
         canDelete: permissions.includes(StreamPermission.DELETE),
-        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxInt256 : 0n,
-        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxInt256 : 0n,
+        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxUint256 : 0n,
+        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxUint256 : 0n,
         canGrant: permissions.includes(StreamPermission.GRANT)
     }
 }

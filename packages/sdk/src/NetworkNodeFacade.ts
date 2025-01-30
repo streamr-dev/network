@@ -1,7 +1,10 @@
 /**
  * Wrap a network node.
  */
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 import {
     ExternalRpcClient,
     ExternalRpcClientClass,
@@ -10,7 +13,7 @@ import {
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { EthereumAddress, Logger, MetricsContext, StreamPartID } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -18,18 +21,13 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
+import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
 import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, peerDescriptorTranslator } from './utils/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
-import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
 
-// TODO should we make getNode() an internal method, and provide these all these services as client methods?
-/** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
@@ -38,23 +36,20 @@ export interface NetworkNodeStub {
     leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: NewStreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
+    getNeighbors: (streamPartId: StreamPartID) => readonly DhtAddress[]
     getPeerDescriptor: () => PeerDescriptor
     getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
-    /** @internal */
     start: (doJoin?: boolean) => Promise<void>
-    /** @internal */
     stop: () => Promise<void>
-    /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
@@ -68,10 +63,9 @@ export interface NetworkNodeStub {
     >(
         request: RequestClass,
         response: ResponseClass,
-        name: string, 
+        name: string,
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void
-
 }
 
 export interface Events {
@@ -127,14 +121,14 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = await this.getEntryPoints()
-        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ?
             peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor,
-                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null) 
+                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null)
                     ? this.config.network.controlLayer.websocketPortRange
                     : undefined
             },
@@ -210,7 +204,7 @@ export class NetworkNodeFacade {
 
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    getNode(): Promise<NetworkNodeStub> {
+    getNode(): Promise<Omit<NetworkNodeStub, 'start' | 'stop'>> {
         this.destroySignal.assertNotDestroyed()
         return this.startNodeTask()
     }
@@ -234,7 +228,7 @@ export class NetworkNodeFacade {
         const node = await this.getNode()
         node.broadcast(StreamMessageTranslator.toProtobuf(msg))
     }
-    
+
     addMessageListener(listener: (msg: OldStreamMessage) => void): void {
         this.messageListeners.push(listener)
     }
@@ -263,12 +257,12 @@ export class NetworkNodeFacade {
         return node.getDiagnosticInfo()
     }
 
-    async getStreamParts(): Promise<ReadonlyArray<StreamPartID>> {
+    async getStreamParts(): Promise<readonly StreamPartID[]> {
         const node = await this.getNode()
         return node.getStreamParts()
     }
 
-    async getNeighbors(streamPartId: StreamPartID): Promise<ReadonlyArray<DhtAddress>> {
+    async getNeighbors(streamPartId: StreamPartID): Promise<readonly DhtAddress[]> {
         const node = await this.getNode()
         return node.getNeighbors(streamPartId)
     }
@@ -300,7 +294,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getAddress(),
+            await this.authentication.getUserId(),
             connectionCount
         )
     }
@@ -319,7 +313,7 @@ export class NetworkNodeFacade {
             sourceDescriptor: await this.getPeerDescriptor(),
             targetDescriptor: peerDescriptorTranslator(leader)
         })
-        return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))   
+        return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))
     }
 
     private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
@@ -329,19 +323,20 @@ export class NetworkNodeFacade {
         return this.cachedNode!.createExternalRpcClient(clientClass)
     }
 
-    async registerExternalRpcMethod<
-        RequestClass extends IMessageType<RequestType>,
-        ResponseClass extends IMessageType<ResponseType>,
-        RequestType extends object,
-        ResponseType extends object
-    >(
-        request: RequestClass,
-        response: ResponseClass,
-        name: string, 
-        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
-    ): Promise<void> {
+    async registerOperator(opts: {
+        getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => NetworkPeerDescriptor[]
+    }): Promise<void> {
         const node = await this.getNode()
-        node.registerExternalNetworkRpcMethod(request, response, name, fn)
+        node.registerExternalNetworkRpcMethod(
+            OperatorDiscoveryRequest,
+            OperatorDiscoveryResponse,
+            'discoverOperators',
+            async (request: OperatorDiscoveryRequest) => {
+                const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
+                const operators = opts.getAssignedNodesForStreamPart(streamPartId)
+                return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
+            }
+        )
     }
 
     private isStarting(): boolean {

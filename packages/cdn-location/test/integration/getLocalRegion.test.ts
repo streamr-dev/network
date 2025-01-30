@@ -10,6 +10,7 @@ describe('getLocalRegion', () => {
         // replace fetch with a function that always times out
 
         global.fetch = jest.fn(() => {
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
             return Promise.reject('API is down')
         })
 

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { StreamID, toStreamPartID, wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -48,7 +48,7 @@ describe('client behaviour on invalid message', () => {
         await subscriberClient.subscribe(streamId, () => {
             throw new Error('should not get here')
         })
-        const publisherWallet = fastWallet()
+        const publisherWallet = await createTestWallet()
         const msg = await createMockMessage({
             streamPartId: toStreamPartID(streamId, 0),
             publisher: publisherWallet

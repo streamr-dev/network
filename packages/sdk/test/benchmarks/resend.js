@@ -3,15 +3,11 @@ const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
 const bytes = require('bytes')
-const fetch = require('node-fetch')
-const { KeyServer } = require('@streamr/test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
 
-const keyserver = new KeyServer()
-
-const { StorageNode, CONFIG_TEST: clientOptions } = StreamrClient
+const { StorageNode } = StreamrClient
 async function getPrivateKey() {
     const response = await fetch('http://localhost:45454/key')
     return response.text()
@@ -19,11 +15,11 @@ async function getPrivateKey() {
 
 async function createClient(opts) {
     return new StreamrClient({
-        ...clientOptions,
-        ...opts,
+        environment: 'dev2',
         auth: {
             privateKey: await getPrivateKey()
-        }
+        },
+        ...opts
     })
 }
 
@@ -160,10 +156,6 @@ async function run() {
 
     suite.on('cycle', (event) => {
         log(toStringBench(event.target))
-    })
-
-    suite.on('complete', () => {
-        keyserver.destroy()
     })
 
     log('starting')

@@ -9,7 +9,7 @@ import {
     SignatureType as NewSignatureType,
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import { StreamID, binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { StreamID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID as OldMessageID } from './MessageID'
 import { MessageRef as OldMessageRef } from './MessageRef'
@@ -79,7 +79,7 @@ export class StreamMessageTranslator {
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
-            publisherId: hexToBinary(msg.getPublisherId()),
+            publisherId: toUserIdRaw(msg.getPublisherId()),
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: NewMessageRef | undefined = undefined
@@ -155,6 +155,7 @@ export class StreamMessageTranslator {
             try {
                 content = NewGroupKeyRequest.toBinary(msg.body.groupKeyRequest)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key request: ${err}`)
             }
         } else if (msg.body.oneofKind === 'groupKeyResponse') {
@@ -162,6 +163,7 @@ export class StreamMessageTranslator {
             try {
                 content = NewGroupKeyResponse.toBinary(msg.body.groupKeyResponse)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key response: ${err}`)
             }
         } else {
@@ -172,7 +174,7 @@ export class StreamMessageTranslator {
             msg.messageId!.streamPartition,
             Number(msg.messageId!.timestamp),
             msg.messageId!.sequenceNumber,
-            toEthereumAddress(binaryToHex(msg.messageId!.publisherId, true)),
+            toUserId(msg.messageId!.publisherId),
             msg.messageId!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined

@@ -1,18 +1,18 @@
-import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
-import { 
+import { DhtAddress, PeerDescriptor, toDhtAddress } from '@streamr/dht'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
+import {
     ExternalRpcClient,
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection
 } from '@streamr/trackerless-network'
-import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
+import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetwork } from './FakeNetwork'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 type MessageListener = (msg: NewStreamMessage) => void
 
@@ -26,7 +26,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork, options: NetworkOptions = {}) {
-        this.id = getDhtAddressFromRaw(crypto.randomBytes(10))
+        this.id = toDhtAddress(crypto.randomBytes(10))
         this.options = options
         this.network = network
     }
@@ -66,7 +66,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return [...this.subscriptions]
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))
@@ -88,7 +88,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getOptions(): NetworkOptions {
         return this.options
     }
@@ -114,7 +113,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         _direction: ProxyDirection,
-        _userId: EthereumAddress,
+        _userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))

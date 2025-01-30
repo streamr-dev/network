@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 
+import { toUserId, UserID, until } from '@streamr/utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -12,17 +13,16 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { waitForCondition } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
 
 const waitMessagesReceived = async (
-    received: Record<string, MessageMetadata[]>,
-    published: Record<string, MessageMetadata[]>
+    received: Record<UserID, MessageMetadata[]>,
+    published: Record<UserID, MessageMetadata[]>
 ) => {
-    await waitForCondition(() => {
+    await until(() => {
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length
         return receivedCount === publishedCount
@@ -44,7 +44,7 @@ describe('PubSub with multiple clients', () => {
         })
         stream = await createTestStream(mainClient, module)
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
     }, 30 * 1000)
 
     afterEach(async () => {
@@ -55,16 +55,15 @@ describe('PubSub with multiple clients', () => {
         const pubClient = environment.createClient({
             id: `publisher${id}`
         })
-        const publisherId = await pubClient.getAddress()
+        const publisherId = await pubClient.getUserId()
 
         addAfter(async () => {
-            counterId.clear(publisherId) // prevent overflows in counter
+            counterId.clear(toUserId(publisherId)) // prevent overflows in counter
         })
 
-        const pubUser = await pubClient.getAddress()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: pubUser
+            userId: publisherId
         })
         return pubClient
     }
@@ -73,14 +72,14 @@ describe('PubSub with multiple clients', () => {
         const client = environment.createClient({
             id: 'subscriber-other'
         })
-        const user = await client.getAddress()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
+        const userId = await client.getUserId()
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId })
         return client
     }
 
-    function checkMessages(published: Record<string, Message[]>, received: Record<string, MessageMetadata[]>) {
+    function checkMessages(published: Record<UserID, Message[]>, received: Record<UserID, MessageMetadata[]>) {
         for (const [key, msgs] of Object.entries(published)) {
-            expect(received[key].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
+            expect(received[key as UserID].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
         }
     }
 
@@ -107,7 +106,7 @@ describe('PubSub with multiple clients', () => {
             }
             // publish message on main client
             await mainClient.publish(stream, message)
-            await waitForCondition(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1, 15 * 1000)
+            await until(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1, 15 * 1000)
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
@@ -122,33 +121,35 @@ describe('PubSub with multiple clients', () => {
 
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-            const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+            const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
+            const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}
             // subscribe to stream from other client instance
             await otherClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesOther[metadata.publisherId] || []
+                const publisherId = toUserId(metadata.publisherId)
+                const msgs = receivedMessagesOther[publisherId] || []
                 msgs.push(metadata)
-                receivedMessagesOther[metadata.publisherId] = msgs
+                receivedMessagesOther[publisherId] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesMain[metadata.publisherId] || []
+                const publisherId = toUserId(metadata.publisherId)
+                const msgs = receivedMessagesMain[publisherId] || []
                 msgs.push(metadata)
-                receivedMessagesMain[metadata.publisherId] = msgs
+                receivedMessagesMain[publisherId] = msgs
             })
 
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
-            const published: Record<string, Message[]> = {}
+            const published: Record<UserID, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getAddress()
+                const publisherId = toUserId(await pubClient.getUserId())
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -176,33 +177,31 @@ describe('PubSub with multiple clients', () => {
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-            const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+            const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
+            const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}
 
             // subscribe to stream from main client instance
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const key = metadata.publisherId
-                const msgs = receivedMessagesMain[key] || []
+                const publisherId = toUserId(metadata.publisherId)
+                const msgs = receivedMessagesMain[publisherId] || []
                 msgs.push(metadata)
-                receivedMessagesMain[key] = msgs
+                receivedMessagesMain[publisherId] = msgs
                 if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                     mainSub.unsubscribe()
                 }
             })
 
-            /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
 
-            /* eslint-enable no-await-in-loop */
             let counter = 0
             const published: Record<string, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getAddress()
+                const publisherId = toUserId(await pubClient.getUserId())
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -226,10 +225,10 @@ describe('PubSub with multiple clients', () => {
                             from: lastMessage.streamMessage.getMessageRef()
                         }
                     }, (_content, metadata) => {
-                        const key = metadata.publisherId
-                        const msgs = receivedMessagesOther[key] || []
+                        const publisherId = toUserId(metadata.publisherId)
+                        const msgs = receivedMessagesOther[publisherId] || []
                         msgs.push(metadata)
-                        receivedMessagesOther[key] = msgs
+                        receivedMessagesOther[publisherId] = msgs
                     })
 
                     addAfter(async () => {
@@ -269,26 +268,26 @@ describe('PubSub with multiple clients', () => {
         otherClient = await createSubscriber()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
-        const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-        const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+        const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
+        const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}
         // subscribe to stream from other client instance
         await otherClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
-            const msgs = receivedMessagesOther[key] || []
+            const publisherId = toUserId(metadata.publisherId)
+            const msgs = receivedMessagesOther[publisherId] || []
             msgs.push(metadata)
-            receivedMessagesOther[key] = msgs
+            receivedMessagesOther[publisherId] = msgs
         })
 
         // subscribe to stream from main client instance
         await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
-            const msgs = receivedMessagesMain[key] || []
+            const publisherId = toUserId(metadata.publisherId)
+            const msgs = receivedMessagesMain[publisherId] || []
             msgs.push(metadata)
-            receivedMessagesMain[key] = msgs
+            receivedMessagesMain[publisherId] = msgs
         })
 
         const publishers: StreamrClient[] = []
@@ -296,9 +295,9 @@ describe('PubSub with multiple clients', () => {
             publishers.push(await createPublisher(i))
         }
 
-        const published: Record<string, Message[]> = {}
+        const published: Record<UserID, Message[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = await pubClient.getAddress()
+            const publisherId = toUserId(await pubClient.getUserId())
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -326,21 +325,21 @@ describe('PubSub with multiple clients', () => {
         const published: Record<string, Message[]> = {}
 
         otherClient = environment.createClient()
-        const otherUser = await otherClient.getAddress()
+        const otherUser = await otherClient.getUserId()
 
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: otherUser })
 
-        const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-        const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+        const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
+        const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}
 
         // subscribe to stream from main client instance
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
-            const msgs = receivedMessagesMain[key] || []
+            const publisherId = toUserId(metadata.publisherId)
+            const msgs = receivedMessagesMain[publisherId] || []
             msgs.push(metadata)
-            receivedMessagesMain[key] = msgs
+            receivedMessagesMain[publisherId] = msgs
             if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                 mainSub.unsubscribe()
             }
@@ -353,7 +352,6 @@ describe('PubSub with multiple clients', () => {
 
         let counter = 0
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -369,10 +367,10 @@ describe('PubSub with multiple clients', () => {
                         from: lastMessage.streamMessage.getMessageRef()
                     }
                 }, (_content, metadata) => {
-                    const key = metadata.publisherId
-                    const msgs = receivedMessagesOther[key] || []
+                    const publisherId = toUserId(metadata.publisherId)
+                    const msgs = receivedMessagesOther[publisherId] || []
                     msgs.push(metadata)
-                    receivedMessagesOther[key] = msgs
+                    receivedMessagesOther[publisherId] = msgs
                 })
 
                 addAfter(async () => {
@@ -386,6 +384,7 @@ describe('PubSub with multiple clients', () => {
                     firstMessage = streamMessage
                 }
             }) // ensure first message stored
+            const publisherId = toUserId(await pubClient.getUserId())
             published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                 async afterEach() {
                     counter += 1

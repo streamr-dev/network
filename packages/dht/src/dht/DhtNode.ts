@@ -4,7 +4,7 @@ import {
     MetricsContext,
     merge,
     scheduleAtInterval,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
@@ -15,8 +15,8 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../connec
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
-import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { Any } from '../proto/google/protobuf/any'
+import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, toNodeId } from '../identifiers'
+import { Any } from '../../generated/google/protobuf/any'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -34,8 +34,8 @@ import {
     PingRequest,
     PingResponse,
     RecursiveOperation
-} from '../proto/packages/dht/protos/DhtRpc'
-import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../types/ServiceID'
@@ -79,6 +79,10 @@ export interface DhtNodeOptions {
     storageRedundancyFactor?: number
     periodicallyPingNeighbors?: boolean
     periodicallyPingRingContacts?: boolean
+    // Limit for how many new neighbors to ping. If number of neighbors is higher than the limit new neighbors 
+    // are not pinged when they are added. This is to prevent flooding the network with pings when joining.
+    // Enable periodicallyPingNeighbors to eventually ping all neighbors.
+    neighborPingLimit?: number
 
     transport?: ITransport
     connectionsView?: ConnectionsView
@@ -104,6 +108,7 @@ export interface DhtNodeOptions {
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
     geoIpDatabaseFolder?: string
+    allowIncomingPrivateConnections?: boolean
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -242,7 +247,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const connectionManager = new ConnectionManager({
                 createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeOptions),
                 maxConnections: this.options.maxConnections,
-                metricsContext: this.options.metricsContext
+                metricsContext: this.options.metricsContext,
+                allowIncomingPrivateConnections: this.options.allowIncomingPrivateConnections ?? false
             })
             await connectionManager.start()
             this.connectionsView = connectionManager
@@ -338,7 +344,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionLocker: this.connectionLocker,
             lockId: this.options.serviceId,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
-            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId)
+            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId),
+            neighborPingLimit: this.options.neighborPingLimit
         })
         this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('nearbyContactRemoved', peerDescriptor)
@@ -381,7 +388,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
             const isControlLayerNode = (this.connectionLocker !== undefined)
             if (isControlLayerNode) {
-                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                const nodeId = toNodeId(peerDescriptor)
                 if (gracefulLeave) {
                     this.peerManager!.removeContact(nodeId)
                 } else {
@@ -500,7 +507,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
+        return toNodeId(this.localPeerDescriptor!)
     }
 
     public getNeighborCount(): number {
@@ -524,7 +531,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getConnectedEntryPoints(): PeerDescriptor[] {
         return this.options.entryPoints !== undefined ? this.options.entryPoints.filter((entryPoint) =>
-            this.connectionsView!.hasConnection(getNodeIdFromPeerDescriptor(entryPoint))
+            this.connectionsView!.hasConnection(toNodeId(entryPoint))
         ) : []
     }
 
@@ -619,7 +626,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
  
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(
+        await until(
             () => this.connectionsView!.getConnectionCount() > 0,
             this.options.networkConnectivityTimeout,
             100,
@@ -629,6 +636,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
+    }
+
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            localPeerDescriptor: this.localPeerDescriptor,
+            transport: this.transport!.getDiagnosticInfo(),
+            router: this.router!.getDiagnosticInfo(),
+            neighborCount: this.getNeighborCount(),
+            nearbyContactCount: Array.from(this.peerManager!.getNearbyContacts().getAllContactsInUndefinedOrder()).length,
+            randomContactCount: this.peerManager!.getRandomContacts().getSize()
+        }
     }
 
     public async stop(): Promise<void> {
