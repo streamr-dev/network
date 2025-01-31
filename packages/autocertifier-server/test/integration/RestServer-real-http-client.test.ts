@@ -1,8 +1,7 @@
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
+import { request, CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import path from 'path'
-import { request } from '@streamr/autocertifier-client'
 
 describe('RestServer', () => {
     let server: RestServer
@@ -45,7 +44,6 @@ describe('RestServer', () => {
     describe('POST /sessions', () => {
         it('should return session with sessionId', async () => {
             const response = await request<Session>('POST', 'https://127.0.0.1:9877/sessions', {})
-
             expect(response).toEqual({ id: sessionId })
         })
     })
@@ -55,7 +53,6 @@ describe('RestServer', () => {
             const response = await request<CertifiedSubdomain>('PATCH', 'https://127.0.0.1:9877/certificates', {
                 streamrWebSocketPort: '1234'
             })
-
             expect(response).toEqual(certifiedSubdomain)
         })
 
@@ -64,19 +61,18 @@ describe('RestServer', () => {
                 await request<CertifiedSubdomain>('PATCH', 'https://127.0.0.1:9877/certificates', {})
                 fail('Should have thrown')
             } catch (err: any) {
-                expect(err.error.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
-                expect(err.error.status).toEqual(400)
+                expect(err.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+                expect(err.httpStatus).toEqual(400)
             }
         })
     })
 
     describe('PUT /certificates/:subdomain/ip', () => {
         it('should update the subdomain IP and port', async () => {
-            const response = await request<undefined>('PUT', 'https://127.0.0.1:9877/certificates/test/ip', {
+            const response = await request('PUT', 'https://127.0.0.1:9877/certificates/test/ip', {
                 streamrWebSocketPort: '1234',
                 token: 'token'
             })
-
             expect(response).toEqual(undefined)
         })
 
@@ -87,8 +83,8 @@ describe('RestServer', () => {
                 })
                 fail('Should have thrown')
             } catch (err: any) {
-                expect(err.error.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
-                expect(err.error.status).toEqual(400)
+                expect(err.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+                expect(err.httpStatus).toEqual(400)
             }
         })
 
@@ -99,8 +95,8 @@ describe('RestServer', () => {
                 })
                 fail('Should have thrown')
             } catch (err: any) {
-                expect(err.error.code).toEqual('TOKEN_MISSING')
-                expect(err.error.status).toEqual(400)
+                expect(err.code).toEqual('TOKEN_MISSING')
+                expect(err.httpStatus).toEqual(400)
             }
         })
     })
