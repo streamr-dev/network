@@ -18,7 +18,7 @@ export async function request<T>(method: string, url: string, body: object, time
                 if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
                     resolve(responseBody)
                 } else {
-                    reject(new ServerError(new Err(responseBody.code ?? ErrorCode.SERVER_ERROR, res.statusCode ?? 500, data)))
+                    reject(new Err(responseBody.code ?? ErrorCode.SERVER_ERROR, res.statusCode ?? 500, data))
                 }
             })
         })
