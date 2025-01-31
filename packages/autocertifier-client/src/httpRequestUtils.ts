@@ -1,5 +1,5 @@
 import https from 'https'
-import { Err, ErrorCode, ServerError } from './errors'
+import { Err, ErrorCode } from './errors'
 
 export async function request<T>(method: string, url: string, body: object, timeout?: number): Promise<T> {
     return new Promise((resolve, reject) => {

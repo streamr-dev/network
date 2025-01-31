@@ -73,7 +73,7 @@ describe('RestServer', () => {
                 streamrWebSocketPort: '1234',
                 token: 'token'
             })
-            expect(response).toEqual(undefined)
+            expect(response).toEqual({})
         })
 
         it('should return an error if streamrWebSocketPort is missing', async () => {
