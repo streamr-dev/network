@@ -4,6 +4,7 @@ import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
 import { Err, ErrorCode, ServerError } from './errors'
 import { Logger } from '@streamr/utils'
+import * as https from 'https'
 
 const logger = new Logger(module)
 
@@ -20,27 +21,38 @@ async function patch<T>(url: string, body: any, timeout?: number): Promise<T> {
 }
 
 async function request<T>(method: string, url: string, body: any, timeout?: number): Promise<T> {
-    const signal = timeout !== undefined ? AbortSignal.timeout(timeout) : undefined
+    return new Promise((resolve, reject) => {
+        const req = https.request(url, {
+            method,
+            rejectUnauthorized: false,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }, (res) => {
+            let data = ''
+            res.on('data', (chunk) => data += chunk)
+            res.on('end', () => {
+                const responseBody = JSON.parse(data) as T
 
-    const response = await fetch(url, {
-        method,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body),
-        signal,
-        agent: new (require('https').Agent)({
-            rejectUnauthorized: false
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(responseBody)
+                } else {
+                    reject(new ServerError(new Err(ErrorCode.SERVER_ERROR, res.statusCode || 500, data)))
+                }
+            })
         })
-    } as any)
+        req.on('error', reject)
 
-    const responseBody = await response.json() as T
+        if (timeout !== undefined) {
+            req.setTimeout(timeout, () => {
+                req.destroy()
+                reject(new Error('Request timed out'))
+            })
+        }
 
-    if (response.ok) {
-        return responseBody
-    } else {
-        throw new ServerError(new Err(ErrorCode.SERVER_ERROR, response.status, JSON.stringify(response.body)))
-    }
+        req.write(JSON.stringify(body))
+        req.end()
+    })
 }
 
 export class RestClient {
