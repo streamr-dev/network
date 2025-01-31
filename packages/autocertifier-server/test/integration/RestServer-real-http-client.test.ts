@@ -2,33 +2,7 @@ import { RestServer } from '../../src/RestServer'
 import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import path from 'path'
-import * as https from 'https'
-
-const makeRequest = (url: string, method: string, body?: any): Promise<{ status: number, body: any }> => {
-    return new Promise((resolve, reject) => {
-        const req = https.request(url, {
-            method,
-            rejectUnauthorized: false,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }, (res) => {
-            let data = ''
-            res.on('data', (chunk) => data += chunk)
-            res.on('end', () => {
-                resolve({
-                    status: res.statusCode!,
-                    body: data !== undefined ? JSON.parse(data) : undefined
-                })
-            })
-        })
-        req.on('error', reject)
-        if (body !== undefined) {
-            req.write(JSON.stringify(body))
-        }
-        req.end()
-    })
-}
+import { request } from '@streamr/autocertifier-client'
 
 describe('RestServer', () => {
     let server: RestServer
@@ -70,58 +44,64 @@ describe('RestServer', () => {
 
     describe('POST /sessions', () => {
         it('should return session with sessionId', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/sessions', 'POST')
+            const response = await request<Session>('POST', 'https://127.0.0.1:9877/sessions', {})
 
-            expect(response.status).toEqual(200)
-            expect(response.body).toEqual({ id: sessionId })
+            expect(response).toEqual({ id: sessionId })
         })
     })
 
     describe('PATCH /certificates', () => {
         it('should return a certified subdomain', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates', 'PATCH', {
+            const response = await request<CertifiedSubdomain>('PATCH', 'https://127.0.0.1:9877/certificates', {
                 streamrWebSocketPort: '1234'
             })
 
-            expect(response.status).toEqual(200)
-            expect(response.body).toEqual(certifiedSubdomain)
+            expect(response).toEqual(certifiedSubdomain)
         })
 
         it('should return an error if streamrWebSocketPort is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates', 'PATCH', {})
-
-            expect(response.status).toEqual(400)
-            expect(response.body.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+            try {
+                await request<CertifiedSubdomain>('PATCH', 'https://127.0.0.1:9877/certificates', {})
+                fail('Should have thrown')
+            } catch (err: any) {
+                expect(err.error.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+                expect(err.error.status).toEqual(400)
+            }
         })
     })
 
     describe('PUT /certificates/:subdomain/ip', () => {
         it('should update the subdomain IP and port', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
+            const response = await request<undefined>('PUT', 'https://127.0.0.1:9877/certificates/test/ip', {
                 streamrWebSocketPort: '1234',
                 token: 'token'
             })
 
-            expect(response.status).toEqual(200)
-            expect(response.body).toEqual({})
+            expect(response).toEqual(undefined)
         })
 
         it('should return an error if streamrWebSocketPort is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
-                token: 'token'
-            })
-
-            expect(response.status).toEqual(400)
-            expect(response.body.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+            try {
+                await request<undefined>('PUT', 'https://127.0.0.1:9877/certificates/test/ip', {
+                    token: 'token'
+                })
+                fail('Should have thrown')
+            } catch (err: any) {
+                expect(err.error.code).toEqual('STREAMR_WEBSOCKET_PORT_MISSING')
+                expect(err.error.status).toEqual(400)
+            }
         })
 
         it('should return an error if token is missing', async () => {
-            const response = await makeRequest('https://127.0.0.1:9877/certificates/test/ip', 'PUT', {
-                streamrWebSocketPort: '1234'
-            })
-
-            expect(response.status).toEqual(400)
-            expect(response.body.code).toEqual('TOKEN_MISSING')
+            try {
+                await request<undefined>('PUT', 'https://127.0.0.1:9877/certificates/test/ip', {
+                    streamrWebSocketPort: '1234'
+                })
+                fail('Should have thrown')
+            } catch (err: any) {
+                expect(err.error.code).toEqual('TOKEN_MISSING')
+                expect(err.error.status).toEqual(400)
+            }
         })
     })
 })
