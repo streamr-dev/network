@@ -4,16 +4,11 @@ import { v4 } from 'uuid'
 import path from 'path'
 import * as https from 'https'
 
-// allow self-signed certificates
-const agent = new https.Agent({
-    rejectUnauthorized: false
-})
-
 const makeRequest = (url: string, method: string, body?: any): Promise<{ status: number, body: any }> => {
     return new Promise((resolve, reject) => {
         const req = https.request(url, {
             method,
-            agent,
+            rejectUnauthorized: false,
             headers: {
                 'Content-Type': 'application/json'
             }
