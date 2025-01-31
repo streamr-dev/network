@@ -37,7 +37,7 @@ async function request<T>(method: string, url: string, body: any, timeout?: numb
                 if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
                     resolve(responseBody)
                 } else {
-                    reject(new ServerError(new Err(ErrorCode.SERVER_ERROR, res.statusCode || 500, data)))
+                    reject(new ServerError(new Err(ErrorCode.SERVER_ERROR, res.statusCode ?? 500, data)))
                 }
             })
         })
