@@ -35,7 +35,7 @@
     "ethers": "^6.13.0",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "semver": "^7.6.3"
+    "semver": "^7.7.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "102.0.0",
