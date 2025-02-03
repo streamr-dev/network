@@ -5,7 +5,7 @@ export async function request<T>(method: string, url: string, body: object, time
     return new Promise((resolve, reject) => {
         const req = https.request(url, {
             method,
-            rejectUnauthorized: false,
+            rejectUnauthorized: false, // crucial for allowing self-signed certificates before subdomain is assigned
             headers: {
                 'Content-Type': 'application/json'
             }
