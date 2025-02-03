@@ -13,7 +13,13 @@ export async function makeHttpRequest<T>(method: string, url: string, body: obje
             let data = ''
             res.on('data', (chunk) => data += chunk)
             res.on('end', () => {
-                const responseBody = JSON.parse(data)
+                let responseBody
+                try {
+                    responseBody = JSON.parse(data)
+                } catch (e) {
+                    reject(new Err(ErrorCode.SERVER_ERROR, res.statusCode ?? 500, `Invalid JSON response: ${data}`))
+                    return
+                }
 
                 if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
                     resolve(responseBody)
