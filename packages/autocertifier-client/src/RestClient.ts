@@ -3,7 +3,7 @@ import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
 import { Logger } from '@streamr/utils'
-import { request } from './httpRequestUtils'
+import { makeHttpRequest } from './makeHttpRequest'
 
 const logger = new Logger(module)
 
@@ -21,7 +21,7 @@ export class RestClient {
     public async createSession(): Promise<string> {
         const url = this.baseUrl + '/sessions'
         try {
-            const response = await request<Session>('POST', url, {})
+            const response = await makeHttpRequest<Session>('POST', url, {})
             return response.id
         } catch (err) {
             logger.debug(err)
@@ -35,7 +35,7 @@ export class RestClient {
             streamrWebSocketPort,
             sessionId
         }
-        return await request<CertifiedSubdomain>('PATCH', url, body, 2 * 60 * 1000)
+        return await makeHttpRequest<CertifiedSubdomain>('PATCH', url, body, 2 * 60 * 1000)
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<CertifiedSubdomain> {
@@ -45,7 +45,7 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        return await request<CertifiedSubdomain>('PATCH', url, body)
+        return await makeHttpRequest<CertifiedSubdomain>('PATCH', url, body)
     }
 
     public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
@@ -57,6 +57,6 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        await request<undefined>('PUT', url, body)
+        await makeHttpRequest<undefined>('PUT', url, body)
     }
 }

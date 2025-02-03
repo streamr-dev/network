@@ -1,7 +1,7 @@
 import https from 'https'
 import { Err, ErrorCode } from './errors'
 
-export async function request<T>(method: string, url: string, body: object, timeout?: number): Promise<T> {
+export async function makeHttpRequest<T>(method: string, url: string, body: object, timeout?: number): Promise<T> {
     return new Promise((resolve, reject) => {
         const req = https.request(url, {
             method,
