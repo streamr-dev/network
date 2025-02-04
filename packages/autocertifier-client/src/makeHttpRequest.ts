@@ -16,8 +16,8 @@ export async function makeHttpRequest<T>(method: string, url: string, body: obje
                 let responseBody
                 try {
                     responseBody = JSON.parse(data)
-                } catch (e) {
-                    reject(new Err(ErrorCode.SERVER_ERROR, res.statusCode ?? 500, `Invalid JSON response: ${data}`))
+                } catch (_e) {
+                    reject(new Err(ErrorCode.SERVER_ERROR, res.statusCode ?? 500, `Failed to parse JSON: ${data}`))
                     return
                 }
 
