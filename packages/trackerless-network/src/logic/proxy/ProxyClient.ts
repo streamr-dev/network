@@ -46,9 +46,9 @@ interface ProxyClientOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    // TODO could be required options if we apply all defaults somewhere at higher level
-    maxPropagationBufferSize?: number
-    minPropagationTargets?: number
+    maxPropagationBufferSize: number
+    minPropagationTargets: number
+    propagationBufferTtl: number
 }
 
 interface ProxyDefinition {
@@ -107,6 +107,7 @@ export class ProxyClient extends EventEmitter<Events> {
         this.propagation = new Propagation({
             minPropagationTargets: options.minPropagationTargets,
             maxMessages: options.maxPropagationBufferSize,
+            ttl: options.propagationBufferTtl,
             sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
                 const remote = this.neighbors.get(neighborId)
                 if (remote) {

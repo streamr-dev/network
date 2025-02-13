@@ -21,6 +21,8 @@ interface NeighborUpdateManagerOptions {
 
 const logger = new Logger(module)
 
+export const DEFAULT_NEIGHBOR_UPDATE_INTERVAL = 10 * 1000
+
 export class NeighborUpdateManager {
 
     private readonly abortController: AbortController

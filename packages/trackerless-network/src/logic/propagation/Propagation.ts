@@ -6,14 +6,15 @@ type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<
 
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
-    minPropagationTargets?: number
-    maxMessages?: number
-    ttl?: number
+    minPropagationTargets: number
+    maxMessages: number
+    ttl: number
 }
 
-const DEFAULT_TTL = 10 * 1000
-const DEFAULT_MIN_PROPAGATION_TARGETS = 2
-const DEFAULT_MAX_MESSAGES = 150
+export const DEFAULT_PROPAGATION_BUFFER_TTL = 10 * 1000
+export const DEFAULT_MIN_PROPAGATION_TARGETS = 2
+export const DEFAULT_MAX_PROPAGATION_BUFFER_SIZE = 150
+
 /**
  * Message propagation logic of a node. Given a message, this class will actively attempt to propagate it to
  * `minPropagationTargets` neighbors until success or TTL expiration.
@@ -29,9 +30,9 @@ export class Propagation {
 
     constructor({
         sendToNeighbor,
-        minPropagationTargets = DEFAULT_MIN_PROPAGATION_TARGETS,
-        maxMessages = DEFAULT_MAX_MESSAGES,
-        ttl = DEFAULT_TTL,
+        minPropagationTargets,
+        maxMessages,
+        ttl
     }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
