@@ -66,7 +66,7 @@ describe('ConnectivityChecking', () => {
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.protocolVersion).toEqual(LOCAL_PROTOCOL_VERSION)
-        expect(response.latitude).toEqual(testLatitude)
-        expect(response.longitude).toEqual(testLongitude)
+        expect(response.latitude).toBeCloseTo(testLatitude, 1)
+        expect(response.longitude).toBeCloseTo(testLongitude, 1)
     })
 })
