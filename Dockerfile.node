@@ -3,7 +3,7 @@ FROM node:${NODE_VERSION}-bullseye AS build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
-        npm run bootstrap
+        npm run bootstrap \
         npm run prune-pkg -- @streamr/node
 RUN cd packages/node; for file in dist/bin/*.js; do ln -s "../$file" "bin/$(basename "$file")"; done
 
