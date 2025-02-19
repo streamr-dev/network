@@ -14,7 +14,7 @@ import {
     toUserId,
     until
 } from '@streamr/utils'
-import { ContractTransactionResponse } from 'ethers'
+import { ContractTransactionResponse, Interface } from 'ethers'
 import { intersection } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -134,6 +134,7 @@ export class StreamRegistry {
     constructor(
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
+        chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
@@ -154,11 +155,11 @@ export class StreamRegistry {
             this.rpcProviderSource.getProvider(),
             'streamRegistry'
         )
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
-        }), config.contracts.pollInterval)
         initContractEventGateway({
-            sourceName: 'StreamCreated', 
+            sourceDefinition: {
+                contractInterfaceFragment: new Interface(StreamRegistryArtifact).getEvent('StreamCreated')!,
+                contractAddress: toEthereumAddress(this.config.contracts.streamRegistryChainAddress)
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'streamCreated',
             targetEmitter: eventEmitter,
