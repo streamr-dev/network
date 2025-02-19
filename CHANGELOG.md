@@ -34,6 +34,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+- Fix false flagging issue (https://github.com/streamr-dev/network/pull/3006)
+
 #### Security
 
 ### @streamr/cli-tools
