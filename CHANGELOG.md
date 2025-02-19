@@ -34,17 +34,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix false flagging issue (https://github.com/streamr-dev/network/pull/3006)
-
 #### Security
 
 ### @streamr/cli-tools
 
 #### Added
-
-- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
-- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
-- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
 
 #### Changed
 
@@ -55,6 +49,22 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+## [102.1.0] - 2025-02-19
+
+### @streamr/node
+
+#### Fixed
+
+- Fix false flagging issue (https://github.com/streamr-dev/network/pull/3006)
+
+### @streamr/cli-tools
+
+#### Added
+
+- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
 
 
 ## [102.0.0] - 2025-01-27
@@ -370,7 +380,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v102.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.0...HEAD
+[102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
 [102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
 [101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
