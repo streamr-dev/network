@@ -87,7 +87,7 @@
     "@lit-protocol/uint8arrays": "^6.11.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/config": "^5.5.0",
+    "@streamr/config": "^5.5.1",
     "@streamr/dht": "102.0.0",
     "@streamr/proto-rpc": "102.0.0",
     "@streamr/trackerless-network": "102.0.0",
