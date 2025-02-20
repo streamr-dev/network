@@ -8,7 +8,6 @@ process.once('loaded', () => {
     window.HTTP = require('http')
     window.HTTPS = require('https')
     window.Buffer = require('buffer/').Buffer
-    window.QueryString = require('querystring')
     // maybe we can set this karma-setup
     // eslint-disable-next-line no-underscore-dangle
     window._streamr_electron_test = true

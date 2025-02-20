@@ -46,7 +46,6 @@ export const createWebpackConfig = (
                     'net': false,
                     'timers': require.resolve('timers-browserify'),
                     'os': false,
-                    'querystring': false,
                     'zlib': require.resolve('browserify-zlib'),
                     'tls': false
                 }
@@ -68,7 +67,6 @@ export const createWebpackConfig = (
                 'express': 'Express',
                 'process': 'process',
                 'ws': 'WebSocket',
-                'querystring': 'QueryString',
             }
         }
     }
