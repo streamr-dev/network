@@ -46,7 +46,7 @@ $ cat ~/.streamr/config/default.json
 $ streamr-node
 ```
 
-The node's address (its public key) is displayed when the Streamr node is started. Record this as the `BrokerNodeAddress`, it's needed in the next step!
+The node's addresss (its public key) is displayed when the Streamr node is started. Record this as the `BrokerNodeAddress`, it's needed in the next step!
 
 **TODO: Don't include the session key extension.**
 
@@ -131,7 +131,7 @@ $ cat ~/.streamr/config/default.json
 
 The following instructions are specific to your choice of MQTT library- this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt). There are many valid alternatives including, `async-mqtt`.
 
-In the code sample below, we provide the URL (the IP or address to your Streamr node) along with the MQTT port (the default is 1883). To authenticate, use an empty `username` field and enter the `ApiKey` as the `password`.
+In the code sample below, we provide the URL (the IP or addresss to your Streamr node) along with the MQTT port (the default is 1883). To authenticate, use an empty `username` field and enter the `ApiKey` as the `password`.
 
 ```ts
 // Node.js example
@@ -153,7 +153,7 @@ Technical information about the plugin interface can be found in the [Streamr no
 
 #### Start pushing data
 
-With your Streamr node running and your MQTT client configured correctly, the final remaining step is to start pushing the data. You will push data by providing a `StreamId` as the first parameter and the JSON payload as the second parameter. The stream ID contains the ethereum addres, i.e. `0x123/sensor/firehose`.
+With your Streamr node running and your MQTT client configured correctly, the final remaining step is to start pushing the data. You will push data by providing a `StreamId` as the first parameter and the JSON payload as the second parameter. The stream ID contains the ethereum address, i.e. `0x123/sensor/firehose`.
 
 :::info
 Push valid JSON! Invalid JSON may silently fail so be sure to run your payload through a JSON validator to double check.
