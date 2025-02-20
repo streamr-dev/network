@@ -26,7 +26,7 @@ When messages are published to a stream, they are actually published to a partit
 :::
 
 ## Create partitioned streams
-Create new partions if your messages extend approx. 100 msg/sec per partition.
+Create new partitions, portions if your messages extend approx. 100 msg/sec per partition.
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any number between 1 and 100. An example of creating a partitioned stream:
 

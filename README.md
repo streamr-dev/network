@@ -168,7 +168,7 @@ Read and edit [CHANGELOG.md](CHANGELOG.md). Create a new section for the new ver
 
 
 ### Step 2: Creating and pushing the version and tag
-In the bash commands below, replace `<SEMVER>` with the version to be published _without_ the letter "v" infront.
+In the bash commands below, replace `<SEMVER>` with the version to be published _without_ the letter "v" in front.
 
 ```
 git checkout main

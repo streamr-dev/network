@@ -17,7 +17,7 @@ For more in depth analysis, see [Security - Data signing & verification](../../s
 Beside the typical externally owned account signing and verification, the Streamr protocol also supports smart contract signature verification, i.e. ERC1271 support. This feature allows the use of smart contracts that follow the ERC1271 spec to become signatories on streams in the Streamr Network.
 
 :::info Key points:
-- This feature is enabled on a **per stream** basis and activated on a **per sesssion** basis.
+- This feature is enabled on a **per stream** basis and activated on a **per session** basis.
 - Ensure the EIP-1271 contract address provided in the stream configuration is valid and compliant with the EIP-1271 specification.
 - Only elliptic curve, secp256k1 cryptography is supported.
 - Smart contract signature validation is periodically [cached](#optimizations-and-caching).
