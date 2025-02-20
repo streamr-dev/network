@@ -1,6 +1,7 @@
 import { StreamrClient, Operator } from '@streamr/sdk'
 import { EthereumAddress, Logger, WeiAmount } from '@streamr/utils'
-import { sample, without } from 'lodash'
+import sample from 'lodash/sample'
+import without from 'lodash/without'
 
 const logger = new Logger(module)
 

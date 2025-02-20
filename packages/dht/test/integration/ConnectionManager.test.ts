@@ -11,7 +11,7 @@ import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { range } from 'lodash'
+import range from 'lodash/range'
 
 const SERVICE_ID = 'demo'
 

@@ -1,7 +1,7 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'

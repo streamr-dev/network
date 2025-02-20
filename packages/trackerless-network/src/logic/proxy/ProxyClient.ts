@@ -8,7 +8,7 @@ import {
 } from '@streamr/dht'
 import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import {
     LeaveStreamPartNotice,
     MessageID,

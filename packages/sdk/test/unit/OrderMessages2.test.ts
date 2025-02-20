@@ -1,6 +1,7 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, until } from '@streamr/utils'
-import { range, shuffle } from 'lodash'
+import range from 'lodash/range'
+import shuffle from 'lodash/shuffle'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'

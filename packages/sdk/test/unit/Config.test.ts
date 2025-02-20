@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/ethereumUtils'

@@ -1,6 +1,6 @@
 import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'

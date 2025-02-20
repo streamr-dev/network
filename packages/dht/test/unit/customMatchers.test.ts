@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('custom matchers', () => {

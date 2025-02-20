@@ -4,7 +4,7 @@ import '../src/logLevel'
 import { StreamrClient } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 
 interface Options extends BaseOptions {
     includePermissions: boolean

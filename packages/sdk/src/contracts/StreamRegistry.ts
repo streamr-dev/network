@@ -15,7 +15,7 @@ import {
     until
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
-import { intersection } from 'lodash'
+import intersection from 'lodash/intersection'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'

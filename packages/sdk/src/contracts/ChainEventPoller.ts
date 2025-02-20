@@ -1,6 +1,6 @@
 import { Logger, Multimap, randomString, scheduleAtInterval, wait } from '@streamr/utils'
 import { Contract, EventLog, Provider } from 'ethers'
-import { sample } from 'lodash'
+import sample from 'lodash/sample'
 
 type EventName = string
 type Listener = (...args: any[]) => void

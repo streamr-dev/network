@@ -10,7 +10,7 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
 const logger = new Logger(module)

@@ -1,5 +1,5 @@
 import { Logger, TheGraphClient, GraphQLQuery } from '@streamr/utils'
-import { shuffle } from 'lodash'
+import shuffle from 'lodash/shuffle'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'

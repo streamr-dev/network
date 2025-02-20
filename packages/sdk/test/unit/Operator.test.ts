@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { capitalize } from 'lodash'
+import capitalize from 'lodash/capitalize'
 import { DestroySignal } from '../../src/DestroySignal'
 import {
     Operator,

@@ -1,4 +1,5 @@
-import { isArray, mergeWith } from 'lodash'
+import isArray from 'lodash/isArray'
+import mergeWith from 'lodash/mergeWith'
 
 /*
  * Does deep merge. This is similar to `lodash` merge, but handles arrays differently:

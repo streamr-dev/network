@@ -1,4 +1,4 @@
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { StoreRpcLocal } from '../../src/dht/store/StoreRpcLocal'
 import { areEqualPeerDescriptors, randomDhtAddress, DhtAddress, toDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { DataEntry, PeerDescriptor, StoreDataRequest } from '../../generated/packages/dht/protos/DhtRpc'

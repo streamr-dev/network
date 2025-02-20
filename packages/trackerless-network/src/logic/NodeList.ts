@@ -1,5 +1,5 @@
 import { DhtAddress, toNodeId } from '@streamr/dht'
-import { sample } from 'lodash'
+import sample from 'lodash/sample'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 

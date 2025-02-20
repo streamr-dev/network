@@ -1,6 +1,6 @@
 import { areEqualBinaries } from '@streamr/utils'
 import { printExpected, printReceived } from 'jest-matcher-utils'
-import { isEqual } from 'lodash'
+import isEqual from 'lodash/isEqual'
 import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { toDhtAddress } from '../../src/identifiers'
 
