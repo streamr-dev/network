@@ -68,9 +68,9 @@ npm publish --access public --tag $NPM_TAG
 cd ../../..
 
 cd packages/node || exit
-npm publish --tag $NPM_TAG --access public
+npm publish --access public --tag $NPM_TAG
 cd ../..
 
 cd packages/cli-tools || exit
-npm publish --tag $NPM_TAG --access public
+npm publish --access public --tag $NPM_TAG
 cd ../..
