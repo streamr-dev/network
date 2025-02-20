@@ -97,13 +97,6 @@ module.exports = (env, argv) => {
         resolve: {
             fallback: {
                 module: false,
-                fs: false,
-                net: false,
-                http: false,
-                https: false,
-                express: false,
-                ws: false,
-                'jest-leak-detector': false,
             }
         },
         plugins: [
