@@ -10,18 +10,14 @@
   },
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/exports-commonjs.js",
-  "browser": "./dist/streamr-sdk.web.js",
-  "exports": {
-    "browser": "./dist/streamr-sdk.web.js",
-    "default": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/exports-esm.mjs",
-      "require": "./dist/src/exports-commonjs.js"
-    }
+  "module": "./dist/src/exports-esm.mjs",
+  "script": "./dist/streamr-sdk.web.min.js",
+  "browser": {
+    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts"
   },
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "bash copy-package.sh && bash fix-esm.sh",
+    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
