@@ -39,7 +39,7 @@ module.exports = (env, argv) => {
             rules: [
                 {
                     test: /(\.jsx|\.js|\.ts|\.mts)$/,
-                    exclude: /(node_modules|bower_components)/,
+                    exclude: /node_modules/,
                     use: {
                         loader: 'babel-loader',
                         options: {
@@ -95,27 +95,6 @@ module.exports = (env, argv) => {
             globalObject: 'globalThis',
         },
         resolve: {
-            alias: {
-                stream: 'readable-stream',
-                util: 'util',
-                buffer: require.resolve('buffer/'),
-                '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
-                '@streamr/utils': path.resolve('../utils/src/exports.ts'),
-                '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
-                '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
-                '@streamr/dht': path.resolve('../dht/src/exports.ts'),
-                '@streamr/autocertifier-client': false,
-                [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
-                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
-                // swap out ServerPersistence for BrowserPersistence
-                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
-                    path.resolve('./src/utils/persistence/BrowserPersistence.mts')
-                )
-            },
             fallback: {
                 module: false,
                 fs: false,
@@ -125,12 +104,11 @@ module.exports = (env, argv) => {
                 express: false,
                 ws: false,
                 'jest-leak-detector': false,
-                'v8': false,
-                '@web3modal/standalone': false
             }
         },
         plugins: [
             new NodePolyfillPlugin({
+                additionalAliases: ['process'],
                 excludeAliases: ['console'],
             }),
             ...(analyze ? [
@@ -141,7 +119,6 @@ module.exports = (env, argv) => {
                 })
             ] : []),
             new webpack.ProvidePlugin({
-                process: 'process/browser',
                 Buffer: ['buffer', 'Buffer'],
             }),
             new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {

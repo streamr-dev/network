@@ -7,8 +7,8 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/test-utils"
   },
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist/",
     "!dist/tsconfig.node.tsbuildinfo",

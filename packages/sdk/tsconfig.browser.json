@@ -8,16 +8,7 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "strictBindCallApply": true,
-        "baseUrl": ".",
-        "paths": {
-            "stream": ["readable-stream"],
-            "util": ["util"],
-            "buffer": ["buffer/"],
-            "@streamr/protocol/*": ["@streamr/protocol/src/*"],
-            "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
-            "@streamr/dht/src/connection/webrtc/NodeWebrtcConnection.ts": [
-                "@streamr/dht/src/connection/webrtc/BrowserWebrtcConnection.ts"]
-        }
+        "baseUrl": "."
     },
     "include": [
         "package.json",

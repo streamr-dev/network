@@ -1,3 +1,4 @@
+import 'timers'
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 

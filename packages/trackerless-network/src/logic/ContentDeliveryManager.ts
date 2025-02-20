@@ -29,7 +29,7 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
-import { ConnectionManager } from '@streamr/dht/src/exports'
+import { ConnectionManager } from '@streamr/dht'
 import { StreamPartitionInfo } from '../types'
 
 export type StreamPartDelivery = {
