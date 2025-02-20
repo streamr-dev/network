@@ -14,7 +14,8 @@ export default [
         ignores: [
             '**/generated/**',
             '**/dist/**',
-            '**/node_modules/**'
+            '**/node_modules/**',
+            '**/scripts/rewrite-package.ts'
         ]
     },
     ...streamr,
