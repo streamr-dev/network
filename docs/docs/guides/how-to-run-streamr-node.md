@@ -73,7 +73,7 @@ docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/streamr-node-in
 ![image](@site/static/img/operator-address.png)
 
 4. Next, do you want to use your node for other things, like data publishing/subscribing? If you're just here to "mine your bandwidth" then you can decline this option.
-5. Lastly, select a path to store your config file. Go with what's suggested if you're unsure and save the path for later incase you need it.
+5. Lastly, select a path to store your config file. Go with what's suggested if you're unsure and save the path for later in case you need it.
 
 The Config Wizard now outputs your node address along with a few links and tips.
 
@@ -168,7 +168,7 @@ streamr-node-init
 ![image](@site/static/img/operator-address.png)
 
 4. Next, do you want to use your node for other things, like data publishing/subscribing? If you're just here to "mine your bandwidth" then you can decline this option.
-5. Lastly, select a path to store your config file. Go with what's suggested if you're unsure and save the path for later incase you need it.
+5. Lastly, select a path to store your config file. Go with what's suggested if you're unsure and save the path for later in case you need it.
 
 The Config Wizard now outputs your node address along with a few links and tips.
 
