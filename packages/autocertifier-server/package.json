@@ -13,6 +13,9 @@
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
+  "browser": {
+    "dist/src/exports.js": false
+  },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
