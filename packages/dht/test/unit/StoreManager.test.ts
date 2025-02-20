@@ -1,5 +1,6 @@
 import { wait, until } from '@streamr/utils'
-import { range, without } from 'lodash'
+import range from 'lodash/range'
+import without from 'lodash/without'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { StoreManager } from '../../src/dht/store/StoreManager'
 import {

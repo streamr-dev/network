@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { SignerWithProvider } from '../Authentication'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'

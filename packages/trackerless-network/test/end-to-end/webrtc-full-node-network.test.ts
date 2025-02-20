@@ -1,6 +1,6 @@
 import { toNodeId, getRandomRegion } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'

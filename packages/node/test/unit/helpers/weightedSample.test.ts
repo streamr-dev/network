@@ -1,5 +1,7 @@
 import { weightedSample } from '../../../src/helpers/weightedSample'
-import { range, repeat, sum } from 'lodash'
+import range from 'lodash/range'
+import repeat from 'lodash/repeat'
+import sum from 'lodash/sum'
 
 describe(weightedSample, () => {
     it('returns undefined on empty array', () => {

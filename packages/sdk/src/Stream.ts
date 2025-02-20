@@ -5,7 +5,8 @@ import {
     toEthereumAddress,
     toStreamPartID
 } from '@streamr/utils'
-import { isNumber, isString } from 'lodash'
+import isNumber from 'lodash/isNumber'
+import isString from 'lodash/isString'
 import range from 'lodash/range'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Message } from './Message'

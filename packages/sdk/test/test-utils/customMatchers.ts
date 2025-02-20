@@ -1,5 +1,6 @@
 import { printExpected, printReceived } from 'jest-matcher-utils'
-import { isFunction, isObject } from 'lodash'
+import isFunction from 'lodash/isFunction'
+import isObject from 'lodash/isObject'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
 interface PartialStreamrClientError {

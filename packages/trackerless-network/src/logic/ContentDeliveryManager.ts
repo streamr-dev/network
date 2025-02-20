@@ -19,7 +19,7 @@ import {
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'

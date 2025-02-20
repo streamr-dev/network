@@ -4,7 +4,7 @@ import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import { Any } from '../../../generated/google/protobuf/any'
 import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../../src/identifiers'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {

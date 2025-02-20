@@ -1,6 +1,8 @@
 import { Multimap } from '@streamr/utils'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { minBy, range, without } from 'lodash'
+import minBy from 'lodash/minBy'
+import range from 'lodash/range'
+import without from 'lodash/without'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { getDistance } from '../../src/dht/PeerManager'
 
