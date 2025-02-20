@@ -437,6 +437,9 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 
+/**
+ * @deprecated use {@link STREAMR_STORAGE_DEFAULT} instead
+ */
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
