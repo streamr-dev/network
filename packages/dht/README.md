@@ -20,7 +20,7 @@ const DhtNode = new DhtNode({
   entryPoints: [{
     kademliaId: new Uint8Array([1, 2, 3])
   }], 
-  // a list of STUN and TURN servers. Critically important when opening webrtc conenctions behind NATs.
+  // a list of STUN and TURN servers. Critically important when opening webrtc connections behind NATs.
   iceServers: [{
     url: "stun.l.google.com",
     port: 19302
@@ -74,17 +74,17 @@ To setup a custom DHT network outside the Streamr Networks Amoy or Polygon envir
 
 ## Development
 
-### local testing and develpment setup
+### local testing and development setup
 
-When running a node for testing or develpment a few configurations are important.
+When running a node for testing or development a few configurations are important.
 
 ```js
 const DhtNode = new DhtNode({
   entryPoints: [], // Point this to your local dev entry point!
   iceServers: [], // Keep empty to ensure webrtc connections are local
-  webrtcAllowPrivateAddresses: true, // Make sure that the value is true in local develpment
+  webrtcAllowPrivateAddresses: true, // Make sure that the value is true in local development
   websocketServerEnableTls: false, // Keep as false to ensure that auto-certification is not attempted
-  websocketHost: '127.0.0.1', // Use 127.0.0.1 instead of localhost during develpment! 
+  websocketHost: '127.0.0.1', // Use 127.0.0.1 instead of localhost during development! 
 })
 ```
 
