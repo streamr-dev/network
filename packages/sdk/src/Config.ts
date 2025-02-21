@@ -442,7 +442,7 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
  */
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
-export const STREAMR_STORAGE_DEFAULT = '0x9dc08ff97f5c156181ec6a0b13fc3946454e529a'
+export const STREAMR_STORAGE_DEFAULT = '0x9dc08ff97f5c156181ec6a0b13fc3946454e529a' as HexString
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
