@@ -75,8 +75,7 @@ export class WebsocketServerConnector {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as WebsocketServerConnection
                 const urlParams = new URLSearchParams(serverSocket.resourceURL.query as string ?? '')
-                const query = Object.fromEntries(urlParams.entries())
-                const action = query.action as (Action | undefined)
+                const action = urlParams.get('action') as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteIpAddress() })
                 if (action === 'connectivityRequest') {
                     attachConnectivityRequestHandler(serverSocket, this.geoIpLocator)
