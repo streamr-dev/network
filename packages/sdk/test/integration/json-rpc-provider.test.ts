@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
 import { wait, until } from '@streamr/utils'
-import { range, sortBy } from 'lodash'
+import range from 'lodash/range'
+import sortBy from 'lodash/sortBy'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'

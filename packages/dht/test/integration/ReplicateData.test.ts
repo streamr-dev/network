@@ -4,7 +4,7 @@ import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/uti
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
-import { sample } from 'lodash'
+import sample from 'lodash/sample'
 import { DataEntry, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
 const DATA = createMockDataEntry()

@@ -15,7 +15,7 @@ import {
 } from '@streamr/trackerless-network'
 import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'

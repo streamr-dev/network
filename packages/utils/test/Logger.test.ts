@@ -1,7 +1,7 @@
 import { Logger } from '../src/Logger'
 import pino from 'pino'
 import path from 'path'
-import { pick } from 'lodash'
+import pick from 'lodash/pick'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
