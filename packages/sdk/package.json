@@ -110,7 +110,7 @@
     "ts-essentials": "^10.0.4",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1"
   },
   "optionalDependencies": {

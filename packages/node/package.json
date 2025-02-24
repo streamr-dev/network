@@ -36,7 +36,7 @@
     "aedes": "^0.51.3",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "cassandra-driver": "^4.7.2",
+    "cassandra-driver": "^4.8.0",
     "chalk": "^4.0.0",
     "commander": "^13.1.0",
     "consistent-hash": "^1.1.1",
@@ -49,8 +49,8 @@
     "merge2": "^1.4.1",
     "p-limit": "^3.1.0",
     "qs": "^6.14.0",
-    "uuid": "^11.0.5",
-    "ws": "^8.18.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

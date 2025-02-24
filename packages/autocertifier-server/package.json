@@ -38,7 +38,7 @@
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/dns2": "^2.0.9",
