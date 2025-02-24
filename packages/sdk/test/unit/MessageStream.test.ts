@@ -29,7 +29,7 @@ describe('MessageStream', () => {
     }
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomAuthentication())
     })
 
     it('onMessage', async () => {

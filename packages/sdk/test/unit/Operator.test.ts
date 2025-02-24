@@ -2,7 +2,8 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { capitalize, random } from 'lodash'
+import capitalize from 'lodash/capitalize'
+import random from 'lodash/random'
 import { DestroySignal } from '../../src/DestroySignal'
 import { EventListenerDefinition } from '../../src/contracts/ChainEventPoller'
 import {

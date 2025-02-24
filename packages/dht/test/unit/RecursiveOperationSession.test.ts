@@ -1,5 +1,5 @@
 import { until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
 import { RecursiveOperationSessionRpcRemote } from '../../src/dht/recursive-operation/RecursiveOperationSessionRpcRemote'
 import { ServiceID } from '../../src/types/ServiceID'

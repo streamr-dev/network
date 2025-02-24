@@ -1,9 +1,9 @@
-import { until, keyToArrayIndex, MetricsReport } from '@streamr/utils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
+import { keyToArrayIndex, MetricsReport, until } from '@streamr/utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { getCreateClient, createTestClient } from '../test-utils/utils'
+import { createTestClient, getCreateClient } from '../test-utils/utils'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -15,7 +15,7 @@ describe('NodeMetrics', () => {
 
     beforeAll(async () => {
         const streamPath = `/metrics/${Date.now()}`
-        const generatorClientPrivateKey = await fetchPrivateKeyWithGas()
+        const generatorClientPrivateKey = await createTestPrivateKey({ gas: true })
         generatorClient = await createClient({
             auth: {
                 privateKey: generatorClientPrivateKey
@@ -35,13 +35,13 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 15653)
+        subscriberClient = createTestClient(await createTestPrivateKey({ gas: true }), 15653)
     }, 30 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
-            generatorClient?.destroy(),
-            subscriberClient?.destroy()
+            generatorClient.destroy(),
+            subscriberClient.destroy()
         ])
     })
 

@@ -1,5 +1,6 @@
 import { until } from '@streamr/utils'
-import { range, without } from 'lodash'
+import range from 'lodash/range'
+import without from 'lodash/without'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
 import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'

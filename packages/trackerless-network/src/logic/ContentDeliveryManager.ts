@@ -19,7 +19,7 @@ import {
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
@@ -62,6 +62,7 @@ export interface ContentDeliveryManagerOptions {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
+    streamPartitionMaxPropagationBufferSize?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
@@ -251,7 +252,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
             dhtJoinTimeout: 20000,  // TODO use options option or named constant?
             periodicallyPingNeighbors: true,
-            periodicallyPingRingContacts: true
+            periodicallyPingRingContacts: true,
+            neighborPingLimit: 16
         })
     }
 
@@ -268,6 +270,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
@@ -322,7 +325,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize
         })
     }
 

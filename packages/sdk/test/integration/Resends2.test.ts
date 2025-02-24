@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { StreamID, collect, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Message, MessageMetadata } from '../../src/Message'
@@ -29,9 +29,9 @@ describe('Resends2', () => {
         return task(count)
     }
 
-    beforeAll(() => {
+    beforeAll(async () => {
         environment = new FakeEnvironment()
-        publisherWallet = fastWallet()
+        publisherWallet = await createTestWallet()
         publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
@@ -55,11 +55,11 @@ describe('Resends2', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     afterAll(async () => {
-        await publisher?.destroy()
+        await publisher.destroy()
     })
 
     it('throws if no storage assigned', async () => {

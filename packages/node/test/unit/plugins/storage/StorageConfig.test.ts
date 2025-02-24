@@ -59,7 +59,7 @@ describe(StorageConfig, () => {
     })
 
     afterEach(() => {
-        storageConfig?.destroy()
+        storageConfig.destroy()
     })
 
     it('state starts empty', () => {
@@ -101,7 +101,7 @@ describe(StorageConfig, () => {
         beforeEach(async () => {
             await storageConfig.start()
             const addToStorageNodeListener = storageEventListeners.get('streamAddedToStorageNode')!
-            const removeFromStorageNodeListener = storageEventListeners.get('streamRemovedFromFromStorageNode')!
+            const removeFromStorageNodeListener = storageEventListeners.get('streamRemovedFromStorageNode')!
             addToStorageNodeListener({
                 streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,

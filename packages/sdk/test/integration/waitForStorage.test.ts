@@ -24,7 +24,7 @@ describe('waitForStorage', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomAuthentication())
         environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await client.createStream({

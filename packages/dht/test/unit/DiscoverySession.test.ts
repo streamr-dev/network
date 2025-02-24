@@ -1,5 +1,5 @@
 import { Multimap, wait } from '@streamr/utils'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
 import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'

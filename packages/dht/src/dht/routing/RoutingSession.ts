@@ -10,13 +10,13 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const ROUTING_TABLE_MAX_SIZE = 20
+const ROUTING_TABLE_MAX_SIZE = 5
 
 export class RoutingRemoteContact extends Contact {
 
@@ -163,7 +163,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? toNodeId(previousPeer) : undefined
         const targetId = toDhtAddress(this.options.routedMessage.target)
         let routingTable: RoutingTable
-        if (this.options.routingTablesCache.has(targetId, previousId)) {
+        if (this.options.routingTablesCache.has(targetId, previousId) && this.options.routingTablesCache.get(targetId, previousId)!.getSize() > 0) {
             routingTable = this.options.routingTablesCache.get(targetId, previousId)!
         } else {
             routingTable = new SortedContactList<RoutingRemoteContact>({

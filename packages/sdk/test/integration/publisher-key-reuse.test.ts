@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
@@ -26,7 +26,7 @@ describe('publisher key reuse', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = fastWallet()
+        publisherWallet = await createTestWallet()
         environment = new FakeEnvironment()
         publisher = createPublisherClient()
         subscriber = environment.createClient()
@@ -57,7 +57,7 @@ describe('publisher key reuse', () => {
     })
 
     it('happy path: different publisher address', async () => {
-        const otherWallet = fastWallet()
+        const otherWallet = await createTestWallet()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             userId: otherWallet.address

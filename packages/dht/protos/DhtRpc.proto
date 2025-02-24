@@ -215,7 +215,7 @@ message ConnectivityResponse {
   string natType = 2;
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
-  string version = 5;
+  string protocolVersion = 5;
   optional double latitude = 6;
   optional double longitude = 7;
 }
@@ -223,19 +223,21 @@ message ConnectivityResponse {
 message HandshakeRequest {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional PeerDescriptor targetPeerDescriptor = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 message HandshakeResponse {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional HandshakeError error = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  string applicationVersion = 4;
 }
 
 enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
   INVALID_TARGET_PEER_DESCRIPTOR = 1;
-  UNSUPPORTED_VERSION = 2;
+  UNSUPPORTED_PROTOCOL_VERSION = 2;
 }
 
 // Wraps all messages

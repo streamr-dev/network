@@ -32,7 +32,7 @@ describe('PushPipeline', () => {
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        messageSigner = new MessageSigner(createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomAuthentication())
     })
 
     afterEach(async () => {

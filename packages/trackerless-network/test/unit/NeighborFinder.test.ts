@@ -1,7 +1,7 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NodeList } from '../../src/logic/NodeList'
 import { until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { expect } from 'expect'
 import { createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { DhtAddress, randomDhtAddress, toNodeId } from '@streamr/dht'

@@ -6,10 +6,10 @@ import { LRUCache } from 'lru-cache'
 type RoutingTableID = string
 export type RoutingTable = Pick<
     SortedContactList<RoutingRemoteContact>,
-    'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'>
+    'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop' | 'getSize'>
 
 const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): RoutingTableID => {
-    return targetId + (previousId ? previousId : '')
+    return targetId + (previousId ?? '')
 }
 
 const DEFAULT_LRU_OPTIONS = {

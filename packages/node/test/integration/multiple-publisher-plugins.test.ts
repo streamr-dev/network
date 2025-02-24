@@ -1,13 +1,12 @@
-import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import WebSocket from 'ws'
-import fetch from 'node-fetch'
 import { StreamPermission } from '@streamr/sdk'
-import { fetchPrivateKeyWithGas, Queue, fastPrivateKey } from '@streamr/test-utils'
-import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
-import { wait, waitForEvent, until } from '@streamr/utils'
-import sample from 'lodash/sample'
+import { createTestPrivateKey, Queue } from '@streamr/test-utils'
+import { until, wait, waitForEvent } from '@streamr/utils'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import range from 'lodash/range'
+import sample from 'lodash/sample'
+import WebSocket from 'ws'
+import { Broker } from '../../src/broker'
+import { createClient, createTestStream, startBroker } from '../utils'
 
 const MESSAGE_COUNT = 120
 const mqttPort = 13611
@@ -102,7 +101,7 @@ describe('multiple publisher plugins', () => {
     let streamId: string
 
     beforeAll(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
+        privateKey = await createTestPrivateKey({ gas: true })
         const client = createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
@@ -130,13 +129,13 @@ describe('multiple publisher plugins', () => {
     })
 
     afterEach(async () => {
-        await broker?.stop()
+        await broker.stop()
     })
 
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = createClient(fastPrivateKey())
+        const subscriber = createClient()
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })

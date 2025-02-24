@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { until, wait } from '@streamr/utils'
 import { AbstractProvider, Interface, Log } from 'ethers'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { ChainEventPoller, POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD } from './../../src/contracts/ChainEventPoller'
 
 const INITIAL_BLOCK_NUMBER = 123

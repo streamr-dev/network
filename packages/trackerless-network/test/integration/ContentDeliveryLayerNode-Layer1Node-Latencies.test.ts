@@ -1,6 +1,6 @@
 import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'

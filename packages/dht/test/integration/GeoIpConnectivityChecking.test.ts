@@ -8,12 +8,12 @@ import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 import { WebsocketServerConnection } from '../../src/connection/websocket/WebsocketServerConnection'
 import fs from 'fs'
 
-// www.gov.za
-const testIp = '164.151.129.20'
+// helsinki.fi
+const testIp = '128.214.222.50'
 
-// Pretoria, South Africa
-const testLatitude = -25.7599
-const testLongitude = 28.2604
+// Helsinki, Finland
+const testLatitude = 60.1719
+const testLongitude = 24.9347
 
 const dbPath = '/tmp/geoipdatabasesintegration'
 
@@ -65,8 +65,8 @@ describe('ConnectivityChecking', () => {
             allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
-        expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)
-        expect(response.latitude).toEqual(testLatitude)
-        expect(response.longitude).toEqual(testLongitude)
+        expect(response.protocolVersion).toEqual(LOCAL_PROTOCOL_VERSION)
+        expect(response.latitude).toBeCloseTo(testLatitude, 1)
+        expect(response.longitude).toBeCloseTo(testLongitude, 1)
     })
 })

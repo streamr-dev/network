@@ -62,7 +62,7 @@ describe('connectivityRequestHandler', () => {
                         tls: false
                     },
                     ipAddress: ipv4ToNumber(HOST),
-                    version: LOCAL_PROTOCOL_VERSION
+                    protocolVersion: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },
@@ -92,7 +92,7 @@ describe('connectivityRequestHandler', () => {
                     host: HOST,
                     natType: 'unknown',
                     ipAddress: ipv4ToNumber(HOST),
-                    version: LOCAL_PROTOCOL_VERSION
+                    protocolVersion: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },

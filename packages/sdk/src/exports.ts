@@ -3,7 +3,7 @@
  */
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
 export { Stream } from './Stream'
-export { StreamMetadata } from './StreamMetadata'
+export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
@@ -80,8 +80,6 @@ export {
     StreamMessageType
 } from './protocol/StreamMessage'
 
-export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
-
 // These are exported for the internal Operator class
 export {
     Operator,
@@ -104,7 +102,6 @@ import {
     stake,
     unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
     getTestTokenContract,
     getTestAdminWallet,
@@ -124,7 +121,6 @@ const _operatorContractUtils = {
     stake,
     unstake,
     getProvider,
-    generateWalletWithGasAndTokens,
     deployOperatorContract,
     getTestTokenContract,
     getTestAdminWallet,
@@ -134,4 +130,4 @@ export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
-export type { Signer, Eip1193Provider, Overrides } from 'ethers'
+export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

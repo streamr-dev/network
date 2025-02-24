@@ -1,14 +1,14 @@
-import http from 'http'
+import { Stream, StreamrClient } from '@streamr/sdk'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { StreamrClient, Stream } from '@streamr/sdk'
+import http from 'http'
+import { Broker } from '../../../../src/broker'
 import {
     createClient,
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from '../../../../src/broker'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
 
 const httpPort1 = 12371
 
@@ -33,15 +33,15 @@ describe('dataMetadataEndpoints', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        client1 = createClient(await fetchPrivateKeyWithGas())
+        storageNodeAccount = await createTestWallet({ gas: true })
+        client1 = createClient(await createTestPrivateKey({ gas: true }))
         storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
     }, TIMEOUT)
 
     afterAll(async () => {
         await Promise.allSettled([
-            client1?.destroy(),
-            storageNode?.stop()
+            client1.destroy(),
+            storageNode.stop()
         ])
     }, TIMEOUT)
 

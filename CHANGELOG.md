@@ -12,6 +12,67 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/node
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/cli-tools
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+## [102.1.0] - 2025-02-19
+
+### @streamr/node
+
+#### Fixed
+
+- Fix false flagging issue (https://github.com/streamr-dev/network/pull/3006)
+
+### @streamr/cli-tools
+
+#### Added
+
+- Add new sub command `streamr storage-node register` to register a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node unregister` to unregister a storage node (https://github.com/streamr-dev/network/pull/2982)
+- Add new sub command `streamr storage-node show` to display the metadata of a storage node (https://github.com/streamr-dev/network/pull/2982)
+
+
+## [102.0.0] - 2025-01-27
+
+### @streamr/sdk
+
+#### Added
+
 - Add support for arbitrary length user IDs: (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
   - new `StreamrClient#getUserId()` method
@@ -42,6 +103,9 @@ Changes before Tatum release are not documented in this file.
   - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
   - both methods overwrite metadata instead of merging it
 - **BREAKING CHANGE:** Methods `Stream#getMetadata()` and `Stream#getStreamParts()` are async (https://github.com/streamr-dev/network/pull/2883)
+- **BREAKING CHANGE:** Rename event `streamRemovedFromFromStorageNode` to `streamRemovedFromStorageNode` (https://github.com/streamr-dev/network/pull/2930)
+- **BREAKING CHANGE:** Replace custom errors with `StreamrClientError`: (https://github.com/streamr-dev/network/pull/2895, https://github.com/streamr-dev/network/pull/2927)
+  - `StreamrClientError` contains `MessageID` instead of `StreamMessage`
 - Caching changes:
   - storage node addresses (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
   - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
@@ -49,8 +113,6 @@ Changes before Tatum release are not documented in this file.
 - Network-level changes:
   - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
-
-#### Deprecated
 
 #### Removed
 
@@ -74,8 +136,6 @@ Changes before Tatum release are not documented in this file.
   - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
   - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
-#### Security
-
 ### @streamr/node
 
 #### Added
@@ -86,8 +146,6 @@ Changes before Tatum release are not documented in this file.
 
 - The `environment` config option now applies additional settings if `dev2` value is used (https://github.com/streamr-dev/network/pull/2813)
   - e.g. disables `entryPointDiscovery` and `metrics`
-
-#### Deprecated
 
 #### Removed
 
@@ -101,11 +159,13 @@ Changes before Tatum release are not documented in this file.
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 - Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
 
-#### Security
-
 ### @streamr/cli-tools
 
 #### Added
+
+- Add binary data support to `streamr stream publish` (https://github.com/streamr-dev/network/pull/2947)
+- Add binary data support to `streamr stream susbcribe` (https://github.com/streamr-dev/network/pull/2948)
+- Add binary data support to `streamr mock-data generate` command (https://github.com/streamr-dev/network/pull/2946)
 
 #### Changed
 
@@ -113,14 +173,6 @@ Changes before Tatum release are not documented in this file.
   - the `--env` flag supports multiple environments
   - if there is a value for `environment` in a config file, this overrides it
   - use `--env dev2` for the development environment
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 
 ## [101.1.2] - 2024-09-04
@@ -328,7 +380,9 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.0...HEAD
+[102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
+[102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
 [101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
 [101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0

@@ -110,7 +110,7 @@ export class StreamStorageRegistry {
                 contractAddress
             },
             sourceEmitter: chainEventPoller,
-            targetName: 'streamRemovedFromFromStorageNode',
+            targetName: 'streamRemovedFromStorageNode',
             targetEmitter: eventEmitter,
             transformation,
             loggerFactory

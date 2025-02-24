@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -9,7 +10,6 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -18,8 +18,8 @@ import { StreamrClientError } from '../../src/StreamrClientError'
  */
 describe('resend with existing key', () => {
 
-    const subscriberWallet = fastWallet()
-    const publisherWallet = fastWallet()
+    let subscriberWallet: Wallet
+    let publisherWallet: Wallet
     let subscriber: StreamrClient
     let stream: Stream
     let initialKey: GroupKey
@@ -68,9 +68,15 @@ describe('resend with existing key', () => {
         await collect(messageStream)
         expect(onError).toHaveBeenCalled()
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(StreamrClientError)
-        expect(error.code).toBe('DECRYPT_ERROR')
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR'
+        })
     }
+
+    beforeAll(async () => {
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet()
+    })
 
     beforeEach(async () => {
         const streamId = toStreamID(createRelativeTestStreamId(module), toEthereumAddress(publisherWallet.address))

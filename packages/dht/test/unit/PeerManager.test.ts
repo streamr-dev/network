@@ -1,5 +1,7 @@
 import { until } from '@streamr/utils'
-import { range, sample, sampleSize } from 'lodash'
+import range from 'lodash/range'
+import sample from 'lodash/sample'
+import sampleSize from 'lodash/sampleSize'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager } from '../../src/dht/PeerManager'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'

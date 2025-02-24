@@ -1,18 +1,10 @@
 import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import { StreamrClient } from '@streamr/sdk'
-import { fastWallet } from '@streamr/test-utils'
 import { until } from '@streamr/utils'
-
-const wallet = fastWallet()
 
 const createMockPlugin = async () => {
     const brokerConfig: any = {
-        client: {
-            auth: {
-                privateKey: wallet.privateKey
-            }
-        },
         plugins: {
             subscriber: {
                 streams: [
@@ -40,15 +32,15 @@ describe('Subscriber Plugin', () => {
     let plugin: any
 
     beforeAll(async () => {
-        client = createClient(wallet.privateKey)
+        client = createClient()
         plugin = await createMockPlugin()
         await plugin.start(client)
     })
 
     afterAll(async () => {
         await Promise.allSettled([
-            client?.destroy(),
-            plugin?.stop()
+            client.destroy(),
+            plugin.stop()
         ])
     })
 

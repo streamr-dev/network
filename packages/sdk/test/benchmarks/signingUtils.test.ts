@@ -1,7 +1,6 @@
+import { createTestWallet } from '@streamr/test-utils'
+import { areEqualBinaries, binaryToHex, createSignature, hexToBinary, randomString, toEthereumAddress, verifySignature } from '@streamr/utils'
 import { verifyMessage, Wallet } from 'ethers'
-import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries, binaryToHex } from '@streamr/utils'
-import { fastWallet } from '@streamr/test-utils'
-import { createSignature, verifySignature } from '@streamr/utils'
 
 /*
  * Benchmarking signingUtils against ether.js implementation. This test is skipped
@@ -33,7 +32,7 @@ describe('SigningUtil', () => {
         let payload: Uint8Array
 
         beforeEach(async () => {
-            wallet = fastWallet()
+            wallet = await createTestWallet()
             payload = Buffer.from(randomString(payloadSize))
             hexSignature = await wallet.signMessage(payload)
             binarySignature = hexToBinary(hexSignature)  

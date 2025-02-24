@@ -44,6 +44,7 @@ const config: Config = {
         excludePrivate: true,
         excludeProtected: true,
         excludeInternal: true,
+        excludeExternals: true,
         includeVersion: true,
         categorizeByGroup: true,
         treatWarningsAsErrors: true,

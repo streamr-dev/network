@@ -19,7 +19,6 @@ import { GroupKeyResponse } from './../../src/protocol/GroupKeyResponse'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { ValidationError } from './../../src/protocol/ValidationError'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
@@ -42,13 +41,13 @@ const groupKeyMessageToStreamMessage = async (
     }, SignatureType.SECP256K1)
 }
 
-const publisherAuthentication = createRandomAuthentication()
-const subscriberAuthentication = createRandomAuthentication()
-
 describe('Validator2', () => {
+
     let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
+    let publisherAuthentication: Authentication
+    let subscriberAuthentication: Authentication
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -64,6 +63,11 @@ describe('Validator2', () => {
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
+
+    beforeAll(async () => {
+        publisherAuthentication = await createRandomAuthentication()
+        subscriberAuthentication = await createRandomAuthentication()
+    })
 
     beforeEach(async () => {
         const publisher = await publisherAuthentication.getUserId()
@@ -152,7 +156,9 @@ describe('Validator2', () => {
                 signature: Buffer.from(msg.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects tampered content', async () => {
@@ -161,7 +167,9 @@ describe('Validator2', () => {
                 content: utf8ToBinary('{"attack":true}')
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects tampered newGroupKey', async () => {
@@ -170,13 +178,17 @@ describe('Validator2', () => {
                 newGroupKey: new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
             })
 
-            await expect(getValidator().validate(invalidMsg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects messages from unpermitted publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
 
-            await expect(getValidator().validate(msg)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(msg)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(msg.getPublisherId(), msg.getStreamId())
         })
 
@@ -202,7 +214,9 @@ describe('Validator2', () => {
         it('rejects group key requests on unexpected streams', async () => {
             groupKeyRequest.getStreamId = jest.fn().mockReturnValue('foo')
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
         })
 
         it('rejects invalid signatures', async () => {
@@ -211,14 +225,18 @@ describe('Validator2', () => {
                 signature: Buffer.from(groupKeyRequest.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidGroupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidGroupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
             const publisher = await publisherAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
         })
 
@@ -226,7 +244,9 @@ describe('Validator2', () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
             const subscriber = await subscriberAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
         })
 
@@ -254,20 +274,26 @@ describe('Validator2', () => {
                 signature: Buffer.from(groupKeyResponse.signature).reverse()
             })
 
-            await expect(getValidator().validate(invalidGroupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(invalidGroupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'INVALID_SIGNATURE'
+            })
         })
 
         it('rejects group key responses on unexpected streams', async () => {
             groupKeyResponse.getStreamId = jest.fn().mockReturnValue('foo')
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
         })
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
             const publisher = await publisherAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
         })
 
@@ -275,7 +301,9 @@ describe('Validator2', () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
             const subscriber = await subscriberAuthentication.getUserId()
 
-            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrow(ValidationError)
+            await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
+                code: 'MISSING_PERMISSION'
+            })
             expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
         })
 

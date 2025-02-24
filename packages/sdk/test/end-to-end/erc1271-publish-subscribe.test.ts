@@ -1,4 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { MessageMetadata } from '../../src'
@@ -16,13 +16,13 @@ describe('ERC-1271: publish', () => {
     let erc1271ContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
-        publisherWallet = new Wallet(await fetchPrivateKeyWithGas())
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet({ gas: true })
         erc1271ContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])
     }, TIMEOUT)
 
     async function createStream(publicSubscribePermission: boolean): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
@@ -82,13 +82,13 @@ describe('ERC-1271: subscribe', () => {
     let erc1271ContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
-        publisherWallet = new Wallet(await fetchPrivateKeyWithGas())
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet({ gas: true })
         erc1271ContractAddress = await deployTestERC1271Contract([toEthereumAddress(subscriberWallet.address)])
     }, TIMEOUT)
 
     async function createStream(): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
@@ -143,14 +143,14 @@ describe('ERC-1271: publish and subscribe', () => {
     let erc1271PublisherContractAddress: EthereumAddress
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
-        publisherWallet = new Wallet(await fetchPrivateKeyWithGas())
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet({ gas: true })
         erc1271SubscriberContractAddress = await deployTestERC1271Contract([toEthereumAddress(subscriberWallet.address)])
         erc1271PublisherContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])
     }, TIMEOUT)
 
     async function createStream(): Promise<StreamID> {
-        const creator = createTestClient(await fetchPrivateKeyWithGas())
+        const creator = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],

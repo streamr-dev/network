@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import range from 'lodash/range'
@@ -21,7 +21,7 @@ describe('unsubscribe', () => {
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
-        wallet = fastWallet()
+        wallet = await createTestWallet()
         client = environment.createClient({
             auth: {
                 privateKey: wallet.privateKey
@@ -35,7 +35,7 @@ describe('unsubscribe', () => {
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await client.destroy()
     })
 
     it('Subscription#unsubscribe', async () => {
