@@ -5,7 +5,7 @@ import {
     WeiAmount,
     collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
-import { Overrides } from 'ethers'
+import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
 import { Authentication } from '../Authentication'
 import { DestroySignal } from '../DestroySignal'
@@ -151,12 +151,12 @@ export class Operator {
         contractAddress: EthereumAddress,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
+        chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         authentication: Authentication,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         getEthersOverrides: () => Promise<Overrides>,
-        eventPollInterval: number
     ) {
         this.contractAddress = contractAddress
         this.contractFactory = contractFactory
@@ -170,7 +170,7 @@ export class Operator {
         this.theGraphClient = theGraphClient
         this.authentication = authentication
         this.getEthersOverrides = getEthersOverrides
-        this.initEventGateways(contractAddress, loggerFactory, eventPollInterval)
+        this.initEventGateways(contractAddress, chainEventPoller, loggerFactory)
         destroySignal.onDestroy.listen(() => {
             this.eventEmitter.removeAllListeners()
         })
@@ -178,17 +178,18 @@ export class Operator {
 
     private initEventGateways(
         contractAddress: EthereumAddress,
-        loggerFactory: LoggerFactory,
-        eventPollInterval: number
+        chainEventPoller: ChainEventPoller,
+        loggerFactory: LoggerFactory
     ): void {
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
-        }), eventPollInterval)
+        const contractInterface = new Interface(OperatorArtifact)
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
         initContractEventGateway({
-            sourceName: 'Staked',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Staked')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'staked',
             targetEmitter: this.eventEmitter,
@@ -196,7 +197,10 @@ export class Operator {
             loggerFactory
         })
         initContractEventGateway({
-            sourceName: 'Unstaked',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Unstaked')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'unstaked',
             targetEmitter: this.eventEmitter,
@@ -220,7 +224,10 @@ export class Operator {
             }
         }
         initContractEventGateway({
-            sourceName: 'ReviewRequest',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('ReviewRequest')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'reviewRequested',
             targetEmitter: this.eventEmitter,
