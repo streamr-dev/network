@@ -65,7 +65,7 @@ The main resources demanded of Streamr nodes are bandwidth and CPU. Memory usage
 These requirements are approximate and they depend on the demands of each stream Sponsorship that the Operator chooses to join. Sponsorship earnings stack, and so do the requirements on the node to service each sponsored stream.
 
 #### Should I run multiple nodes?
-Running a fleet of nodes with a redundancy factor greater than one is recommended incase one of your nodes has an outage while servicing a stream. Ideally each node would run on separate physical hardware or in a separate geographical location. It isn’t useful to run multiple nodes on the same device or virtual machine (VM).
+Running a fleet of nodes with a redundancy factor greater than one is recommended in case one of your nodes has an outage while servicing a stream. Ideally each node would run on separate physical hardware or in a separate geographical location. It isn’t useful to run multiple nodes on the same device or virtual machine (VM).
 
 Nodes will be doing real work on real streams, and the amount one can stake/earn is not directly limited by the number of nodes. Still of course, more nodes can do more work and that potentially allows you to earn more, so the relationship is more indirect.
 
