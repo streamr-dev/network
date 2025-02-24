@@ -15,18 +15,18 @@ To retrieve data from storage, a key exchange between the publisher and subscrib
 ```ts
 const {
   StreamrClient,
-  STREAMR_STORAGE_DEFAULT,
+    STREAMR_STORAGE_NODE_ADDRESS,
 } = require('@streamr/sdk');
 
 // assign a stream to a storage node
-await stream.addToStorageNode(STREAMR_STORAGE_DEFAULT);
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_ADDRESS);
 ```
 
 Other operations with storage:
 
 ```ts
 // remove the stream from a storage node
-await stream.removeFromStorageNode(STREAMR_STORAGE_DEFAULT);
+await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_ADDRESS);
 
 // fetch the storage nodes for a stream
 const storageNodes = stream.getStorageNodes();

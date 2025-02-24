@@ -12,7 +12,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add new storage node cluster address `STREAMR_STORAGE_DEFAULT` (https://github.com/streamr-dev/network/pull/3020)
+- Add new storage node cluster address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 
 #### Changed
 

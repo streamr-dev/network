@@ -31,7 +31,7 @@ export {
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
-    STREAMR_STORAGE_DEFAULT,
+    STREAMR_STORAGE_NODE_ADDRESS,
     NetworkConfig,
     ControlLayerConfig,
     NetworkNodeConfig,
