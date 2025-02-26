@@ -21,6 +21,9 @@ module.exports = createKarmaConfig(
         alias: {
             [NodeWebrtcConnection]: BrowserWebrtcConnection,
             [NodeWebsocketClientConnection]: BrowserWebsocketClientConnection
+        },
+        fallback: {
+            module: false
         }
     }),
     __dirname
