@@ -24,6 +24,11 @@ module.exports = createKarmaConfig(
         },
         fallback: {
             module: false
+        },
+        externals: {
+            http: 'HTTP',
+            ws: 'WebSocket',
+            'node-datachannel': 'commonjs node-datachannel',
         }
     }),
     __dirname

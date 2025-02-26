@@ -7,10 +7,11 @@ interface CreateWebpackConfigOptions {
     libraryName: string
     alias?: Record<string, string>
     fallback?: Record<string, string>
+    externals?: Record<string, string>
 }
 
 export const createWebpackConfig = (
-    { entry, libraryName, alias = {}, fallback = {} }: CreateWebpackConfigOptions
+    { entry, libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
 ): Record<string, any> => {
     return () => {
         return {
@@ -54,15 +55,7 @@ export const createWebpackConfig = (
                 libraryTarget: 'umd2',
                 umdNamedDefine: true,
             },
-            externals: {
-                'geoip-lite': 'commonjs geoip-lite',
-                'node-datachannel': 'commonjs node-datachannel',
-                'http': 'HTTP',
-                'https': 'HTTPS',
-                'express': 'Express',
-                'process': 'process',
-                'ws': 'WebSocket',
-            }
+            externals,
         }
     }
 }

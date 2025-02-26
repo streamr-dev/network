@@ -21,5 +21,11 @@ module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
     },
     fallback: {
         module: false
+    },
+    externals: {
+        'node-datachannel': 'commonjs node-datachannel',
+        express: 'Express',
+        http: 'HTTP',
+        ws: 'WebSocket',
     }
 }), __dirname)
