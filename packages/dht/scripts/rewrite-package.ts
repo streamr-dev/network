@@ -1,3 +1,13 @@
+/**
+ * This script moves the package.json file into the dist folder while adjusting
+ * relative pathnames for exports. Since the compiled output is inside "dist",
+ * but the original package.json references paths as if it's in the root, we
+ * need to strip "dist" from all export fields (main, types, …).
+ *
+ * This ensures that consumers of the package import the correct files
+ * without referencing "dist" in their paths, maintaining proper module resolution.
+ */
+
 import pkg from '../package.json' assert { type: 'json' }
 import * as fs from 'node:fs'
 import path, { dirname } from 'node:path'
