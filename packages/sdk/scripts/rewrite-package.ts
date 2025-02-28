@@ -8,14 +8,14 @@
  * without referencing "dist" in their paths, maintaining proper module resolution.
  */
 
-import pkg from "../package.json" assert { type: "json" }
-import * as fs from "node:fs"
-import path, { dirname } from "node:path"
-import { fileURLToPath } from "url"
+import pkg from '../package.json' assert { type: 'json' }
+import * as fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'url'
 
 function fixPathname(pathname: string): string {
-    return pathname.startsWith("./dist")
-        ? `./${path.relative("./dist", pathname)}`
+    return pathname.startsWith('./dist')
+        ? `./${path.relative('./dist', pathname)}`
         : pathname.replace(/(\.m?)ts$/, '$1js')
 }
 
@@ -48,7 +48,7 @@ const newPkg = {
 
 const dist = path.resolve(
     dirname(fileURLToPath(import.meta.url)),
-    "../dist/package.json"
+    '../dist/package.json'
 )
 
 fs.writeFileSync(dist, JSON.stringify(newPkg, null, 2))

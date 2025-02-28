@@ -15,7 +15,6 @@ export default [
             '**/generated/**',
             '**/dist/**',
             '**/node_modules/**',
-            '**/scripts/rewrite-package.ts'
         ]
     },
     ...streamr,
