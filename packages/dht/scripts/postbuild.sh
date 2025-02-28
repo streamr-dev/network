@@ -7,7 +7,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cd "${SCRIPT_DIR}/.."
 
 # Sanitize the final package.json
-npx tsx scripts/rewrite-package.ts
+npx ts-node scripts/rewrite-package.ts
 
 # Copy assets
 cp -f README.md dist

@@ -68,7 +68,7 @@
     "node-polyfill-webpack-plugin": "^4.1.0",
     "terser-webpack-plugin": "^5.3.11",
     "ts-loader": "^9.5.2",
-    "tsx": "^4.19.3",
+    "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
     "webpack": "^5.97.1",
