@@ -5,5 +5,8 @@ const TEST_PATHS = ['test/**/*.ts']
 
 module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
     entry: './src/exports.ts',
-    libraryName: 'proto-rpc'
+    libraryName: 'proto-rpc',
+    fallback: {
+        module: false
+    }
 }))

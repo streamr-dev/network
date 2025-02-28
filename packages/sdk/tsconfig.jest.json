@@ -15,7 +15,8 @@
         "bin/generate-config-validator.js",
         "src/config.schema.json",
         "test/**/*",
-        "test/**/*.json"
+        "test/**/*.json",
+        "scripts"
     ],
     "exclude": [
         "test/legacy/*",

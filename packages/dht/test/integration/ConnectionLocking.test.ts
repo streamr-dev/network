@@ -5,7 +5,7 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/transport/ITransport'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
-import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { toNodeId } from '../../src/identifiers'
 

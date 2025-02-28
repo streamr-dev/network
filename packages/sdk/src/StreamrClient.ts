@@ -1,3 +1,8 @@
+/**
+ * Importing 'timers' ensures `setImmediate` is available in browsers,
+ * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
+ */
+import 'timers'
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
