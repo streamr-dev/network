@@ -18,7 +18,6 @@
   },
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
-  "dependencies": {},
   "devDependencies": {
     "@electron/rebuild": "^3.7.1",
     "@jest/fake-timers": "^29.6.2",
@@ -35,7 +34,6 @@
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
-    "timers-browserify": "^2.0.12",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1"
   }
