@@ -8,9 +8,9 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "dist/src/exports.js",
+  "main": "./dist/src/exports.js",
   "browser": {
-    "dist/src/exports.js": false
+    "./dist/src/exports.js": false
   },
   "scripts": {
     "build": "tsc -b tsconfig.node.json",

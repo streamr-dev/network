@@ -7,8 +7,8 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
-  "main": "dist/src/exports.js",
-  "types": "dist/src/exports.d.ts",
+  "main": "./dist/src/exports.js",
+  "types": "./dist/src/exports.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json",
