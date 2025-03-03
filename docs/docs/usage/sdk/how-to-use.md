@@ -69,6 +69,42 @@ module.exports = {
 }
 ```
 
+#### Rollup
+
+Install the SDK, a Rollup polyfill plugin, like `rollup-plugin-polyfill-node`, and a couple of other required Rollup plugins.
+
+```bash
+npm i @streamr/sdk
+npm i -D rollup-plugin-polyfill-node @rollup/plugin-commonjs @rollup/plugin-node-resolve
+```
+
+Then modify your `rollup.config.mjs`:
+
+```ts
+import commonjs from '@rollup/plugin-commonjs'
+import nodePolyfills from 'rollup-plugin-polyfill-node'
+import resolve from '@rollup/plugin-node-resolve'
+
+export default [
+    {
+        // …
+        output: {
+            // …
+            format: "iife", // browser-friendly format
+        },
+        context: 'globalThis',
+        plugins: [
+            // …
+            resolve({
+                browser: true
+            }),
+            commonjs(),
+            nodePolyfills(),
+        ]
+    }
+]
+```
+
 ## Troubleshooting
 
 When on mac, you might run into the problem of not having **cmake** and/or **openssl** installed and configured.
