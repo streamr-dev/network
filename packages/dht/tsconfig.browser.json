@@ -9,9 +9,5 @@
     "src/**/*",
     "test/**/*",
     "package.json"
-  ],
-  "exclude": [
-    "src/connection/webrtc/NodeWebrtcConnection.ts",
-    "src/connection/websocket/NodeWebsocketClientConnection.ts"
   ]
 }
