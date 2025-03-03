@@ -47,6 +47,28 @@ Due to the stricter security rules inside browser extensions you must use the we
 #### React Native
 We are actively working on React Native compatibility but currently the Streamr SDK is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Streamr node integration pattern](../connect-apps-and-iot/streamr-node-interface.md).
 
+#### Webpack
+
+Install the SDK and a Webpack polyfill plugin library, like `node-polyfill-webpack-plugin`.
+
+```bash
+npm i @streamr/sdk node-polyfill-webpack-plugin
+```
+
+Then use the polyfill plugin in your `webpack.config.js`:
+
+```ts
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+
+module.exports = {
+    // …
+    plugins: [
+        // …
+        new NodePolyfillPlugin({ additionalAliases: ['process'] })
+    ]
+}
+```
+
 ## Troubleshooting
 
 When on mac, you might run into the problem of not having **cmake** and/or **openssl** installed and configured.
