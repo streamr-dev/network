@@ -49,13 +49,13 @@ We are actively working on React Native compatibility but currently the Streamr 
 
 #### Webpack
 
-Install the SDK and a Webpack polyfill plugin library, like `node-polyfill-webpack-plugin`.
+Install the SDK and a Webpack polyfill plugin such as `node-polyfill-webpack-plugin`.
 
 ```bash
 npm i @streamr/sdk node-polyfill-webpack-plugin
 ```
 
-Then use the polyfill plugin in your `webpack.config.js`:
+Then use the plugin in your `webpack.config.js`:
 
 ```ts
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
@@ -71,14 +71,14 @@ module.exports = {
 
 #### Rollup
 
-Install the SDK, a Rollup polyfill plugin, like `rollup-plugin-polyfill-node`, and a couple of other required Rollup plugins.
+First, install the Streamr SDK along with a Rollup polyfill plugin like `rollup-plugin-polyfill-node` and the necessary Rollup plugins:
 
 ```bash
 npm i @streamr/sdk
 npm i -D rollup-plugin-polyfill-node @rollup/plugin-commonjs @rollup/plugin-node-resolve
 ```
 
-Next, update your `rollup.config.mjs` to include the plugin. Ensure that the [`context`](https://rollupjs.org/configuration-options/#context) is correctly set and that you're building in a browser-friendly format.
+Then, update your `rollup.config.mjs` to integrate the polyfill plugin. Make sure the [`context`](https://rollupjs.org/configuration-options/#context) is set correctly and that your build is optimized for a browser-friendly format.
 
 ```ts
 import commonjs from '@rollup/plugin-commonjs'
@@ -140,7 +140,7 @@ export default nextConfig
 
 #### Vite
 
-To use the SDK with Vite.js, you'll need a polyfill plugin like vite-plugin-node-polyfills. Start by installing both the SDK and the plugin:
+To use the SDK with Vite.js, you'll need a polyfill plugin like `vite-plugin-node-polyfills`. Start by installing both the SDK and the plugin:
 
 ```bash
 npm i @streamr/sdk
