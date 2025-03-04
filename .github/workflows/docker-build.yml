@@ -21,7 +21,7 @@ on:
       host_machine_platform:
         type: string
         required: false
-        default: ubuntu-20.04
+        default: ubuntu-latest
       build_platforms:
         type: string
         required: true
