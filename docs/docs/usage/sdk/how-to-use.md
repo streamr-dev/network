@@ -174,18 +174,42 @@ npm i @streamr/sdk node-polyfill-webpack-plugin
 Next, create or update `gatsby-node.ts` to include the plugin:
 
 ```ts
-import { GatsbyNode } from 'gatsby'
+import type { GatsbyNode } from 'gatsby'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
-export const onCreateWebpackConfig: GatsbyNode['onCreateWebpackConfig'] = ({
-    actions,
-}) => {
-    actions.setWebpackConfig({
-        plugins: [new NodePolyfillPlugin({
-            additionalAliases: ['process']
-        })],
-    })
-}
+export const onCreateWebpackConfig: GatsbyNode['onCreateWebpackConfig'] =
+    async ({ stage, actions, loaders }) => {
+        if (stage === 'build-html' || stage === 'develop-html') {
+            actions.setWebpackConfig({
+                module: {
+                    rules: [
+                        {
+                            test: /node-forge|sqlite3|@lit-protocol/,
+                            use: loaders.null(),
+                        },
+                    ],
+                },
+            })
+        }
+
+        actions.setWebpackConfig({
+            resolve: {
+                alias: {
+                    pino: 'pino/browser',
+                },
+            },
+            externals: [
+                {
+                    'node-datachannel': 'commonjs node-datachannel',
+                },
+            ],
+            plugins: [
+                new NodePolyfillPlugin({
+                    additionalAliases: ['process'],
+                }),
+            ],
+        })
+    }
 ```
 
 With that, your SDK setup for Gatsby.js is complete!
