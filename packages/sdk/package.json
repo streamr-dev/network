@@ -2,7 +2,6 @@
   "name": "@streamr/sdk",
   "version": "102.1.0",
   "description": "JavaScript / TypeScript SDK for Streamr",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
@@ -10,18 +9,23 @@
   },
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/exports-commonjs.js",
-  "browser": "./dist/streamr-sdk.web.js",
-  "exports": {
-    "browser": "./dist/streamr-sdk.web.js",
-    "default": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/exports-esm.mjs",
-      "require": "./dist/src/exports-commonjs.js"
-    }
+  "module": "./dist/src/exports-esm.mjs",
+  "script": "./dist/streamr-sdk.web.min.js",
+  "browser": {
+    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
+    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+
   },
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "LICENSE",
+    "README.md",
+    "readme-header.png"
+  ],
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "bash copy-package.sh && bash fix-esm.sh",
+    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
@@ -72,6 +76,7 @@
     "node-polyfill-webpack-plugin": "^4.1.0",
     "terser-webpack-plugin": "^5.3.12",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
     "webpack": "^5.97.1",
@@ -103,7 +108,6 @@
     "p-limit": "^3.1.0",
     "p-memoize": "4.0.4",
     "p-throttle": "4.1.1",
-    "readable-stream": "^4.7.0",
     "reflect-metadata": "^0.2.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

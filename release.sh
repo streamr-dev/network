@@ -16,8 +16,8 @@ fi
 npm run build
 
 # Build sdk webpack bundle
-cd packages/sdk || exit
-npm run build-browser
+npm run build-browser -w packages/sdk
+
 if [ $? -ne 0 ]
 then
     echo
@@ -25,7 +25,6 @@ then
     echo
     exit 1
 fi
-cd ../..
 
 cd packages/utils || exit
 npm publish --access public --tag $NPM_TAG
@@ -63,14 +62,14 @@ cd packages/trackerless-network || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
-cd packages/sdk/dist || exit # Notice: dist folder
+cd packages/sdk || exit
 npm publish --access public --tag $NPM_TAG
-cd ../../..
+cd ../..
 
 cd packages/node || exit
-npm publish --tag $NPM_TAG --access public
+npm publish --access public --tag $NPM_TAG
 cd ../..
 
 cd packages/cli-tools || exit
-npm publish --tag $NPM_TAG --access public
+npm publish --access public --tag $NPM_TAG
 cd ../..

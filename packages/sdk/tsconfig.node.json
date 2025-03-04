@@ -10,14 +10,13 @@
         "noImplicitOverride": false
     },
     "include": [
-        "package.json",
         "src/**/*",
         "src/**/*.json",
         "src/config.schema.json"
     ],
     "exclude": [
         "src/exports-esm.mjs",
-        "src/utils/persistence/BrowserPersistence.mts"
+        "jest.config.ts"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
