@@ -2,7 +2,6 @@
   "name": "@streamr/sdk",
   "version": "102.1.0",
   "description": "JavaScript / TypeScript SDK for Streamr",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
