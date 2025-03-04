@@ -7,7 +7,7 @@ import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { ConnectivityResponse, HandshakeError, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { ITransport } from '../../transport/ITransport'
-import { ipv4ToNumber, Logger, wait } from '@streamr/utils'
+import { ipv4ToNumber, Logger, numberToIpv4, wait } from '@streamr/utils'
 import { attachConnectivityRequestHandler, DISABLE_CONNECTIVITY_PROBE } from '../connectivityRequestHandler'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionType, IConnection } from '../IConnection'
@@ -138,6 +138,9 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
                 delFunc()  
+            } else if (numberToIpv4(remotePeerDescriptor.ipAddress) !== (websocketServerConnection as WebsocketServerConnection).getRemoteIpAddress()) {
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_IP_ADDRESS)
+                delFunc()
             } else {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             }
@@ -148,6 +151,8 @@ export class WebsocketServerConnector {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+            } else if (numberToIpv4(remotePeerDescriptor.ipAddress) !== (websocketServerConnection as WebsocketServerConnection).getRemoteIpAddress()) {
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_IP_ADDRESS)
             } else if (this.options.onNewConnection(pendingConnection)) {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {

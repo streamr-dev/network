@@ -1,4 +1,4 @@
-import { until } from '@streamr/utils'
+import { ipv4ToNumber, until } from '@streamr/utils'
 import range from 'lodash/range'
 import sample from 'lodash/sample'
 import sampleSize from 'lodash/sampleSize'
@@ -36,7 +36,7 @@ const createPeerManager = (
         createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createDhtNodeRpcRemote(peerDescriptor, localPeerDescriptor, pingFailures),
         hasConnection: () => false
     } as any)
-    const contacts = nodeIds.map((n) => ({ nodeId: toDhtAddressRaw(n), type: NodeType.NODEJS }))
+    const contacts = nodeIds.map((n) => ({ nodeId: toDhtAddressRaw(n), type: NodeType.NODEJS, ipAddress: ipv4ToNumber('127.0.0.1') }))
     for (const contact of contacts) {
         manager.addContact(contact)
     }

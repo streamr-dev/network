@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, until, waitForEvent3 } from '@streamr/utils'
+import { ipv4ToNumber, Logger, MetricsContext, until, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
@@ -386,7 +386,8 @@ describe('ConnectionManager', () => {
                 // This is not the correct nodeId of peerDescriptor2
                 nodeId: toDhtAddressRaw(randomDhtAddress()),
                 type: NodeType.NODEJS,
-                websocket: peerDescriptor2.websocket
+                websocket: peerDescriptor2.websocket,
+                ipAddress: ipv4ToNumber('127.0.0.1')
             },
             body: {
                 oneofKind: 'rpcMessage',
