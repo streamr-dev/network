@@ -13,7 +13,7 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { createStreamMessage } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcRemote', () => {
@@ -21,14 +21,8 @@ describe('ContentDeliveryRpcRemote', () => {
     let clientRpc: ListeningRpcCommunicator
     let rpcRemote: ContentDeliveryRpcRemote
 
-    const clientNode: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
-    const serverNode: PeerDescriptor = {
-        nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
-    }
+    const clientNode = createMockPeerDescriptor()
+    const serverNode = createMockPeerDescriptor()
 
     let recvCounter: number
 
