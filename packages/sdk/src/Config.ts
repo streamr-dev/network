@@ -334,22 +334,6 @@ export interface StreamrClientConfig {
      */
     encryption?: {
         /**
-         * Enable experimental Lit Protocol key exchange.
-         *
-         * When enabled encryption key storing and fetching will primarily be done through the
-         * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
-         * key-exchange system.
-         */
-        litProtocolEnabled?: boolean
-
-        /**
-         * Enable log messages of the Lit Protocol library to be printed to stdout.
-         */
-        litProtocolLogging?: boolean
-
-        // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
-        // to lit protocol key requests (both encryption and decryption?)
-        /**
          * When requesting an encryption key using the standard Streamr
          * key-exchange system, defines how many milliseconds should a response
          * be awaited for.
