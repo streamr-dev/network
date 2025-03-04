@@ -1,11 +1,12 @@
 /**
- * This script moves the package.json file into the dist folder while adjusting
- * relative pathnames for exports. Since the compiled output is inside "dist",
- * but the original package.json references paths as if it's in the root, we
- * need to strip "dist" from all export fields (main, types, …).
+ * This script overwrites the package.json file inside the dist folder while
+ * adjusting relative pathnames for exports. Since the compiled output is inside
+ * "dist", but the original package.json references paths as if it's in the root,
+ * we need to strip "dist" from all export fields (main, types, …).
  *
- * This ensures that consumers of the package import the correct files
- * without referencing "dist" in their paths, maintaining proper module resolution.
+ * This ensures that consumers of the package (incl. bundlers like Webpack) import
+ * the correct files without referencing "dist" in their paths, maintaining proper
+ * module resolution.
  */
 
 import pkg from '../package.json'
