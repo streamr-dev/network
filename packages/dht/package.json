@@ -16,6 +16,10 @@
   },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "prebuild": "./proto.sh",
     "postbuild": "./scripts/postbuild.sh",
