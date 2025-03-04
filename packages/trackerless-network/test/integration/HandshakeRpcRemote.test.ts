@@ -1,10 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import {

@@ -1,10 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../generated/packages/trackerless-network/protos/NetworkRpc'

@@ -1,10 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { Empty } from '../../generated/google/protobuf/empty'

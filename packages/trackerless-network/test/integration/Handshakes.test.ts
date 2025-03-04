@@ -1,7 +1,5 @@
 import {
     ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
     Simulator,
     SimulatorTransport,
     toNodeId
