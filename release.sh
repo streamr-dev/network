@@ -50,9 +50,9 @@ cd packages/autocertifier-client || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
-cd packages/dht/dist || exit
+cd packages/dht || exit
 npm publish --access public --tag $NPM_TAG
-cd ../../..
+cd ../..
 
 cd packages/autocertifier-server || exit
 npm publish --access public --tag $NPM_TAG
