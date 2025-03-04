@@ -17,6 +17,7 @@
   },
   "files": [
     "dist",
+    "!*.tsbuildinfo",
     "LICENSE",
     "README.md",
     "readme-header.png"

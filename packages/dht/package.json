@@ -18,6 +18,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "files": [
     "dist",
+    "!*.tsbuildinfo",
     "README.md"
   ],
   "scripts": {
