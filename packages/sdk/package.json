@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "bash fix-esm.sh",
+    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
