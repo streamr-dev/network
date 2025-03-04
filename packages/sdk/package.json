@@ -13,7 +13,9 @@
   "module": "./dist/src/exports-esm.mjs",
   "script": "./dist/streamr-sdk.web.min.js",
   "browser": {
-    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts"
+    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
+    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+
   },
   "files": [
     "dist",
