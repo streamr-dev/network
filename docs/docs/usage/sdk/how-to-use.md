@@ -69,42 +69,6 @@ module.exports = {
 }
 ```
 
-#### Rollup
-
-First, install the Streamr SDK along with a Rollup polyfill plugin like `rollup-plugin-polyfill-node` and the necessary Rollup plugins:
-
-```bash
-npm i @streamr/sdk
-npm i -D rollup-plugin-polyfill-node @rollup/plugin-commonjs @rollup/plugin-node-resolve
-```
-
-Then, update your `rollup.config.mjs` to integrate the polyfill plugin. Make sure the [`context`](https://rollupjs.org/configuration-options/#context) is set correctly and that your build is optimized for a browser-friendly format.
-
-```ts
-import commonjs from '@rollup/plugin-commonjs'
-import nodePolyfills from 'rollup-plugin-polyfill-node'
-import resolve from '@rollup/plugin-node-resolve'
-
-export default [
-    {
-        // …
-        output: {
-            // …
-            format: "iife", // browser-friendly format
-        },
-        context: 'globalThis',
-        plugins: [
-            // …
-            resolve({
-                browser: true
-            }),
-            commonjs(),
-            nodePolyfills(),
-        ]
-    }
-]
-```
-
 #### Next.js
 
 The Next.js workflow closely resembles the Webpack workflow mentioned above but requires a bit more setup. To get started, install the SDK along with a Webpack polyfill plugin, such as `node-polyfill-webpack-plugin`.
