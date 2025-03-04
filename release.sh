@@ -62,9 +62,9 @@ cd packages/trackerless-network || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
-cd packages/sdk/dist || exit # Notice: dist folder
+cd packages/sdk || exit
 npm publish --access public --tag $NPM_TAG
-cd ../../..
+cd ../..
 
 cd packages/node || exit
 npm publish --access public --tag $NPM_TAG

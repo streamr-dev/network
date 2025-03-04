@@ -15,9 +15,15 @@
   "browser": {
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts"
   },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "readme-header.png"
+  ],
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
+    "postbuild": "bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
