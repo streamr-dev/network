@@ -39,7 +39,7 @@
         "@types/node": "^20.14.8",
         "cli-table": "^0.3.6",
         "eslint": "^9.14.0",
-        "eslint-config-streamr-ts": "^6.1.0",
+        "eslint-config-streamr-ts": "^7.0.0",
         "eslint-import-resolver-typescript": "^3.8.3",
         "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-jest": "^28.11.0",
