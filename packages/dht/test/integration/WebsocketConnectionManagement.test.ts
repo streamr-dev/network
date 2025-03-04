@@ -8,6 +8,7 @@ import { Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { toNodeId } from '../../src/identifiers'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const SERVICE_ID = 'test'
 
@@ -28,23 +29,15 @@ describe('Websocket Connection Management', () => {
     let noWsServerManager: ConnectionManager
     let biggerNoWsServerManager: ConnectionManager
     const simulator = new Simulator()
-    const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([2]),
-        type: NodeType.NODEJS,
+    const wsServerConnectorPeerDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 12223,
             tls: false
         }
-    }
-    const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([1]),
-        type: NodeType.NODEJS,
-    }
-    const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([3]),
-        type: NodeType.NODEJS,
-    }
+    })
+    const noWsServerConnectorPeerDescriptor = createMockPeerDescriptor()
+    const biggerNoWsServerConnectorPeerDescriptor = createMockPeerDescriptor()
 
     let connectorTransport1: SimulatorTransport
     let connectorTransport2: SimulatorTransport
@@ -134,10 +127,7 @@ describe('Websocket Connection Management', () => {
                 rpcMessage: RpcMessage.create()
             },
             messageId: 'mockerer',
-            targetDescriptor: {
-                nodeId: new Uint8Array([1, 2, 4]),
-                type: NodeType.NODEJS
-            }
+            targetDescriptor: createMockPeerDescriptor()
         }
 
         await Promise.allSettled([
