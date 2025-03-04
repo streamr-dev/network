@@ -25,7 +25,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { Any } from '../../generated/google/protobuf/any'
-import { wait, until } from '@streamr/utils'
+import { wait, until, ipv4ToNumber } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
@@ -33,6 +33,7 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
     return {
         nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
+        ipAddress: ipv4ToNumber('127.0.0.1'),
         ...opts
     }
 }
@@ -48,8 +49,8 @@ export const createMockRingNode = async (
     const peerDescriptor: PeerDescriptor = {
         nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
-        region
-        //ipAddress: ipv4ToNumber(ipAddress)
+        region,
+        ipAddress: ipv4ToNumber('127.0.0.1')
     }
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
     await mockConnectionManager.start()
@@ -82,7 +83,8 @@ export const createMockConnectionDhtNode = async (
     const peerDescriptor: PeerDescriptor = {
         nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
-        region: getRandomRegion()
+        region: getRandomRegion(),
+        ipAddress: ipv4ToNumber('127.0.0.1')
     }
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
     await mockConnectionManager.start()
@@ -114,6 +116,7 @@ export const createMockConnectionLayer1Node = async (
     const descriptor: PeerDescriptor = {
         nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
         type: NodeType.NODEJS,
+        ipAddress: ipv4ToNumber('127.0.0.1')
     }
     const node = new DhtNode({
         peerDescriptor: descriptor,

@@ -85,10 +85,7 @@ describe('HandshakeRpcLocal', () => {
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveRequest = {
-            interleaveTargetDescriptor: {
-                nodeId: toDhtAddressRaw('0x2222' as DhtAddress),
-                type: NodeType.NODEJS
-            }
+            interleaveTargetDescriptor: createMockPeerDescriptor()
         }
         await rpcLocal.interleaveRequest(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()

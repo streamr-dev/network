@@ -10,7 +10,7 @@ import {
     toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, ipv4ToNumber, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -101,6 +101,7 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'n
         ...opts,
         nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
+        ipAddress: ipv4ToNumber('127.0.0.1'),
         region: getRandomRegion()
     }
 }

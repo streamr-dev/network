@@ -1,4 +1,4 @@
-import { Multimap, wait } from '@streamr/utils'
+import { ipv4ToNumber, Multimap, wait } from '@streamr/utils'
 import sampleSize from 'lodash/sampleSize'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
@@ -17,7 +17,8 @@ const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's options, not relev
 const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
     return {
         nodeId: toDhtAddressRaw(nodeId),
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        ipAddress: ipv4ToNumber('127.0.0.1') 
     }
 }
 

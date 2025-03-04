@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, toDhtAddressRaw } from '@streamr/dht'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
-import { StreamID, toStreamPartID, until } from '@streamr/utils'
+import { ipv4ToNumber, StreamID, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -18,7 +18,8 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
     const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
         ...entryPoint,
         nodeId: toDhtAddressRaw(entryPoint.nodeId as DhtAddress),
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        ipAddress: ipv4ToNumber('127.0.0.1')
     }))
     const networkNode = createNetworkNode({
         layer0: {

@@ -2,7 +2,7 @@ import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, until } from '@streamr/utils'
-import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../generated/google/protobuf/any'
@@ -27,10 +27,7 @@ describe('Route Message With Mock Connections', () => {
         simulator = new Simulator()
         entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
 
-        entryPointDescriptor = {
-            nodeId: toDhtAddressRaw(entryPoint.getNodeId()),
-            type: NodeType.NODEJS
-        }
+        entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
 
         sourceNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         destinationNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())

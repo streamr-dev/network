@@ -6,7 +6,7 @@ import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { MetricsContext } from '@streamr/utils'
+import { ipv4ToNumber, MetricsContext } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
@@ -181,6 +181,7 @@ describe('WebRTC Connection Management', () => {
         msg.targetDescriptor = {
             nodeId: new Uint8Array([0, 0, 0, 0, 0]),
             type: NodeType.NODEJS,
+            ipAddress: ipv4ToNumber('127.0.0.1') 
         }
         
         await Promise.allSettled([

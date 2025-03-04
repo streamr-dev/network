@@ -156,7 +156,7 @@ message PeerDescriptor {
   ConnectivityMethod tcp = 4;
   ConnectivityMethod websocket = 5;
   optional uint32 region = 6;
-  optional uint32 ipAddress = 7;
+  uint32 ipAddress = 7;
   optional bytes publicKey = 8;
   // signature of fields 2-8
   optional bytes signature = 9; 
@@ -238,6 +238,7 @@ enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
   INVALID_TARGET_PEER_DESCRIPTOR = 1;
   UNSUPPORTED_PROTOCOL_VERSION = 2;
+  INVALID_IP_ADDRESS = 3;
 }
 
 // Wraps all messages
