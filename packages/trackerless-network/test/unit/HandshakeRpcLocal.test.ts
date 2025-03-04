@@ -1,4 +1,4 @@
-import { DhtAddress, NodeType, toNodeId, toDhtAddressRaw } from '@streamr/dht'
+import { DhtAddress, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
