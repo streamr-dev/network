@@ -6,7 +6,7 @@ import {
     toDhtAddress,
     toNodeId,
 } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/utils'
+import { ipv4ToNumber, StreamPartIDUtils } from '@streamr/utils'
 import { expect } from 'expect'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
@@ -44,25 +44,20 @@ describe('NodeList', () => {
         for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
                 nodeId: id,
-                type: NodeType.NODEJS
+                type: NodeType.NODEJS,
+                ipAddress: ipv4ToNumber('127.0.0.1')
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))
         }
     })
 
     it('add', () => {
-        const newDescriptor = {
-            nodeId: new Uint8Array([1, 2, 3]),
-            type: NodeType.NODEJS
-        }
+        const newDescriptor = createMockPeerDescriptor()
         const newNode = createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
         expect(nodeList.has(toNodeId(newDescriptor))).toEqual(true)
 
-        const newDescriptor2 = {
-            nodeId: new Uint8Array([1, 2, 4]),
-            type: NodeType.NODEJS
-        }
+        const newDescriptor2 = createMockPeerDescriptor()
         const newNode2 = createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
         expect(nodeList.has(toNodeId(newDescriptor2))).toEqual(false)

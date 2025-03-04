@@ -11,20 +11,15 @@ import { NeighborUpdate } from '../../generated/packages/trackerless-network/pro
 import {
     NeighborUpdateRpcClient,
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
     let rpcRemote: NeighborUpdateRpcRemote
 
-    const clientNode: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
-    const serverNode: PeerDescriptor = {
-        nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
-    }
+    const clientNode = createMockPeerDescriptor()
+    const serverNode = createMockPeerDescriptor()
 
     let simulator: Simulator
     let mockConnectionManager1: SimulatorTransport
@@ -45,10 +40,7 @@ describe('NeighborUpdateRpcRemote', () => {
             NeighborUpdate,
             'neighborUpdate',
             async (): Promise<NeighborUpdate> => {
-                const node: PeerDescriptor = {
-                    nodeId: new Uint8Array([4, 2, 4]),
-                    type: NodeType.NODEJS
-                }
+                const node = createMockPeerDescriptor()
                 const update: NeighborUpdate = {
                     streamPartId: StreamPartIDUtils.parse('stream#0'),
                     neighborDescriptors: [

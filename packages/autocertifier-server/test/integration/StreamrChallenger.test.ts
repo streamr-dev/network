@@ -12,7 +12,7 @@ import {
     toDhtAddressRaw
 } from '@streamr/dht'
 import path from 'path'
-import { MetricsContext, until } from '@streamr/utils'
+import { ipv4ToNumber, MetricsContext, until } from '@streamr/utils'
 
 describe('StreamrChallenger', () => {
 
@@ -28,7 +28,8 @@ describe('StreamrChallenger', () => {
             host: '127.0.0.1',
             port: 12323,
             tls: false
-        }
+        },
+        ipAddress: ipv4ToNumber('127.0.0.1')
     }
     const sessionId = 'sessionId'
     const rpcMethod = async (): Promise<HasSessionResponse> => {

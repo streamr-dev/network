@@ -12,7 +12,7 @@ import {
     createOutgoingHandshaker
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { Logger } from '@streamr/utils'
+import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, SERVICE_ID } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
@@ -22,6 +22,7 @@ const logger = new Logger(module)
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
     nodeId: toDhtAddressRaw(randomDhtAddress()),
     type: NodeType.NODEJS,
+    ipAddress: ipv4ToNumber('127.0.0.1') // ????
 }
 
 // TODO: use async/await
@@ -38,7 +39,8 @@ export const runStreamrChallenge = (
                 host: streamrWebSocketIp,
                 port: parseInt(streamrWebSocketPort),
                 tls: true
-            }
+            },
+            ipAddress: ipv4ToNumber(streamrWebSocketIp)
         }
         const socket = new WebsocketClientConnection()
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +

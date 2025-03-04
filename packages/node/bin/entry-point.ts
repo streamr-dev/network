@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, DhtNode, NodeType, toDhtAddressRaw } from '@streamr/dht'
+import { ipv4ToNumber } from '@streamr/utils'
 
 const main = async () => {
     const entryPoint = CHAIN_CONFIG.dev2.entryPoints[0]
     const peerDescriptor = {
         ...entryPoint,
         nodeId: toDhtAddressRaw(entryPoint.nodeId as DhtAddress),
-        type: NodeType.NODEJS  // TODO remove this when NET-1070 done
+        type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
+        ipAddress: ipv4ToNumber(entryPoint.websocket.host)
     }
     const dhtNode = new DhtNode({
         nodeId: entryPoint.nodeId as DhtAddress,

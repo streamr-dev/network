@@ -1,7 +1,7 @@
 import { DhtAddress, NodeType, PeerDescriptor, toDhtAddress, toDhtAddressRaw } from '@streamr/dht'
 import {
     LengthPrefixedFrameDecoder,
-    Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
+    Logger, StreamID, TheGraphClient, composeAbortSignals, ipv4ToNumber, merge,
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
@@ -130,6 +130,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
         ...json,
         nodeId: toDhtAddressRaw((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
+        ipAddress: ipv4ToNumber('127.0.0.1'), //????
         websocket: json.websocket
     }
     if ((peerDescriptor as any).id !== undefined) {
