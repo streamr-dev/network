@@ -133,7 +133,7 @@ export class ExperimentController {
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
-        await this.runBatchedOperation(nodes, 12, async (node) => {
+        await this.runBatchedOperation(nodes, 10, async (node) => {
             const startWsServerForNode = Math.random() < ratioOfWsNodes
             const instruction = ExperimentServerMessage.create({
                 instruction: {
@@ -171,7 +171,7 @@ export class ExperimentController {
 
     async runRoutingExperiment(): Promise<void> {
         const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 16, async (node) => {
+        await this.runBatchedOperation(nodes, 12, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'routingExperiment',
