@@ -178,10 +178,9 @@ describe('WebRTC Connection Management', () => {
             })
         })
 
-        msg.targetDescriptor = {
-            nodeId: new Uint8Array([0, 0, 0, 0, 0]),
-            type: NodeType.NODEJS,
-        }
+        msg.targetDescriptor = createMockPeerDescriptor({
+            nodeId: new Uint8Array([0, 0, 0, 0, 0])
+        })
         
         await Promise.allSettled([
             manager1.send(msg),

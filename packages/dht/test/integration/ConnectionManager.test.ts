@@ -385,7 +385,6 @@ describe('ConnectionManager', () => {
             targetDescriptor: createMockPeerDescriptor({
                 // This is not the correct nodeId of peerDescriptor2
                 nodeId: toDhtAddressRaw(randomDhtAddress()),
-                type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
             }),
             body: {
