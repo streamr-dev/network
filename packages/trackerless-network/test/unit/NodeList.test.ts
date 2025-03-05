@@ -42,10 +42,9 @@ describe('NodeList', () => {
     beforeEach(() => {
         nodeList = new NodeList(ownId, 6)
         for (const id of ids) {
-            const peerDescriptor: PeerDescriptor = {
-                nodeId: id,
-                type: NodeType.NODEJS
-            }
+            const peerDescriptor = createMockPeerDescriptor({
+                nodeId: id
+            })
             nodeList.add(createRemoteGraphNode(peerDescriptor))
         }
     })
