@@ -8,7 +8,7 @@ import {
     toNodeId
 } from '@streamr/dht'
 import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
 import { ControlLayerNode } from './logic/ControlLayerNode'

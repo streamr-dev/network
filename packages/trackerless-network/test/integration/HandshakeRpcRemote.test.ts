@@ -1,10 +1,4 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import {
@@ -14,20 +8,15 @@ import {
 import {
     HandshakeRpcClient,
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
     let rpcRemote: HandshakeRpcRemote
 
-    const clientNode: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
-    const serverNode: PeerDescriptor = {
-        nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
-    }
+    const clientNode = createMockPeerDescriptor()
+    const serverNode = createMockPeerDescriptor()
 
     let simulator: Simulator
     let mockConnectionManager1: SimulatorTransport

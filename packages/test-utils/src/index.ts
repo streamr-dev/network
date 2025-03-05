@@ -1,4 +1,4 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry, binaryToHex } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
@@ -144,14 +144,6 @@ export const toReadableStream = (...args: unknown[]): Readable => {
     return rs
 }
 
-export function fastPrivateKey(): string {
-    return crypto.randomBytes(32).toString('hex')
-}
-
-export function fastWallet(): Wallet {
-    return new Wallet(fastPrivateKey())
-}
-
 export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
@@ -277,34 +269,44 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
     return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
 }
 
-// TODO refactor method e.g. to createTestWallet({ gas: boolean, token: boolean })
-export const generateWalletWithGasAndTokens = async (tokens = true): Promise<Wallet & AbstractSigner<Provider>> => {
+const fastPrivateKey = (): string => {
+    return binaryToHex(crypto.randomBytes(32), true)
+}
+
+export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<Wallet & AbstractSigner<Provider>> => {
     const provider = getTestProvider()
-    const privateKey = crypto.randomBytes(32).toString('hex')
-    const newWallet = new Wallet(privateKey)
-    const adminWallet = getTestAdminWallet(provider)
-    const token = getTestTokenContract(adminWallet)
-    await retry(
-        async () => {
-            if (tokens) {
-                await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
-            }
-            await (await adminWallet.sendTransaction({
-                to: newWallet.address,
-                value: parseEther('1')
-            })).wait()
-        },
-        (message: string, err: any) => {
-            logger.debug(message, { err })
-        },
-        'Token minting',
-        10,
-        100
-    )
+    const newWallet = new Wallet(fastPrivateKey())
+    if (opts?.gas || opts?.tokens) {
+        const adminWallet = getTestAdminWallet(provider)
+        const token = getTestTokenContract(adminWallet)
+        await retry(
+            async () => {
+                if (opts?.gas) {
+                    await (await adminWallet.sendTransaction({
+                        to: newWallet.address,
+                        value: parseEther('1')
+                    })).wait()
+                }
+                if (opts?.tokens) {
+                    await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+                }
+            },
+            (message: string, err: any) => {
+                logger.debug(message, { err })
+            },
+            'Token minting',
+            10,
+            100
+        )
+    }
     return newWallet.connect(provider) as (Wallet & AbstractSigner<Provider>)
 }
 
-export const fetchPrivateKeyWithGas = async (): Promise<string> => {
-    const wallet = await generateWalletWithGasAndTokens(false)
-    return wallet.privateKey
+export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: boolean }): Promise<string> => {
+    if (opts?.gas || opts?.tokens) {
+        const wallet = await createTestWallet(opts)
+        return wallet.privateKey
+    } else {
+        return fastPrivateKey()
+    }
 }

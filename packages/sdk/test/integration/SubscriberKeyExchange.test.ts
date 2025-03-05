@@ -1,14 +1,14 @@
 import 'reflect-metadata'
 
-import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import {
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
     toStreamPartID,
     toUserId,
-    UserID,
-    until
+    until,
+    UserID
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -80,8 +80,8 @@ describe('SubscriberKeyExchange', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = fastWallet()
-        subscriberWallet = fastWallet()
+        publisherWallet = await createTestWallet()
+        subscriberWallet = await createTestWallet()
         environment = new FakeEnvironment()
         subscriber = environment.createClient({
             auth: {

@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { validateEnvironmentVariable } from '../src/AutoCertifierServer'
 import { Database, Subdomain } from '../src/Database'
 import { Route53Api } from '../src/Route53Api'
-import { chunk } from 'lodash'
+import chunk from 'lodash/chunk'
 import { ChangeAction } from '@aws-sdk/client-route-53'
 
 (async () => {

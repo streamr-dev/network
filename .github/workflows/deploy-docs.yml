@@ -3,12 +3,6 @@ name: Production Documentation
 
 on:
   workflow_dispatch:
-  #push:
-  #  tags:
-  #    - '*'
-  #    - '!**beta**'
-  #    - '!**alpha**'
-  #    - '!**tatum**'
 
 jobs:
   deploy:
@@ -44,7 +38,7 @@ jobs:
       - name: Deploy to S3
         working-directory: ./docs
         run: |
-          aws s3 sync build/. s3://docs.streamr.network --acl private
+          aws s3 sync build/. s3://docs.streamr.network --acl private --delete
       - name: Invalidate Cloudfront cache
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CF_DISTRIBUTION_ID_PROD_DOCS }} --paths "/*"

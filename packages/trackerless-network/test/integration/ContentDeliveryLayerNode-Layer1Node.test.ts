@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, toNodeId, getRandomRegion } from '@streamr/dht'
 import { Logger, StreamPartIDUtils, until } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'

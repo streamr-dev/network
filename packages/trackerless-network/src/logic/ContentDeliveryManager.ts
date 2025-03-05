@@ -1,5 +1,6 @@
 import {
     ConnectionLocker,
+    ConnectionManager,
     DhtAddress,
     DhtNode,
     EXISTING_CONNECTION_TIMEOUT,
@@ -20,7 +21,7 @@ import {
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
@@ -30,7 +31,6 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
-import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
 import fs from 'fs'
 import readline from 'readline'
@@ -43,6 +43,7 @@ type TimeToData = {
     layer1JoinTime?: number
     firstNeighborConnectedTimestamp?: number
 }
+import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './propagation/Propagation'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -75,6 +76,7 @@ export interface ContentDeliveryManagerOptions {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
+    streamPartitionMaxPropagationBufferSize?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
@@ -299,6 +301,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
@@ -359,7 +362,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets ?? DEFAULT_MIN_PROPAGATION_TARGETS,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize ?? DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+            propagationBufferTtl: DEFAULT_PROPAGATION_BUFFER_TTL
         })
     }
 

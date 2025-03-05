@@ -54,6 +54,12 @@ export default [
                 ignoreEOLComments: true
             }],
             'no-restricted-imports': ['error', {
+                paths: [
+                    {
+                        name: 'lodash',
+                        message: 'Import [module] from lodash/[module] instead'
+                    }
+                ],
                 patterns: ['*/dist']
             }],
             'no-unneeded-ternary': 'error',

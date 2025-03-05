@@ -7,7 +7,7 @@ import {
     until
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { sample } from 'lodash'
+import sample from 'lodash/sample'
 import type { MarkRequired } from 'ts-essentials'
 import { ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ConnectionsView } from '../connection/ConnectionsView'

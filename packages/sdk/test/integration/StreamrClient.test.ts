@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Defer, StreamPartID, StreamPartIDUtils, collect, wait } from '@streamr/utils'
 import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -27,7 +27,7 @@ describe('StreamrClient', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        privateKey = fastPrivateKey()
+        privateKey = await createTestPrivateKey()
         environment = new FakeEnvironment()
         client = environment.createClient({
             auth: {
@@ -36,7 +36,7 @@ describe('StreamrClient', () => {
         })
         const stream = await createTestStream(client, module)
         streamDefinition = (await stream.getStreamParts())[0]
-        const publisherWallet = fastWallet()
+        const publisherWallet = await createTestWallet()
         await stream.grantPermissions({
             userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]

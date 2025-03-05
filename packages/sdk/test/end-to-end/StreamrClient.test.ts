@@ -1,4 +1,4 @@
-import { fastPrivateKey, isRunningInElectron } from '@streamr/test-utils'
+import { isRunningInElectron } from '@streamr/test-utils'
 import { StreamrClient } from '../../src'
 
 describe('StreamrClient', () => {
@@ -6,10 +6,7 @@ describe('StreamrClient', () => {
 
     beforeEach(async () => {
         client = new StreamrClient({
-            environment: 'dev2',
-            auth: {
-                privateKey: fastPrivateKey(),
-            }
+            environment: 'dev2'
         })
     }, 30 * 1000)
 

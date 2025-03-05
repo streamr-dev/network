@@ -1,6 +1,6 @@
 import { wait } from '@streamr/utils'
 import { createCacheMap, createLazyMap } from '../../src/utils/Mapping'
-import { range } from 'lodash'
+import range from 'lodash/range'
 
 describe('Mapping', () => {
 

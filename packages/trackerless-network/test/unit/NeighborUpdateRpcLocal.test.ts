@@ -1,6 +1,6 @@
 import { DhtAddress, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'

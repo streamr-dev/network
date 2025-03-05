@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -22,7 +22,7 @@ describe('Resends', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        const publisherPrivateKey = fastWallet().privateKey
+        const publisherPrivateKey = await createTestPrivateKey()
         environment = new FakeEnvironment()
         const publisher = environment.createClient({
             auth: {

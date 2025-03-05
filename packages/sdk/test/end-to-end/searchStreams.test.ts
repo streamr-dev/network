@@ -1,4 +1,4 @@
-import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
+import { createTestPrivateKey, randomUserId } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -42,7 +42,7 @@ describe('searchStreams', () => {
         client = new StreamrClient({
             environment: 'dev2',
             auth: {
-                privateKey: await fetchPrivateKeyWithGas(),
+                privateKey: await createTestPrivateKey({ gas: true }),
             }
         })
         const streams = await createTestStreams([

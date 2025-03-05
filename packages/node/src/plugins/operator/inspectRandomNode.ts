@@ -42,6 +42,10 @@ export async function inspectRandomNode(
     })
 
     const results = await consumeResults()
+    if (results.length === 0) {
+        logger.info('Not raising flag (no results from inspection)', { target })
+        return
+    }
     if (results.some((pass) => pass)) {
         logger.info('Not raising flag', { target })
         return

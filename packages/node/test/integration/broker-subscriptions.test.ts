@@ -1,10 +1,10 @@
-import { Wallet } from 'ethers'
+import { Stream, StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { until, wait } from '@streamr/utils'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, until } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { createClient, createTestStream, startBroker } from '../utils'
 
 jest.setTimeout(50000)
 
@@ -41,8 +41,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
-        const broker1User = fastWallet()
-        const broker2User = fastWallet()
+        const broker1User = await createTestWallet()
+        const broker2User = await createTestWallet()
         broker1 = await startBroker({
             privateKey: broker1User.privateKey,
             extraPlugins: {
@@ -60,8 +60,8 @@ describe('broker subscriptions', () => {
             }
         })
 
-        client1 = createClient(await fetchPrivateKeyWithGas())
-        client2 = createClient(await fetchPrivateKeyWithGas())
+        client1 = createClient(await createTestPrivateKey({ gas: true }))
+        client2 = createClient(await createTestPrivateKey({ gas: true }))
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toUserId, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
@@ -61,7 +61,7 @@ describe('messagePipeline', () => {
 
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
-        publisher = fastWallet()
+        publisher = await createTestWallet()
         const groupKeyStore = {
             get: async () => undefined
         } as any

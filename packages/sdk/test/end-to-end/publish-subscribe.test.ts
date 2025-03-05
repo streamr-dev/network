@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, toDhtAddressRaw } from '@streamr/dht'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
 import { StreamID, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -65,8 +65,8 @@ describe('publish-subscribe', () => {
     let subscriberClient: StreamrClient
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
-        publisherPk = await fetchPrivateKeyWithGas()
+        subscriberWallet = await createTestWallet()
+        publisherPk = await createTestPrivateKey({ gas: true })
     })
 
     beforeEach(async () => {

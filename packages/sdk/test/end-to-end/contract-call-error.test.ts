@@ -1,4 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('contract call error', () => {
@@ -6,10 +6,7 @@ describe('contract call error', () => {
     // TODO: see NET-1007, could improve error messages in fast-chain
     it('insufficient funds', async () => {
         const client = new StreamrClient({
-            environment: 'dev2',
-            auth: {
-                privateKey: fastWallet().privateKey
-            }
+            environment: 'dev2'
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
             'Error while executing contract call "streamRegistry.createStream", code=UNKNOWN_ERROR'
@@ -31,7 +28,7 @@ describe('contract call error', () => {
     })
 
     it('concurrent transactions', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const client = new StreamrClient({
             environment: 'dev2',
             auth: {

@@ -71,7 +71,9 @@ export interface StrictContentDeliveryLayerNodeOptions {
     propagationResultPath?: string
 }
 
-const RANDOM_NODE_VIEW_SIZE = 20
+export const DEFAULT_NODE_VIEW_SIZE = 20
+export const DEFAULT_NEIGHBOR_TARGET_COUNT = 4
+export const DEFAULT_ACCEPT_PROXY_CONNECTIONS = false
 
 const logger = new Logger(module)
 
@@ -290,7 +292,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,
@@ -310,7 +312,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,

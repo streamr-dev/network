@@ -3,7 +3,7 @@ import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { isBrowserEnvironment } from '../../src/helpers/browser/isBrowserEnvironment'
 import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 
 const IP_ADDRESS = '1.2.3.4'
 

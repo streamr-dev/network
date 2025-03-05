@@ -1,11 +1,11 @@
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestClient, runCommand } from './utils'
 
 describe('create stream', () => {
 
     it('happy path', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const address = new Wallet(privateKey).address.toLowerCase()
         const path = `/${Date.now()}`
         const streamId = `${address}${path}`

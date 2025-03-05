@@ -9,7 +9,7 @@ export type RoutingTable = Pick<
     'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop' | 'getSize'>
 
 const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): RoutingTableID => {
-    return targetId + (previousId ? previousId : '')
+    return targetId + (previousId ?? '')
 }
 
 const DEFAULT_LRU_OPTIONS = {

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, randomUserId } from '@streamr/test-utils'
+import { createTestWallet, randomUserId } from '@streamr/test-utils'
 import { toStreamID, toStreamPartID, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -13,18 +13,19 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 
+const STREAM_ID = toStreamID('test.eth/foobar')
+const GROUP_KEY = GroupKey.generate('groupKeyId-123')
+
 describe('GroupKeyManager', () => {
+
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
     let litProtocolFacade: MockProxy<LitProtocolFacade>
     let subscriberKeyExchange: MockProxy<SubscriberKeyExchange>
     let eventEmitter: StreamrClientEventEmitter
     let groupKeyManager: GroupKeyManager
+    let wallet: Wallet
 
-    const groupKeyId = 'groupKeyId-123'
-    const streamId = toStreamID('test.eth/foobar')
-    const wallet = new Wallet(fastPrivateKey())
-    const publisherId = toUserId(wallet.address)
-    const groupKey = GroupKey.generate(groupKeyId)
+    const getUserId = () => toUserId(wallet.address)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
         return new GroupKeyManager(
@@ -45,6 +46,10 @@ describe('GroupKeyManager', () => {
         )
     }
 
+    beforeAll(async () => {
+        wallet = await createTestWallet()
+    })
+
     beforeEach(() => {
         groupKeyStore = mock<LocalGroupKeyStore>()
         litProtocolFacade = mock<LitProtocolFacade>()
@@ -55,47 +60,47 @@ describe('GroupKeyManager', () => {
 
     describe('fetchKey', () => {
         it('key present in (local) group key store', async () => {
-            groupKeyStore.get.mockResolvedValueOnce(groupKey)
+            groupKeyStore.get.mockResolvedValueOnce(GROUP_KEY)
 
-            const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
-            expect(key).toEqual(groupKey)
-            expect(groupKeyStore.get).toHaveBeenCalledWith(groupKeyId, publisherId)
+            const key = await groupKeyManager.fetchKey(toStreamPartID(STREAM_ID, 0), GROUP_KEY.id, getUserId())
+            expect(key).toEqual(GROUP_KEY)
+            expect(groupKeyStore.get).toHaveBeenCalledWith(GROUP_KEY.id, getUserId())
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(0)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(0)
         })
 
         it('key present in lit protocol', async () => {
-            litProtocolFacade.get.mockResolvedValueOnce(groupKey)
+            litProtocolFacade.get.mockResolvedValueOnce(GROUP_KEY)
 
-            const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
-            expect(key).toEqual(groupKey)
+            const key = await groupKeyManager.fetchKey(toStreamPartID(STREAM_ID, 0), GROUP_KEY.id, getUserId())
+            expect(key).toEqual(GROUP_KEY)
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
-            expect(litProtocolFacade.get).toHaveBeenCalledWith(streamId, groupKeyId)
+            expect(litProtocolFacade.get).toHaveBeenCalledWith(STREAM_ID, GROUP_KEY.id)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(1)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(0)
         })
 
         it('key present in subscriber key exchange', async () => {
             subscriberKeyExchange.requestGroupKey.mockImplementation(async () => {
-                groupKeyStore.get.mockResolvedValue(groupKey)
-                setTimeout(() => eventEmitter.emit('encryptionKeyStoredToLocalStore', groupKey.id), 0)
+                groupKeyStore.get.mockResolvedValue(GROUP_KEY)
+                setTimeout(() => eventEmitter.emit('encryptionKeyStoredToLocalStore', GROUP_KEY.id), 0)
             })
 
-            const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
-            expect(key).toEqual(groupKey)
+            const key = await groupKeyManager.fetchKey(toStreamPartID(STREAM_ID, 0), GROUP_KEY.id, getUserId())
+            expect(key).toEqual(GROUP_KEY)
             expect(groupKeyStore.get).toHaveBeenCalledTimes(2)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(1)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledWith(
-                groupKeyId,
-                publisherId,
-                toStreamPartID(streamId, 0)
+                GROUP_KEY.id,
+                getUserId(),
+                toStreamPartID(STREAM_ID, 0)
             )
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(1)
         })
 
         it('key not present anywhere (timeout)', async () => {
-            await expect(groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId))
+            await expect(groupKeyManager.fetchKey(toStreamPartID(STREAM_ID, 0), GROUP_KEY.id, getUserId()))
                 .rejects
                 .toThrow('waitForEvent (timed out after 100 ms)')
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
@@ -105,7 +110,7 @@ describe('GroupKeyManager', () => {
 
         it('skips lit protocol if lit protocol disabled in config', async () => {
             groupKeyManager = createGroupKeyManager(false)
-            await expect(groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId))
+            await expect(groupKeyManager.fetchKey(toStreamPartID(STREAM_ID, 0), GROUP_KEY.id, getUserId()))
                 .rejects
                 .toThrow('waitForEvent (timed out after 100 ms)')
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
@@ -116,9 +121,9 @@ describe('GroupKeyManager', () => {
 
     describe('storeKey', () => {
         it('given pre-defined key only stores in (local) group key store and skips lit protocol', async () => {
-            const returnedGroupKey = await groupKeyManager.storeKey(groupKey, publisherId, streamId)
-            expect(returnedGroupKey).toEqual(groupKey)
-            expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, publisherId, groupKey.data)
+            const returnedGroupKey = await groupKeyManager.storeKey(GROUP_KEY, getUserId(), STREAM_ID)
+            expect(returnedGroupKey).toEqual(GROUP_KEY)
+            expect(groupKeyStore.set).toHaveBeenCalledWith(GROUP_KEY.id, getUserId(), GROUP_KEY.data)
             expect(litProtocolFacade.store).toHaveBeenCalledTimes(0)
         })
 
@@ -128,56 +133,56 @@ describe('GroupKeyManager', () => {
                     return new GroupKey('foobarId', Buffer.from(symmetricKey))
                 })
 
-                const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
+                const returnedGroupKey = await groupKeyManager.storeKey(undefined, getUserId(), STREAM_ID)
                 expect(returnedGroupKey.id).toEqual('foobarId')
-                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, publisherId, returnedGroupKey.data)
-                expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
+                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, getUserId(), returnedGroupKey.data)
+                expect(litProtocolFacade.store).toHaveBeenCalledWith(STREAM_ID, returnedGroupKey.data)
 
             })
 
             it('lit-protocol offline: generates new key and stores only in (local) group key store', async () => {
-                const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
-                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, publisherId, returnedGroupKey.data)
-                expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
+                const returnedGroupKey = await groupKeyManager.storeKey(undefined, getUserId(), STREAM_ID)
+                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, getUserId(), returnedGroupKey.data)
+                expect(litProtocolFacade.store).toHaveBeenCalledWith(STREAM_ID, returnedGroupKey.data)
             })
 
             it('lit-protocol disabled: does not even attempt to store key in lit protocol', async () => {
                 groupKeyManager = createGroupKeyManager(false)
-                await groupKeyManager.storeKey(undefined, publisherId, streamId)
+                await groupKeyManager.storeKey(undefined, getUserId(), STREAM_ID)
                 expect(litProtocolFacade.store).toHaveBeenCalledTimes(0)
             })
         })
     })
 
     it('addKeyToLocalStore delegates to groupKeyStore#add', async () => {
-        await groupKeyManager.addKeyToLocalStore(groupKey, publisherId)
-        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, publisherId, groupKey.data)
+        await groupKeyManager.addKeyToLocalStore(GROUP_KEY, getUserId())
+        expect(groupKeyStore.set).toHaveBeenCalledWith(GROUP_KEY.id, getUserId(), GROUP_KEY.data)
     })
 
     describe('fetchLatestEncryptionKey', () => {
 
         it('happy path', async () => {
             const key = GroupKey.generate()
-            groupKeyStore.getLatestEncryptionKeyId.calledWith(publisherId, streamId).mockResolvedValue(key.id)
-            groupKeyStore.get.calledWith(key.id, publisherId).mockResolvedValue(key)
-            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toEqual(key)
+            groupKeyStore.getLatestEncryptionKeyId.calledWith(getUserId(), STREAM_ID).mockResolvedValue(key.id)
+            groupKeyStore.get.calledWith(key.id, getUserId()).mockResolvedValue(key)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(getUserId(), STREAM_ID)).toEqual(key)
         })
 
         it('key reference not found', async () => {
             const key = GroupKey.generate()
-            groupKeyStore.get.calledWith(key.id, publisherId).mockResolvedValue(key)
-            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toBeUndefined()
+            groupKeyStore.get.calledWith(key.id, getUserId()).mockResolvedValue(key)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(getUserId(), STREAM_ID)).toBeUndefined()
         })
 
         it('key data not found', async () => {
             const key = GroupKey.generate()
-            groupKeyStore.getLatestEncryptionKeyId.calledWith(publisherId, streamId).mockResolvedValue(key.id)
-            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toBeUndefined()
+            groupKeyStore.getLatestEncryptionKeyId.calledWith(getUserId(), STREAM_ID).mockResolvedValue(key.id)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(getUserId(), STREAM_ID)).toBeUndefined()
         })
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomUserId(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomUserId(), STREAM_ID)
             }).rejects.toThrow('not supported')
         })
     })

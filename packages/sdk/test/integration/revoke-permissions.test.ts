@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { Defer, merge } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
@@ -59,8 +59,8 @@ describe('revoke permissions', () => {
         if (subscriber) {
             await subscriber.destroy()
         }
-        publisherPrivateKey = fastPrivateKey()
-        subscriberPrivateKey = fastPrivateKey()
+        publisherPrivateKey = await createTestPrivateKey()
+        subscriberPrivateKey = await createTestPrivateKey()
         // eslint-disable-next-line require-atomic-updates
         publisher = environment.createClient(
             merge(

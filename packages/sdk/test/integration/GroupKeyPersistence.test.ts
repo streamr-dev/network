@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect, toStreamPartID, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
@@ -50,8 +50,8 @@ describe('Group Key Persistence', () => {
             return client
         }
         beforeEach(async () => {
-            publisherPrivateKey = fastPrivateKey()
-            subscriberPrivateKey = fastPrivateKey()
+            publisherPrivateKey = await createTestPrivateKey()
+            subscriberPrivateKey = await createTestPrivateKey()
 
             publisher = await setupPublisher({
                 id: 'publisher',

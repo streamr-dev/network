@@ -1,13 +1,15 @@
 import type { Operator } from '@streamr/network-contracts'
 import {
     ProxyDirection,
+    SignerWithProvider,
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { fastPrivateKey, fetchPrivateKeyWithGas, generateWalletWithGasAndTokens } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet, parseEther } from 'ethers'
-import { cloneDeep, set } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import set from 'lodash/set'
 import { Broker, createBroker } from '../../../../src/broker'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
@@ -27,12 +29,12 @@ describe('OperatorPlugin', () => {
     let broker: Broker
     let brokerWallet: Wallet
     let operatorContract: Operator
-    let operatorWallet: Wallet
+    let operatorWallet: Wallet & SignerWithProvider
 
     beforeAll(async () => {
         const deployment = (await setupOperatorContract({
             nodeCount: 1,
-            generateWalletWithGasAndTokens
+            createTestWallet
         }))
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet
@@ -44,23 +46,23 @@ describe('OperatorPlugin', () => {
     })
 
     async function waitForHeartbeatMessage(operatorContractAddress: EthereumAddress): Promise<void> {
-        const client = createClient(fastPrivateKey())
+        const client = createClient()
         const sub = await client.subscribe(formCoordinationStreamId(operatorContractAddress))
         await collect(sub, 1)
         await client.destroy()
     }
 
     it('accepts proxy connections', async () => {
-        const subscriber = createClient(await fetchPrivateKeyWithGas())
+        const subscriber = createClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(subscriber, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
         await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
 
-        const publisher = createClient(fastPrivateKey())
+        const publisher = createClient()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             userId: await publisher.getUserId()
@@ -109,10 +111,10 @@ describe('OperatorPlugin', () => {
     })
     
     it('operator discovery', async () => {
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await createTestPrivateKey({ gas: true }))
         const stream = await createTestStream(client, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
