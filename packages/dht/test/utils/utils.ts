@@ -29,7 +29,7 @@ import { wait, until } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
-export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<PeerDescriptor>): PeerDescriptor => {
     return {
         nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,

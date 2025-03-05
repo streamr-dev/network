@@ -382,12 +382,12 @@ describe('ConnectionManager', () => {
         const msg: Message = {
             serviceId: SERVICE_ID,
             messageId: '1',
-            targetDescriptor: {
+            targetDescriptor: createMockPeerDescriptor({
                 // This is not the correct nodeId of peerDescriptor2
                 nodeId: toDhtAddressRaw(randomDhtAddress()),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
-            },
+            }),
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
