@@ -4,7 +4,7 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
-import { Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { toNodeId } from '../../src/identifiers'
