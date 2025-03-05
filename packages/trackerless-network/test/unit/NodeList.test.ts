@@ -1,6 +1,5 @@
 import {
     ListeningRpcCommunicator,
-    NodeType,
     PeerDescriptor,
     randomDhtAddress,
     toDhtAddress,
