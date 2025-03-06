@@ -29,6 +29,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- *BREAKING* Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
+
 #### Fixed
 
 #### Security

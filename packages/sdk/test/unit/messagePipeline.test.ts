@@ -12,7 +12,6 @@ import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageSigner } from '../../src/signature/MessageSigner'
@@ -68,8 +67,6 @@ describe('messagePipeline', () => {
         const destroySignal = new DestroySignal()
         const config: Pick<StrictStreamrClientConfig, 'encryption'> = {
             encryption: {
-                litProtocolEnabled: false,
-                litProtocolLogging: false,
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
             } as any
@@ -87,7 +84,6 @@ describe('messagePipeline', () => {
             signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>()),
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
-                mock<LitProtocolFacade>(),
                 groupKeyStore,
                 config,
                 createPrivateKeyAuthentication(publisher.privateKey),
