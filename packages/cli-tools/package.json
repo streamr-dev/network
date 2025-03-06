@@ -7,6 +7,12 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/cli-tools"
   },
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "streamr": "dist/bin/streamr.js"
   },
