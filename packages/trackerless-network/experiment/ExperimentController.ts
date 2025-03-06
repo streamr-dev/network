@@ -230,7 +230,7 @@ export class ExperimentController {
         const lastNodes: string[] = []
         for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
-            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastNodes.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 3)!
+            const pickedEntryPoints = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastNodes.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 3)!
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
@@ -238,7 +238,7 @@ export class ExperimentController {
                         streamPartId,
                         entryPoints: [
                             this.clients.get(entryPoint)!.peerDescriptor!,
-                            // ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
+                            ...pickedEntryPoints.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
                         ],
                         startWsServer
                     }
