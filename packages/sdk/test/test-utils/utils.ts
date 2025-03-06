@@ -32,7 +32,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
@@ -210,12 +209,9 @@ export const createGroupKeyManager = async (
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
-        mock<LitProtocolFacade>(),
         groupKeyStore,
         {
             encryption: {
-                litProtocolEnabled: false,
-                litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50,
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!

@@ -68,15 +68,5 @@ subscriber.addEncryptionKey(key, streamId);
 
 There are two optional configuration options related to encryption keys:
 
-- `decryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
-- `decryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
-
-## Lit protocol
-
-[Lit Protocol](https://litprotocol.com) is a decentralized key management network powered by threshold cryptography. Streamr can be configured to use Lit to manage stream key management. See the [store and retrieve data](../../usage/streams/store-and-retrieve) section for more information on combining Lit with Streamr.
-
-The Streamr SDK uses the Streamr Network's key-exchange by default. There is also experimental support for [Lit Protocol](https://litprotocol.com/). If you want to enable it, set `encryption.litProtocolEnabled` config option to `true`. 
-When Lit Protocol is enabled, it is used as a primary encryption key store. The Streamr Network's key-exchange is still used as a fallback.
-For the Streamr Network's key-exchange you can use these config options to control the decryption process:
 - `encryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
 - `encryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
