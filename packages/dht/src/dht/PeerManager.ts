@@ -71,7 +71,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     private activeContacts: Set<DhtAddress>
     private ringContacts: RingContactList<DhtNodeRpcRemote>
     private randomContacts: RandomContactList<DhtNodeRpcRemote>
-    private recentlyPingedCache: Map<DhtAddress, number> = new Map()
     private stopped: boolean = false
     private readonly options: PeerManagerOptions
 
@@ -125,7 +124,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        this.recentlyPingedCache.set(newContact.getNodeId(), Date.now())
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
             referenceId: this.options.localNodeId,
             allowToContainReferenceId: false
@@ -162,7 +160,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
                 logger.debug('starting ping ' + nodeId)
-                this.recentlyPingedCache.set(nodeId, Date.now())
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${nodeId}`)
