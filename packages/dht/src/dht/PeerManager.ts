@@ -159,7 +159,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                 || (this.options.neighborPingLimit !== undefined && this.neighbors.count() > this.options.neighborPingLimit)) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
-                logger.debug('starting ping ' + nodeId)
+                logger.trace('starting ping ' + nodeId)
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${nodeId}`)
