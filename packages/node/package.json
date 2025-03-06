@@ -15,6 +15,15 @@
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE",
+    "plugins.md",
+    "configs",
+    "configuration.md"
+  ],
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json",
