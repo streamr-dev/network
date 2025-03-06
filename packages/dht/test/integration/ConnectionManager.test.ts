@@ -6,7 +6,7 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse, Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -382,12 +382,11 @@ describe('ConnectionManager', () => {
         const msg: Message = {
             serviceId: SERVICE_ID,
             messageId: '1',
-            targetDescriptor: {
+            targetDescriptor: createMockPeerDescriptor({
                 // This is not the correct nodeId of peerDescriptor2
                 nodeId: toDhtAddressRaw(randomDhtAddress()),
-                type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
-            },
+            }),
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
