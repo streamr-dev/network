@@ -1,6 +1,15 @@
 ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bullseye AS build
 WORKDIR /usr/src/network
+# Install required dependencies for SRT plugin
+RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
+    tclsh \
+    pkg-config \
+    cmake \
+    libssl-dev \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=@streamr/proto-rpc && \

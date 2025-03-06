@@ -18,6 +18,8 @@ import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
 import * as BrokerConfigSchema from './config.schema.json'
+import * as SRTPluginConfigSchema from '../plugins/srt/config.schema.json'
+
 
 const MIN_BALANCE = parseEther('0.1')
 
@@ -291,12 +293,13 @@ interface PubsubPlugin {
     port?: number
 }
 
-type PubsubPluginKey = 'websocket' | 'mqtt' | 'http'
+type PubsubPluginKey = 'websocket' | 'mqtt' | 'http' | 'srt'
 
 const DEFAULT_PORTS: Record<PubsubPluginKey, number> = {
     websocket: WebsocketConfigSchema.properties.port.default,
     mqtt: MqttConfigSchema.properties.port.default,
     http: BrokerConfigSchema.properties.httpServer.properties.port.default,
+    srt: SRTPluginConfigSchema.properties.port.default
 }
 
 /**
@@ -319,6 +322,7 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
             { value: 'websocket', name: 'WebSocket' },
             { value: 'mqtt', name: 'MQTT' },
             { value: 'http', name: 'HTTP' },
+            { value: 'srt', name: 'SRT' }
         ],
     })
 
@@ -348,7 +352,7 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                                             value ===
                                             (plugin.port ??
                                                 DEFAULT_PORTS[
-                                                    pluginKey as PubsubPluginKey
+                                                pluginKey as PubsubPluginKey
                                                 ])
                                     ) ?? []
 

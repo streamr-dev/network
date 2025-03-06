@@ -8,6 +8,7 @@ import { OperatorPlugin } from './plugins/operator/OperatorPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
+import { SRTPlugin } from './plugins/srt/SRTPlugin'
 
 export const createPlugin = (name: string, brokerConfig: StrictConfig): Plugin<any> | never => {
     switch (name) {
@@ -27,6 +28,8 @@ export const createPlugin = (name: string, brokerConfig: StrictConfig): Plugin<a
             return new SubscriberPlugin(name, brokerConfig)
         case 'info':
             return new InfoPlugin(name, brokerConfig)
+        case 'srt':
+            return new SRTPlugin(name, brokerConfig)
         default:
             throw new Error(`Unknown plugin: ${name}`)
     }
