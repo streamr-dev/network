@@ -46,6 +46,8 @@ export class ExperimentNodeWrapper {
     private readonly publicIp: string
     private node?: NetworkNode
     private socket?: WebSocket
+    private interval?: NodeJS.Timeout
+
     constructor(controllerUrl: string, publicIp: string, id?: string) {
         this.controllerUrl = controllerUrl
         this.publicIp = publicIp
@@ -82,7 +84,7 @@ export class ExperimentNodeWrapper {
             }
         })
         this.send(message)
-        setInterval(() => {
+        this.interval = setInterval(() => {
             const memoryUsedInMB = process.memoryUsage().heapUsed
             if (memoryUsedInMB > 150 * 1024 * 1024) {
                 logger.warn('Memory usage exceeded 150MB, sending alert')
@@ -98,8 +100,8 @@ export class ExperimentNodeWrapper {
                 this.send(message)
             }
             logger.info('connection stats', { 
-                connections: this.node!.stack.getControlLayerNode().getConnectionsView().getConnectionCount(),
-                layer0Neighbors: this.node!.stack.getControlLayerNode().getNeighbors().length
+                connections: this.node?.stack.getControlLayerNode().getConnectionsView().getConnectionCount() ?? 0,
+                layer0Neighbors: this.node?.stack.getControlLayerNode().getNeighbors().length ?? 0
             })
         }, 30 * 1000)
     }
@@ -194,7 +196,10 @@ export class ExperimentNodeWrapper {
                 const instruction = message.instruction.getNeighborsRequest
                 setImmediate(() => this.getNeighbors(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'stopNodeRequest') {
-                setImmediate(async () => { 
+                setImmediate(async () => {
+                    if (this.interval) {
+                        clearInterval(this.interval)
+                    }
                     await wait(5000)
                     process.exit(1)
                 })
