@@ -6,7 +6,6 @@ import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils,
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, last, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
-import { memoryUsage } from 'process'
 
 interface ExperimentNode {
     socket: WebSocket
@@ -238,7 +237,7 @@ export class ExperimentController {
                         streamPartId,
                         entryPoints: [
                             this.clients.get(entryPoint)!.peerDescriptor!,
-                            ...pickedEntryPoints.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
+                            // ...pickedEntryPoints.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
                         ],
                         startWsServer
                     }
