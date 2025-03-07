@@ -97,6 +97,10 @@ export class ExperimentNodeWrapper {
                 })
                 this.send(message)
             }
+            logger.info('connection stats', { 
+                connections: this.node!.stack.getControlLayerNode().getConnectionsView().getConnectionCount(),
+                layer0Neighbors: this.node!.stack.getControlLayerNode().getNeighbors().length
+            })
         }, 30 * 1000)
     }
 
