@@ -16,7 +16,7 @@ import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const ROUTING_TABLE_MAX_SIZE = 20
+const ROUTING_TABLE_MAX_SIZE = 5
 
 export class RoutingRemoteContact extends Contact {
 

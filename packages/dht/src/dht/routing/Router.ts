@@ -141,7 +141,7 @@ export class Router {
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
                 } catch {
-                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
+                    logger.debug('raceEvents timed out for routingSession ' + session.sessionId) 
                 }
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 

@@ -19,12 +19,15 @@ import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
 import { DhtAddress, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Logger } from '@streamr/utils'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
 }
 
 export const RECURSIVE_OPERATION_TIMEOUT = 10 * 1000
+
+const logger = new Logger(module)
 
 export interface RecursiveOperationSessionOptions {
     transport: ITransport
@@ -205,6 +208,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                     this.emit('completed')
                     this.completionEventEmitted = true
                 }
+                logger.debug('completed recursive operation after 4000 ms timeout')
             }, 4000)  // TODO use options option or named constant?
         }
     }
