@@ -7,4 +7,5 @@ export interface DhtRpcOptions extends ProtoRpcOptions {
     clientId?: number
     connect?: boolean
     sendIfStopped?: boolean
+    doNotBufferWhileConnecting?: boolean
 }
