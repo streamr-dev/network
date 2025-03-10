@@ -334,22 +334,6 @@ export interface StreamrClientConfig {
      */
     encryption?: {
         /**
-         * Enable experimental Lit Protocol key exchange.
-         *
-         * When enabled encryption key storing and fetching will primarily be done through the
-         * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
-         * key-exchange system.
-         */
-        litProtocolEnabled?: boolean
-
-        /**
-         * Enable log messages of the Lit Protocol library to be printed to stdout.
-         */
-        litProtocolLogging?: boolean
-
-        // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
-        // to lit protocol key requests (both encryption and decryption?)
-        /**
          * When requesting an encryption key using the standard Streamr
          * key-exchange system, defines how many milliseconds should a response
          * be awaited for.
@@ -437,7 +421,12 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 
+/**
+ * @deprecated use {@link STREAMR_STORAGE_NODE_ADDRESS} instead
+ */
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
+
+export const STREAMR_STORAGE_NODE_ADDRESS = '0x9dc08ff97f5c156181ec6a0b13fc3946454e529a' as HexString
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?

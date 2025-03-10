@@ -2,8 +2,16 @@ import path from 'path'
 import webpack from 'webpack'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
+interface CreateWebpackConfigOptions {
+    entry: string
+    libraryName: string
+    alias?: Record<string, string>
+    fallback?: Record<string, string>
+    externals?: Record<string, string>
+}
+
 export const createWebpackConfig = (
-    { entry, libraryName, alias = {} }: { entry: string, libraryName: string, alias: Record<string, string> }
+    { entry, libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
 ): Record<string, any> => {
     return () => {
         return {
@@ -26,9 +34,8 @@ export const createWebpackConfig = (
                 ],
             },
             plugins: [
-                new NodePolyfillPlugin(),
-                new webpack.ProvidePlugin({
-                    process: 'process/browser'
+                new NodePolyfillPlugin({
+                    additionalAliases: ['process']
                 }),
                 new webpack.ProvidePlugin({
                     Buffer: ['buffer', 'Buffer']
@@ -36,20 +43,8 @@ export const createWebpackConfig = (
             ],
             resolve: {
                 extensions: ['.ts', '.js'],
-                alias: {
-                    'process': 'process/browser',
-                    ...alias
-                },
-                fallback: {
-                    'fs': false,
-                    'module': false,
-                    'net': false,
-                    'timers': require.resolve('timers-browserify'),
-                    'os': false,
-                    'querystring': false,
-                    'zlib': require.resolve('browserify-zlib'),
-                    'tls': false
-                }
+                alias,
+                fallback,
             },
             output: {
                 filename: `${libraryName}.js`,
@@ -60,16 +55,7 @@ export const createWebpackConfig = (
                 libraryTarget: 'umd2',
                 umdNamedDefine: true,
             },
-            externals: {
-                'geoip-lite': 'commonjs geoip-lite',
-                'node-datachannel': 'commonjs node-datachannel',
-                'http': 'HTTP',
-                'https': 'HTTPS',
-                'express': 'Express',
-                'process': 'process',
-                'ws': 'WebSocket',
-                'querystring': 'QueryString',
-            }
+            externals,
         }
     }
 }

@@ -36,13 +36,13 @@
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "ts-essentials": "^10.0.4",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "yallist": "^5.0.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "102.1.0",
-    "@types/lodash": "^4.17.15",
+    "@types/lodash": "^4.17.16",
     "@types/yallist": "^4.0.1",
     "expect": "^29.6.2",
     "ts-node": "^10.9.2"

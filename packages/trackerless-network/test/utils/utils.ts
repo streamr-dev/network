@@ -96,12 +96,12 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<PeerDescriptor>): PeerDescriptor => {
     return {
-        ...opts,
         nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
-        region: getRandomRegion()
+        region: getRandomRegion(),
+        ...opts
     }
 }
 

@@ -1,5 +1,6 @@
 import {
     ConnectionLocker,
+    ConnectionManager,
     DhtAddress,
     DhtNode,
     EXISTING_CONNECTION_TIMEOUT,
@@ -29,8 +30,8 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
-import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
+import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './propagation/Propagation'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -325,8 +326,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
-            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets ?? DEFAULT_MIN_PROPAGATION_TARGETS,
+            maxPropagationBufferSize: this.options.streamPartitionMaxPropagationBufferSize ?? DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+            propagationBufferTtl: DEFAULT_PROPAGATION_BUFFER_TTL
         })
     }
 

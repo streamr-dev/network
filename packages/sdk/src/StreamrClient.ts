@@ -1,3 +1,8 @@
+/**
+ * Importing 'timers' ensures `setImmediate` is available in browsers,
+ * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
+ */
+import 'timers'
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
@@ -27,7 +32,6 @@ import { RpcProviderSource } from './RpcProviderSource'
 import { Stream } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamMetadata, getPartitionCount } from './StreamMetadata'
-import { StreamrClientError } from './StreamrClientError'
 import { ChainEventPoller } from './contracts/ChainEventPoller'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
@@ -173,9 +177,6 @@ export class StreamrClient {
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
-        }
-        if (opts.key !== undefined && this.config.encryption.litProtocolEnabled) {
-            throw new StreamrClientError('cannot pass "key" when Lit Protocol is enabled', 'UNSUPPORTED_OPERATION')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const queue = await this.publisher.getGroupKeyQueue(streamId)

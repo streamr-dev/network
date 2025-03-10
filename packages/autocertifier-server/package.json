@@ -13,6 +13,9 @@
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
+  "browser": {
+    "dist/src/exports.js": false
+  },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
@@ -25,7 +28,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.744.0",
+    "@aws-sdk/client-route-53": "^3.758.0",
     "@streamr/autocertifier-client": "102.1.0",
     "@streamr/dht": "102.1.0",
     "@streamr/proto-rpc": "102.1.0",
@@ -38,7 +41,7 @@
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/dns2": "^2.0.9",

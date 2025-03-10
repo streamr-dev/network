@@ -2,7 +2,6 @@
   "name": "@streamr/sdk",
   "version": "102.1.0",
   "description": "JavaScript / TypeScript SDK for Streamr",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
@@ -10,18 +9,23 @@
   },
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/exports-commonjs.js",
-  "browser": "./dist/streamr-sdk.web.js",
-  "exports": {
-    "browser": "./dist/streamr-sdk.web.js",
-    "default": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/exports-esm.mjs",
-      "require": "./dist/src/exports-commonjs.js"
-    }
+  "module": "./dist/src/exports-esm.mjs",
+  "script": "./dist/streamr-sdk.web.min.js",
+  "browser": {
+    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
+    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+
   },
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "LICENSE",
+    "README.md",
+    "readme-header.png"
+  ],
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "bash copy-package.sh && bash fix-esm.sh",
+    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
@@ -52,10 +56,10 @@
     "@jest/globals": "^29.7.0",
     "@streamr/test-utils": "102.1.0",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.17.15",
+    "@types/lodash": "^4.17.16",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "babel-loader": "^9.2.1",
+    "babel-loader": "^10.0.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "babel-plugin-transform-typescript-metadata": "^0.3.2",
     "benchmark": "^2.1.4",
@@ -70,8 +74,9 @@
     "lodash-webpack-plugin": "^0.11.6",
     "nightwatch": "^3.11.0",
     "node-polyfill-webpack-plugin": "^4.1.0",
-    "terser-webpack-plugin": "^5.3.11",
+    "terser-webpack-plugin": "^5.3.12",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
     "webpack": "^5.97.1",
@@ -83,8 +88,6 @@
   "dependencies": {
     "@babel/runtime": "^7.26.7",
     "@babel/runtime-corejs3": "^7.26.7",
-    "@lit-protocol/core": "2.2.5",
-    "@lit-protocol/uint8arrays": "^6.11.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.5.1",
@@ -92,25 +95,23 @@
     "@streamr/proto-rpc": "102.1.0",
     "@streamr/trackerless-network": "102.1.0",
     "@streamr/utils": "102.1.0",
-    "core-js": "^3.40.0",
+    "core-js": "^3.41.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
     "idb": "^8.0.2",
-    "lit-siwe": "^1.1.8",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.2",
     "p-limit": "^3.1.0",
     "p-memoize": "4.0.4",
     "p-throttle": "4.1.1",
-    "readable-stream": "^4.7.0",
     "reflect-metadata": "^0.2.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "ts-essentials": "^10.0.4",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1"
   },
   "optionalDependencies": {

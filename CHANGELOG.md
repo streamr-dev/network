@@ -12,11 +12,24 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
+
 #### Changed
+
+- **BREAKING CHANGE**: Browser exports improved, but polyfills now required.
+  - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field.
+  - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite).
+
+  Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details.
+
 
 #### Deprecated
 
+- Deprecate storage node address `STREAMR_STORAGE_NODE_GERMANY` (https://github.com/streamr-dev/network/pull/3020)
+
 #### Removed
+
+- *BREAKING* Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
 
 #### Fixed
 
