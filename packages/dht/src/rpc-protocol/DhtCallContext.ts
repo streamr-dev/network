@@ -9,6 +9,7 @@ export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
     clientId?: number
     connect?: boolean
     sendIfStopped?: boolean
+    doNotBufferWhileConnecting?: boolean
     //used in incoming calls
     incomingSourceDescriptor?: PeerDescriptor
 }

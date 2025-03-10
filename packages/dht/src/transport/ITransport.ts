@@ -9,11 +9,13 @@ export interface TransportEvents {
 export interface SendOptions {
     connect: boolean
     sendIfStopped: boolean
+    doNotBufferWhileConnecting: boolean
 }
 
 export const DEFAULT_SEND_OPTIONS = {
     connect: true,
-    sendIfStopped: false
+    sendIfStopped: false,
+    doNotBufferWhileConnecting: false
 }
 
 export interface ITransport {
