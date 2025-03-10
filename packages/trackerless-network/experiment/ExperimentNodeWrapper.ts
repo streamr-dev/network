@@ -99,10 +99,10 @@ export class ExperimentNodeWrapper {
                 })
                 this.send(message)
             }
-            logger.info('connection stats', { 
-                connections: this.node?.stack.getControlLayerNode().getConnectionsView().getConnectionCount() ?? 0,
-                layer0Neighbors: this.node?.stack.getControlLayerNode().getNeighbors().length ?? 0
-            })
+            // logger.info('connection stats', { 
+            //     connections: this.node?.stack.getControlLayerNode().getConnectionsView().getConnectionCount() ?? 0,
+            //     layer0Neighbors: this.node?.stack.getControlLayerNode().getNeighbors().length ?? 0
+            // })
         }, 30 * 1000)
     }
 

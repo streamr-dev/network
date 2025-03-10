@@ -237,7 +237,7 @@ export class ExperimentController {
                         streamPartId,
                         entryPoints: [
                             this.clients.get(entryPoint)!.peerDescriptor!,
-                            // ...pickedEntryPoints.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
+                            ...pickedEntryPoints.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!)
                         ],
                         startWsServer
                     }
