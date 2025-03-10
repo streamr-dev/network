@@ -375,7 +375,7 @@ export class ExperimentController {
             const batch = batches[i]
             await Promise.all(batch.map((node) => operation(node)))
             const instructedNodeCount = batch.length === batchSize ? batchSize * (parseInt(i) + 1) : batchSize * parseInt(i) + batch.length
-            await until(() => untilCondition(instructedNodeCount), 2 * 60 * 1000, 1000)
+            await until(() => untilCondition(instructedNodeCount), 3 * 60 * 1000, 1000)
             logger.info(`batch ${i} completed, ${nodes.length - instructedNodeCount} nodes remaining`)
         }
     }
