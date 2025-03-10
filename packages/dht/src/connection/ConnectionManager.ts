@@ -309,7 +309,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
         if (this.endpoints.get(nodeId)!.connected) {
             (connection as ManagedConnection).send(binary)
-        } else {
+        } else if (!opts.doNotBufferWhileConnecting) {
             return (this.endpoints.get(nodeId)! as ConnectingEndpoint).buffer.push(binary)
         }
     }

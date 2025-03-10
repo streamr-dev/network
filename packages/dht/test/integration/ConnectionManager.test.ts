@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, until, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, until, wait, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
@@ -522,6 +522,68 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
         await connectionManager2.stop()
  
+    })
+
+    it('send doNotBufferWhileConnecting', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10011, max: 10011 }
+        })
+
+        await connectionManager1.start()
+
+        const connectionManager2 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10012, max: 10012 }
+        })
+
+        await connectionManager2.start()
+
+        const msg: Message = {
+            serviceId: SERVICE_ID,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+            targetDescriptor: connectionManager1.getLocalPeerDescriptor()
+        }
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('connected', () => {
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('connected', () => {
+                resolve()
+            })
+        })            
+    
+        let receivedMessages = 0
+        connectionManager1.on('message', () => {
+            receivedMessages++
+        })
+
+        const sendOptions = {
+            connect: true,
+            sendIfStopped: false,
+            doNotBufferWhileConnecting: true
+        }
+        await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg, sendOptions)])
+        await wait(1000)
+        expect(receivedMessages).toEqual(0)
+        expect(connectionManager1.getConnections().length).toEqual(1)
+        expect(connectionManager2.getConnections().length).toEqual(1)
+
+        await connectionManager1.stop()
+        await connectionManager2.stop()
+
     })
 
 })
