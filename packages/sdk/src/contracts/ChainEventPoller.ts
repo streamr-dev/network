@@ -95,7 +95,7 @@ export class ChainEventPoller {
                     //
                     // In the topics filter:
                     // - the inner array ([topic1, topic2, topic3]) applies an OR condition, meaning the log’s first topic can be any of these
-                    // - the outer array ([[topic1, topic2, topic3]]) applies an AND condition across topic positions (i.e. there only one AND expression)
+                    // - the outer array ([[topic1, topic2, topic3]]) applies an AND condition across topic positions (i.e. only one AND expression)
                     //   See: https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_newfilter
                     //
                     // Ideally, we would specify exact address-topic pairs, such as:
@@ -109,7 +109,8 @@ export class ChainEventPoller {
                     // We might also receive:
                     //   - T2 from A1 or A2
                     //   - T1 from A3
-                    // These extra events are safely ignored, as the event propagation logic (see line 147) ensures only relevant listeners process them.
+                    // These extra events are safely ignored, as the event propagation logic (see line 148) ensures that
+                    // only relevant listeners process them.
                     const filter = {
                         address: uniq(this.listeners.map((l) => l.contractAddress)),
                         topics: [uniq(this.listeners.map((l) => l.contractInterfaceFragment.topicHash))],
