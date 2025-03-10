@@ -567,9 +567,8 @@ describe('ConnectionManager', () => {
         })            
     
         let receivedMessages = 0
-        connectionManager1.on('message', (msg) => {
+        connectionManager1.on('message', () => {
             receivedMessages++
-            throw 'Invarant violation'
         })
 
         const sendOptions = {
