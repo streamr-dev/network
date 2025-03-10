@@ -1,6 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
@@ -178,10 +178,7 @@ describe('WebRTC Connection Management', () => {
             })
         })
 
-        msg.targetDescriptor = {
-            nodeId: new Uint8Array([0, 0, 0, 0, 0]),
-            type: NodeType.NODEJS,
-        }
+        msg.targetDescriptor = createMockPeerDescriptor()
         
         await Promise.allSettled([
             manager1.send(msg),
