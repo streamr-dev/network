@@ -88,6 +88,28 @@ export class ChainEventPoller {
                         }
                     }
                     logger.debug('Polling', { fromBlock, eventNames })
+                    // This creates a filter with the following criteria: 
+                    // - logs must originate from any of the specified addresses: [address1, address2] (OR condition)
+                    // - logs must match any of the specified topics: [[topic1, topic2, topic3]] (OR condition for topic[0])
+                    // - logs must be within the specified fromBlock range
+                    //
+                    // In the topics filter:
+                    // - the inner array ([topic1, topic2, topic3]) applies an OR condition, meaning the log’s first topic can be any of these
+                    // - the outer array ([[topic1, topic2, topic3]]) applies an AND condition across topic positions (i.e. there only one AND expression)
+                    //   See: https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_newfilter
+                    //
+                    // Ideally, we would specify exact address-topic pairs, such as:
+                    //   (addr=111 AND topic=222) OR (addr=333 AND topic=444)
+                    // However, Ethereum's API does not support this level of filtering.
+                    //
+                    // As a result, this filter may return additional logs beyond the intended matches. 
+                    // For example, if we want:
+                    //   - Topic T1 from addresses A1 and A2
+                    //   - Topic T2 from address A3
+                    // We might also receive:
+                    //   - T2 from A1 or A2
+                    //   - T1 from A3
+                    // These extra events are safely ignored, as the event propagation logic (see line 147) ensures only relevant listeners process them.
                     const filter = {
                         address: uniq(this.listeners.map((l) => l.contractAddress)),
                         topics: [uniq(this.listeners.map((l) => l.contractInterfaceFragment.topicHash))],
