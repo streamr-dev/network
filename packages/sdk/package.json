@@ -1,6 +1,6 @@
 {
   "name": "@streamr/sdk",
-  "version": "102.1.0",
+  "version": "103.0.0-rc.0",
   "description": "JavaScript / TypeScript SDK for Streamr",
   "repository": {
     "type": "git",
@@ -14,7 +14,6 @@
   "browser": {
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
     "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
-
   },
   "files": [
     "dist",
@@ -54,7 +53,7 @@
     "@babel/preset-env": "^7.26.8",
     "@babel/preset-typescript": "^7.26.0",
     "@jest/globals": "^29.7.0",
-    "@streamr/test-utils": "102.1.0",
+    "@streamr/test-utils": "103.0.0-rc.0",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.16",
     "ajv": "^8.17.1",
@@ -91,10 +90,10 @@
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.5.1",
-    "@streamr/dht": "102.1.0",
-    "@streamr/proto-rpc": "102.1.0",
-    "@streamr/trackerless-network": "102.1.0",
-    "@streamr/utils": "102.1.0",
+    "@streamr/dht": "103.0.0-rc.0",
+    "@streamr/proto-rpc": "103.0.0-rc.0",
+    "@streamr/trackerless-network": "103.0.0-rc.0",
+    "@streamr/utils": "103.0.0-rc.0",
     "core-js": "^3.41.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
