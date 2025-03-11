@@ -127,18 +127,22 @@ export class ExperimentController {
         return entryPoint
     }
 
-    async startNodes(ratioOfWsNodes: number, entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
+    async startNodes(ratioOfWsNodes: number, entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false, pickEntryPoints = false): Promise<void> {
         logger.info('starting nodes')
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
         await this.runBatchedOperation(nodes, 10, async (node) => {
             const startWsServerForNode = Math.random() < ratioOfWsNodes
+            const pickedEntryPoints = sampleSize(Array.from(this.clients.keys()).filter((id) => id !== entryPoint && this.clients.get(id)!.peerDescriptor?.websocket !== undefined), 3)!
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
                     start: {
-                        entryPoints: [entryPointPeerDescriptor],
+                        entryPoints: [
+                            entryPointPeerDescriptor,
+                            ...pickEntryPoints ? pickedEntryPoints.map((ep) => this.clients.get(ep)!.peerDescriptor!) : []
+                        ],
                         asEntryPoint: false,
                         join,
                         storeRoutingPaths,

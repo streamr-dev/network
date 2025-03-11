@@ -220,7 +220,7 @@ const run = async (ratioOfWsNodes: number, nodeCountPerRegion: number, resultNam
         } else if (experiment === 'propagation') { 
             const entryPointId = await controller.startEntryPoint(false, true)
             logger.info('entry point started', { entryPointId })
-            await controller.startNodes(ratioOfWsNodes, entryPointId, true, false, true)
+            await controller.startNodes(ratioOfWsNodes, entryPointId, true, false, true, true)
             logger.info('all nodes started')
             await controller.runPropagationExperiment('experiment#0')
         } else if (experiment === 'routing') {
