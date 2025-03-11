@@ -18,7 +18,7 @@ export const joinResults = async (filePath: string): Promise<unknown> => {
         numOfLines += 1
         joinTimes.push({ time, nodeCount: numOfLines })
     })
-    await waitForEvent(file, 'close')
+    await waitForEvent(file, 'close', 15000)
     console.log('avg:', sum / numOfLines)
     return joinTimes
 }
@@ -46,7 +46,7 @@ export const routingResults = async (filePath: string): Promise<unknown> => {
             numOfLines += 1
         }
     })
-    await waitForEvent(file, 'close')
+    await waitForEvent(file, 'close', 15000)
 
     const avgRtt = rttSum / numOfLines
     const avgTimeToReceiver = timeToReceiverSum / numOfLines
@@ -83,7 +83,7 @@ export const timeToDataResults = async (filePath: string): Promise<unknown> => {
         numOfLines += 1
         times.push({ data: parsedResult.messageReceivedTimestamp - parsedResult.startTime, layer1join: parsedResult.layer1JoinTime, fetch: parsedResult.entryPointsFetch, nodeCount: numOfLines, firstNeighbor: parsedResult.firstNeighbor - parsedResult.startTime,  })
     })
-    await waitForEvent(file, 'close')
+    await waitForEvent(file, 'close', 15000)
     const avgTimeToData = sumTimeToData / numOfLines
     const avgLayer1Join = sumLayer1Join / numOfLines
     const avgEntryPointFetch = sumEntryPointFetch / numOfLines
@@ -127,7 +127,7 @@ export const propagationResults = async (filePath: string): Promise<unknown> => 
             }
         }
     })
-    await waitForEvent(file, 'close')
+    await waitForEvent(file, 'close', 15000)
 
     const avgPropagationTime = sumPropagationTime / numOfLines
     const avgHops = sumHops / numOfLines
