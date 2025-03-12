@@ -9,6 +9,12 @@
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json",
