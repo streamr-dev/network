@@ -1,0 +1,9 @@
+**/dist/**/*
+**/generated/**/*
+**/*.md
+**/*.yaml
+**/*.yml
+**/*.css
+
+# Lerna formats its config automatically
+lerna.json
