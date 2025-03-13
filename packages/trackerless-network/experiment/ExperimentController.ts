@@ -233,7 +233,7 @@ export class ExperimentController {
         const lastNodes: string[] = []
         for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
-            const pickedEntryPoints = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastNodes.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 3)!
+            const pickedEntryPoints = sampleSize(Array.from(this.clients.keys()).filter((id) => this.resultsReceived.has(id) && lastNodes.every((last) => last !== id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
@@ -249,7 +249,7 @@ export class ExperimentController {
             })
             this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
             await wait(2500)
-            if (lastNodes.length < 20) { 
+            if (lastNodes.length < 30) { 
                 lastNodes.push(subscriber)
             } else {
                 lastNodes.shift()
