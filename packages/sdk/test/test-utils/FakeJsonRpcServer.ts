@@ -3,6 +3,7 @@ import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import intersection from 'lodash/intersection'
+import isEqual from 'lodash/isEqual'
 import isArray from 'lodash/isArray'
 import { AddressInfo } from 'net'
 import { promisify } from 'util'
@@ -94,10 +95,10 @@ export class FakeJsonRpcServer {
         } else if (request.method === 'eth_getLogs') {
             const topics = request.params[0].topics
             const topicId = id('StreamCreated(string,string)')
-            if ((topics.length !== 1) || (topics[0] !== topicId)) {
+            if (!isEqual(topics, [[topicId]])) {
                 throw new Error('Not implemented')
             }
-            if (request.params[0].toBlock !== 'latest') {
+            if (request.params[0].toBlock !== undefined) {
                 throw new Error('Not implemented')
             }
             const fromBlock = parseInt(request.params[0].fromBlock, 16)
