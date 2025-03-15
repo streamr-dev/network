@@ -39,6 +39,32 @@ Your updated node will now be running. As usual, you can checkup on it with
 sudo docker logs streamr --follow
 ```
 
+## Docker compose update guide
+:::info
+Using docker compose not only keeps your configuration in place, but makes updating easier
+:::
+
+To update your Streamr node from `v100.0.0` to a newer version, let's say `v102.1.0` you would need to update your docker-compose.yml with the newer image version and run:
+
+```
+sudo docker compose up -d
+```
+
+And docker compose will do everything for you, without disruption of the node.
+
+example docker-compose.yml:
+```
+services:
+  streamr:
+    image: streamr/node:v102.1.0
+    container_name: streamr
+    restart: unless-stopped
+    ports:
+      - "32200:32200"
+    volumes:
+      - ~/.streamrDocker:/home/streamr/.streamr
+```
+
 ## npm update guide
 Firstly stop your node, if you're running your node with `PM2` for example, then it will be something like:
 
