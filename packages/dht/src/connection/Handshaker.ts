@@ -180,7 +180,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 const error = !isMaybeSupportedProtocolVersion(handshake.protocolVersion) 
                         // All versions before 102.0.0 are not supported
                         || semver.satisfies(semver.coerce(handshake.applicationVersion)!, '< 102.0.0')
-                        ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
+                    ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
