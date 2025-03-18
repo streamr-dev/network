@@ -104,7 +104,7 @@ describe('Handshaker', () => {
         })
 
         it('onHandshakeFailed unsupported version', () => {
-            handshaker.emit('handshakeFailed', HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
+            handshaker.emit('handshakeFailed', HandshakeError.UNSUPPORTED_VERSION)
             expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
             expect(mockPendingConnectionClose).toHaveBeenCalledTimes(1)
         })

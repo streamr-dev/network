@@ -237,7 +237,7 @@ message HandshakeResponse {
 enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
   INVALID_TARGET_PEER_DESCRIPTOR = 1;
-  UNSUPPORTED_PROTOCOL_VERSION = 2;
+  UNSUPPORTED_VERSION = 2;
 }
 
 // Wraps all messages

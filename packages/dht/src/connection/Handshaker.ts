@@ -6,6 +6,7 @@ import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedProtocolVersion } from '../helpers/version'
 import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
+import semver from 'semver'
 import { version as applicationVersion } from '../../package.json'
 
 const logger = new Logger(module)
@@ -36,7 +37,7 @@ export const createOutgoingHandshaker = (
         pendingConnection.off('disconnected', managedConnectionDisconnectedListener)
     }
     const handshakeFailedListener = (error?: HandshakeError) => {
-        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_PROTOCOL_VERSION) {
+        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
             pendingConnection.close(false)
             stopHandshaker()
         } else {
@@ -177,7 +178,9 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
                 const error = !isMaybeSupportedProtocolVersion(handshake.protocolVersion) 
-                    ? HandshakeError.UNSUPPORTED_PROTOCOL_VERSION : handshake.error
+                        // All versions before 102.0.0 are not supported
+                        || semver.satisfies(semver.coerce(handshake.applicationVersion)!, '< 102.0.0')
+                        ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
