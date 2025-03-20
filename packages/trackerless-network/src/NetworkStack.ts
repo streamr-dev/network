@@ -131,14 +131,14 @@ export class NetworkStack {
     private async ensureConnectedToControlLayer(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
         if (!this.controlLayerNode!.hasJoined()) {
-            setImmediate(async () => {
+            // setImmediate(async () => {
                 if (this.options.layer0?.entryPoints !== undefined) {
                     // TODO should catch possible rejection?
                     // the question mark is there to avoid problems when stop() is called before start()
                     // -> TODO change to exlamation mark if we don't support that (and remove NetworkStackStoppedDuringStart.test)
                     await this.controlLayerNode?.joinDht(this.options.layer0.entryPoints)
                 }
-            })
+            // })
             await this.controlLayerNode!.waitForNetworkConnectivity()
         }
     }
