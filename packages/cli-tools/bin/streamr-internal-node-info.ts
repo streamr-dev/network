@@ -74,6 +74,8 @@ createClientCommand(async (client: StreamrClient, nodeId: string) => {
         console.info(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
     } else {
         logger.error('No peer descriptor found')
+        const closestNodes = peerDescriptors.map((p) => toNodeId(p))
+        console.info(JSON.stringify(closestNodes, undefined, 4))
     }
 })
     .description('show detailed information about a node')
