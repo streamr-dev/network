@@ -550,11 +550,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
-        const connectedEntryPoints = this.getConnectedEntryPoints()
-        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.storeDataToDhtViaPeer(key, data, sample(connectedEntryPoints)!)
-        }
-        return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
+        return this.executeRecursiveOperation(
+            () => this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId()),
+            (connectedEntryPoint) => this.storeDataToDhtViaPeer(key, data, connectedEntryPoint)
+        )
     }
 
     public async storeDataToDhtViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -568,12 +567,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async fetchDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
-        const connectedEntryPoints = this.getConnectedEntryPoints()
-        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.fetchDataFromDhtViaPeer(key, sample(connectedEntryPoints)!)
-        }
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
-        return result.dataEntries ?? []  // TODO is this fallback needed?
+        return this.executeRecursiveOperation(
+            async () => {
+                const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
+                return result.dataEntries ?? [] 
+            },
+            (connectedEntryPoint)  => this.fetchDataFromDhtViaPeer(key, connectedEntryPoint)
+        )
     }
 
     public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
@@ -584,6 +584,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ExternalApiRpcClient
         )
         return await rpcRemote.externalFetchData(key)
+    }
+
+    private async executeRecursiveOperation<ReturnType>(
+        executeDirectly: () => ReturnType,
+        executeViaPeer: (connectedEntryPoint: PeerDescriptor) => ReturnType
+    ): Promise<ReturnType> {
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return executeViaPeer(sample(connectedEntryPoints)!)
+        }
+        return executeDirectly()
     }
 
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
