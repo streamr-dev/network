@@ -1,4 +1,3 @@
-import { fastPrivateKey } from '@streamr/test-utils'
 import merge from 'lodash/merge'
 import { DependencyContainer, container } from 'tsyringe'
 import { StreamrClientConfig } from '../../../src/Config'
@@ -57,15 +56,7 @@ export class FakeEnvironment {
     }
 
     createClient(opts?: StreamrClientConfig): StreamrClient {
-        let authOpts
-        if (opts?.auth === undefined) {
-            authOpts = {
-                auth: {
-                    privateKey: fastPrivateKey()
-                }
-            }
-        }
-        const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, authOpts, opts)
+        const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, opts)
         const client = new StreamrClient(configWithDefaults, this.dependencyContainer)
         this.destroySignal.onDestroy.listen(async () => {
             await client.destroy()

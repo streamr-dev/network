@@ -1,6 +1,6 @@
 import { pTransaction } from '../src/pTransaction'
 
-function promisify(...sequence: Array<string | Error>): Array<Promise<string>> {
+function promisify(...sequence: (string | Error)[]): Promise<string>[] {
     return sequence.map((v) => {
         if (typeof v === 'string') {
             return Promise.resolve(v)
@@ -37,7 +37,7 @@ describe('pTransaction', () => {
 
     it('rejects given an array containing a rejection', async () => {
         const promises = promisify('a', 'b', new Error('something bad'), 'c')
-        await expect(pTransaction(promises, () => {})).rejects.toThrowError('something bad')
+        await expect(pTransaction(promises, () => {})).rejects.toThrow('something bad')
     })
 
     it('invokes rollback given an array containing a rejection', async () => {

@@ -1,13 +1,13 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { Message, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { Logger, runAndWaitForEvents3, until } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -27,10 +27,7 @@ describe('Route Message With Mock Connections', () => {
         simulator = new Simulator()
         entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
 
-        entryPointDescriptor = {
-            nodeId: toDhtAddressRaw(entryPoint.getNodeId()),
-            type: NodeType.NODEJS
-        }
+        entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
 
         sourceNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         destinationNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())
@@ -116,7 +113,7 @@ describe('Route Message With Mock Connections', () => {
                 parallelRootNodeIds: []
             })
         }
-        await waitForCondition(() => receivedMessages === messageCount)
+        await until(() => receivedMessages === messageCount)
     })
 
     it('From all to all', async () => {
@@ -157,10 +154,10 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => receivedMessageCounts[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
+        await until(() => receivedMessageCounts[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
         await Promise.all(
             Object.keys(receivedMessageCounts).map(async (key) =>
-                waitForCondition(() => receivedMessageCounts[key as DhtAddress] >= routerNodes.length - 1, 30000)
+                until(() => receivedMessageCounts[key as DhtAddress] >= routerNodes.length - 1, 30000)
             )
         )
 

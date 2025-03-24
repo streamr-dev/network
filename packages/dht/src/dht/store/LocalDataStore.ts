@@ -1,4 +1,4 @@
-import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, toDhtAddress } from '../../identifiers'
 import { MapWithTtl } from '@streamr/utils'
 
@@ -36,7 +36,7 @@ export class LocalDataStore {
 
     public markAsDeleted(key: DhtAddress, creator: DhtAddress): boolean {
         const item = this.store.get(key)
-        if ((item === undefined) || !item.has(creator)) {
+        if (!item?.has(creator)) {
             return false
         }
         const storedEntry = item.get(creator)

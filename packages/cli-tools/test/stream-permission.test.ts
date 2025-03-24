@@ -1,17 +1,17 @@
-import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
-import 'jest-extended'
 import { StreamPermission } from '@streamr/sdk'
+import { createTestPrivateKey, randomUserId } from '@streamr/test-utils'
+import 'jest-extended'
 import { createTestClient, runCommand } from './utils'
 
 describe('permission', () => {
 
     it('grant and revoke', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const client = createTestClient(privateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         const otherUser = randomUserId()
         const hasPermission = () => client.hasPermission({
-            user: otherUser,
+            userId: otherUser,
             permission: StreamPermission.PUBLISH,
             streamId: stream.id,
             allowPublic: false

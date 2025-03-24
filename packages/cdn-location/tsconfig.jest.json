@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.jest.json",
     "include": [
         "src/**/*",
+        "data-generation/**/*",
         "test/**/*"
     ],
     "references": [

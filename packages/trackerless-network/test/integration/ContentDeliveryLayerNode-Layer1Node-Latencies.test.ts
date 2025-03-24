@@ -1,6 +1,6 @@
 import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { range } from 'lodash'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
@@ -72,8 +72,8 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         await otherContentDeliveryLayerNodes[0].start()
         await otherDiscoveryLayerNodes[0].joinDht([entrypointDescriptor])
         await Promise.all([
-            waitForCondition(() => otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length === 1),
-            waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
+            until(() => otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length === 1),
+            until(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
         ])
         expect(otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
         expect(otherContentDeliveryLayerNodes[0].getNeighbors().length).toEqual(1)
@@ -84,7 +84,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map(async (i) => {
             await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
-        await waitForCondition(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4), 15000, 1000)
+        await until(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
             expect(otherContentDeliveryLayerNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(otherContentDeliveryLayerNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
@@ -110,14 +110,14 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            waitForCondition(() => node.getNeighbors().length >= 4, 10000)
+            until(() => node.getNeighbors().length >= 4, 10000)
         ))
 
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
-            waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
+            until(() => node.getOutgoingHandshakeCount() === 0)
         ))
 
-        await waitForCondition(() => {
+        await until(() => {
             let mismatchCounter = 0
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()

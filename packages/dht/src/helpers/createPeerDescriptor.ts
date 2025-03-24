@@ -10,7 +10,7 @@ import {
     ConnectivityResponse,
     NodeType,
     PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 
 const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddressRaw => {
     // nodeId is calculated as 

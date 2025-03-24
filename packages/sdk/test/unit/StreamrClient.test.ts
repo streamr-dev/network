@@ -3,14 +3,14 @@ import 'reflect-metadata'
 import merge from 'lodash/merge'
 import { container } from 'tsyringe'
 import { StreamrClientConfig } from '../../src/Config'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClient } from '../../src/StreamrClient'
 
 const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(
-        {},
-        CONFIG_TEST,
+        {
+            environment: 'dev2'
+        },
         opts
     ), container)
 }
@@ -47,24 +47,6 @@ describe('StreamrClient', () => {
                 key: GroupKey.generate(),
                 distributionMethod: 'rotate'
             })).rejects.toThrow('streamId')
-        })
-
-        it('updateEncryptionKey: throws error message if lit protocol enabled and passing explicit key', async () => {
-            const client = createClient({
-                encryption: {
-                    litProtocolEnabled: true
-                }
-            })
-            await expect(() => {
-                return client.updateEncryptionKey({
-                    streamId: 'foobar.eth/foobar',
-                    distributionMethod: 'rotate',
-                    key: GroupKey.generate()
-                })
-            }).rejects.toThrowStreamrError({
-                message: 'cannot pass "key" when Lit Protocol is enabled',
-                code: 'UNSUPPORTED_OPERATION'
-            })
         })
     })
 })

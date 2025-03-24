@@ -10,7 +10,7 @@ import {
     toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -23,8 +23,8 @@ import {
     MessageID,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -50,7 +50,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
+        neighborPingLimit: 16
     })
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
@@ -76,7 +77,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId: toUserIdRaw(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
@@ -95,12 +96,12 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<PeerDescriptor>): PeerDescriptor => {
     return {
-        ...opts,
         nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
-        region: getRandomRegion()
+        region: getRandomRegion(),
+        ...opts
     }
 }
 

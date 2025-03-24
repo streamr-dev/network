@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { createTestWallet, testOnlyInNodeJs } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -31,7 +31,7 @@ describe('gap fill', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = fastWallet()
+        publisherWallet = await createTestWallet()
         environment = new FakeEnvironment()
         const publisher = environment.createClient({
             auth: {
@@ -60,7 +60,7 @@ describe('gap fill', () => {
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
-        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
+        subscriber.addEncryptionKey(GROUP_KEY, publisherWallet.address)
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 3)
         await publish(await createMessage(1000))
@@ -73,9 +73,10 @@ describe('gap fill', () => {
         const storageNode = await startFailingStorageNode(new Error('expected'), environment)
         await stream.addToStorageNode(storageNode.getAddress())
         const subscriber = environment.createClient({
-            gapFillTimeout: 50
+            gapFillTimeout: 50,
+            retryResendAfter: 50
         })
-        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
+        subscriber.addEncryptionKey(GROUP_KEY, publisherWallet.address)
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 2)
         await publish(await createMessage(1000))

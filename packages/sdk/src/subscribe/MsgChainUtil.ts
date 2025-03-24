@@ -5,7 +5,7 @@ import { Signal } from './../utils/Signal'
 
 type ProcessMessageFn = (streamMessage: StreamMessage) => Promise<StreamMessage>
 
-type OnError = Signal<[Error, StreamMessage?, number?]>
+type OnError = Signal<[Error, StreamMessage?]>  // TODO could remove the StreamMessage parameter or use it?
 
 class MsgChainProcessor {
 

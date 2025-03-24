@@ -1,5 +1,5 @@
 import { ProtoCallContext } from '@streamr/proto-rpc'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from './DhtRpcOptions'
 
 export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
@@ -9,6 +9,7 @@ export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
     clientId?: number
     connect?: boolean
     sendIfStopped?: boolean
+    doNotBufferWhileConnecting?: boolean
     //used in incoming calls
     incomingSourceDescriptor?: PeerDescriptor
 }

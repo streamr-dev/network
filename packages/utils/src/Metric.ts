@@ -213,7 +213,7 @@ export class MetricsContext {
         formatNumber?: (value: number) => string,
     ): void {
         const ongoingSamples: Map<string, Sampler> = new Map()
-        return scheduleAtFixedRate(async (now: number) => {
+        scheduleAtFixedRate(async (now: number) => {
             if (ongoingSamples.size > 0) {
                 const report = {
                     period: {

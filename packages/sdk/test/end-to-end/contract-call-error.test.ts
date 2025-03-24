@@ -1,5 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { createTestPrivateKey } from '@streamr/test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('contract call error', () => {
@@ -7,20 +6,16 @@ describe('contract call error', () => {
     // TODO: see NET-1007, could improve error messages in fast-chain
     it('insufficient funds', async () => {
         const client = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: fastWallet().privateKey
-            }
+            environment: 'dev2'
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            // eslint-disable-next-line max-len
             'Error while executing contract call "streamRegistry.createStream", code=UNKNOWN_ERROR'
         )
     })
 
     it('invalid chain RPC url', async () => {
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             contracts: {
                 rpcs: [{
                     url: 'http://mock.test'
@@ -33,9 +28,9 @@ describe('contract call error', () => {
     })
 
     it('concurrent transactions', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await createTestPrivateKey({ gas: true })
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey
             }
@@ -43,7 +38,6 @@ describe('contract call error', () => {
         await expect(() => Promise.all([
             client.createStream('/path1' + Date.now()),
             client.createStream('/path2' + Date.now())
-            // eslint-disable-next-line max-len
         ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", code=NONCE_EXPIRED')
     })
 })

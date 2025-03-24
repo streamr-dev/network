@@ -8,15 +8,15 @@ import {
 } from '@streamr/dht'
 import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import {
     LeaveStreamPartNotice,
     MessageID,
     MessageRef,
     ProxyDirection,
     StreamMessage
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
@@ -28,7 +28,6 @@ import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 // TODO use options option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             const result = await task()
@@ -47,7 +46,9 @@ interface ProxyClientOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
+    maxPropagationBufferSize: number
+    minPropagationTargets: number
+    propagationBufferTtl: number
 }
 
 interface ProxyDefinition {
@@ -104,8 +105,9 @@ export class ProxyClient extends EventEmitter<Events> {
             markForInspection: () => {}
         })
         this.propagation = new Propagation({
-            // TODO use options option or named constant?
-            minPropagationTargets: options.minPropagationTargets ?? 2,
+            minPropagationTargets: options.minPropagationTargets,
+            maxMessages: options.maxPropagationBufferSize,
+            ttl: options.propagationBufferTtl,
             sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
                 const remote = this.neighbors.get(neighborId)
                 if (remote) {

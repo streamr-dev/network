@@ -1,14 +1,14 @@
 import { Logger } from '../src/Logger'
 import pino from 'pino'
 import path from 'path'
-import { pick } from 'lodash'
+import pick from 'lodash/pick'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 
 describe('Logger', () => {
     let logger: Logger
-    let logs: Array<{ level: unknown, msg: unknown }>
+    let logs: { level: unknown, msg: unknown }[]
 
     beforeEach(() => {
         logs = []

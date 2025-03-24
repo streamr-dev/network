@@ -17,15 +17,13 @@ const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
 
 function makeStubStream(streamId: string): Stream {
     const partitions = PARTITION_COUNT_LOOKUP[streamId]
-    return {
+    const stub: Partial<Stream> = {
         id: toStreamID(streamId),
-        getMetadata: () => ({
-            partitions
-        }),
-        getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
-            return range(0, partitions).map((p) => toStreamPartID(this.id, p))
+        async getStreamParts(): Promise<StreamPartID[]> { // TODO: duplicated code from client
+            return range(0, partitions).map((p) => toStreamPartID(toStreamID(streamId), p))
         }
-    } as Stream
+    }
+    return stub as Stream
 }
 
 describe(StorageConfig, () => {
@@ -61,7 +59,7 @@ describe(StorageConfig, () => {
     })
 
     afterEach(() => {
-        storageConfig?.destroy()
+        storageConfig.destroy()
     })
 
     it('state starts empty', () => {
@@ -82,8 +80,8 @@ describe(StorageConfig, () => {
         })
 
         it('stream part listeners invoked', () => {
-            expect(onStreamPartAdded).toBeCalledTimes(6)
-            expect(onStreamPartRemoved).toBeCalledTimes(0)
+            expect(onStreamPartAdded).toHaveBeenCalledTimes(6)
+            expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
             expect(onStreamPartAdded.mock.calls).toEqual([
                 [parse('stream-1#0')],
                 [parse('stream-1#1')],
@@ -103,7 +101,7 @@ describe(StorageConfig, () => {
         beforeEach(async () => {
             await storageConfig.start()
             const addToStorageNodeListener = storageEventListeners.get('streamAddedToStorageNode')!
-            const removeFromStorageNodeListener = storageEventListeners.get('streamRemovedFromFromStorageNode')!
+            const removeFromStorageNodeListener = storageEventListeners.get('streamRemovedFromStorageNode')!
             addToStorageNodeListener({
                 streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
@@ -125,8 +123,8 @@ describe(StorageConfig, () => {
         })
 
         it('stream part listeners invoked', () => {
-            expect(onStreamPartAdded).toBeCalledTimes(2 + 1)
-            expect(onStreamPartRemoved).toBeCalledTimes(2)
+            expect(onStreamPartAdded).toHaveBeenCalledTimes(2 + 1)
+            expect(onStreamPartRemoved).toHaveBeenCalledTimes(2)
             expect(onStreamPartAdded.mock.calls).toEqual([
                 [parse('stream-1#0')],
                 [parse('stream-1#1')],

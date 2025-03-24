@@ -1,6 +1,6 @@
 import { Simulator } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { range } from 'lodash'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -56,10 +56,10 @@ describe('Propagation', () => {
     })
 
     it('All nodes receive messages', async () => {
-        await waitForCondition(
+        await until(
             () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 30000
         )
-        await waitForCondition(() => {
+        await until(() => {
             const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
                 return acc + curr.getNeighbors().length
             }, 0) / contentDeliveryLayerNodes.length
@@ -71,6 +71,6 @@ describe('Propagation', () => {
             randomUserId()
         )
         contentDeliveryLayerNodes[0].broadcast(msg)
-        await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)
+        await until(() => totalReceived >= NUM_OF_NODES, 10000)
     }, 45000)
 })

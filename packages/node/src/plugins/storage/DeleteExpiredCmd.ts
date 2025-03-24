@@ -59,7 +59,7 @@ export class DeleteExpiredCmd {
     }: Options) {
         this.streamrBaseUrl = streamrBaseUrl
         this.dryRun = dryRun
-        this.bucketLimit = bucketLimit || 10000000
+        this.bucketLimit = bucketLimit ?? 10000000
 
         const authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraUsername, cassandraPassword)
         this.cassandraClient = new cassandra.Client({
@@ -116,7 +116,7 @@ export class DeleteExpiredCmd {
                     return {
                         streamId: stream.streamId,
                         partition: stream.partition,
-                        storageDays: streamFromChain.getMetadata().storageDays ?? 365
+                        storageDays: (await streamFromChain.getStorageDayCount()) ?? 365
                     }
                 } catch (err) { logger.error('Failed to fetch stream info', { err }) }
             })

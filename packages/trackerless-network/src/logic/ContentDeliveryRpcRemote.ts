@@ -3,8 +3,8 @@ import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
     StreamMessage
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
@@ -12,9 +12,10 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
 
     private rtt?: number
 
-    async sendStreamMessage(msg: StreamMessage): Promise<void> {
+    async sendStreamMessage(msg: StreamMessage, doNotBufferWhileConnecting?: boolean): Promise<void> {
         const options = this.formDhtRpcOptions({
-            notification: true
+            notification: true,
+            doNotBufferWhileConnecting
         })
         this.getClient().sendStreamMessage(msg, options).catch(() => {
             logger.trace('Failed to sendStreamMessage')

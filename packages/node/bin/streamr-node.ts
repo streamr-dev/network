@@ -20,7 +20,6 @@ program
             if (!program.opts().test) {
                 await broker.start()
             } else {
-                // eslint-disable-next-line no-console
                 console.info('the configuration is valid')
                 // TODO remove process.exit(0)
                 // We should not need explicit exit call if all setTimeouts are cleared.

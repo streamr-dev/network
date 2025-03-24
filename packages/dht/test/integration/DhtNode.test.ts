@@ -1,8 +1,9 @@
-import { waitForCondition } from '@streamr/utils'
-import { range, without } from 'lodash'
+import { until } from '@streamr/utils'
+import range from 'lodash/range'
+import without from 'lodash/without'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
 import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
-import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -58,7 +59,7 @@ describe('DhtNode', () => {
         await localNode.joinDht([entryPointPeerDescriptor])
         await localNode.waitForNetworkConnectivity()
 
-        await waitForCondition(() => localNode.getNeighborCount() === otherPeerDescriptors.length + 1)
+        await until(() => localNode.getNeighborCount() === otherPeerDescriptors.length + 1)
         const expectedNodeIds = without(getAllPeerDescriptors(), localPeerDescriptor).map((n) => toNodeId(n))
         const actualNodeIds = localNode.getClosestContacts().map((n) => toNodeId(n))
         expect(actualNodeIds).toIncludeSameMembers(expectedNodeIds)

@@ -1,10 +1,9 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, toDhtAddressRaw } from '@streamr/dht'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
-import { StreamID, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { StreamID, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -33,7 +32,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.addMessageListener((msg) => {
             messages.push(StreamMessageTranslator.toClientProtocol(msg).getParsedContent())
         })
-        await waitForCondition(() => messages.length > 0, TIMEOUT)
+        await until(() => messages.length > 0, TIMEOUT)
         return messages
     } finally {
         await networkNode.stop()
@@ -45,7 +44,7 @@ async function createStreamWithPermissions(
     ...assignments: PermissionAssignment[]
 ): Promise<Stream> {
     const creatorClient = new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey
         }
@@ -66,8 +65,8 @@ describe('publish-subscribe', () => {
     let subscriberClient: StreamrClient
 
     beforeAll(async () => {
-        subscriberWallet = fastWallet()
-        publisherPk = await fetchPrivateKeyWithGas()
+        subscriberWallet = await createTestWallet()
+        publisherPk = await createTestPrivateKey({ gas: true })
     })
 
     beforeEach(async () => {
@@ -77,8 +76,8 @@ describe('publish-subscribe', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            publisherClient?.destroy(),
-            subscriberClient?.destroy(),
+            publisherClient.destroy(),
+            subscriberClient.destroy(),
         ])
     }, TIMEOUT)
 
@@ -88,7 +87,7 @@ describe('publish-subscribe', () => {
         beforeAll(async () => {
             stream = await createStreamWithPermissions(publisherPk, {
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: subscriberWallet.address
+                userId: subscriberWallet.address
             })
         }, TIMEOUT * 2)
 
@@ -105,7 +104,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            await until(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -132,7 +131,7 @@ describe('publish-subscribe', () => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            await until(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })

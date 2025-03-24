@@ -10,15 +10,14 @@ import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     CloseTemporaryConnection,
-    ContentDeliveryLayerNeighborInfo,
     LeaveStreamPartNotice,
     MessageID,
     MessageRef,
     StreamMessage,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -32,6 +31,7 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
+import { ContentDeliveryLayerNeighborInfo } from '../types'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -65,7 +65,9 @@ export interface StrictContentDeliveryLayerNodeOptions {
     rpcRequestTimeout?: number
 }
 
-const RANDOM_NODE_VIEW_SIZE = 20
+export const DEFAULT_NODE_VIEW_SIZE = 20
+export const DEFAULT_NEIGHBOR_TARGET_COUNT = 4
+export const DEFAULT_ACCEPT_PROXY_CONNECTIONS = false
 
 const logger = new Logger(module)
 
@@ -93,9 +95,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     return
                 }
                 const contact = this.options.nearbyNodeView.get(remoteNodeId)
-                || this.options.randomNodeView.get(remoteNodeId)
-                || this.options.neighbors.get(remoteNodeId)
-                || this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
+                ?? this.options.randomNodeView.get(remoteNodeId)
+                ?? this.options.neighbors.get(remoteNodeId)
+                ?? this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.options.discoveryLayerNode.removeContact(remoteNodeId)
@@ -284,7 +286,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,
@@ -304,7 +306,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,

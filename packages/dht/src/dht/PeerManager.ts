@@ -8,7 +8,7 @@ import { ConnectionLocker } from '../connection/ConnectionManager'
 import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
 import {
     PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
 import { RingContactList } from './contact/RingContactList'
@@ -23,6 +23,7 @@ interface PeerManagerOptions {
     localNodeId: DhtAddress
     localPeerDescriptor: PeerDescriptor
     connectionLocker?: ConnectionLocker
+    neighborPingLimit?: number
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
     hasConnection: (nodeId: DhtAddress) => boolean
@@ -154,7 +155,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const nodeId = toNodeId(peerDescriptor)
             // Important to lock here, before the ping result is known
             this.options.connectionLocker?.weakLockConnection(nodeId, this.options.lockId)
-            if (this.options.hasConnection(contact.getNodeId())) {
+            if (this.options.hasConnection(contact.getNodeId()) 
+                || (this.options.neighborPingLimit !== undefined && this.neighbors.count() > this.options.neighborPingLimit)) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
                 logger.trace('starting ping ' + nodeId)
@@ -266,7 +268,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.neighbors.count()
     }
 
-    getNeighbors(): ReadonlyArray<DhtNodeRpcRemote> {
+    getNeighbors(): readonly DhtNodeRpcRemote[] {
         return this.neighbors.toArray()
     }
 

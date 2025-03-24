@@ -1,7 +1,7 @@
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { toDhtAddress } from '../../src/identifiers'
 
@@ -26,7 +26,7 @@ describe('Storing data in DHT with two peers', () => {
     afterEach(async () => {
         await entryPoint.stop()
         await otherNode.stop()
-        simulator?.stop()
+        simulator!.stop()
     })
 
     it('Node can store on two peer DHT', async () => {
@@ -42,7 +42,7 @@ describe('Storing data in DHT with two peers', () => {
 
     it('Can store on one peer DHT', async () => {
         await otherNode.stop()
-        await waitForCondition(() => entryPoint.getNeighborCount() === 0)
+        await until(() => entryPoint.getNeighborCount() === 0)
         const storedData = createMockDataEntry()
         await entryPoint.storeDataToDht(toDhtAddress(storedData.key), storedData.data!)
         const foundData = await entryPoint.fetchDataFromDht(toDhtAddress(storedData.key))

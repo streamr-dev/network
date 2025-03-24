@@ -1,19 +1,17 @@
 import 'reflect-metadata'
 
-import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toUserId, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
-import { Stream } from '../../src/Stream'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
-import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageSigner } from '../../src/signature/MessageSigner'
@@ -49,7 +47,7 @@ describe('messagePipeline', () => {
                 partition,
                 Date.now(),
                 0,
-                toEthereumAddress(publisher.address),
+                toUserId(publisher.address),
                 'mock-msgChainId'
             ),
             messageType: StreamMessageType.MESSAGE,
@@ -62,37 +60,21 @@ describe('messagePipeline', () => {
 
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
-        publisher = fastWallet()
-        const stream = new Stream(
-            StreamPartIDUtils.getStreamID(streamPartId),
-            {
-                partitions: 1,
-            },
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any
-        )
+        publisher = await createTestWallet()
         const groupKeyStore = {
             get: async () => undefined
         } as any
         const destroySignal = new DestroySignal()
         const config: Pick<StrictStreamrClientConfig, 'encryption'> = {
             encryption: {
-                litProtocolEnabled: false,
-                litProtocolLogging: false,
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
             } as any
         }
         streamRegistry = {
-            getStream: async () => stream,
+            getStreamMetadata: async () => ({ partitions: 1 }),
             isStreamPublisher: async () => true,
-            clearStreamCache: jest.fn()
+            invalidatePermissionCaches: jest.fn()
         }
         pipeline = createMessagePipeline({
             streamPartId,
@@ -102,7 +84,6 @@ describe('messagePipeline', () => {
             signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>()),
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
-                mock<LitProtocolFacade>(),
                 groupKeyStore,
                 config,
                 createPrivateKeyAuthentication(publisher.privateKey),
@@ -148,9 +129,12 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Signature validation failed')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_SIGNATURE',
+            message: 'Signature validation failed'
+        })
         expect(output).toEqual([])
     })
 
@@ -163,9 +147,12 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Invalid JSON')
+        expect(error).toEqualStreamrClientError({
+            code: 'INVALID_MESSAGE_CONTENT',
+            message: 'Unable to parse JSON'
+        })
         expect(output).toEqual([])
     })
 
@@ -181,13 +168,15 @@ describe('messagePipeline', () => {
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
+        expect(onError).toHaveBeenCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(DecryptError)
-        expect(error.message).toMatch(/timed out/)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR',
+            message: 'Could not get encryption key'
+        })
         expect(output).toEqual([])
-        expect(streamRegistry.clearStreamCache).toBeCalledTimes(1)
-        expect(streamRegistry.clearStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledTimes(1)
+        expect(streamRegistry.invalidatePermissionCaches).toHaveBeenCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
     })
 
     it('error: exception', async () => {
@@ -199,7 +188,7 @@ describe('messagePipeline', () => {
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(onError).toBeCalledTimes(1)
-        expect(onError).toBeCalledWith(err)
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onError).toHaveBeenCalledWith(err)
     })
 })

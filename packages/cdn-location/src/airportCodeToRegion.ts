@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const airportCodeToRegion: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {
     JFK: [100, 40.639447, -73.779317],
     LGA: [200, 40.777199, -73.872597],

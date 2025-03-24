@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
-import { waitForStreamToEnd } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { randomUserId, waitForStreamToEnd } from '@streamr/test-utils'
+import { UserID, hexToBinary, toStreamID, utf8ToBinary, until, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
@@ -11,7 +11,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const MOCK_STREAM_ID = `mock-stream-id-${Date.now()}`
-const MOCK_PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const MOCK_PUBLISHER_ID = randomUserId()
 const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
     return new StreamMessage({
@@ -52,7 +52,7 @@ class ProxyClient {
         if (this.hasError(query)) {
             resultCallback!(ProxyClient.ERROR, undefined)
         } else {
-            return this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
+            this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
         }
     }
 
@@ -95,7 +95,7 @@ describe('cassanda-queries', () => {
     let realClient: Client
 
     const waitForStoredMessageCount = async (expectedCount: number) => {
-        return waitForCondition(async () => {
+        return until(async () => {
             const result = await realClient.execute('SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [
                 MOCK_STREAM_ID
             ])
@@ -121,7 +121,7 @@ describe('cassanda-queries', () => {
     })
 
     afterAll(async () => {
-        await storage?.close() // also cleans up realClient
+        await storage.close() // also cleans up realClient
     })
 
     beforeEach(async () => {
@@ -172,7 +172,7 @@ describe('cassanda-queries', () => {
         [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, undefined],
         [REQUEST_TYPE_RANGE, undefined, undefined],
         [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
-    ])('%s, publisher: %p', (requestType: string, publisherId: string | undefined, msgChainId: string | undefined) => {
+    ])('%s, publisher: %p', (requestType: string, publisherId: UserID | undefined, msgChainId: string | undefined) => {
 
         const getResultStream = (streamId: string): Readable => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()

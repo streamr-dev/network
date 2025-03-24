@@ -14,13 +14,13 @@
         let resendMsgCounter = 0
 
         const publisherClient = new StreamrClient({
-            ...StreamrClient.CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: PUBLISHER_KEY
             }
         })
         const subscriberClient = new StreamrClient({
-            ...StreamrClient.CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: SUBSCRIBER_KEY
             }
@@ -38,7 +38,7 @@
             // 2. Grant permissions
             await stream.grantPermissions({
                 permissions: ['subscribe'],
-                user: await subscriberClient.getAddress()
+                userId: await subscriberClient.getUserId()
             })
             document.getElementById('permissionGranted').checked = true
             document.getElementById('permissionGrantedValue').value = await subscriberClient.getAddress()

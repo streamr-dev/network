@@ -40,8 +40,8 @@ The Streamr SDK offers a convenience static function `StreamrClient.generateEthe
 const { address, privateKey } = StreamrClient.generateEthereumAccount();
 ```
 
-In order to retrieve the address, an async call must me made to `streamr.getAddress`
+In order to retrieve the address, an async call must me made to `streamr.getUserId`
 
 ```ts
-const address = await streamr.getAddress();
+const address = await streamr.getUserId();
 ```

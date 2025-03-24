@@ -1,15 +1,15 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { Logger, StreamPartID, UserID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { Logger, StreamPartID, toUserId, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
     StreamMessage
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { IProxyConnectionRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 
 const logger = new Logger(module)
@@ -64,7 +64,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         if (msg.body.oneofKind === 'groupKeyRequest') {
             try {
                 const recipientId = msg.body.groupKeyRequest.recipientId
-                return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
+                return this.getNodeIdsForUserId(toUserId(recipientId))
             } catch (err) {
                 logger.trace(`Could not parse GroupKeyRequest`, { err })
                 return []
@@ -88,7 +88,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         const remoteNodeId = toNodeId(senderPeerDescriptor)
         this.connections.set(remoteNodeId, {
             direction: request.direction,
-            userId: toEthereumAddress(binaryToHex(request.userId, true)),
+            userId: toUserId(request.userId),
             remote: new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,
                 senderPeerDescriptor,

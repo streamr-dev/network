@@ -1,11 +1,13 @@
-import { fastWallet } from '@streamr/test-utils'
+import { createTestWallet } from '@streamr/test-utils'
 import {
     EthereumAddress, Multimap,
     StreamID,
     StreamPartID,
     toEthereumAddress, toLengthPrefixedFrame,
     toStreamID,
-    toStreamPartID
+    toStreamPartID,
+    toUserId,
+    UserID
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { once } from 'events'
@@ -65,12 +67,11 @@ export class FakeStorageNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private server?: Server
-    private readonly wallet: Wallet
+    private wallet?: Wallet
     private readonly node: NetworkNodeFacade
     private readonly chain: FakeChain
 
     constructor(environment: FakeEnvironment) {
-        this.wallet = fastWallet()
         this.node = environment.createNode()
         this.chain = environment.getChain()
         this.chain.on('streamAddedToStorageNode', (event) => {
@@ -84,10 +85,11 @@ export class FakeStorageNode {
     }
 
     getAddress(): EthereumAddress {
-        return toEthereumAddress(this.wallet.address)
+        return toEthereumAddress(this.wallet!.address)
     }
 
     async start(): Promise<void> {
+        this.wallet = await createTestWallet()
         this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
             switch (resendType) {
                 case 'last':
@@ -119,8 +121,8 @@ export class FakeStorageNode {
         this.chain.setStorageNodeMetadata(this.getAddress(), {
             urls: [`http://127.0.0.1:${port}`]
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
+        const storageNodeAssignmentStreamPermissions = new Multimap<UserID, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(toUserId(this.getAddress()), StreamPermission.PUBLISH)
         this.chain.setStream(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
@@ -135,7 +137,7 @@ export class FakeStorageNode {
     }
 
     private async addStream(streamId: StreamID): Promise<void> {
-        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions
+        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions as number
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
         streamParts.forEach(async (streamPartId) => {
             if (!(await this.node.getStreamParts()).includes(streamPartId)) {
@@ -147,7 +149,7 @@ export class FakeStorageNode {
                 await this.node.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
-                    publisher: this.wallet,
+                    publisher: this.wallet!,
                     content: {
                         streamPart: streamPartId,
                     }

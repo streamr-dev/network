@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "101.1.2",
+  "version": "103.0.0-rc.0",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json",
-    "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-browser": "karma start karma.config.js"
@@ -22,16 +22,14 @@
   "dependencies": {
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^9.4.0",
-    "pino-pretty": "^11.2.2",
-    "secp256k1": "^5.0.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.17.10",
-    "@types/node-fetch": "^2.6.4",
-    "@types/secp256k1": "^4.0.6",
-    "node-fetch": "^2.7.0"
+    "@types/lodash": "^4.17.16",
+    "@types/secp256k1": "^4.0.6"
   }
 }

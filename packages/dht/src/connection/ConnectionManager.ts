@@ -10,9 +10,10 @@ import {
     LockResponse,
     Message,
     PeerDescriptor,
-    UnlockRequest
-} from '../proto/packages/dht/protos/DhtRpc'
-import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+    UnlockRequest,
+    SetPrivateRequest
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockStates, LockID } from './ConnectionLockStates'
@@ -31,6 +32,7 @@ import { PendingConnection } from './PendingConnection'
 export interface ConnectionManagerOptions {
     maxConnections?: number
     metricsContext: MetricsContext
+    allowIncomingPrivateConnections: boolean
     createConnectorFacade: () => ConnectorFacade
 }
 
@@ -127,6 +129,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
     private state = ConnectionManagerState.IDLE
+    private privateClientMode = false
 
     constructor(options: ConnectionManagerOptions) {
         super()
@@ -154,7 +157,18 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             removeRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => 
                 this.closeConnection(peerDescriptor, gracefulLeave, reason),
-            getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
+            getLocalPeerDescriptor: () => this.getLocalPeerDescriptor(),
+            setPrivate: (id: DhtAddress, isPrivate: boolean) => {
+                if (!this.options.allowIncomingPrivateConnections) {
+                    logger.debug(`node ${id} attemted to set a connection as private, but it is not allowed`)
+                    return
+                }
+                if (isPrivate) {
+                    this.locks.addPrivate(id)
+                } else {
+                    this.locks.removePrivate(id)
+                }
+            }
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
             (req: LockRequest, context: ServerCallContext) => lockRpcLocal.lockRequest(req, context))
@@ -162,6 +176,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: UnlockRequest, context: ServerCallContext) => lockRpcLocal.unlockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
+        this.rpcCommunicator.registerRpcNotification(SetPrivateRequest, 'setPrivate',
+            (req: SetPrivateRequest, context: ServerCallContext) => lockRpcLocal.setPrivate(req, context))
     }
 
     /*
@@ -180,7 +196,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.endpoints.forEach((endpoint) => {
             if (endpoint.connected) {
                 const connection = endpoint.connection
-                if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
+                const nodeId = connection.getNodeId()
+                if (!this.locks.isLocked(nodeId) && !this.locks.isPrivate(nodeId) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                     logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                     disconnectionCandidates.addContact(connection)
                 }
@@ -291,8 +308,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.metrics.sendMessagesPerSecond.record(1)
 
         if (this.endpoints.get(nodeId)!.connected) {
-            return (connection as ManagedConnection).send(binary)
-        } else {
+            (connection as ManagedConnection).send(binary)
+        } else if (!opts.doNotBufferWhileConnecting) {
             return (this.endpoints.get(nodeId)! as ConnectingEndpoint).buffer.push(binary)
         }
     }
@@ -398,6 +415,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             connected: true,
             connection: managedConnection
         })
+        if (this.privateClientMode) {
+            this.setPrivateForConnection(peerDescriptor, this.privateClientMode).catch(() => {})
+        }
         this.emit('connected', peerDescriptor)
         this.onConnectionCountChange()
     }
@@ -529,6 +549,40 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.locks.removeWeakLocked(nodeId, lockId)
     }
 
+    public async enablePrivateClientMode(): Promise<void> {
+        this.privateClientMode = true
+        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
+            if (endpoint.connected) {
+                const peerDescription = endpoint.connection.getPeerDescriptor()
+                return this.setPrivateForConnection(peerDescription!, true)
+            }
+        }))
+    }
+
+    public async disablePrivateClientMode(): Promise<void> {
+        this.privateClientMode = false
+        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
+            if (endpoint.connected) {
+                const peerDescription = endpoint.connection.getPeerDescriptor()
+                return this.setPrivateForConnection(peerDescription!, false)
+            }
+        }))
+    }
+
+    public isPrivateClientMode(): boolean {
+        return this.privateClientMode
+    }
+
+    private async setPrivateForConnection(targetDescriptor: PeerDescriptor, isPrivate: boolean): Promise<void> {
+        const rpcRemote = new ConnectionLockRpcRemote(
+            this.getLocalPeerDescriptor(),
+            targetDescriptor,
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
+        )
+        await rpcRemote.setPrivate(isPrivate)
+    }
+
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
         const endpoint = this.endpoints.get(toNodeId(targetDescriptor))
 
@@ -587,7 +641,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             .map((endpoint) => endpoint)
             // TODO is this filtering needed? (if it is, should we do the same filtering e.g.
             // in getConnection() or in other methods which access this.endpoints directly?)
-            .filter((endpoint) => endpoint.connected)
+            .filter((endpoint) => endpoint.connected && !this.locks.isPrivate(toNodeId(endpoint.connection.getPeerDescriptor()!)))
             .map((endpoint) => endpoint.connection.getPeerDescriptor()!)
     }
 
@@ -598,7 +652,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     public getDiagnosticInfo(): Record<string, unknown> {
         const managedConnections: ManagedConnection[] = Array.from(this.endpoints.values())
             .filter((endpoint) => endpoint.connected)
-            .map((endpoint) => endpoint.connection as ManagedConnection)
+            .map((endpoint) => endpoint.connection)
         return {
             connections: managedConnections.map((connection) => connection.getDiagnosticInfo()),
             connectionCount: this.endpoints.size

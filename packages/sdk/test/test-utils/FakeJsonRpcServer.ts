@@ -1,25 +1,21 @@
-import { AbiCoder, keccak256, toUtf8Bytes } from 'ethers'
+import { AbiCoder, id } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
-import { intersection, isArray } from 'lodash'
+import intersection from 'lodash/intersection'
+import isEqual from 'lodash/isEqual'
+import isArray from 'lodash/isArray'
 import { AddressInfo } from 'net'
 import { promisify } from 'util'
+import { formEthereumFunctionSelector, parseEthereumFunctionSelectorFromCallData } from './utils'
 
 export const CHAIN_ID = 5555
-const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const BLOCK_NUMBER = 123
 const EVENT_STREAM_ID = '0x0000000000000000000000000000000000000001/foo'
 
 const toHex = (val: number) => {
     return '0x' + val.toString(16)
 }
-
-const getLabelHash = (methodSignature: string) => keccak256(toUtf8Bytes(methodSignature))
-
-const getContractMethodHash = (methodSignature: string) => getLabelHash(methodSignature).substring(2, 10)
-
-const getEventTopicHash = (eventSignature: string) => getLabelHash(eventSignature)
 
 export interface JsonRpcRequest {
     id: string
@@ -89,19 +85,20 @@ export class FakeJsonRpcServer {
             return toHex(BLOCK_NUMBER)
         } else if (request.method === 'eth_call') {
             const data: string = request.params[0].data
-            const contractMethodHash = data.substring(2, 10)
-            if (contractMethodHash === getContractMethodHash('hasPermission(string,address,uint8)')) {
-                return TRUE
+            const functionSelector = parseEthereumFunctionSelectorFromCallData(data)
+            if (functionSelector === formEthereumFunctionSelector('getPermissionsForUserId(string,bytes)')) {
+                // PermissionStructOutput: { canEdit: false, canDelete: false, publishExpiration: 0n, subscribeExpiration: 0n, canGrant: false }
+                return '0x' + '0'.repeat(320)
             } else {
-                throw new Error(`Unknown contract method: ${contractMethodHash}, request: ${JSON.stringify(request)}`)
+                throw new Error(`Unknown contract method: ${functionSelector}, request: ${JSON.stringify(request)}`)
             }
         } else if (request.method === 'eth_getLogs') {
             const topics = request.params[0].topics
-            const topicHash = getEventTopicHash('StreamCreated(string,string)')
-            if ((topics.length !== 1) || (topics[0] !== topicHash)) {
+            const topicId = id('StreamCreated(string,string)')
+            if (!isEqual(topics, [[topicId]])) {
                 throw new Error('Not implemented')
             }
-            if (request.params[0].toBlock !== 'latest') {
+            if (request.params[0].toBlock !== undefined) {
                 throw new Error('Not implemented')
             }
             const fromBlock = parseInt(request.params[0].fromBlock, 16)
@@ -109,7 +106,7 @@ export class FakeJsonRpcServer {
                 const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
                 return [{
                     address: request.params[0].address,
-                    topics: [topicHash],
+                    topics: [topicId],
                     data,
                     blockNumber: toHex(BLOCK_NUMBER),
                     transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',

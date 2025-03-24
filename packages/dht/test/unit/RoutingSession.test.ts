@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { RoutingMode, RoutingSession } from '../../src/dht/routing/RoutingSession'
-import { Message, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
@@ -74,6 +74,13 @@ describe('RoutingSession', () => {
         connections.delete(toNodeId(mockPeerDescriptor2))
         routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
+    })
+
+    it('recalculates Routing Table if it is empty', () => {
+        connections.set(toNodeId(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
+        routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
     })
 
 })

@@ -7,15 +7,15 @@ import {
     toNodeId,
     toDhtAddressRaw
 } from '../../identifiers'
-import { Any } from '../../proto/google/protobuf/any'
-import { Timestamp } from '../../proto/google/protobuf/timestamp'
+import { Any } from '../../../generated/google/protobuf/any'
+import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import {
     DataEntry,
     PeerDescriptor,
     RecursiveOperation,
     ReplicateDataRequest,
     StoreDataRequest, StoreDataResponse
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../../types/ServiceID'
 import { getClosestNodes } from '../contact/getClosestNodes'
@@ -32,7 +32,7 @@ interface StoreManagerOptions {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 

@@ -1,10 +1,12 @@
-import { waitForCondition } from '@streamr/utils'
-import { range, sample, sampleSize } from 'lodash'
+import { until } from '@streamr/utils'
+import range from 'lodash/range'
+import sample from 'lodash/sample'
+import sampleSize from 'lodash/sampleSize'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager } from '../../src/dht/PeerManager'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { DhtAddress, randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -64,7 +66,7 @@ describe('PeerManager', () => {
         expect(manager.getNeighborCount()).toBe(0)
         manager.addContact(failureContact)
         const closesSuccessContact = getClosestNodes(toNodeId(localPeerDescriptor), successContacts)[0]
-        await waitForCondition(() => {
+        await until(() => {
             const neighborNodeIds = manager.getNeighbors().map((n) => n.getNodeId())
             return neighborNodeIds.includes(toNodeId(closesSuccessContact))
         })

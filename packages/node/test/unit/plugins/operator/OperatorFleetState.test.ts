@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
-import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
+import { wait, until, waitForEvent } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { MessageListener, StreamrClient, Subscription } from '@streamr/sdk'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
@@ -51,7 +51,7 @@ describe(OperatorFleetState, () => {
     })
 
     afterEach(() => {
-        state?.destroy()
+        state.destroy()
     })
 
     it('cannot double start', async () => {
@@ -112,7 +112,7 @@ describe(OperatorFleetState, () => {
         await setTimeAndPublishMessage(10, createHeartbeatMsg('c'))
         await setTimeAndPublishMessage(19, createHeartbeatMsg('e'))
 
-        await waitForCondition(() => state.getNodeIds().length <= 3)
+        await until(() => state.getNodeIds().length <= 3)
         expect(state.getNodeIds()).toEqual(['c', 'd', 'e'])
         expect(events).toEqual([
             ['added', 'a'],

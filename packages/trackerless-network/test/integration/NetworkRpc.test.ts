@@ -4,11 +4,11 @@ import {
     RpcCommunicator,
     toProtoRpcClient
 } from '@streamr/proto-rpc'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { Empty } from '../../src/proto/google/protobuf/empty'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import { Empty } from '../../generated/google/protobuf/empty'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
@@ -47,6 +47,6 @@ describe('Network RPC', () => {
             randomUserId()
         )
         await client.sendStreamMessage(msg)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 })

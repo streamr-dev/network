@@ -6,7 +6,7 @@ import {
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
@@ -17,7 +17,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationSessionRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
@@ -39,7 +39,7 @@ interface RecursiveOperationManagerOptions {
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
-export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface RecursiveOperationResult { closestNodes: PeerDescriptor[], dataEntries?: DataEntry[] }
 
 const logger = new Logger(module)
 

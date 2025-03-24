@@ -1,11 +1,12 @@
 import 'reflect-metadata'
+
+import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { until } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils/promises'
-import { createTestStream, createTestClient } from '../test-utils/utils'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const TEST_TIMEOUT = 30 * 1000
 
@@ -17,16 +18,16 @@ describe('StorageNodeRegistry', () => {
     let stream: Stream
 
     beforeAll(async () => {
-        creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
-        listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
+        creatorWallet = await createTestWallet({ gas: true })
+        listenerWallet = await createTestWallet({ gas: true })
         creatorClient = createTestClient(creatorWallet.privateKey, 43235)
         listenerClient = createTestClient(listenerWallet.privateKey, 43234)
     }, TEST_TIMEOUT)
 
     afterAll(async () => {
         await Promise.allSettled([
-            creatorClient?.destroy(),
-            listenerClient?.destroy()
+            creatorClient.destroy(),
+            listenerClient.destroy()
         ])
     })
 
@@ -58,9 +59,9 @@ describe('StorageNodeRegistry', () => {
     }, TEST_TIMEOUT)
 
     it('no assignments', async () => {
-        const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
+        const storageNodeWallet = await createTestWallet({ gas: true })
         const storageNodeManager = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: storageNodeWallet.privateKey
             }
@@ -80,7 +81,7 @@ describe('StorageNodeRegistry', () => {
         listenerClient.on('streamAddedToStorageNode', (payload: any) => {
             onAddPayloads.push(payload)
         })
-        listenerClient.on('streamRemovedFromFromStorageNode', (payload: any) => {
+        listenerClient.on('streamRemovedFromStorageNode', (payload: any) => {
             onRemovePayloads.push(payload)
         })
 

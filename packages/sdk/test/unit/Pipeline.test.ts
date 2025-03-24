@@ -9,7 +9,7 @@ const WAIT = 20
 
 async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
-    for await (const item of items) {
+    for (const item of items) {
         await wait(waitTime * 0.1)
         yield item
         await wait(waitTime * 0.1)

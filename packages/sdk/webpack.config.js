@@ -38,8 +38,8 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /(\.jsx|\.js|\.ts)$/,
-                    exclude: /(node_modules|bower_components)/,
+                    test: /(\.jsx|\.js|\.ts|\.mts)$/,
+                    exclude: /node_modules/,
                     use: {
                         loader: 'babel-loader',
                         options: {
@@ -52,7 +52,7 @@ module.exports = (env, argv) => {
             ]
         },
         resolve: {
-            modules: ['node_modules', ...require.resolve.paths(''), path.resolve('./vendor')],
+            modules: ['node_modules', ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
@@ -95,45 +95,13 @@ module.exports = (env, argv) => {
             globalObject: 'globalThis',
         },
         resolve: {
-            alias: {
-                stream: 'readable-stream',
-                util: 'util',
-                http: path.resolve('./src/shim/http-https.ts'),
-                https: path.resolve('./src/shim/http-https.ts'),
-                buffer: require.resolve('buffer/'),
-                'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
-                '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
-                '@streamr/utils': path.resolve('../utils/src/exports.ts'),
-                '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
-                '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
-                '@streamr/dht': path.resolve('../dht/src/exports.ts'),
-                '@streamr/autocertifier-client': false,
-                [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
-                    path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
-                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
-                // swap out ServerPersistence for BrowserPersistence
-                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
-                    path.resolve('./src/utils/persistence/BrowserPersistence.ts')
-                )
-            },
             fallback: {
                 module: false,
-                fs: false,
-                net: false,
-                http: false,
-                https: false,
-                express: false,
-                ws: false,
-                'jest-leak-detector': false,
-                'v8': false,
-                '@web3modal/standalone': false
             }
         },
         plugins: [
             new NodePolyfillPlugin({
+                additionalAliases: ['process'],
                 excludeAliases: ['console'],
             }),
             ...(analyze ? [
@@ -144,7 +112,6 @@ module.exports = (env, argv) => {
                 })
             ] : []),
             new webpack.ProvidePlugin({
-                process: 'process/browser',
                 Buffer: ['buffer', 'Buffer'],
             }),
             new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
@@ -177,14 +144,15 @@ module.exports = (env, argv) => {
                             ecma: 2018,
                             output: {
                                 comments: false,
-                            },
-                        },
-                    }),
-                ],
+                                ascii_only: true
+                            }
+                        }
+                    })
+                ]
             },
             output: {
                 filename: '[name].web.min.js',
-            },
+            }
         })
     }
 }

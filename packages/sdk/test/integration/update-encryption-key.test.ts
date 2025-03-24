@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
@@ -32,10 +31,10 @@ describe('update encryption key', () => {
         })
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            userId: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        streamPartId = stream.getStreamParts()[0]
+        streamPartId = (await stream.getStreamParts())[0]
         const sub = await subscriber.subscribe(streamPartId)
         messageIterator = sub[Symbol.asyncIterator]()
         onError = jest.fn()
@@ -119,7 +118,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: await subscriber.getAddress(),
+                userId: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const rotatedKey = GroupKey.generate()
@@ -148,7 +147,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: await subscriber.getAddress(),
+                userId: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             await publisher.updateEncryptionKey({
@@ -160,8 +159,10 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 2
             })
-            await waitForCondition(() => onError.mock.calls.length > 0, 10 * 1000)
-            expect(onError.mock.calls[0][0]).toBeInstanceOf(DecryptError)
+            await until(() => onError.mock.calls.length > 0, 10 * 1000)
+            expect(onError.mock.calls[0][0]).toEqualStreamrClientError({
+                code: 'DECRYPT_ERROR'
+            })
         }, 10 * 1000)
     })
 })

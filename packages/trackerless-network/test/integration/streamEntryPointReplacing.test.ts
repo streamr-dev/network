@@ -1,6 +1,6 @@
 import { LatencyType, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { range } from 'lodash'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import range from 'lodash/range'
 import { NetworkStack } from '../../src/NetworkStack'
 import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -82,7 +82,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         }
 
         await Promise.all(initialNodesOnStream.map((node) => node.getContentDeliveryManager().leaveStreamPart(STREAM_PART_ID)))
-        await waitForCondition(() => 
+        await until(() => 
             laterNodesOnStream.every((node) => node.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length >= 4), 60000, 1000
         )
 
@@ -92,6 +92,6 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             randomUserId()
         )
         newNodeInStream.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
+        await until(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
     }, 200000)
 })

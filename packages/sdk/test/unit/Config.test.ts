@@ -1,5 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig, DEFAULT_ENVIRONMENT } from '../../src/Config'
+import cloneDeep from 'lodash/cloneDeep'
+import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/ethereumUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -91,7 +92,7 @@ describe('Config', () => {
 
         it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
-            const clientOverrides = createStrictConfig(CONFIG_TEST)
+            const clientOverrides = createStrictConfig({ environment: 'dev2' })
             expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
             expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints)
         })
@@ -102,7 +103,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT].entryPoints[0].nodeId)
+            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT_ID].entryPoints[0].nodeId)
         })
 
         it('can override entryPoints', () => {
@@ -179,6 +180,20 @@ describe('Config', () => {
                     storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry
                 }
             })
+        })
+
+        it('dev2 injects CONFIG_TEST values', () => {
+            const config: any = {
+                environment: 'dev2',
+                network: {
+                    controlLayer: {
+                        maxMessageSize: 123
+                    }
+                }
+            }
+            const expected = cloneDeep(CONFIG_TEST)
+            expected.network!.controlLayer!.maxMessageSize = 123
+            expect(createStrictConfig(config)).toMatchObject(expected)
         })
 
         describe('highGasPrice', () => {

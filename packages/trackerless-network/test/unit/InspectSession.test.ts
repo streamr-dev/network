@@ -1,5 +1,5 @@
 import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
-import { MessageID } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageID } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 import { utf8ToBinary } from '@streamr/utils'
 import { DhtAddress, randomDhtAddress } from '@streamr/dht'
@@ -52,6 +52,7 @@ describe('InspectSession', () => {
         inspectSession.markMessage(anotherNode, messageId1)
         await Promise.all([
             waitForEvent3<Events>(inspectSession, 'done', 100),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             inspectSession.markMessage(inspectedNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -61,6 +62,7 @@ describe('InspectSession', () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await Promise.all([
             waitForEvent3<Events>(inspectSession, 'done', 100),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             inspectSession.markMessage(anotherNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -71,6 +73,7 @@ describe('InspectSession', () => {
         await expect(async () => {
             await Promise.all([
                 waitForEvent3<Events>(inspectSession, 'done', 100),
+                // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
                 inspectSession.markMessage(anotherNode, messageId2)
             ])
         }).rejects.toThrow('waitForEvent3')

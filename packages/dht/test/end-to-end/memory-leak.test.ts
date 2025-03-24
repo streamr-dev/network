@@ -1,8 +1,8 @@
 import LeakDetector from 'jest-leak-detector'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { toNodeId } from '../../src/identifiers'
 
@@ -55,7 +55,7 @@ describe('memory leak', () => {
             }
         }
         await sender.send(msg)
-        await waitForCondition(() => receivedMessage !== undefined)
+        await until(() => receivedMessage !== undefined)
         expect(receivedMessage!.messageId).toEqual(MESSAGE_ID)
 
         await Promise.all([

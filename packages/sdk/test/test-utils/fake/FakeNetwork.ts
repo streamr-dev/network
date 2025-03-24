@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { StreamMessage, StreamMessageType } from '../../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetworkNode } from './FakeNetworkNode'
@@ -65,7 +65,7 @@ export class FakeNetwork {
     async waitForSentMessages(opts: SentMessagesFilter & { count: number }, timeout = 60 * 1000): Promise<StreamMessage[]> { 
         let found: StreamMessage[] = []
         const count = opts.count
-        await waitForCondition(() => {
+        await until(() => {
             found = this.getSentMessages(opts)
             return found.length >= count
         }, timeout, timeout / 100, undefined, () => {

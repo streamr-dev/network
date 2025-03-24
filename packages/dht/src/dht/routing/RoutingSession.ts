@@ -2,21 +2,21 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote, ROUTING_TIMEOUT } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationRpcClient, RouterRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const ROUTING_TABLE_MAX_SIZE = 20
+const ROUTING_TABLE_MAX_SIZE = 5
 
 export class RoutingRemoteContact extends Contact {
 
@@ -163,7 +163,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? toNodeId(previousPeer) : undefined
         const targetId = toDhtAddress(this.options.routedMessage.target)
         let routingTable: RoutingTable
-        if (this.options.routingTablesCache.has(targetId, previousId)) {
+        if (this.options.routingTablesCache.has(targetId, previousId) && this.options.routingTablesCache.get(targetId, previousId)!.getSize() > 0) {
             routingTable = this.options.routingTablesCache.get(targetId, previousId)!
         } else {
             routingTable = new SortedContactList<RoutingRemoteContact>({
@@ -196,7 +196,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         while ((this.ongoingRequests.size < this.options.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
-            // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${toNodeId(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())

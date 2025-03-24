@@ -3,7 +3,6 @@ import 'reflect-metadata'
 import { wait } from '@streamr/utils'
 import random from 'lodash/random'
 import uniq from 'lodash/uniq'
-import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -15,18 +14,13 @@ const MESSAGE_COUNT = 100
  */
 describe('parallel publish', () => {
 
-    const publisherWallet = fastWallet()
     let publisher: StreamrClient
     let stream: Stream
     let environment: FakeEnvironment
 
     beforeAll(async () => {
         environment = new FakeEnvironment()
-        publisher = environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        })
+        publisher = environment.createClient()
         stream = await publisher.createStream('/path')
     })
 

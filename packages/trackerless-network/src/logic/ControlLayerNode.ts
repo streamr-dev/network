@@ -1,5 +1,5 @@
 import { ConnectionsView, DataEntry, DhtAddress, ITransport, PeerDescriptor } from '@streamr/dht'
-import { Any } from '../proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 
 export interface ControlLayerNode extends ITransport {
     joinDht(entryPointDescriptors: PeerDescriptor[]): Promise<void>

@@ -9,13 +9,13 @@ import {
 import {
     RpcMessage,
     RpcErrorType
-} from './proto/ProtoRpc'
-import { Empty } from './proto/google/protobuf/empty'
+} from '../generated/ProtoRpc'
+import { Empty } from '../generated/google/protobuf/empty'
 import { MethodOptions, ServerRegistry } from './ServerRegistry'
 import { DeferredState, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext, ProtoRpcOptions } from './ProtoCallContext'
-import { Any } from './proto/google/protobuf/any'
+import { Any } from '../generated/google/protobuf/any'
 import { IMessageType } from '@protobuf-ts/runtime'
 
 export enum StatusCode {

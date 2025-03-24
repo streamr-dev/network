@@ -12,17 +12,17 @@
         "package.json",
         "src/**/*",
         "src/**/*.json",
-        "vendor/**/*",
+        "bin/generate-config-validator.js",
         "src/config.schema.json",
         "test/**/*",
-        "test/**/*.json"
+        "test/**/*.json",
+        "scripts"
     ],
     "exclude": [
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/exports-esm.mjs",
-        "src/utils/persistence/BrowserPersistence.ts"
+        "src/exports-esm.mjs"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },

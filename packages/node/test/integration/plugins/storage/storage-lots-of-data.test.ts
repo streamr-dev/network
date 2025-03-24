@@ -1,9 +1,10 @@
+import { randomUserId } from '@streamr/test-utils'
+import { Logger } from '@streamr/utils'
 import { randomFillSync } from 'crypto'
 import toArray from 'stream-to-array'
-import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
+import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { getTestName, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { buildMsg } from './Storage.test'
-import { Logger, toEthereumAddress } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -61,6 +62,7 @@ describe('Storage: lots of data', () => {
     beforeAll(async () => {
         const storePromises = []
         const randomBuffer = Buffer.alloc(MESSAGE_SIZE)
+        const publisherId = randomUserId()
         for (let i = 0; i < NUM_MESSAGES; i++) {
             randomFillSync(randomBuffer)
             const msg = buildMsg({
@@ -68,7 +70,7 @@ describe('Storage: lots of data', () => {
                 streamPartition: 0,
                 timestamp: 1000000 + (i + 1),
                 sequenceNumber: 0,
-                publisherId: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                publisherId,
                 content: randomBuffer.toString('hex'),
             })
             storePromises.push(() => storage.store(msg))

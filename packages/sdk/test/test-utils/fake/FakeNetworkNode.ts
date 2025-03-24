@@ -66,7 +66,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return [...this.subscriptions]
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))
@@ -88,7 +88,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getOptions(): NetworkOptions {
         return this.options
     }

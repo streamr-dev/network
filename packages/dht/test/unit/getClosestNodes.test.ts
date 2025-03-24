@@ -1,4 +1,6 @@
-import { range, sampleSize, sortBy } from 'lodash'
+import range from 'lodash/range'
+import sampleSize from 'lodash/sampleSize'
+import sortBy from 'lodash/sortBy'
 import { getDistance } from '../../src/dht/PeerManager'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { DhtAddress, randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
@@ -10,7 +12,7 @@ describe('getClosestNodes', () => {
     it('happy path', () => {
         const peerDescriptors = range(10).map(() => createMockPeerDescriptor())
         const referenceId = randomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n), 2)))
+        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n)), 2))
 
         const actual = getClosestNodes(
             referenceId,

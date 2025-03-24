@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { collect, waitForCondition } from '@streamr/utils'
+import { collect, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -31,10 +31,10 @@ describe('sequential resend subscribe', () => {
         stream = await createTestStream(publisher, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            userId: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         waitForStorage = getWaitForStorage(publisher, {
@@ -77,7 +77,7 @@ describe('sequential resend subscribe', () => {
 
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
             const receivedMsgsPromise = collect(sub, expectedMessageCount)
-            await waitForCondition(() => onResent.mock.calls.length > 0)
+            await until(() => onResent.mock.calls.length > 0)
             const streamMessage = await publisher.publish(stream.id, Msg(), { // should be realtime
                 timestamp: id
             })

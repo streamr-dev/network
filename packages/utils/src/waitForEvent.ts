@@ -19,7 +19,6 @@ export async function waitForEvent(
     abortSignal?: AbortSignal
 ): Promise<unknown[]> {
     let listener: (eventArgs: any[]) => void
-    // eslint-disable-next-line no-async-promise-executor
     const task: Promise<unknown[]> = new Promise((resolve) => {
         listener = (...eventArgs: any[]) => {
             if (predicate(...eventArgs)) {

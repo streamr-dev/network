@@ -4,11 +4,11 @@ import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
     Message, PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
-import { isMaybeSupportedVersion } from '../helpers/version'
+import { isMaybeSupportedProtocolVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
@@ -79,14 +79,14 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
-                        const remoteVersion = connectivityResponseMessage.version
+                        const remoteProtocolVersion = connectivityResponseMessage.protocolVersion
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        if (isMaybeSupportedVersion(remoteVersion)) {
+                        if (isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
                             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                            reject(`Unsupported version: ${remoteVersion}`)
+                            reject(`Unsupported version: ${remoteProtocolVersion}`)
                         }
                     }
                 } catch (err) {

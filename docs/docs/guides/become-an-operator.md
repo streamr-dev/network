@@ -91,6 +91,33 @@ A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](..
 
 Checkout the [Operator FAQ](../help/operator-faq.md#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
 
+## Responsibilities and expectations
+Node Operators play a crucial role in maintaining the reliability and performance of the Streamr Network. As an operator, your primary responsibility is to ensure that your nodes are consistently running, relaying data efficiently, and meeting network standards. Most operators manage a fleet of nodes with a [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 or higher to ensure high availability.
+
+If your Operator contract offers a competitive owner’s cut, you’re likely to attract delegators. These delegators rely on your oversight as an Operator and the performance of your node fleet to participate effectively in the Sponsorship economy, maximizing their yield potential while supporting you.
+
+### Staying informed
+To stay up to date with the latest network developments, Operators should join the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and regularly check the **#node-announcements** channel. Here, the Streamr team shares critical updates, including:
+
+- **Node software updates**  
+- **New sponsorship opportunities**  
+- **Network status announcements**  
+
+Staying informed ensures your nodes remain compliant with the latest requirements and operate smoothly within the network.
+
+### Don't overcommit your node fleet
+When you join a stream Sponsorship you are committing to relay data for that stream. You should not commit to more than your node fleet can handle, both in terms of bandwidth and CPU. Each stream Sponsorship has different requirements and each Sponsorship will increase the load on your node fleet.
+
+### Be contactable
+While not strictly required, it’s recommended to provide contact details on your Operator page, such as an email address or Discord handle. This allows the Streamr team or your delegators to reach you quickly if needed.
+
+Additionally, building a presence within the Streamr community—by engaging with others and offering support on Discord—can enhance your reputation and credibility as an Operator.
+
+### Keeping node software up to date
+Streamr developers continuously improve the Streamr node software. You can review the latest updates in the published [release notes](https://github.com/streamr-dev/network/blob/main/CHANGELOG.md). Updates may include new features, bug fixes, and performance improvements.
+
+While the Streamr team provides regular updates on the **#node-announcements** Discord channel, it’s ultimately your responsibility as an Operator to ensure your nodes run at least the minimum recommended software version. Occasionally, new versions will be released that require prompt action— for critical updates we expect **operators to update their nodes within 24 hours**. While we hope to minimize the frequency of such announcements, Operators must be ready to update their nodes to maintain network compatibility and avoid potential issues. If Operators do not update their nodes in time, they may be unable to earn from stream sponsorships and in extreme cases could even be slashed.
+
 ## The Amoy test environment
 The [Streamr Hub](https://streamr.network/hub) is the place to test out your Operator before creating it on Polygon with real tokens, just select "Polygon Amoy testnet" from top-right network selector. You'll need to use the [Amoy node config](./how-to-run-streamr-node.md#amoy-node-config).
 

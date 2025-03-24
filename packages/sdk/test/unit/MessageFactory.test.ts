@@ -1,5 +1,6 @@
-import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import random from 'lodash/random'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -14,37 +15,10 @@ import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
-const WALLET = fastWallet()
-const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const PARTITION_COUNT = 50
 const GROUP_KEY = GroupKey.generate()
-
-const createMessageFactory = async (opts?: {
-    streamRegistry?: StreamRegistry
-    groupKeyQueue?: GroupKeyQueue
-    erc1271ContractFacade?: ERC1271ContractFacade
-}) => {
-    const authentication = createPrivateKeyAuthentication(WALLET.privateKey)
-    return new MessageFactory(
-        merge<MessageFactoryOptions>(
-            {
-                streamId: STREAM_ID,
-                authentication,
-                streamRegistry: createStreamRegistry({
-                    partitionCount: PARTITION_COUNT,
-                    isPublicStream: false,
-                    isStreamPublisher: true
-                }),
-                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-                signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
-                messageSigner: new MessageSigner(authentication)
-            },
-            opts
-        )
-    )
-}
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
@@ -61,15 +35,48 @@ const createMessage = async (
 
 describe('MessageFactory', () => {
 
+    let wallet: Wallet
+
+    const getStreamId = () => toStreamID('/path', toEthereumAddress(wallet.address))
+
+    const createMessageFactory = async (opts?: {
+        streamRegistry?: StreamRegistry
+        groupKeyQueue?: GroupKeyQueue
+        erc1271ContractFacade?: ERC1271ContractFacade
+    }) => {
+        const authentication = createPrivateKeyAuthentication(wallet.privateKey)
+        return new MessageFactory(
+            merge<MessageFactoryOptions>(
+                {
+                    streamId: getStreamId(),
+                    authentication,
+                    streamRegistry: createStreamRegistry({
+                        partitionCount: PARTITION_COUNT,
+                        isPublicStream: false,
+                        isStreamPublisher: true
+                    }),
+                    groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+                    signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
+                    messageSigner: new MessageSigner(authentication)
+                },
+                opts
+            )
+        )
+    }
+
+    beforeAll(async () => {
+        wallet = await createTestWallet()
+    })
+
     it('happy path', async () => {
         const messageFactory = await createMessageFactory()
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: toEthereumAddress(WALLET.address),
+                publisherId: toEthereumAddress(wallet.address),
                 sequenceNumber: 0,
-                streamId: STREAM_ID,
+                streamId: getStreamId(),
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
                 timestamp: TIMESTAMP
             },
@@ -100,7 +107,7 @@ describe('MessageFactory', () => {
                 msgChainId: expect.any(String),
                 publisherId: contractAddress,
                 sequenceNumber: 0,
-                streamId: STREAM_ID,
+                streamId: getStreamId(),
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
                 timestamp: TIMESTAMP
             },
@@ -172,7 +179,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(WALLET.privateKey), GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(wallet.privateKey), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)

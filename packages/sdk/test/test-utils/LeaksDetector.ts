@@ -129,7 +129,7 @@ export class LeaksDetector {
             }
 
             const id = this.getID(path, value)
-            const paths = this.idToPaths.get(id) || new Set()
+            const paths = this.idToPaths.get(id) ?? new Set()
             paths.add(pathString)
             this.idToPaths.set(id, paths)
             if (!this.seen.has(value)) {
@@ -155,7 +155,7 @@ export class LeaksDetector {
         const results = (await Promise.all(tasks)).filter(Boolean) as string[]
 
         const leaks = results.reduce((o, id) => Object.assign(o, {
-            [id]: [...(this.idToPaths.get(id) || [])],
+            [id]: [...(this.idToPaths.get(id) ?? [])],
         }), {})
 
         logger.debug(`checking for leaks with ${this.leakDetectors.size} items <<`)

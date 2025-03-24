@@ -14,6 +14,8 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID,
+    toUserId,
+    toUserIdRaw,
     utf8ToBinary, waitForEvent3
 } from '@streamr/utils'
 import fs from 'fs'
@@ -21,7 +23,7 @@ import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNo
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { NetworkNode } from '../../src/NetworkNode'
-import { ContentType, EncryptionType, SignatureType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentType, EncryptionType, SignatureType } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000
@@ -88,7 +90,7 @@ const measureJoiningTime = async () => {
                 streamPartition: 0,
                 timestamp: i,
                 sequenceNumber: Math.floor(Math.random() * 20000),
-                publisherId: hexToBinary('0x2222'),
+                publisherId: toUserIdRaw(toUserId('0x2222')),
                 messageChainId: 'msgChainId'
             },
             body: {
@@ -147,7 +149,6 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {

@@ -1,7 +1,7 @@
 export class DuplicateDetector {
 
     private values: Set<string> = new Set()
-    private queue: Array<string> = []
+    private queue: string[] = []
     private maxItemCount: number
 
     constructor(

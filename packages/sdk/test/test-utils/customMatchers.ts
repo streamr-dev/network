@@ -1,5 +1,6 @@
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import isFunction from 'lodash/isFunction'
+import isObject from 'lodash/isObject'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
 interface PartialStreamrClientError {
@@ -13,16 +14,17 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toThrowStreamrError(expectedError: PartialStreamrClientError): R
+            toThrowStreamrClientError(expectedError: PartialStreamrClientError): R
+            toEqualStreamrClientError(expectedError: PartialStreamrClientError): R
         }
     }
 }
 
-const formErrorMessage = (description: string, expected: string, actual: string): string => {
-    return `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
+const formErrorMessage = (field: keyof StreamrClientError, expected: string, actual: string): string => {
+    return `StreamrClientError ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
-const toThrowStreamrError = (
+const toThrowStreamrClientError = (
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: PartialStreamrClientError
 ): jest.CustomMatcherResult => {
@@ -40,31 +42,58 @@ const toThrowStreamrError = (
     } else {
         actualError = actual
     }
+    const assertionErrors = createAssertionErrors(actualError, expectedError)
+    return toCustomMatcherResult(assertionErrors, 'Expected not to throw StreamrClientError')
+}
 
-    const messages: string[] = []
+const toEqualStreamrClientError = (
+    actual: unknown, // should be StreamrClientError
+    expectedError: PartialStreamrClientError
+): jest.CustomMatcherResult => {
+    const assertionErrors = createAssertionErrors(actual, expectedError)
+    return toCustomMatcherResult(assertionErrors, 'StreamrClientErrors are equal')
+}
+
+const createAssertionErrors = (
+    actualError: unknown,
+    expectedError: PartialStreamrClientError
+): string[] => {
+    const assertionErrors: string[] = []
     if (!(actualError instanceof StreamrClientError)) {
-        messages.push(formErrorMessage('Class name', 'StreamrClientError', actualError.constructor.name))
+        const received = isObject(actualError) ? actualError.constructor.name : actualError
+        assertionErrors.push(`Not an instance of StreamrClientError:\nReceived: ${printReceived(received)}`)
     } else {
         if (actualError.code !== expectedError.code) {
-            messages.push(formErrorMessage('StreamrClientError.code', expectedError.code, actualError.code))
+            assertionErrors.push(formErrorMessage('code', expectedError.code, actualError.code))
         }
-        if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
-            messages.push(formErrorMessage('StreamrClientError.message', expectedError.message, actualError.message))
+        if (expectedError.message !== undefined) {
+            // similar matching logic as in https://jestjs.io/docs/expect#tothrowerror
+            const isMatch = (expectedError instanceof Error)
+                ? (actualError.message === expectedError.message)
+                : actualError.message.includes(expectedError.message)
+            if (!isMatch) {
+                assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
+            }
         }
     }
-    if (messages.length > 0) {
+    return assertionErrors
+}
+
+const toCustomMatcherResult = (assertionErrors: string[], inversionErrorMessage: string) => {
+    if (assertionErrors.length > 0) {
         return {
             pass: false,
-            message: () => messages.join('\n\n')
+            message: () => assertionErrors.join('\n\n')
         }
     } else {
         return {
             pass: true,
-            message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+            message: () => inversionErrorMessage
         }
     }
 }
 
 expect.extend({
-    toThrowStreamrError
+    toThrowStreamrClientError,
+    toEqualStreamrClientError
 })

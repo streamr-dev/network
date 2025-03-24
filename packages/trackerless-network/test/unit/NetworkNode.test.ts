@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
 import { Events } from '../../src/logic/ContentDeliveryManager'
-import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
@@ -33,10 +33,10 @@ describe('NetworkNode', () => {
         contentDeliveryManager.emit('newMessage', msg2)
         expect(onMessage.mock.calls[0][0]).toEqual(msg1)
         expect(onMessage.mock.calls[1][0]).toEqual(msg2)
-        expect(onMessage).toBeCalledTimes(2)
+        expect(onMessage).toHaveBeenCalledTimes(2)
 
         node.removeMessageListener(onMessage)
         contentDeliveryManager.emit('newMessage', createMessage(3))
-        expect(onMessage).toBeCalledTimes(2)
+        expect(onMessage).toHaveBeenCalledTimes(2)
     })
 })

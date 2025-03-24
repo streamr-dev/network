@@ -1,12 +1,13 @@
 import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toStreamID, toUserId, utf8ToBinary } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageRef } from '../../src/protocol/MessageRef'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
+import { StreamrClientError } from './../../src/StreamrClientError'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
@@ -28,7 +29,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
+                    toUserId('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -50,7 +51,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972170055,
                     0,
-                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
+                    toUserId('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     'vGDg4KzqASGpHCrG6Qao'
                 ),
                 prevMsgRef: new MessageRef(1704972169554, 0),
@@ -95,7 +96,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0xbd968096c7f0a363212e9bb524890ac1ea2c2af9'),
+                    toUserId('0xbd968096c7f0a363212e9bb524890ac1ea2c2af9'),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -118,7 +119,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972170055,
                     0,
-                    toEthereumAddress('0x0472476943d7570b368e2a02123321518568a66e'),
+                    toUserId('0x0472476943d7570b368e2a02123321518568a66e'),
                     'vGDg4KzqASGpHCrG6Qao'
                 ),
                 prevMsgRef: new MessageRef(1704972169554, 0),
@@ -147,7 +148,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    contractAddress,
+                    toUserId(contractAddress),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -155,7 +156,6 @@ describe('SignatureValidator', () => {
                 messageType: StreamMessageType.MESSAGE,
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                // eslint-disable-next-line max-len
                 signature: hexToBinary('aaaaaaaaaaaaaaaaaaaa'),
                 signatureType: SignatureType.ERC_1271
             })
@@ -173,8 +173,8 @@ describe('SignatureValidator', () => {
 
         it('not passing signature validation scenario', async () => {
             erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
-            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toEqual(
-                new Error('Signature validation failed')
+            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toThrowStreamrClientError(
+                new StreamrClientError('Signature validation failed', 'INVALID_SIGNATURE', message)
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
@@ -185,8 +185,8 @@ describe('SignatureValidator', () => {
 
         it('failing signature validation scenario', async () => {
             erc1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
-            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toEqual(
-                new Error('An error occurred during address recovery from signature: Error: random issue')
+            await expect(signatureValidator.assertSignatureIsValid(message)).rejects.toThrowStreamrClientError(
+                new StreamrClientError('An error occurred during address recovery from signature: Error: random issue', 'INVALID_SIGNATURE', message)
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),

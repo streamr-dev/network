@@ -1,21 +1,30 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { StreamrClient } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
+import omit from 'lodash/omit'
 
 interface Options extends BaseOptions {
     includePermissions: boolean
 }
 
+const withRenamedField = (obj: any, from: string, to: string) => {
+    return {
+        ...omit(obj, from),
+        [to]: obj[from]
+    }
+}
+
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     const stream = await client.getStream(streamId)
-    const obj: any = { id: stream.id, ...stream.getMetadata() }
+    const obj: any = { id: stream.id, ...await stream.getMetadata() }
     if (options.includePermissions) {
         const assigments = await stream.getPermissions()
         obj.permissions = assigments.map((assignment) => {
             return {
-                ...assignment,
+                ...withRenamedField(assignment, 'userId', 'user'),
                 permissions: assignment.permissions.map(getPermissionId)
             }
         })

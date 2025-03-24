@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { SimulatorConnector } from './SimulatorConnector'
 import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
@@ -90,7 +90,7 @@ class CloseOperation extends SimulatorOperation {
 export class Simulator {
     private stopped = false
     private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
-    private latencyTable?: Array<Array<number>>
+    private latencyTable?: number[][]
     private associations: Map<ConnectionID, Association> = new Map()
 
     private latencyType: LatencyType
@@ -191,7 +191,8 @@ export class Simulator {
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')
-            return operation.association.connectedCallback!('Target connector not found')
+            operation.association.connectedCallback!('Target connector not found')
+            return
         }
 
         target.handleIncomingConnection(operation.sourceConnection)
@@ -293,7 +294,7 @@ export class Simulator {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-        debugVars['simulatorHeapSize'] = this.operationQueue.size()
+        debugVars.simulatorHeapSize = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)
