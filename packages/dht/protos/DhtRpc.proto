@@ -315,3 +315,11 @@ message ExternalFetchDataRequest {
 message ExternalFetchDataResponse {
   repeated DataEntry entries = 1;
 }
+
+message ExternalFindClosestNodesRequest {
+  bytes nodeId = 1;
+}
+
+message ExternalFindClosestNodesResponse {
+  repeated PeerDescriptor closestNodes = 1;
+}

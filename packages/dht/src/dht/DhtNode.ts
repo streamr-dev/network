@@ -597,15 +597,29 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return executeDirectly()
     }
 
-    public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
+    public async deleteDataFromDht(key: DhtAddress, waitToCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
-            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitToCompletion)
         }
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
-        return result.closestNodes
+        return this.executeRecursiveOperation(
+            async () => {
+                const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
+                return result.closestNodes
+            },
+            (connectedEntryPoint) => this.findClosestNodesViaPeer(key, connectedEntryPoint)
+        )
+    }
+    private async findClosestNodesViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
+        return await rpcRemote.externalFindClosestNode(key)
     }
 
     public getTransport(): ITransport {

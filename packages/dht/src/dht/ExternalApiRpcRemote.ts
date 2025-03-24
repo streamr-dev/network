@@ -4,6 +4,7 @@ import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest, PeerDesc
 import { ExternalApiRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from './contact/RpcRemote'
 
+const DEFAULT_TIMEOUT = 10000
 export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
     async externalFetchData(key: DhtAddress): Promise<DataEntry[]> {
@@ -12,7 +13,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
         }
         const options = this.formDhtRpcOptions({
             // TODO use options option or named constant?
-            timeout: 10000
+            timeout: DEFAULT_TIMEOUT
         })
         try {
             const data = await this.getClient().externalFetchData(request, options)
@@ -29,11 +30,26 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
         }
         const options = this.formDhtRpcOptions({
             // TODO use options option or named constant?
-            timeout: 10000
+            timeout: DEFAULT_TIMEOUT
         })
         try {
             const response = await this.getClient().externalStoreData(request, options)
             return response.storers
+        } catch {
+            return []
+        }
+    }
+
+    async externalFindClosestNode(key: DhtAddress): Promise<PeerDescriptor[]> {
+        const request: ExternalStoreDataRequest= {
+            key: toDhtAddressRaw(key)
+        }
+        const option = this.formDhtRpcOptions({
+            timeout: DEFAULT_TIMEOUT
+        })
+        try {
+            const response = (await this.getClient().externalFindClosestNode(request, option)) as unknown as PeerDescriptor[]
+            return response
         } catch {
             return []
         }
