@@ -1,6 +1,6 @@
 import { hexToBinary, binaryToHex, wait } from "@streamr/utils"
 import { DhtNode } from "./dht/DhtNode"
-import { NodeType, RecursiveOperation } from "./proto/packages/dht/protos/DhtRpc"
+import { NodeType, RecursiveOperation } from "../generated/packages/dht/protos/DhtRpc"
 import { DhtAddress } from "./identifiers"
 
 // 63876bf3c80c636dec99b016709d0573caaf161c
