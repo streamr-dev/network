@@ -36,7 +36,7 @@ export const createSignaturePayload = (opts: {
             header,
             utf8ToBinary(request.requestId),
             request.recipientId,
-            request.rsaPublicKey,
+            request.publicKey,
             Buffer.concat(request.groupKeyIds.map((k) => utf8ToBinary(k)))
         ])
     } else if (opts.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {

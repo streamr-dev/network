@@ -84,7 +84,7 @@ export class PublisherKeyExchange {
     private async onMessage(request: StreamMessage): Promise<void> {
         if (OldGroupKeyRequest.is(request)) {
             try {
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
+                const { recipient, requestId, publicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
                 const responseType = await this.getResponseType(recipient)
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
@@ -99,7 +99,7 @@ export class PublisherKeyExchange {
                             responseType,
                             recipient,
                             request.getStreamPartID(),
-                            rsaPublicKey,
+                            publicKey,
                             request.getPublisherId(),
                             requestId
                         )
@@ -137,12 +137,12 @@ export class PublisherKeyExchange {
         responseType: ResponseType,
         publisherId: UserID,
         streamPartId: StreamPartID,
-        rsaPublicKey: string,
+        publicKey: string,
         recipientId: UserID,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, publicKey)
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({

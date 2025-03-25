@@ -95,13 +95,13 @@ export class SubscriberKeyExchange {
         groupKeyId: string,
         streamPartId: StreamPartID,
         publisherId: UserID,
-        rsaPublicKey: string,
+        publicKey: string,
         requestId: string
     ): Promise<StreamMessage> {
         const requestContent = new OldGroupKeyRequest({
             recipient: publisherId,
             requestId,
-            rsaPublicKey,
+            publicKey: publicKey,
             groupKeyIds: [groupKeyId],
         })
         const erc1271contract = this.subscriber.getERC1271ContractAddress(streamPartId)

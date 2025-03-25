@@ -9,7 +9,7 @@ export class GroupKeyRequestTranslator {
         const translated: NewGroupKeyRequest = {
             recipientId: toUserIdRaw(msg.recipient),
             requestId: msg.requestId,
-            rsaPublicKey: utf8ToBinary(msg.rsaPublicKey),
+            publicKey: utf8ToBinary(msg.publicKey),
             groupKeyIds: [...msg.groupKeyIds]
         }
         return translated
@@ -19,7 +19,7 @@ export class GroupKeyRequestTranslator {
         const translated = new OldGroupKeyRequest({
             recipient: toUserId(msg.recipientId),
             requestId: msg.requestId,
-            rsaPublicKey: binaryToUtf8(msg.rsaPublicKey),
+            publicKey: binaryToUtf8(msg.publicKey),
             groupKeyIds: msg.groupKeyIds
         })
         return translated

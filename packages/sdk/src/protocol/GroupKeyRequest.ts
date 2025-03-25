@@ -4,20 +4,20 @@ import { StreamMessage, StreamMessageType } from './StreamMessage'
 interface Options {
     requestId: string
     recipient: UserID
-    rsaPublicKey: string
+    publicKey: string
     groupKeyIds: string[]
 }
 
 export class GroupKeyRequest {
     readonly requestId: string
     readonly recipient: UserID
-    readonly rsaPublicKey: string
+    readonly publicKey: string
     readonly groupKeyIds: readonly string[]
 
-    constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
+    constructor({ requestId, recipient, publicKey, groupKeyIds }: Options) {
         this.requestId = requestId
         this.recipient = recipient
-        this.rsaPublicKey = rsaPublicKey
+        this.publicKey = publicKey
         this.groupKeyIds = groupKeyIds
     }
 

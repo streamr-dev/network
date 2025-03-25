@@ -79,7 +79,7 @@ describe('proxy group key exchange', () => {
                 groupKeyRequest: {
                     requestId: 'requestId',
                     recipientId: toUserIdRaw(publisherUserId),
-                    rsaPublicKey: new Uint8Array(),
+                    publicKey: new Uint8Array(),
                     groupKeyIds: ['mock']
                 }
             },

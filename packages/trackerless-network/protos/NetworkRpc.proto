@@ -86,7 +86,7 @@ message ContentMessage {
 message GroupKeyRequest {
   string requestId = 1;
   bytes recipientId = 2;
-  bytes rsaPublicKey = 3;
+  bytes publicKey = 3;
   repeated string groupKeyIds = 4;
 }
 

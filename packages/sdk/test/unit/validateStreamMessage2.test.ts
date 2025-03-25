@@ -116,7 +116,7 @@ describe('Validator2', () => {
         groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
             recipient: publisher,
-            rsaPublicKey: 'rsaPublicKey',
+            publicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
         }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
 

@@ -75,7 +75,7 @@ describe('SubscriberKeyExchange', () => {
         const request = convertBytesToGroupKeyRequest(message.content)
         expect(request.requestId).toBeString()
         expect(request.recipient).toEqualCaseInsensitive(publisherWallet.address)
-        expect(request.rsaPublicKey).toBeString()
+        expect(request.publicKey).toBeString()
         expect(request.groupKeyIds).toEqual(expectedRequestedKeyIds)
     }
 
