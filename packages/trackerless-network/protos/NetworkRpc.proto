@@ -56,6 +56,11 @@ enum EncryptionType {
   AES = 1;
 }
 
+enum AsymmetricEncryptionType {
+  RSA = 0;
+  ML_KEM = 1;
+}
+
 enum SignatureType {
   LEGACY_SECP256K1 = 0;
   SECP256K1 = 1;
@@ -88,12 +93,14 @@ message GroupKeyRequest {
   bytes recipientId = 2;
   bytes publicKey = 3;
   repeated string groupKeyIds = 4;
+  AsymmetricEncryptionType encryptionType = 5;
 }
 
 message GroupKeyResponse {
   string requestId = 1;
   bytes recipientId = 2;
   repeated GroupKey groupKeys = 3;
+  AsymmetricEncryptionType encryptionType = 4;
 }
 
 message GroupKey {

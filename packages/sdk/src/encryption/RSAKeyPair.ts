@@ -1,5 +1,7 @@
 import crypto from 'crypto'
 import { promisify } from 'util'
+import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
@@ -46,7 +48,7 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-export class RSAKeyPair {
+export class RSAKeyPair implements KeyExchangeKeyPair {
     // the keys are in PEM format
     private readonly privateKey: string
     private readonly publicKey: string
@@ -62,6 +64,10 @@ export class RSAKeyPair {
 
     getPrivateKey(): string {
         return this.privateKey
+    }
+
+    getEncryptionType(): AsymmetricEncryptionType {
+        return AsymmetricEncryptionType.RSA
     }
 
     static async create(keyLength: number): Promise<RSAKeyPair> {

@@ -1,5 +1,5 @@
 import { GroupKeyRequest as NewGroupKeyRequest } from '@streamr/trackerless-network'
-import { binaryToUtf8, toUserId, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
+import { binaryToUtf8, toUserId, toUserIdRaw } from '@streamr/utils'
 import { GroupKeyRequest as OldGroupKeyRequest } from './GroupKeyRequest'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -9,8 +9,9 @@ export class GroupKeyRequestTranslator {
         const translated: NewGroupKeyRequest = {
             recipientId: toUserIdRaw(msg.recipient),
             requestId: msg.requestId,
-            publicKey: utf8ToBinary(msg.publicKey),
-            groupKeyIds: [...msg.groupKeyIds]
+            publicKey: msg.publicKey,
+            groupKeyIds: [...msg.groupKeyIds],
+            encryptionType: msg.encryptionType,
         }
         return translated
     }
@@ -20,7 +21,8 @@ export class GroupKeyRequestTranslator {
             recipient: toUserId(msg.recipientId),
             requestId: msg.requestId,
             publicKey: binaryToUtf8(msg.publicKey),
-            groupKeyIds: msg.groupKeyIds
+            groupKeyIds: msg.groupKeyIds,
+            encryptionType: msg.encryptionType,
         })
         return translated
     }

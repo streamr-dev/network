@@ -81,11 +81,4 @@ export class GroupKey {
         )
     }
 
-    /** @internal */
-    static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
-        return new GroupKey(
-            encryptedKey.id,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
-        )
-    }
 }

@@ -350,6 +350,10 @@
                 "rsaKeyLength": {
                     "type": "number",
                     "default": 4096
+                },
+                "requireQuantumResistantKeyExchange": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "default": {}

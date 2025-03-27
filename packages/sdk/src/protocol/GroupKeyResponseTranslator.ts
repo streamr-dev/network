@@ -16,7 +16,8 @@ export class GroupKeyResponseTranslator {
         const translated: NewGroupKeyResponse = {
             recipientId: toUserIdRaw(msg.recipient),
             requestId: msg.requestId,
-            groupKeys
+            groupKeys,
+            encryptionType: msg.encryptionType
         }
         return translated
     }
@@ -29,7 +30,8 @@ export class GroupKeyResponseTranslator {
         return new OldGroupKeyResponse({
             requestId: msg.requestId,
             recipient: toUserId(msg.recipientId),
-            encryptedGroupKeys
+            encryptedGroupKeys,
+            encryptionType: msg.encryptionType,
         })
     }
 }

@@ -18,9 +18,10 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
-import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
+import { EncryptionUtil } from './EncryptionUtil'
+import { MLKEMKeyPair } from './MLKEMKeyPair'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -31,7 +32,7 @@ const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the num
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
 
-    private rsaKeyPair?: RSAKeyPair
+    private keyPair?: RSAKeyPair | MLKEMKeyPair
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
@@ -64,7 +65,11 @@ export class SubscriberKeyExchange {
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
+            if (config.encryption.requireQuantumResistantKeyExchange) {
+                this.keyPair = MLKEMKeyPair.create()
+            } else {
+                this.keyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
+            }
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
@@ -80,7 +85,6 @@ export class SubscriberKeyExchange {
             groupKeyId,
             streamPartId,
             publisherId,
-            this.rsaKeyPair!.getPublicKey(),
             requestId)
         await this.networkNodeFacade.broadcast(request)
         this.pendingRequests.add(requestId)
@@ -95,14 +99,14 @@ export class SubscriberKeyExchange {
         groupKeyId: string,
         streamPartId: StreamPartID,
         publisherId: UserID,
-        publicKey: string,
-        requestId: string
+        requestId: string,
     ): Promise<StreamMessage> {
         const requestContent = new OldGroupKeyRequest({
             recipient: publisherId,
             requestId,
-            publicKey: publicKey,
+            publicKey: this.keyPair!.getPublicKey(),
             groupKeyIds: [groupKeyId],
+            encryptionType: this.keyPair!.getEncryptionType(),
         })
         const erc1271contract = this.subscriber.getERC1271ContractAddress(streamPartId)
         return this.messageSigner.createSignedMessage({
@@ -124,14 +128,14 @@ export class SubscriberKeyExchange {
     private async onMessage(msg: StreamMessage): Promise<void> {
         if (OldGroupKeyResponse.is(msg)) {
             try {
-                const { requestId, recipient, encryptedGroupKeys } = convertBytesToGroupKeyResponse(msg.content)
+                const { requestId, recipient, encryptedGroupKeys, encryptionType } = convertBytesToGroupKeyResponse(msg.content)
                 if (await this.isAssignedToMe(msg.getStreamPartID(), recipient, requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
-                        const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.set(key.id, msg.getPublisherId(), key.data)
+                        const key = EncryptionUtil.decryptWithPrivateKey(encryptedKey.data, this.keyPair!.getPrivateKey(), encryptionType)
+                        await this.store.set(encryptedKey.id, msg.getPublisherId(), key)
                     }))
                 }
             } catch (err: any) {

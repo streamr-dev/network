@@ -355,6 +355,15 @@ export interface StreamrClientConfig {
          * requested via the standard Streamr key-exchange.
          */
         rsaKeyLength?: number
+
+        /**
+         * If true, ML-KEM-1024 will be used for key exchange instead of RSA.
+         * If true on subscribers, they will send key requests specifying an ML-KEM public key instead of an RSA one.
+         * If true on publishers, they will *only* respond to key requests specifying an ML-KEM public key.
+         * If false or undefined on publishers, they will respond to key requests with either RSA or ML-KEM
+         * depending on what the subscriber requests.
+         */
+        requireQuantumResistantKeyExchange?: boolean
     }
 
     contracts?: {
