@@ -570,7 +570,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.executeRecursiveOperation(
             async () => {
                 const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
-                return result.dataEntries ?? [] 
+                return result.dataEntries ?? [] // TODO is this fallback needed?
             },
             (connectedEntryPoint) => this.fetchDataFromDhtViaPeer(key, connectedEntryPoint)
         )
