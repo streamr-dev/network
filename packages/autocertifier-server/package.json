@@ -34,13 +34,13 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.758.0",
+    "@aws-sdk/client-route-53": "^3.777.0",
     "@streamr/autocertifier-client": "103.0.0-rc.0",
     "@streamr/dht": "103.0.0-rc.0",
     "@streamr/proto-rpc": "103.0.0-rc.0",
     "@streamr/utils": "103.0.0-rc.0",
     "acme-client": "^5.4.0",
-    "body-parser": "^1.20.3",
+    "body-parser": "^2.2.0",
     "dns2": "^2.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
