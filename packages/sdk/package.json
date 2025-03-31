@@ -89,7 +89,7 @@
     "@babel/runtime-corejs3": "^7.26.7",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/config": "^5.5.1",
+    "@streamr/config": "^5.5.2",
     "@streamr/dht": "103.0.0-rc.0",
     "@streamr/proto-rpc": "103.0.0-rc.0",
     "@streamr/trackerless-network": "103.0.0-rc.0",
