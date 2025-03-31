@@ -1,8 +1,7 @@
-import { AsymmetricEncryptionType } from "@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc"
-import { KeyLike } from "crypto"
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
 
 export interface KeyExchangeKeyPair {
-    getPublicKey(): KeyLike
-    getPrivateKey(): KeyLike
+    getPublicKey(): Uint8Array
+    getPrivateKey(): Uint8Array
     getEncryptionType(): AsymmetricEncryptionType
 }

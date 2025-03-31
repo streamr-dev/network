@@ -1,5 +1,5 @@
 import { binaryToHex, binaryToUtf8 } from '@streamr/utils'
-import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
 import { EncryptionType } from '../protocol/StreamMessage'

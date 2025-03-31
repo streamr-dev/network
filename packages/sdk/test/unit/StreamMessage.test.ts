@@ -1,6 +1,5 @@
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
-import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
 import { MessageRef } from '../../src/protocol/MessageRef'
 import {
@@ -16,7 +15,7 @@ const content = {
     hello: 'world',
 }
 
-const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
+const newGroupKey = { id: 'groupKeyId', data: hexToBinary('1234') }
 const signature = hexToBinary('0x123123')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
@@ -226,7 +225,7 @@ describe('StreamMessage', () => {
                     signatureType: SignatureType.SECP256K1,
                     signature,
                     groupKeyId: 'foo',
-                    newGroupKey: new EncryptedGroupKey('bar', new Uint8Array([1, 2, 3])),
+                    newGroupKey: { id: 'bar', data: new Uint8Array([1, 2, 3]) },
                     prevMsgRef: new MessageRef(1564046332168, 5),
                 })
                 const copyWithFieldsNullified = new StreamMessage({

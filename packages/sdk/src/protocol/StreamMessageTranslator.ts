@@ -1,7 +1,7 @@
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
-    GroupKey as NewGroupKey,
+    EncryptedGroupKey,
     GroupKeyRequest as NewGroupKeyRequest,
     GroupKeyResponse as NewGroupKeyResponse,
     MessageID as NewMessageID,
@@ -10,7 +10,6 @@ import {
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
 import { StreamID, toUserId, toUserIdRaw } from '@streamr/utils'
-import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID as OldMessageID } from './MessageID'
 import { MessageRef as OldMessageRef } from './MessageRef'
 import {
@@ -91,7 +90,7 @@ export class StreamMessageTranslator {
         }
         let body: NewStreamMessage['body']
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            let newGroupKey: NewGroupKey | undefined = undefined
+            let newGroupKey: EncryptedGroupKey | undefined = undefined
             if (msg.newGroupKey) {
                 newGroupKey = {
                     id: msg.newGroupKey.id,
@@ -136,19 +135,14 @@ export class StreamMessageTranslator {
         let content: Uint8Array
         let contentType: OldContentType = OldContentType.BINARY
         let encryptionType: OldEncryptionType = OldEncryptionType.NONE
-        let newGroupKey: OldEncryptedGroupKey | undefined = undefined
+        let newGroupKey: EncryptedGroupKey | undefined = undefined
         let groupKeyId: string | undefined = undefined
         if (msg.body.oneofKind === 'contentMessage') {
             messageType = OldStreamMessageType.MESSAGE
             content = msg.body.contentMessage.content
             contentType = newToOldContentType(msg.body.contentMessage.contentType)
             encryptionType = newToOldEncryptionType(msg.body.contentMessage.encryptionType)
-            if (msg.body.contentMessage.newGroupKey) {
-                newGroupKey = new OldEncryptedGroupKey(
-                    msg.body.contentMessage.newGroupKey.id,
-                    msg.body.contentMessage.newGroupKey.data
-                )
-            }
+            newGroupKey = msg.body.contentMessage.newGroupKey
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST

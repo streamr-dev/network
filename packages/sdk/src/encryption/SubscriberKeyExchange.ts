@@ -1,15 +1,12 @@
-import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { GroupKeyRequest as OldGroupKeyRequest } from '../protocol/GroupKeyRequest'
-import { GroupKeyResponse as OldGroupKeyResponse } from '../protocol/GroupKeyResponse'
 import { MessageID } from '../protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
-import { convertBytesToGroupKeyResponse, convertGroupKeyRequestToBytes } from '../protocol/oldStreamMessageBinaryUtils'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -22,6 +19,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EncryptionUtil } from './EncryptionUtil'
 import { MLKEMKeyPair } from './MLKEMKeyPair'
+import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -101,13 +99,13 @@ export class SubscriberKeyExchange {
         publisherId: UserID,
         requestId: string,
     ): Promise<StreamMessage> {
-        const requestContent = new OldGroupKeyRequest({
-            recipient: publisherId,
+        const requestContent: GroupKeyRequest = {
+            recipientId: toUserIdRaw(publisherId),
             requestId,
             publicKey: this.keyPair!.getPublicKey(),
             groupKeyIds: [groupKeyId],
             encryptionType: this.keyPair!.getEncryptionType(),
-        })
+        }
         const erc1271contract = this.subscriber.getERC1271ContractAddress(streamPartId)
         return this.messageSigner.createSignedMessage({
             messageId: new MessageID(
@@ -118,7 +116,7 @@ export class SubscriberKeyExchange {
                 erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
-            content: convertGroupKeyRequestToBytes(requestContent),
+            content: GroupKeyRequest.toBinary(requestContent),
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
@@ -126,10 +124,12 @@ export class SubscriberKeyExchange {
     }
 
     private async onMessage(msg: StreamMessage): Promise<void> {
-        if (OldGroupKeyResponse.is(msg)) {
+        if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             try {
-                const { requestId, recipient, encryptedGroupKeys, encryptionType } = convertBytesToGroupKeyResponse(msg.content)
-                if (await this.isAssignedToMe(msg.getStreamPartID(), recipient, requestId)) {
+                const { requestId, recipientId, groupKeys: encryptedGroupKeys, encryptionType } = GroupKeyResponse.fromBinary(msg.content)
+                const recipientUserId = toUserId(recipientId)
+
+                if (await this.isAssignedToMe(msg.getStreamPartID(), recipientUserId, requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)

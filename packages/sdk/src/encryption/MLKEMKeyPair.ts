@@ -1,6 +1,6 @@
-import { ml_kem1024 } from "@noble/post-quantum/ml-kem"
-import { KeyExchangeKeyPair } from "./KeyExchangeKeyPair"
-import { AsymmetricEncryptionType } from "@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc"
+import { ml_kem1024 } from '@noble/post-quantum/ml-kem'
+import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
 
 export class MLKEMKeyPair implements KeyExchangeKeyPair {
     private readonly privateKey: Buffer
@@ -19,6 +19,7 @@ export class MLKEMKeyPair implements KeyExchangeKeyPair {
         return this.privateKey
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getEncryptionType(): AsymmetricEncryptionType {
         return AsymmetricEncryptionType.ML_KEM
     }

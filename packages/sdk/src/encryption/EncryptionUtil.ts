@@ -1,11 +1,11 @@
 import crypto, { CipherKey } from 'crypto'
-import { ml_kem1024 } from '@noble/post-quantum/ml-kem';
-import { randomBytes } from '@noble/post-quantum/utils';
+import { ml_kem1024 } from '@noble/post-quantum/ml-kem'
+import { randomBytes } from '@noble/post-quantum/utils'
 import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
-import { AsymmetricEncryptionType } from '@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc';
-import { hexToBinary } from '@streamr/utils';
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
+import { binaryToUtf8 } from '@streamr/utils'
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 
@@ -18,7 +18,7 @@ export class EncryptionUtil {
     /**
      * Generic utility functions
      */
-    static encryptForPublicKey(plaintext: Uint8Array, publicKey: crypto.KeyLike, type: AsymmetricEncryptionType): Buffer {
+    static encryptForPublicKey(plaintext: Uint8Array, publicKey: Uint8Array, type: AsymmetricEncryptionType): Buffer {
         if (type === AsymmetricEncryptionType.ML_KEM) {
             return this.encryptWithMLKEMPublicKey(plaintext, publicKey)
         }
@@ -28,7 +28,7 @@ export class EncryptionUtil {
         throw new Error(`Unexpected GroupKeyEncryptionType: ${type}`)
     }
 
-    static decryptWithPrivateKey(cipher: Uint8Array, privateKey: crypto.KeyLike, type: AsymmetricEncryptionType): Buffer {
+    static decryptWithPrivateKey(cipher: Uint8Array, privateKey: Uint8Array, type: AsymmetricEncryptionType): Buffer {
         if (type === AsymmetricEncryptionType.ML_KEM) {
             return this.decryptWithMLKEMPrivateKey(cipher, privateKey)
         }
@@ -41,41 +41,45 @@ export class EncryptionUtil {
     /**
      * RSA
      */
-    private static validateRSAPublicKey(publicKey: crypto.KeyLike): void | never {
-        const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
-        if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
+    private static toRSAPublicKeyString(publicKey: Uint8Array): string {
+        // RSA publicKey passed around in string format for legacy reasons
+        const keyString = binaryToUtf8(publicKey)
+        if (!keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
-            throw new Error('"publicKey" must be a PKCS#8 RSA public key in the PEM format')
+            throw new Error('"publicKey" must be an RSA public key (SPKI) in PEM format, encoded in UTF-8')
         }
+        return keyString
     }
 
-    private static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): Buffer {
-        this.validateRSAPublicKey(publicKey)
-        const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
+    private static toRSAPrivateKeyString(privateKey: Uint8Array): string {
+        // RSA privateKey passed around in string format for legacy reasons
+        const keyString = binaryToUtf8(privateKey)
+        if (!keyString.startsWith('-----BEGIN PRIVATE KEY-----')
+            || !keyString.endsWith('-----END PRIVATE KEY-----\n')) {
+            throw new Error('"privateKey" must be a PKCS#8 RSA private key in PEM format, encoded in UTF-8')
+        }
+        return keyString
+    }
+
+    private static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Buffer {
+        const keyString = this.toRSAPublicKeyString(publicKey)
+        const ciphertextBuffer = crypto.publicEncrypt(keyString, plaintextBuffer)
         return ciphertextBuffer
     }
 
-    private static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: crypto.KeyLike): Buffer {
-        return crypto.privateDecrypt(privateKey, ciphertext)
+    private static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: Uint8Array): Buffer {
+        const keyString = this.toRSAPrivateKeyString(privateKey)
+        return crypto.privateDecrypt(keyString, ciphertext)
     }
 
     /**
      * ML-KEM
      */
-    private static MLKEMKeyToUint8Array(publicKey: crypto.KeyLike): Uint8Array {
-        if (Buffer.isBuffer(publicKey)) {
-            return publicKey
-        }
-        if (typeof publicKey === 'string') {
-            return hexToBinary(publicKey)
-        }
-        throw new Error(`ML-KEM publicKey is of unexpected type: ${publicKey.toString()}`)
-    }
 
-    private static encryptWithMLKEMPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): Buffer {
+    private static encryptWithMLKEMPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Buffer {
         // Encapsulate to get kemCipher and shared secret
         // The recipient will be able to derive sharedSecret using privateKey and kemCipher
-        const { cipherText: kemCipher, sharedSecret } = ml_kem1024.encapsulate(this.MLKEMKeyToUint8Array(publicKey));
+        const { cipherText: kemCipher, sharedSecret } = ml_kem1024.encapsulate(publicKey)
 
         if (kemCipher.length !== KEM_CIPHER_LENGTH_BYTES) {
             throw new Error(`Expected KEM cipher to be ${KEM_CIPHER_LENGTH_BYTES}, but it was ${kemCipher.length} bytes`)
@@ -84,29 +88,29 @@ export class EncryptionUtil {
         // Derive an AES wrapping key from the shared secret using HKDF
         // The recipient will be able to repeat this computation to derive the same key
         const kdfSalt = randomBytes(KDF_SALT_LENGTH_BYTES)
-        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32);
+        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32)
         
         // Encrypt plaintext with the AES wrapping key
         const aesEncryptedPlaintext = this.encryptWithAES(plaintextBuffer, Buffer.from(wrappingAESKey))
 
         // Concatenate the deliverables into a binary package
-        return Buffer.concat([kemCipher, kdfSalt, aesEncryptedPlaintext]);
+        return Buffer.concat([kemCipher, kdfSalt, aesEncryptedPlaintext])
     }
 
-    private static decryptWithMLKEMPrivateKey(cipherPackage: Uint8Array, privateKey: crypto.KeyLike): Buffer {
+    private static decryptWithMLKEMPrivateKey(cipherPackage: Uint8Array, privateKey: Uint8Array): Buffer {
         // Split the cipherPackage, see encryptWithMLKEMPublicKey how it's constructed
         let pos = 0
-        const kemCipher = cipherPackage.slice(0, KEM_CIPHER_LENGTH_BYTES);
+        const kemCipher = cipherPackage.slice(0, KEM_CIPHER_LENGTH_BYTES)
         pos += KEM_CIPHER_LENGTH_BYTES
-        const kdfSalt = cipherPackage.slice(pos, pos + KDF_SALT_LENGTH_BYTES);
+        const kdfSalt = cipherPackage.slice(pos, pos + KDF_SALT_LENGTH_BYTES)
         pos += KDF_SALT_LENGTH_BYTES
-        const aesEncryptedPlaintext = cipherPackage.slice(pos);
+        const aesEncryptedPlaintext = cipherPackage.slice(pos)
 
         // Derive the shared secret using the private key and kemCipher
-        const sharedSecret = ml_kem1024.decapsulate(kemCipher, this.MLKEMKeyToUint8Array(privateKey));
+        const sharedSecret = ml_kem1024.decapsulate(kemCipher, privateKey)
 
         // Derive the wrappingAESKey
-        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32);
+        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32)
 
         // Decrypt the aesEncryptedPlaintext
         return this.decryptWithAES(aesEncryptedPlaintext, Buffer.from(wrappingAESKey))

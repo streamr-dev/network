@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 export class GroupKeyError extends Error {
@@ -70,7 +70,10 @@ export class GroupKey {
 
     /** @internal */
     encryptNextGroupKey(nextGroupKey: GroupKey): EncryptedGroupKey {
-        return new EncryptedGroupKey(nextGroupKey.id, EncryptionUtil.encryptWithAES(nextGroupKey.data, this.data))
+        return {
+            id: nextGroupKey.id, 
+            data: EncryptionUtil.encryptWithAES(nextGroupKey.data, this.data)
+        }
     }
 
     /** @internal */

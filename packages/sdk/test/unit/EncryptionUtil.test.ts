@@ -4,11 +4,10 @@ import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encrypti
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { createMockMessage } from '../test-utils/utils'
-import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
-import { AsymmetricEncryptionType } from '@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc';
-import { RSAKeyPair } from '../../src/encryption/RSAKeyPair';
-import { MLKEMKeyPair } from '../../src/encryption/MLKEMKeyPair';
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
+import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
+import { MLKEMKeyPair } from '../../src/encryption/MLKEMKeyPair'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -85,8 +84,6 @@ describe('EncryptionUtil', () => {
             expect(cipher1).not.toStrictEqual(cipher2)
         })
     })
-
-
     
     describe('StreamMessage decryption', () => {
         it('passes the happy path', async () => {
@@ -115,7 +112,7 @@ describe('EncryptionUtil', () => {
             })
             const msg2 = new StreamMessage({
                 ...msg,
-                newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
+                newGroupKey: { id: 'mockId', data: hexToBinary('0x1234') }
             }) as StreamMessageAESEncrypted
             expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError(
                 new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', msg2)

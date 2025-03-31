@@ -1,7 +1,8 @@
 import crypto from 'crypto'
 import { promisify } from 'util'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
-import { AsymmetricEncryptionType } from '@streamr/trackerless-network/dist/generated/packages/trackerless-network/protos/NetworkRpc'
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
+import { utf8ToBinary } from '@streamr/utils'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
@@ -58,14 +59,17 @@ export class RSAKeyPair implements KeyExchangeKeyPair {
         this.publicKey = publicKey
     }
 
-    getPublicKey(): string {
-        return this.publicKey
+    getPublicKey(): Uint8Array {
+        // Note: the public key is passed around as an utf-8 encoded string for some legacy reasons
+        return utf8ToBinary(this.publicKey)
     }
 
-    getPrivateKey(): string {
-        return this.privateKey
+    getPrivateKey(): Uint8Array {
+        // Note: the public key is passed around as an utf-8 encoded string for some legacy reasons
+        return utf8ToBinary(this.privateKey)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getEncryptionType(): AsymmetricEncryptionType {
         return AsymmetricEncryptionType.RSA
     }
