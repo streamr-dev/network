@@ -134,7 +134,7 @@ export class SubscriberKeyExchange {
                     this.pendingRequests.delete(requestId)
                     await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
-                        const key = EncryptionUtil.decryptWithPrivateKey(encryptedKey.data, this.keyPair!.getPrivateKey(), encryptionType)
+                        const key = await EncryptionUtil.decryptWithPrivateKey(encryptedKey.data, this.keyPair!.getPrivateKey(), encryptionType)
                         await this.store.set(encryptedKey.id, msg.getPublisherId(), key)
                     }))
                 }

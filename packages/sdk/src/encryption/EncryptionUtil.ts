@@ -6,6 +6,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
 import { binaryToUtf8 } from '@streamr/utils'
+import { getSubtle } from '../utils/crossPlatformCrypto'
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 
@@ -18,7 +19,7 @@ export class EncryptionUtil {
     /**
      * Generic utility functions
      */
-    static encryptForPublicKey(plaintext: Uint8Array, publicKey: Uint8Array, type: AsymmetricEncryptionType): Buffer {
+    static async encryptForPublicKey(plaintext: Uint8Array, publicKey: Uint8Array, type: AsymmetricEncryptionType): Promise<Buffer> {
         if (type === AsymmetricEncryptionType.ML_KEM) {
             return this.encryptWithMLKEMPublicKey(plaintext, publicKey)
         }
@@ -28,7 +29,7 @@ export class EncryptionUtil {
         throw new Error(`Unexpected GroupKeyEncryptionType: ${type}`)
     }
 
-    static decryptWithPrivateKey(cipher: Uint8Array, privateKey: Uint8Array, type: AsymmetricEncryptionType): Buffer {
+    static async decryptWithPrivateKey(cipher: Uint8Array, privateKey: Uint8Array, type: AsymmetricEncryptionType): Promise<Buffer> {
         if (type === AsymmetricEncryptionType.ML_KEM) {
             return this.decryptWithMLKEMPrivateKey(cipher, privateKey)
         }
@@ -75,8 +76,34 @@ export class EncryptionUtil {
     /**
      * ML-KEM
      */
+    private static async deriveAESWrapperKey(sharedSecret: Uint8Array, kdfSalt: Uint8Array): Promise<Uint8Array> {
+        const subtle = getSubtle()
+        const keyMaterial = await subtle.importKey(
+            'raw',
+            sharedSecret,
+            { name: 'HKDF' },
+            false,
+            ['deriveKey']
+        )
+    
+        const derivedKey = await subtle.deriveKey(
+            {
+                name: 'HKDF',
+                hash: 'SHA-512',
+                salt: kdfSalt,
+                info: INFO
+            },
+            keyMaterial,
+            { name: 'AES-CTR', length: 256 },
+            true,
+            ['encrypt', 'decrypt']
+        )
+    
+        const exportedKey = await subtle.exportKey('raw', derivedKey)
+        return new Uint8Array(exportedKey)
+    }
 
-    private static encryptWithMLKEMPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Buffer {
+    private static async encryptWithMLKEMPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Promise<Buffer> {
         // Encapsulate to get kemCipher and shared secret
         // The recipient will be able to derive sharedSecret using privateKey and kemCipher
         const { cipherText: kemCipher, sharedSecret } = ml_kem1024.encapsulate(publicKey)
@@ -88,7 +115,7 @@ export class EncryptionUtil {
         // Derive an AES wrapping key from the shared secret using HKDF
         // The recipient will be able to repeat this computation to derive the same key
         const kdfSalt = randomBytes(KDF_SALT_LENGTH_BYTES)
-        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32)
+        const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
         
         // Encrypt plaintext with the AES wrapping key
         const aesEncryptedPlaintext = this.encryptWithAES(plaintextBuffer, Buffer.from(wrappingAESKey))
@@ -97,7 +124,7 @@ export class EncryptionUtil {
         return Buffer.concat([kemCipher, kdfSalt, aesEncryptedPlaintext])
     }
 
-    private static decryptWithMLKEMPrivateKey(cipherPackage: Uint8Array, privateKey: Uint8Array): Buffer {
+    private static async decryptWithMLKEMPrivateKey(cipherPackage: Uint8Array, privateKey: Uint8Array): Promise<Buffer> {
         // Split the cipherPackage, see encryptWithMLKEMPublicKey how it's constructed
         let pos = 0
         const kemCipher = cipherPackage.slice(0, KEM_CIPHER_LENGTH_BYTES)
@@ -110,7 +137,7 @@ export class EncryptionUtil {
         const sharedSecret = ml_kem1024.decapsulate(kemCipher, privateKey)
 
         // Derive the wrappingAESKey
-        const wrappingAESKey = crypto.hkdfSync('sha512', sharedSecret, kdfSalt, INFO, 32)
+        const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
 
         // Decrypt the aesEncryptedPlaintext
         return this.decryptWithAES(aesEncryptedPlaintext, Buffer.from(wrappingAESKey))

@@ -155,9 +155,9 @@ export class PublisherKeyExchange {
         requestId: string,
         keyEncryptionType: AsymmetricEncryptionType,
     ): Promise<StreamMessage> {
-        const encryptedGroupKeys: EncryptedGroupKey[] = await Promise.all(keys.map((key) => ({
+        const encryptedGroupKeys: EncryptedGroupKey[] = await Promise.all(keys.map(async (key) => ({
             id: key.id,
-            data: EncryptionUtil.encryptForPublicKey(key.data, publicKey, keyEncryptionType)
+            data: await EncryptionUtil.encryptForPublicKey(key.data, publicKey, keyEncryptionType)
         })))
         const responseContent: GroupKeyResponse = {
             recipientId: toUserIdRaw(recipientId),

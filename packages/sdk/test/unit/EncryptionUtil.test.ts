@@ -46,41 +46,43 @@ describe('EncryptionUtil', () => {
     describe('RSA', () => {
         it('returns a ciphertext which is different from the plaintext', async () => {
             const key = await RSAKeyPair.create(512)
-            const ciphertext = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
             expect(ciphertext).not.toStrictEqual(plaintext)
         })
 
         it('returns the initial plaintext after decrypting the ciphertext', async () => {
             const key = await RSAKeyPair.create(512)
-            const ciphertext = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
-            expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.RSA)).toStrictEqual(plaintext)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            expect(await EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.RSA)).toStrictEqual(plaintext)
         })
     
         it('produces different ciphertexts upon multiple encrypt() calls', async () => {
             const key = await RSAKeyPair.create(512)
-            const cipher1 = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
-            const cipher2 = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            const cipher1 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            const cipher2 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
             expect(cipher1).not.toStrictEqual(cipher2)
         })
     })
 
     describe('ML-KEM', () => {
-        it('returns a ciphertext which is different from the plaintext', () => {
+        it('returns a ciphertext which is different from the plaintext', async () => {
             const key = MLKEMKeyPair.create()
-            const ciphertext = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
             expect(ciphertext).not.toStrictEqual(plaintext)
         })
 
-        it('returns the initial plaintext after decrypting the ciphertext', () => {
+        it('returns the initial plaintext after decrypting the ciphertext', async () => {
             const key = MLKEMKeyPair.create()
-            const ciphertext = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
-            expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.ML_KEM)).toStrictEqual(plaintext)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            expect(await EncryptionUtil.decryptWithPrivateKey(
+                ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.ML_KEM
+            )).toStrictEqual(plaintext)
         })
     
-        it('produces different ciphertexts upon multiple encrypt() calls', () => {
+        it('produces different ciphertexts upon multiple encrypt() calls', async () => {
             const key = MLKEMKeyPair.create()
-            const cipher1 = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
-            const cipher2 = EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            const cipher1 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            const cipher2 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
             expect(cipher1).not.toStrictEqual(cipher2)
         })
     })

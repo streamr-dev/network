@@ -3,6 +3,7 @@ import { promisify } from 'util'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
 import { utf8ToBinary } from '@streamr/utils'
+import { getSubtle } from '../utils/crossPlatformCrypto'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
@@ -11,15 +12,6 @@ import { utf8ToBinary } from '@streamr/utils'
  * https://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding
  */
 export const MIN_KEY_LENGTH = 640
-
-function getSubtle(): crypto.webcrypto.SubtleCrypto {
-    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : crypto.webcrypto.subtle
-    if (!subtle) {
-        const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
-        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
-    }
-    return subtle
-}
 
 function ab2str(...args: any[]): string {
     // @ts-expect-error Uint8Array parameters
