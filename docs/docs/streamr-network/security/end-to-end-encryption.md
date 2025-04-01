@@ -19,13 +19,13 @@ The subscribers need the symmetric group key in order to decrypt the data. They 
 ## Quantum security
 As an experimental feature, Streamr Network allows quantum resistant cryptographic algorithms to be used instead of traditional ones where applicable. Here's an overview of supported algorithms with commentary from the quantum security point of view:
 - Data encryption: AES-256 (quantum resistant, used by default)
-- Key exchange: ML-KEM (quantum resistant, available via config option), RSA (not quantum resistant, currently used by default)
+- Key exchange: ML-KEM-1024 (quantum resistant, available via config option), RSA (not quantum resistant, currently used by default)
 - Signatures: ECDSA with secp256k1 curve (not quantum resistant, used by default). Quantum resistant alternatives coming soon
 
 ## Quantum resistant key exchange
-The ML-KEM based key exchange works as follows. As ML-KEM can only be used to generate a shared secret between the publisher and subscriber, by itself it's not sufficient to allow an arbitrary key to be transferred from the publisher to a subscriber. Therefore, the ML-KEM shared secret is used to derive an AES-256 'wrapper' key using HKDF. The wrapper key is obtained by both the publisher and subscriber by repeating the same key derivation starting with the shared secret. The wrapper key is used to encrypt and decrypt the actual data encryption key, which is the key being exchanged.
+The ML-KEM-1024 based key exchange works as follows. As ML-KEM can only be used to generate a shared secret between the publisher and subscriber, by itself it's not sufficient to allow an arbitrary key to be transferred from the publisher to a subscriber. Therefore, the ML-KEM shared secret is used to derive an AES-256 'wrapper' key using HKDF. The wrapper key is obtained by both the publisher and subscriber by repeating the same key derivation starting with the shared secret. The wrapper key is used to encrypt and decrypt the actual data encryption key, which is the key being exchanged. All algorithms involved in this procedure are considered quantum resistant, therefore making the entirety of the key exchange quantum resistant.
 
-To start using the quantum resistant key exchange using ML-KEM, pass the following configuration to `StreamrClient` on *subscribers*:
+To start using the ML-KEM based key exchange, pass the following configuration to `StreamrClient` on *subscribers*:
 
 ```
 const streamr = new StreamrClient({
