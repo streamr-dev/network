@@ -6,7 +6,8 @@ import {
     waitForEvent3
 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ProxyDirection, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { AsymmetricEncryptionType, ProxyDirection, 
+    SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
@@ -80,7 +81,8 @@ describe('proxy group key exchange', () => {
                     requestId: 'requestId',
                     recipientId: toUserIdRaw(publisherUserId),
                     publicKey: new Uint8Array(),
-                    groupKeyIds: ['mock']
+                    groupKeyIds: ['mock'],
+                    encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
             signatureType: SignatureType.SECP256K1,
@@ -111,7 +113,8 @@ describe('proxy group key exchange', () => {
                 groupKeyResponse: {
                     requestId: 'requestId',
                     recipientId: toUserIdRaw(publisherUserId),
-                    groupKeys: []
+                    groupKeys: [],
+                    encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
             signatureType: SignatureType.SECP256K1,
