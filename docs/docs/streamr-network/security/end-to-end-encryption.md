@@ -22,6 +22,9 @@ As an experimental feature, Streamr Network allows quantum resistant cryptograph
 - Key exchange: ML-KEM (quantum resistant, available via config option), RSA (not quantum resistant, currently used by default)
 - Signatures: ECDSA with secp256k1 curve (not quantum resistant, used by default). Quantum resistant alternatives coming soon
 
+## Quantum resistant key exchange
+The ML-KEM based key exchange works as follows. As ML-KEM can only be used to generate a shared secret between the publisher and subscriber, by itself it's not sufficient to allow an arbitrary key to be transferred from the publisher to a subscriber. Therefore, the ML-KEM shared secret is used to derive an AES-256 'wrapper' key using HKDF. The wrapper key is obtained by both the publisher and subscriber by repeating the same key derivation starting with the shared secret. The wrapper key is used to encrypt and decrypt the actual data encryption key, which is the key being exchanged.
+
 To start using the quantum resistant key exchange using ML-KEM, pass the following configuration to `StreamrClient` on *subscribers*:
 
 ```
