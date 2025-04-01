@@ -8,6 +8,7 @@ export interface Options {
     privateKey?: string
     config?: string
     env?: EnvironmentId
+    quantum?: boolean
 }
 
 export const createCommand = (): commander.Command => {
@@ -34,6 +35,7 @@ export const createClientCommand = (
         .option('--config <file>', 'read connection and authentication settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
             createFnParseEnum('env', ENVIRONMENT_IDS))
+        .option('--quantum', 'use and require quantum secure algorithms where available')
         .action(async (...args: any[]) => {
             const commandOptions = args[args.length - 1].opts()
             try {
