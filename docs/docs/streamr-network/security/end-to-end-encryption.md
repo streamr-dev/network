@@ -5,12 +5,35 @@ sidebar_position: 3
 # End-to-end encryption
 Confidentiality of events published on a stream can be guaranteed with end-to-end encryption. The publisher generates a AES-256 symmetric encryption key and encrypts the messages before publishing them to the network. As the publisher fully controls who can access their data, they are also responsible for communicating the key to subscribers - usually via the key exchange mechanism described below.
 
+The following algorithms are currently available:
+- Message encryption: AES-256
+- Key exchange: RSA (default), ML-KEM (experimental)
+
 ## Key exchange
 The subscribers need the symmetric group key in order to decrypt the data. They automatically obtain this key by performing a key exchange with the publisher. The key exchange happens using asymmetric encryption:
 
--   Both the publisher and subscriber generate a temporary RSA key pair to be used for the key exchange
+-   Both the publisher and subscriber generate a temporary asymmetric key pair (RSA or ML-KEM, depending on configuration) to be used for the key exchange
 -   The subscriber sends a key request to the publisher, containing the subscriber's public key, signed with the subscriber's Ethereum key
--   The publisher checks from the on-chain access control registry whether that subscriber should be able to access the stream, and if it does, the publisher responds with the AES symmetric key, encrypted with the publisher's RSA key for the subscriber's RSA key, and signs with the publisher's Ethereum key.
+-   The publisher checks from the on-chain access control registry whether that subscriber should be able to access the stream, and if it does, the publisher responds by encrypting the AES symmetric key required to unlock the data. The key is encrypted with the publisher's temporary private key for the subscriber's temporary public key, and signed with the publisher's Ethereum key.
+
+## Quantum security
+As an experimental feature, Streamr Network allows quantum resistant cryptographic algorithms to be used instead of traditional ones where applicable. Here's an overview of supported algorithms with commentary from the quantum security point of view:
+- Data encryption: AES-256 (quantum resistant, used by default)
+- Key exchange: ML-KEM (quantum resistant, available via config option), RSA (not quantum resistant, currently used by default)
+- Signatures: ECDSA with secp256k1 curve (not quantum resistant, used by default). Quantum resistant alternatives coming soon
+
+To start using the quantum resistant key exchange using ML-KEM, pass the following configuration to `StreamrClient` on *subscribers*:
+
+```
+const streamr = new StreamrClient({
+    encryption: {
+        requireQuantumResistantKeyExchange: true
+    },
+    // ...
+})
+```
+
+Publishers will automatically respond to key requests based on what algorithm the subscriber requests, so configuring publishers with the above is not necessary. However, if you do set the above config on publishers, they will *only* respond to key requests using ML-KEM, and will ignore requests for RSA. Note that both publishers and subscribers need to have a recent version of the Streamr libraries to use the quantum secure key exchange.
 
 ## Publisher liveness
 To perform the key exchange with the subscribers, the publisher must be online and present in the Network. As the Streamr Network deals with real-time messages, publishers are often constantly online. However, it may happen that the publisher has disappeared since publishing the data, making those messages inaccessible to subscribers who have yet to receive the key. This is a consequence of the data publisher being in full control of who can access their data on the Network.
