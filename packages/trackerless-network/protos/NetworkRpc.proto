@@ -57,7 +57,7 @@ enum EncryptionType {
 }
 
 enum AsymmetricEncryptionType {
-  RSA = 0;
+  RSA = 0; // default
   ML_KEM = 1;
 }
 
