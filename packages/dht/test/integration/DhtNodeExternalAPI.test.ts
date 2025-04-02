@@ -44,5 +44,11 @@ describe('DhtNodeExternalApi', () => {
         expectEqualData(foundData[0], entry)
         expect(toDhtAddress(foundData[0].creator)).toEqual(toNodeId(remote.getLocalPeerDescriptor()))
     })
+
+    it('external find closet nodes happy path', async () => {
+        const nodeId = remote.getNodeId()
+        const closestNodes = await remote.findClosestNodesFromDht(nodeId)
+        expect(toDhtAddress(closestNodes[0].nodeId)).toEqual(nodeId)
+    })
   
 })
