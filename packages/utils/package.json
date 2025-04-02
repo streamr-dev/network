@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "103.0.0-rc.0",
+  "version": "103.0.0-rc.1",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -9,6 +9,12 @@
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json",

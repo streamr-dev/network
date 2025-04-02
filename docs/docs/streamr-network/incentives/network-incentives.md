@@ -92,7 +92,7 @@ There are two DATA token flow processes in the normal operation of Streamr token
 
 Staking process where Operators stake to earn from Sponsorships:
 - Operators send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
-- Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`
+- Sponsors send DATA tokens to the Sponsorship contract by calling the `sponsor` method, or `transferAndCall`
   - simply using `transfer` is not recommended, since the system will lose track of who funded the Sponsorship
 - Every second, the remaining sponsorship is allocated to the Operators in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy
 - Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called
