@@ -1,6 +1,6 @@
 import { DhtAddress, toDhtAddressRaw } from '../identifiers'
 import { Any } from '../../generated/google/protobuf/any'
-import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { DataEntry, ExternalFetchDataRequest, ExternalFindClosestNodesRequest, ExternalStoreDataRequest, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from './contact/RpcRemote'
 
@@ -41,15 +41,15 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
     }
 
     async externalFindClosestNode(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const request: ExternalStoreDataRequest= {
-            key: toDhtAddressRaw(key)
+        const request: ExternalFindClosestNodesRequest = {
+            nodeId: toDhtAddressRaw(key)
         }
-        const option = this.formDhtRpcOptions({
+        const options = this.formDhtRpcOptions({
             timeout: DEFAULT_TIMEOUT
         })
         try {
-            const response = (await this.getClient().externalFindClosestNode(request, option)) as unknown as PeerDescriptor[]
-            return response
+            const response = await this.getClient().externalFindClosestNodes(request, options)
+            return response.closestNodes
         } catch {
             return []
         }
