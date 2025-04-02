@@ -20,6 +20,7 @@ import { RSAKeyPair } from './RSAKeyPair'
 import { EncryptionUtil } from './EncryptionUtil'
 import { MLKEMKeyPair } from './MLKEMKeyPair'
 import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -30,7 +31,7 @@ const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the num
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
 
-    private keyPair?: RSAKeyPair | MLKEMKeyPair
+    private keyPair?: KeyExchangeKeyPair
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry

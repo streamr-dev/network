@@ -26,7 +26,7 @@ export class EncryptionUtil {
         if (type === AsymmetricEncryptionType.RSA) {
             return this.encryptWithRSAPublicKey(plaintext, publicKey)
         }
-        throw new Error(`Unexpected GroupKeyEncryptionType: ${type}`)
+        throw new Error(`Unexpected encryption type: ${type}`)
     }
 
     static async decryptWithPrivateKey(cipher: Uint8Array, privateKey: Uint8Array, type: AsymmetricEncryptionType): Promise<Buffer> {
@@ -36,7 +36,7 @@ export class EncryptionUtil {
         if (type === AsymmetricEncryptionType.RSA) {
             return this.decryptWithRSAPrivateKey(cipher, privateKey)
         }
-        throw new Error(`Unexpected GroupKeyEncryptionType: ${type}`)
+        throw new Error(`Unexpected encryption type: ${type}`)
     }
 
     /**

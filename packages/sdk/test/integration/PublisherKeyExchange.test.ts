@@ -1,7 +1,6 @@
 import 'reflect-metadata'
-
 import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toUserId, UserID } from '@streamr/utils'
+import { EthereumAddress, toUserId, UserID, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -176,7 +175,7 @@ describe('PublisherKeyExchange', () => {
             await triggerGroupKeyRequest(publisherClient, stream)
     
             // Due to the above, rely on time - not foolproof
-            await new Promise((resolve) => setTimeout(resolve, 3000))
+            await wait(3000)
 
             // Check that no response was sent
             const sentMessages = environment.getNetwork().getSentMessages({

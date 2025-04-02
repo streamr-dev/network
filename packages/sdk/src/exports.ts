@@ -52,7 +52,7 @@ export { SignerWithProvider } from './Authentication'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'
-export { ProxyDirection } from '@streamr/trackerless-network'
+export { EncryptedGroupKey, ProxyDirection } from '@streamr/trackerless-network'
 export type { 
     StreamID,
     StreamPartID,
