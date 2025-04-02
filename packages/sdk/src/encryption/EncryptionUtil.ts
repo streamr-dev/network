@@ -17,7 +17,7 @@ const KDF_SALT_LENGTH_BYTES = 64
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
     /**
-     * Generic utility functions
+     * Public API for asymmetric encryption, unified interface across the different AsymmetricEncryptionTypes
      */
     static async encryptForPublicKey(plaintext: Uint8Array, publicKey: Uint8Array, type: AsymmetricEncryptionType): Promise<Buffer> {
         if (type === AsymmetricEncryptionType.ML_KEM) {

@@ -85,7 +85,7 @@ message ContentMessage {
   ContentType contentType = 2;
   EncryptionType encryptionType = 3;
   optional string groupKeyId = 4;
-  optional GroupKey newGroupKey = 5;
+  optional EncryptedGroupKey newGroupKey = 5;
 }
 
 message GroupKeyRequest {
@@ -99,11 +99,11 @@ message GroupKeyRequest {
 message GroupKeyResponse {
   string requestId = 1;
   bytes recipientId = 2;
-  repeated GroupKey groupKeys = 3;
+  repeated EncryptedGroupKey groupKeys = 3;
   AsymmetricEncryptionType encryptionType = 4;
 }
 
-message GroupKey {
+message EncryptedGroupKey {
   string id = 1;
   bytes data = 2;
 }

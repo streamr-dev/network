@@ -5,7 +5,7 @@ export {
     AsymmetricEncryptionType,
     ContentType,
     EncryptionType,
-    GroupKey as EncryptedGroupKey,
+    EncryptedGroupKey,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
