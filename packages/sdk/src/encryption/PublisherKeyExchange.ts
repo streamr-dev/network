@@ -98,7 +98,8 @@ export class PublisherKeyExchange {
                 const responseType = await this.getResponseType(recipientUserId)
 
                 if (responseType !== ResponseType.NONE) {
-                    this.logger.debug('Handling group key request', { requestId, responseType })
+                    this.logger.debug('Handling group key request', 
+                        { requestId, responseType, keyEncryptionType: AsymmetricEncryptionType[keyEncryptionType] })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
                     const authenticatedUser = await this.authentication.getUserId()
                     const keys = without(

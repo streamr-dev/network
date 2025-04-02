@@ -19,7 +19,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EncryptionUtil } from './EncryptionUtil'
 import { MLKEMKeyPair } from './MLKEMKeyPair'
-import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -79,17 +79,18 @@ export class SubscriberKeyExchange {
     private async doRequestGroupKey(groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
-        const request = await this.createRequest(
+        const { message, request } = await this.createRequest(
             groupKeyId,
             streamPartId,
             publisherId,
             requestId)
-        await this.networkNodeFacade.broadcast(request)
+        await this.networkNodeFacade.broadcast(message)
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
             requestId,
-            publisherId
+            publisherId,
+            keyEncryptionType: AsymmetricEncryptionType[request.encryptionType]
         })
     }
 
@@ -98,8 +99,8 @@ export class SubscriberKeyExchange {
         streamPartId: StreamPartID,
         publisherId: UserID,
         requestId: string,
-    ): Promise<StreamMessage> {
-        const requestContent: GroupKeyRequest = {
+    ): Promise<{ message: StreamMessage, request: GroupKeyRequest }> {
+        const request: GroupKeyRequest = {
             recipientId: toUserIdRaw(publisherId),
             requestId,
             publicKey: this.keyPair!.getPublicKey(),
@@ -107,7 +108,7 @@ export class SubscriberKeyExchange {
             encryptionType: this.keyPair!.getEncryptionType(),
         }
         const erc1271contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-        return this.messageSigner.createSignedMessage({
+        const message = await this.messageSigner.createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -116,11 +117,13 @@ export class SubscriberKeyExchange {
                 erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
-            content: GroupKeyRequest.toBinary(requestContent),
+            content: GroupKeyRequest.toBinary(request),
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
         }, erc1271contract === undefined ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
+
+        return { message, request }
     }
 
     private async onMessage(msg: StreamMessage): Promise<void> {
