@@ -597,13 +597,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return executeDirectly()
     }
 
-<<<<<<< HEAD
-    public async deleteDataFromDht(key: DhtAddress, waitToCompletion: boolean): Promise<void> {
-=======
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
->>>>>>> main
         if (!this.abortController.signal.aborted) {
-            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitToCompletion)
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
