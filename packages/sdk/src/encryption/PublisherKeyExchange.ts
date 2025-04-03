@@ -2,20 +2,19 @@ import {
     Logger,
     StreamPartID,
     StreamPartIDUtils,
+    toUserId,
+    toUserIdRaw,
     UserID
 } from '@streamr/utils'
+import { AsymmetricEncryptionType, GroupKeyResponse, EncryptedGroupKey, GroupKeyRequest } from '@streamr/trackerless-network'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamrClientEventEmitter } from '../events'
-import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
-import { GroupKeyRequest as OldGroupKeyRequest } from '../protocol/GroupKeyRequest'
-import { GroupKeyResponse as OldGroupKeyResponse } from '../protocol/GroupKeyResponse'
 import { MessageID } from '../protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
-import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '../protocol/oldStreamMessageBinaryUtils'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -24,6 +23,7 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 /*
  * Sends group key responses
@@ -48,6 +48,7 @@ export class PublisherKeyExchange {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly erc1271Publishers = new Set<UserID>()
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -56,6 +57,7 @@ export class PublisherKeyExchange {
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -66,6 +68,7 @@ export class PublisherKeyExchange {
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
+        this.config = config
         networkNodeFacade.once('start', async () => {
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
@@ -82,26 +85,37 @@ export class PublisherKeyExchange {
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {
-        if (OldGroupKeyRequest.is(request)) {
+        if (request.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
-                const responseType = await this.getResponseType(recipient)
+                const { recipientId, requestId, publicKey, 
+                    groupKeyIds, encryptionType: keyEncryptionType } = GroupKeyRequest.fromBinary(request.content)
+                const recipientUserId = toUserId(recipientId)
+
+                if (this.config.encryption.requireQuantumResistantKeyExchange && keyEncryptionType === AsymmetricEncryptionType.RSA) {
+                    throw new Error(`Received key request for RSA, but quantum resistant crypto is required. Can't answer!`)
+                }
+
+                const responseType = await this.getResponseType(recipientUserId)
+
                 if (responseType !== ResponseType.NONE) {
-                    this.logger.debug('Handling group key request', { requestId, responseType })
+                    this.logger.debug('Handling group key request', 
+                        { requestId, responseType, keyEncryptionType: AsymmetricEncryptionType[keyEncryptionType] })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
                     const authenticatedUser = await this.authentication.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
+
                     if (keys.length > 0) {
                         const response = await this.createResponse(
                             keys,
                             responseType,
-                            recipient,
+                            recipientUserId,
                             request.getStreamPartID(),
-                            rsaPublicKey,
+                            publicKey,
                             request.getPublisherId(),
-                            requestId
+                            requestId,
+                            keyEncryptionType,
                         )
                         await this.networkNodeFacade.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
@@ -137,19 +151,21 @@ export class PublisherKeyExchange {
         responseType: ResponseType,
         publisherId: UserID,
         streamPartId: StreamPartID,
-        rsaPublicKey: string,
+        publicKey: Uint8Array,
         recipientId: UserID,
-        requestId: string
+        requestId: string,
+        keyEncryptionType: AsymmetricEncryptionType,
     ): Promise<StreamMessage> {
-        const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
-            return new EncryptedGroupKey(key.id, encryptedGroupKey)
-        }))
-        const responseContent = new OldGroupKeyResponse({
-            recipient: recipientId,
+        const encryptedGroupKeys: EncryptedGroupKey[] = await Promise.all(keys.map(async (key) => ({
+            id: key.id,
+            data: await EncryptionUtil.encryptForPublicKey(key.data, publicKey, keyEncryptionType)
+        })))
+        const responseContent: GroupKeyResponse = {
+            recipientId: toUserIdRaw(recipientId),
             requestId,
-            encryptedGroupKeys
-        })
+            groupKeys: encryptedGroupKeys,
+            encryptionType: keyEncryptionType,
+        }
         const response = this.messageSigner.createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
@@ -159,7 +175,7 @@ export class PublisherKeyExchange {
                 publisherId,
                 createRandomMsgChainId()
             ),
-            content: convertGroupKeyResponseToBytes(responseContent),
+            content: GroupKeyResponse.toBinary(responseContent),
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,

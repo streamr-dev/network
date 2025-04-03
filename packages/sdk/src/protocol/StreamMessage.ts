@@ -1,6 +1,6 @@
 import { StreamID, StreamPartID, UserID, binaryToUtf8 } from '@streamr/utils'
+import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import { StreamrClientError } from '../StreamrClientError'
-import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID } from './MessageID'
 import { MessageRef } from './MessageRef'
 import { ValidationError } from './ValidationError'

@@ -5,12 +5,16 @@ import { getConfig } from './config'
 
 export const getClientConfig = (commandOptions: Options, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
     const configFileJson = getConfig(commandOptions.config)?.client
-    const environmentOptions = { environment: commandOptions.env }
-    const authenticationOptions = (commandOptions.privateKey !== undefined) ? { auth: { privateKey: commandOptions.privateKey } } : undefined
+    const environmentOptions: StreamrClientConfig = { environment: commandOptions.env }
+    const authenticationOptions: StreamrClientConfig = 
+        (commandOptions.privateKey !== undefined) ? { auth: { privateKey: commandOptions.privateKey } } : {}
+    const encryptionOptions: StreamrClientConfig = 
+        (commandOptions.quantum === true) ? { encryption: { requireQuantumResistantKeyExchange: true } } : {}
     return merge(
         configFileJson,
         environmentOptions,
         authenticationOptions,
+        encryptionOptions,
         overridenOptions
     )
 }

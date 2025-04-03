@@ -1,27 +1,21 @@
 import 'reflect-metadata'
 
-import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { UserID, hexToBinary, toStreamID, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
+import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import {
-    convertGroupKeyRequestToBytes,
-    convertGroupKeyResponseToBytes
-} from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { MOCK_CONTENT, createRandomAuthentication } from '../test-utils/utils'
-import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
-import { GroupKeyRequest } from './../../src/protocol/GroupKeyRequest'
-import { GroupKeyResponse } from './../../src/protocol/GroupKeyResponse'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
-const groupKeyMessageToStreamMessage = async (
-    groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
+const groupKeyRequestToStreamMessage = async (
+    groupKeyRequest: GroupKeyRequest,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
     authentication: Authentication
@@ -30,12 +24,25 @@ const groupKeyMessageToStreamMessage = async (
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
-        content: groupKeyMessage instanceof GroupKeyRequest
-            ? convertGroupKeyRequestToBytes(groupKeyMessage)
-            : convertGroupKeyResponseToBytes(groupKeyMessage),
-        messageType: groupKeyMessage instanceof GroupKeyRequest
-            ? StreamMessageType.GROUP_KEY_REQUEST
-            : StreamMessageType.GROUP_KEY_RESPONSE,
+        content: GroupKeyRequest.toBinary(groupKeyRequest),
+        messageType: StreamMessageType.GROUP_KEY_REQUEST,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+    }, SignatureType.SECP256K1)
+}
+
+const groupKeyResponseToStreamMessage = async (
+    groupKeyResponse: GroupKeyResponse,
+    messageId: MessageID,
+    prevMsgRef: MessageRef | undefined,
+    authentication: Authentication
+): Promise<StreamMessage> => {
+    const messageSigner = new MessageSigner(authentication)
+    return messageSigner.createSignedMessage({
+        messageId,
+        prevMsgRef,
+        content: GroupKeyResponse.toBinary(groupKeyResponse),
+        messageType: StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
     }, SignatureType.SECP256K1)
@@ -97,7 +104,7 @@ describe('Validator2', () => {
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
-            newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
+            newGroupKey: { id: 'groupKeyId', data: hexToBinary('0x1111') },
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
         }, SignatureType.SECP256K1)
@@ -113,21 +120,23 @@ describe('Validator2', () => {
         }, SignatureType.SECP256K1)
         expect(msg.signature).not.toEqualBinary(msgWithPrevMsgRef.signature)
 
-        groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({
+        groupKeyRequest = await groupKeyRequestToStreamMessage({
             requestId: 'requestId',
-            recipient: publisher,
-            rsaPublicKey: 'rsaPublicKey',
-            groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
+            recipientId: toUserIdRaw(publisher),
+            publicKey: Buffer.from('rsaPublicKey', 'utf8'),
+            groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
+            encryptionType: AsymmetricEncryptionType.RSA,
+        }, new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
 
-        groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
+        groupKeyResponse = await groupKeyResponseToStreamMessage({
             requestId: 'requestId',
-            recipient: subscriber,
-            encryptedGroupKeys: [
-                new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
-                new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
+            recipientId: toUserIdRaw(subscriber),
+            groupKeys: [
+                { id: 'groupKeyId1', data: hexToBinary('0x1111') },
+                { id: 'groupKeyId2', data: hexToBinary('0x2222') },
             ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
+            encryptionType: AsymmetricEncryptionType.RSA,
+        }, new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
     })
 
     describe('validate(unknown message type)', () => {
@@ -175,7 +184,7 @@ describe('Validator2', () => {
         it('rejects tampered newGroupKey', async () => {
             const invalidMsg = new StreamMessage({
                 ...msg,
-                newGroupKey: new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
+                newGroupKey: { id: 'foo', data: msgWithNewGroupKey.newGroupKey!.data }
             })
 
             await expect(getValidator().validate(invalidMsg)).rejects.toThrowStreamrClientError({

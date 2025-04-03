@@ -214,7 +214,8 @@ export const createGroupKeyManager = async (
             encryption: {
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50,
-                rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
+                rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!,
+                requireQuantumResistantKeyExchange: false,
             }
         },
         authentication ?? await createRandomAuthentication(),

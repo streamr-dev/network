@@ -7,11 +7,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessageType } from '../../src/protocol/StreamMessage'
-import { convertBytesToGroupKeyRequest } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
+import { GroupKeyRequest } from '@streamr/trackerless-network'
 
 /*
  * Subscriber fetches a historical message and can use the encryption key from the message
@@ -99,6 +99,6 @@ describe('resend and subscribe', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
-        expect(convertBytesToGroupKeyRequest(groupKeyRequests[0].content).groupKeyIds).toEqual([groupKey.id])
+        expect(GroupKeyRequest.fromBinary(groupKeyRequests[0].content).groupKeyIds).toEqual([groupKey.id])
     })
 })

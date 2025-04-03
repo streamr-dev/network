@@ -1,11 +1,12 @@
 import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, toUserId, utf8ToBinary } from '@streamr/utils'
+import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
 import {

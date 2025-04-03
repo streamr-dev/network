@@ -1,5 +1,9 @@
 import crypto from 'crypto'
 import { promisify } from 'util'
+import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
+import { utf8ToBinary } from '@streamr/utils'
+import { getSubtle } from '../utils/crossPlatformCrypto'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
@@ -8,15 +12,6 @@ import { promisify } from 'util'
  * https://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding
  */
 export const MIN_KEY_LENGTH = 640
-
-function getSubtle(): crypto.webcrypto.SubtleCrypto {
-    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : crypto.webcrypto.subtle
-    if (!subtle) {
-        const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
-        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
-    }
-    return subtle
-}
 
 function ab2str(...args: any[]): string {
     // @ts-expect-error Uint8Array parameters
@@ -46,7 +41,7 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-export class RSAKeyPair {
+export class RSAKeyPair implements KeyExchangeKeyPair {
     // the keys are in PEM format
     private readonly privateKey: string
     private readonly publicKey: string
@@ -56,12 +51,19 @@ export class RSAKeyPair {
         this.publicKey = publicKey
     }
 
-    getPublicKey(): string {
-        return this.publicKey
+    getPublicKey(): Uint8Array {
+        // Note: the public key is passed around as an utf-8 encoded string for some legacy reasons
+        return utf8ToBinary(this.publicKey)
     }
 
-    getPrivateKey(): string {
-        return this.privateKey
+    getPrivateKey(): Uint8Array {
+        // Note: the public key is passed around as an utf-8 encoded string for some legacy reasons
+        return utf8ToBinary(this.privateKey)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getEncryptionType(): AsymmetricEncryptionType {
+        return AsymmetricEncryptionType.RSA
     }
 
     static async create(keyLength: number): Promise<RSAKeyPair> {

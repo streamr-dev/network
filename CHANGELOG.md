@@ -13,6 +13,7 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
+- Added support for quantum secure key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 
 #### Changed
 

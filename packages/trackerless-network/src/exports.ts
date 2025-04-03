@@ -2,9 +2,10 @@ export { NetworkNode, createNetworkNode } from './NetworkNode'
 export { NetworkOptions, NetworkStack } from './NetworkStack'
 export { ContentDeliveryManagerOptions, streamPartIdToDataKey } from './logic/ContentDeliveryManager'
 export {
+    AsymmetricEncryptionType,
     ContentType,
     EncryptionType,
-    GroupKey,
+    EncryptedGroupKey,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,

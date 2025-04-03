@@ -87,6 +87,7 @@
   "dependencies": {
     "@babel/runtime": "^7.26.7",
     "@babel/runtime-corejs3": "^7.26.7",
+    "@noble/post-quantum": "^0.4.0",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.5.2",

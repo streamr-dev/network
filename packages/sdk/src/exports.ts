@@ -52,7 +52,7 @@ export { SignerWithProvider } from './Authentication'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'
-export { ProxyDirection } from '@streamr/trackerless-network'
+export { EncryptedGroupKey, ProxyDirection } from '@streamr/trackerless-network'
 export type { 
     StreamID,
     StreamPartID,
@@ -68,7 +68,6 @@ export type {
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
 export type { UserID } from '@streamr/utils'
-export type { EncryptedGroupKey } from './protocol/EncryptedGroupKey'
 export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
 export {
