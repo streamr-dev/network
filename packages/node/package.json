@@ -37,7 +37,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
-    "@inquirer/prompts": "^7.3.3",
+    "@inquirer/prompts": "^7.4.0",
     "@streamr/config": "^5.5.2",
     "@streamr/dht": "103.0.0-rc.1",
     "@streamr/sdk": "103.0.0-rc.1",
@@ -52,7 +52,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
@@ -67,16 +67,16 @@
     "@streamr/network-contracts": "^8.2.0",
     "@streamr/test-utils": "103.0.0-rc.1",
     "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
+    "@types/express": "^5.0.1",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.16",
     "@types/merge2": "^1.4.4",
     "@types/qs": "^6.9.18",
     "@types/stream-to-array": "^2.3.3",
     "@types/supertest": "^6.0.2",
-    "@types/ws": "^8.18.0",
+    "@types/ws": "^8.18.1",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
-    "supertest": "^7.0.0"
+    "supertest": "^7.1.0"
   }
 }

@@ -41,6 +41,6 @@
   "devDependencies": {
     "@types/long-timeout": "^0.1.2",
     "@types/tar": "^6.1.11",
-    "express": "^4.21.2"
+    "express": "^5.1.0"
   }
 }
