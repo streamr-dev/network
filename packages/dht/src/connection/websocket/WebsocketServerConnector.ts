@@ -133,7 +133,7 @@ export class WebsocketServerConnector {
         if (this.ongoingConnectRequests.has(nodeId)) {
             const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
@@ -145,7 +145,7 @@ export class WebsocketServerConnector {
             const pendingConnection = new PendingConnection(remotePeerDescriptor)
             
             if (!isMaybeSupportedProtocolVersion(remoteProtocolVersion)) {
-                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_PROTOCOL_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.options.onNewConnection(pendingConnection)) {
