@@ -258,6 +258,8 @@ export class ProxyClient extends EventEmitter<Events> {
         }
     }
 
+    /* eslint-disable indent */
+    // Linting for indentation is broken in addManagedEventListener for some reason.
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
         addManagedEventListener<'disconnected', (node: PeerDescriptor) => void>(
