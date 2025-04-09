@@ -2,6 +2,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     Logger,
     MetricsContext,
+    addManagedEventListener,
     merge,
     scheduleAtInterval,
     until
@@ -262,7 +263,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.options.rpcRequestTimeout }
         )
 
-        this.transport.on('message', (message: Message) => this.handleMessageFromTransport(message))
+        addManagedEventListener<'message', (message: Message) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+            this.transport,
+            'message',
+            (message: Message) => this.handleMessageFromTransport(message),
+            this.abortController.signal
+        )
 
         this.initPeerManager()
 
@@ -381,23 +387,33 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 }
             }
         })
-        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.router!.onNodeConnected(peerDescriptor)
-            this.emit('connected', peerDescriptor)
-        })
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            const isControlLayerNode = (this.connectionLocker !== undefined)
-            if (isControlLayerNode) {
-                const nodeId = toNodeId(peerDescriptor)
-                if (gracefulLeave) {
-                    this.peerManager!.removeContact(nodeId)
-                } else {
-                    this.peerManager!.removeNeighbor(nodeId)
+        addManagedEventListener<'connected', (eerDescriptor: PeerDescriptor) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+            this.transport!,
+            'connected',
+            (peerDescriptor: PeerDescriptor) => {
+                this.router!.onNodeConnected(peerDescriptor)
+                this.emit('connected', peerDescriptor)
+            },
+            this.abortController.signal
+        )
+        addManagedEventListener<'disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+            this.transport!,
+            'disconnected',
+            (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+                const isControlLayerNode = (this.connectionLocker !== undefined)
+                if (isControlLayerNode) {
+                    const nodeId = toNodeId(peerDescriptor)
+                    if (gracefulLeave) {
+                        this.peerManager!.removeContact(nodeId)
+                    } else {
+                        this.peerManager!.removeNeighbor(nodeId)
+                    }
                 }
-            }
-            this.router!.onNodeDisconnected(peerDescriptor)
-            this.emit('disconnected', peerDescriptor, gracefulLeave)
-        })
+                this.router!.onNodeDisconnected(peerDescriptor)
+                this.emit('disconnected', peerDescriptor, gracefulLeave)
+            },
+            this.abortController.signal
+        )
     }
 
     private bindRpcLocalMethods(): void {
