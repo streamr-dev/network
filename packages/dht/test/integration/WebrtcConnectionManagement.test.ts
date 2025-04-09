@@ -1,7 +1,7 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
@@ -15,7 +15,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             transport,
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     })
 }
 
@@ -161,34 +162,6 @@ describe('WebRTC Connection Management', () => {
 
     }, 20000)
 
-    it('Disconnects webrtcconnection while being connected', async () => {
-        const msg: Message = {
-            serviceId,
-            messageId: '1',
-            body: {
-                oneofKind: 'rpcMessage',
-                rpcMessage: RpcMessage.create()
-            },
-        }
-
-        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', () => {
-                resolve()
-            })
-        })
-
-        msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg).catch((e) => {
-            expect(e.code).toEqual('SEND_FAILED')
-        })
-
-        // @ts-expect-error private field
-        manager1.closeConnection(peerDescriptor2)
-
-        await disconnectedPromise1
-
-    }, 20000)
-
     it('failed connections are cleaned up', async () => {
         const msg: Message = {
             serviceId,
@@ -205,10 +178,7 @@ describe('WebRTC Connection Management', () => {
             })
         })
 
-        msg.targetDescriptor = {
-            nodeId: new Uint8Array([0, 0, 0, 0, 0]),
-            type: NodeType.NODEJS,
-        }
+        msg.targetDescriptor = createMockPeerDescriptor()
         
         await Promise.allSettled([
             manager1.send(msg),

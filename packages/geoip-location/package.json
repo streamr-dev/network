@@ -1,6 +1,6 @@
 {
   "name": "@streamr/geoip-location",
-  "version": "101.1.2",
+  "version": "103.0.0-rc.1",
   "description": "Library for getting location information from IP addresses based on MaxMind GeoLite2 databases",
   "repository": {
     "type": "git",
@@ -14,6 +14,12 @@
     "dist/src/downloadGeoIpDatabase.js": false
   },
   "types": "dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "Apache-2.0",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
@@ -25,16 +31,16 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
-    "@streamr/utils": "101.1.2",
+    "@streamr/utils": "103.0.0-rc.1",
     "eventemitter3": "^5.0.0",
     "long-timeout": "^0.1.1",
     "mmdb-lib": "^2.1.1",
     "tar": "^7.4.3",
-    "uuid": "^10.0.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/long-timeout": "^0.1.2",
     "@types/tar": "^6.1.11",
-    "express": "^4.21.0"
+    "express": "^4.21.2"
   }
 }

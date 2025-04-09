@@ -9,7 +9,7 @@ import {
     RouteMessageAck,
     RecursiveOperationRequest,
     Message
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -17,7 +17,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface RecursiveOperationSessionEvents {
@@ -100,7 +100,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            target: getRawFromDhtAddress(this.options.targetId),
+            target: toDhtAddressRaw(this.options.targetId),
             sourcePeer: this.options.localPeerDescriptor,
             reachableThrough: [],
             routingPath: [],
@@ -151,9 +151,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        const localNodeId = toNodeId(this.options.localPeerDescriptor)
         routingPath.forEach((desc) => {
-            const newNodeId = getNodeIdFromPeerDescriptor(desc)
+            const newNodeId = toNodeId(desc)
             if (localNodeId !== newNodeId) {
                 this.allKnownHops.add(newNodeId)
             }
@@ -161,8 +161,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
-        const newNodeId = getNodeIdFromPeerDescriptor(desc)
+        const localNodeId = toNodeId(this.options.localPeerDescriptor)
+        const newNodeId = toNodeId(desc)
         if (localNodeId !== newNodeId) {
             this.reportedHops.add(newNodeId)
         }
@@ -180,7 +180,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const creatorNodeId = getDhtAddressFromRaw(entry.creator)
+            const creatorNodeId = toDhtAddress(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
             if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
                 || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {

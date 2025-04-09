@@ -1,18 +1,17 @@
-import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
-import { Wallet } from 'ethers'
-import padEnd from 'lodash/padEnd'
-import { StreamrClient,
-    CONFIG_TEST,
+import {
     NetworkPeerDescriptor,
     Stream,
     StreamMetadata,
     StreamPermission,
+    StreamrClient,
     StreamrClientConfig
 } from '@streamr/sdk'
+import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
+import padEnd from 'lodash/padEnd'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 
-export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
+export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'
 
 interface TestConfig {
     privateKey: string
@@ -35,7 +34,7 @@ export const formConfig = ({
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
-            plugins['storage'] = {
+            plugins.storage = {
                 cassandra: {
                     hosts: [STREAMR_DOCKER_DEV_HOST],
                     datacenter: 'datacenter1',
@@ -52,19 +51,13 @@ export const formConfig = ({
 
     return {
         client: {
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey
-            },
-            network: {
-                ...CONFIG_TEST.network,
-                node: {
-                    id: toEthereumAddress(new Wallet(privateKey).address),
-                }
-            },
+            }
         },
         httpServer: {
-            port: httpPort ? httpPort : 7171
+            port: httpPort ?? 7171
         },
         apiAuthentication,
         plugins
@@ -82,23 +75,13 @@ export const createEthereumAddress = (id: number): EthereumAddress => {
 }
 
 export const createClient = (
-    privateKey: string,
+    privateKey?: string,
     clientOptions?: StreamrClientConfig
 ): StreamrClient => {
-    const opts = merge(
-        CONFIG_TEST,
+    const opts = merge<StreamrClientConfig>(
         {
-            auth: {
-                privateKey
-            },
-            network: {
-                controlLayer: CONFIG_TEST.network!.controlLayer,
-                node:
-                    merge(
-                        CONFIG_TEST.network!.node,
-                        clientOptions?.network?.node
-                    )
-            }
+            environment: 'dev2',
+            auth: (privateKey !== undefined) ? { privateKey } : undefined
         },
         clientOptions
     )
@@ -114,9 +97,9 @@ export const getTestName = (module: NodeModule): string => {
 export const createTestStream = async (
     streamrClient: StreamrClient,
     module: NodeModule,
-    props?: Partial<StreamMetadata>
+    props?: StreamMetadata
 ): Promise<Stream> => {
-    const id = `${await streamrClient.getAddress()}/test/${getTestName(module)}/${Date.now()}`
+    const id = `/test/${getTestName(module)}/${Date.now()}`
     const stream = await streamrClient.createStream({
         id,
         ...props
@@ -131,7 +114,7 @@ export async function startStorageNode(
     extraPlugins = {}
 ): Promise<Broker> {
     const client = new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey: storageNodePrivateKey
         }

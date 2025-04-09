@@ -1,7 +1,7 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { Empty } from '../proto/google/protobuf/empty'
+import { DhtAddress, toDhtAddress, toNodeId } from '../identifiers'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -10,8 +10,8 @@ import {
     PeerDescriptor,
     PingRequest,
     PingResponse
-} from '../proto/packages/dht/protos/DhtRpc'
-import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { IDhtNodeRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RingContacts } from './contact/RingContactList'
 import { getClosestNodes } from './contact/getClosestNodes'
@@ -19,7 +19,7 @@ import { RingIdRaw } from './contact/ringIdentifiers'
 
 interface DhtNodeRpcLocalOptions {
     peerDiscoveryQueryBatchSize: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
@@ -39,7 +39,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.options.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const peers = getClosestNodes(
-            getDhtAddressFromRaw(request.nodeId), 
+            toDhtAddress(request.nodeId), 
             this.options.getNeighbors(),
             { maxCount: this.options.peerDiscoveryQueryBatchSize }
         )
@@ -63,7 +63,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
+        logger.trace('received ping request: ' + toNodeId((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
             this.options.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
@@ -76,7 +76,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderNodeId = getNodeIdFromPeerDescriptor(sender)
+        const senderNodeId = toNodeId(sender)
         logger.trace('received leave notice: ' + senderNodeId)
         this.options.removeContact(senderNodeId)
         return {}

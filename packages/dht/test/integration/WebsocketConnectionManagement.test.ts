@@ -1,15 +1,14 @@
-/* eslint-disable promise/no-nesting */
-
-import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { MetricsContext, until, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
-import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toNodeId } from '../../src/identifiers'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const SERVICE_ID = 'test'
 
@@ -19,7 +18,8 @@ const createOptions = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultCo
             createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     }
 }
 
@@ -29,23 +29,15 @@ describe('Websocket Connection Management', () => {
     let noWsServerManager: ConnectionManager
     let biggerNoWsServerManager: ConnectionManager
     const simulator = new Simulator()
-    const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([2]),
-        type: NodeType.NODEJS,
+    const wsServerConnectorPeerDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 12223,
             tls: false
         }
-    }
-    const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([1]),
-        type: NodeType.NODEJS,
-    }
-    const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([3]),
-        type: NodeType.NODEJS,
-    }
+    })
+    const noWsServerConnectorPeerDescriptor = createMockPeerDescriptor()
+    const biggerNoWsServerConnectorPeerDescriptor = createMockPeerDescriptor()
 
     let connectorTransport1: SimulatorTransport
     let connectorTransport2: SimulatorTransport
@@ -135,17 +127,14 @@ describe('Websocket Connection Management', () => {
                 rpcMessage: RpcMessage.create()
             },
             messageId: 'mockerer',
-            targetDescriptor: {
-                nodeId: new Uint8Array([1, 2, 4]),
-                type: NodeType.NODEJS
-            }
+            targetDescriptor: createMockPeerDescriptor()
         }
 
         await Promise.allSettled([
             waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
             wsServerManager.send(dummyMessage)
         ])
-        expect(wsServerManager.hasConnection(getNodeIdFromPeerDescriptor(dummyMessage.targetDescriptor!))).toBeFalse()
+        expect(wsServerManager.hasConnection(toNodeId(dummyMessage.targetDescriptor!))).toBeFalse()
     }, 20000)
     
     it('Can open connections to peer with server', async () => {
@@ -159,14 +148,14 @@ describe('Websocket Connection Management', () => {
             targetDescriptor: wsServerConnectorPeerDescriptor
         }
         await noWsServerManager.send(dummyMessage)
-        await waitForCondition(
+        await until(
             () => {
-                const nodeId = getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor)
+                const nodeId = toNodeId(noWsServerConnectorPeerDescriptor)
                 return wsServerManager.hasConnection(nodeId)
             }
         )
-        await waitForCondition(
-            () => noWsServerManager.hasConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))
+        await until(
+            () => noWsServerManager.hasConnection(toNodeId(wsServerConnectorPeerDescriptor))
         )
     })
 

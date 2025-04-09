@@ -1,9 +1,14 @@
+/**
+ * Importing 'timers' ensures `setImmediate` is available in browsers,
+ * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
+ */
+import 'timers'
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, UserID } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -24,30 +29,33 @@ import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { RpcProviderSource } from './RpcProviderSource'
-import { Stream, StreamMetadata } from './Stream'
+import { Stream } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamrClientError } from './StreamrClientError'
+import { StreamMetadata, getPartitionCount } from './StreamMetadata'
+import { ChainEventPoller } from './contracts/ChainEventPoller'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery } from './permission'
+import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendOptions, Resends } from './subscribe/Resends'
+import { ResendOptions, Resends, toInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
+import { map } from './utils/GeneratorUtils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 
@@ -68,8 +76,10 @@ export interface ExtraSubscribeOptions {
      * Subscribe on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard.
      * The streamr client wallet address must be an authorized signer for the contract.
      */
-    erc1271Contract?: string
+    erc1271Contract?: HexString
 }
+
+const logger = new Logger(module)
 
 /**
  * The main API used to interact with Streamr.
@@ -91,6 +101,7 @@ export class StreamrClient {
     private readonly operatorRegistry: OperatorRegistry
     private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly chainEventPoller: ChainEventPoller
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -127,6 +138,7 @@ export class StreamrClient {
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
+        this.chainEventPoller = container.resolve<ChainEventPoller>(ChainEventPoller)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
@@ -166,9 +178,6 @@ export class StreamrClient {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
         }
-        if (opts.key !== undefined && this.config.encryption.litProtocolEnabled) {
-            throw new StreamrClientError('cannot pass "key" when Lit Protocol is enabled', 'UNSUPPORTED_OPERATION')
-        }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const queue = await this.publisher.getGroupKeyQueue(streamId)
         if (opts.distributionMethod === 'rotate') {
@@ -186,8 +195,8 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: string): Promise<void> {
-        await this.localGroupKeyStore.set(key.id, toEthereumAddress(publisherId), key.data)
+    async addEncryptionKey(key: GroupKey, publisherId: HexString): Promise<void> {
+        await this.localGroupKeyStore.set(key.id, toUserId(publisherId), key.data)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -294,7 +303,7 @@ export class StreamrClient {
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
-        const pipeline = await this.resends.resend(streamPartId, options, getStorageNodes)
+        const pipeline = await this.resends.resend(streamPartId, toInternalResendOptions(options), getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
@@ -355,7 +364,11 @@ export class StreamrClient {
      */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.getStream(streamId, false)
+        // Check if the stream exists by querying its metadata. Throws an error if no metadata is found,
+        // indicating the stream doesn't exist. As a side-effect this populates StreamRegistry's metadata
+        // cache for future use, such as stream.getPartitionCount() calls.
+        await this.streamRegistry.getStreamMetadata(streamId)
+        return new Stream(streamId, this)
     }
 
     /**
@@ -368,10 +381,12 @@ export class StreamrClient {
      *
      * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
-    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, merge({ partitions: 1 }, omit(props, 'id') ))
+        const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') )
+        await this.streamRegistry.createStream(streamId, metadata)
+        return new Stream(streamId, this)
     }
 
     /**
@@ -395,13 +410,19 @@ export class StreamrClient {
     }
 
     /**
-     * Updates the metadata of a stream.
-     *
-     * @param props - the stream id and the metadata fields to be updated
+     * Returns the metadata of a stream.
      */
-    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.updateStream(streamId, omit(props, 'id'))
+    async getStreamMetadata(streamIdOrPath: string): Promise<StreamMetadata> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStreamMetadata(streamId)
+    }
+
+    /**
+     * Updates the metadata of a stream.
+     */
+    async setStreamMetadata(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        await this.streamRegistry.setStreamMetadata(streamId, metadata)
     }
 
     /**
@@ -423,7 +444,16 @@ export class StreamrClient {
         permissionFilter: SearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
     ): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter, orderBy)
+        logger.debug('Search for streams', { term, permissionFilter })
+        if ((term === undefined) && (permissionFilter === undefined)) {
+            throw new Error('Requires a search term or a permission filter')
+        }
+        const streamIds = this.streamRegistry.searchStreams(
+            term,
+            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
+            orderBy
+        )
+        return map(streamIds, (id) => new Stream(id, this))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -431,24 +461,24 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<HexString> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<HexString> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
     }
 
     /**
      * Checks whether the given permission is in effect.
      */
-    hasPermission(query: PermissionQuery): Promise<boolean> {
-        return this.streamRegistry.hasPermission(query)
+    async hasPermission(query: PermissionQuery): Promise<boolean> {
+        return this.streamRegistry.hasPermission(await toInternalPermissionQuery(query, this.streamIdBuilder))
     }
 
     /**
@@ -462,14 +492,14 @@ export class StreamrClient {
      * Grants permissions on a given stream.
      */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
      * Revokes permissions on a given stream.
      */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -483,23 +513,25 @@ export class StreamrClient {
         streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
-        return this.streamRegistry.setPermissions(...items)
+        return this.streamRegistry.setPermissions(...items.map((item) => (
+            { ...item, assignments: item.assignments.map(toInternalPermissionAssignment) }
+        )))
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId))
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -508,22 +540,42 @@ export class StreamrClient {
 
     /**
      * Assigns a stream to a storage node.
+     *
+     * @param opts - control how long to wait for storage node to pick up on assignment
+     * @returns If opts.wait=true, the promise resolves when the storage node acknowledges the assignment and
+     * is therefore ready to store published messages. If we don't receive the acknowledgment within the `timeout`,
+     * the promise rejects, but the assignment may still succeed later.
      */
-    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
-        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
+    async addStreamToStorageNode(
+        streamIdOrPath: string,
+        storageNodeAddress: HexString,
+        opts: { wait: boolean, timeout?: number } = { wait: false }
+    ): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        await addStreamToStorageNode(
+            streamId,
+            toEthereumAddress(storageNodeAddress),
+            opts,
+            getPartitionCount(await this.streamRegistry.getStreamMetadata(streamId)),
+            this.subscriber,
+            this.streamRegistry,
+            this.streamStorageRegistry,
+            this.loggerFactory,
+            this.config
+        )
     }
 
     /**
      * Unassigns a stream from a storage node.
      */
-    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
         return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Checks whether a stream is assigned to a storage node.
      */
-    async isStoredStream(streamIdOrPath: string, storageNodeAddress: string): Promise<boolean> {
+    async isStoredStream(streamIdOrPath: string, storageNodeAddress: HexString): Promise<boolean> {
         return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
@@ -532,8 +584,15 @@ export class StreamrClient {
      *
      * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
-    async getStoredStreams(storageNodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
+    async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
+        const queryResult = await this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
+        for (const stream of queryResult.streams) {
+            this.streamRegistry.populateMetadataCache(stream.id, stream.metadata)
+        }
+        return {
+            streams: queryResult.streams.map((item) => new Stream(item.id, this)),
+            blockNumber: queryResult.blockNumber
+        }
     }
 
     /**
@@ -542,7 +601,7 @@ export class StreamrClient {
      * @param streamIdOrPath - if a stream is given, returns the list of storage nodes the stream has been assigned to;
      * leave as `undefined` to return all storage nodes
      */
-    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+    async getStorageNodes(streamIdOrPath?: string): Promise<HexString[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }
 
@@ -562,8 +621,8 @@ export class StreamrClient {
      *
      * @returns rejects if the storage node is not found
      */
-    async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
-        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
+    async getStorageNodeMetadata(storageNodeAddress: HexString): Promise<StorageNodeMetadata> {
+        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(storageNodeAddress))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -578,10 +637,17 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
-    getAddress(): Promise<UserID> {
-        return this.authentication.getAddress()
+    async getUserId(): Promise<HexString> {
+        return await this.authentication.getUserId()
+    }
+
+    /**
+     * Alias to {@link getUserId|getUserId()}
+     */
+    getAddress(): Promise<HexString> {
+        return this.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------
@@ -590,6 +656,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getNode(): NetworkNodeFacade {
         return this.node
@@ -678,7 +745,7 @@ export class StreamrClient {
     /**
      * Get diagnostic info about the underlying network. Useful for debugging issues.
      *
-     * @remark returned object's structure can change without semver considerations
+     * @remarks returned object's structure can change without semver considerations
      */
     async getDiagnosticInfo(): Promise<Record<string, unknown>> {
         return this.node.getDiagnosticInfo()
@@ -686,6 +753,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     getConfig(): StrictStreamrClientConfig {
         return this.config
@@ -694,6 +762,8 @@ export class StreamrClient {
     /**
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
+     *
+     * The {@link https://docs.ethers.org/v6/api/contract/#Overrides Overrides} type is from the `ethers` library.
      */
     getEthersOverrides(): Promise<Overrides> {
         return _getEthersOverrides(this.rpcProviderSource, this.config)
@@ -708,17 +778,21 @@ export class StreamrClient {
             operatorContractAddress,
             this.contractFactory,
             this.rpcProviderSource,
+            this.chainEventPoller,
             this.theGraphClient,
             this.authentication,
             this.destroySignal,
             this.loggerFactory,
-            () => this.getEthersOverrides(),
-            this.config.contracts.pollInterval
+            () => this.getEthersOverrides()
         )
     }
 
-    /* 
-     * Discover operators that have been recently online on a given stream
+    /** 
+     * Discover operators that have been recently online on a given stream.
+     *
+     * The API may change soon (NET-1374).
+     * 
+     * @internal
      */
     findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
         return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)

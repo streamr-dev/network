@@ -2,14 +2,18 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { LogLevel, merge } from '@streamr/utils'
+import { HexString, LogLevel, merge } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { CONFIG_TEST } from './ConfigTest'
 
 export interface ProviderAuthConfig {
+    /**
+     * The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type is from the `ethers` library.
+     */
     ethereum: Eip1193Provider
 }
 
@@ -18,7 +22,7 @@ export interface PrivateKeyAuthConfig {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: string
+    address?: HexString
 }
 
 export interface ControlLayerConfig {
@@ -61,15 +65,6 @@ export interface ControlLayerConfig {
      * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
     */
     webrtcAllowPrivateAddresses?: boolean
-
-    /**
-     * Defines WebRTC connection establishment timeout in milliseconds.
-     *
-     * When attempting to form a new connection, if not established within
-     * this timeout, the attempt is considered as failed and further
-     * waiting for it will cease.
-    */
-    webrtcNewConnectionTimeout?: number
 
     /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
@@ -164,9 +159,6 @@ export interface ControlLayerConfig {
 
 export interface NetworkNodeConfig {
 
-    /** The Ethereum address of the node. */
-    id?: string
-
     /**
      * The number of connections the client's network node should have
      * on each stream partition.
@@ -239,7 +231,9 @@ export interface EthereumNetworkConfig {
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
 
-export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
+export const ENVIRONMENT_IDS: EnvironmentId[] = ['polygon', 'polygonAmoy', 'dev2']
+
+export const DEFAULT_ENVIRONMENT_ID: EnvironmentId = 'polygon'
 
 /**
  * @category Important
@@ -340,22 +334,6 @@ export interface StreamrClientConfig {
      */
     encryption?: {
         /**
-         * Enable experimental Lit Protocol key exchange.
-         *
-         * When enabled encryption key storing and fetching will primarily be done through the
-         * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
-         * key-exchange system.
-         */
-        litProtocolEnabled?: boolean
-
-        /**
-         * Enable log messages of the Lit Protocol library to be printed to stdout.
-         */
-        litProtocolLogging?: boolean
-
-        // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
-        // to lit protocol key requests (both encryption and decryption?)
-        /**
          * When requesting an encryption key using the standard Streamr
          * key-exchange system, defines how many milliseconds should a response
          * be awaited for.
@@ -380,9 +358,9 @@ export interface StreamrClientConfig {
     }
 
     contracts?: {
-        streamRegistryChainAddress?: string
-        streamStorageRegistryChainAddress?: string
-        storageNodeRegistryChainAddress?: string
+        streamRegistryChainAddress?: HexString
+        streamStorageRegistryChainAddress?: HexString
+        storageNodeRegistryChainAddress?: HexString
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
         rpcs?: ConnectionInfo[]
@@ -443,12 +421,17 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 
+/**
+ * @deprecated use {@link STREAMR_STORAGE_NODE_ADDRESS} instead
+ */
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
+
+export const STREAMR_STORAGE_NODE_ADDRESS = '0x9dc08ff97f5c156181ec6a0b13fc3946454e529a' as HexString
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? DEFAULT_ENVIRONMENT
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT_ID
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
@@ -457,32 +440,30 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
-    const config = merge(data, {
+    let config = merge({
         network: {
-            ...data.network,
             controlLayer: {
-                entryPoints: defaults.entryPoints,
-                ...data.network?.controlLayer,
+                entryPoints: defaults.entryPoints
             }
         } as any,
         contracts: {
             ethereumNetwork: {
-                chainId: defaults.id,
-                ...data.contracts?.ethereumNetwork
+                chainId: defaults.id
             },
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             rpcs: defaults.rpcEndpoints,
-            theGraphUrl: defaults.theGraphUrl,
-            ...data.contracts,
+            theGraphUrl: defaults.theGraphUrl
         } as any
-    }) as any
+    }, data) as any
     if (environmentId === 'polygon') {
         config.contracts.ethereumNetwork = { 
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
+    } else if (environmentId === 'dev2') {
+        config = merge(CONFIG_TEST, config)
     }
     return config
 }
@@ -492,6 +473,7 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
         throw new Error((validate as any).errors!.map((e: any) => {
             let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 text += `: ${e.params.additionalProperty}`
             }
             return text

@@ -51,5 +51,4 @@ export const waitForStorage = async (
         })
         await wait(opts.interval)
     }
-    /* eslint-enable no-await-in-loop */
 }

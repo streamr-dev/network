@@ -1,7 +1,9 @@
-import { range, sampleSize, sortBy } from 'lodash'
+import range from 'lodash/range'
+import sampleSize from 'lodash/sampleSize'
+import sortBy from 'lodash/sortBy'
 import { getDistance } from '../../src/dht/PeerManager'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { PeerDescriptor } from '../../src/exports'
 
@@ -9,8 +11,8 @@ describe('getClosestNodes', () => {
 
     it('happy path', () => {
         const peerDescriptors = range(10).map(() => createMockPeerDescriptor())
-        const referenceId = createRandomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => getNodeIdFromPeerDescriptor(n), 2)))
+        const referenceId = randomDhtAddress()
+        const excluded = new Set<DhtAddress>(sampleSize(peerDescriptors.map((n) => toNodeId(n)), 2))
 
         const actual = getClosestNodes(
             referenceId,
@@ -22,8 +24,8 @@ describe('getClosestNodes', () => {
         )
 
         const expected = sortBy(
-            peerDescriptors.filter((n) => !excluded.has(getNodeIdFromPeerDescriptor(n))),
-            (peerDescriptor: PeerDescriptor) => getDistance(peerDescriptor.nodeId, getRawFromDhtAddress(referenceId))
+            peerDescriptors.filter((n) => !excluded.has(toNodeId(n))),
+            (peerDescriptor: PeerDescriptor) => getDistance(peerDescriptor.nodeId, toDhtAddressRaw(referenceId))
         ).slice(0, 5)
         expect(actual).toEqual(expected)
     })

@@ -1,10 +1,10 @@
 import { Message } from '@streamr/dht'
 import { ExternalNetworkRpc, SERVICE_ID } from '../../src/logic/ExternalNetworkRpc'
-import { HandshakeRequest, HandshakeResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { HandshakeRequest, HandshakeResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { RpcMessage } from '@streamr/proto-rpc'
-import { Any } from '../../src/proto/google/protobuf/any'
-import { HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Any } from '../../generated/google/protobuf/any'
+import { HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('ExternalNetworkRpc', () => {
 

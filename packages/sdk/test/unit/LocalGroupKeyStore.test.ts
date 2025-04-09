@@ -22,9 +22,9 @@ describe('LocalGroupKeyStore', () => {
 
     afterEach(async () => {
         // @ts-expect-error doesn't want us to unassign, but it's ok
-        store = undefined // eslint-disable-line require-atomic-updates
+        store = undefined
         // @ts-expect-error doesn't want us to unassign, but it's ok
-        store2 = undefined // eslint-disable-line require-atomic-updates
+        store2 = undefined
     })
 
     it('can get and set', async () => {

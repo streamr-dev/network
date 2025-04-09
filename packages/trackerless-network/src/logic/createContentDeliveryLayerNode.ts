@@ -1,11 +1,22 @@
-import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
-import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { StrictContentDeliveryLayerNodeOptions, ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
+import { DEFAULT_NEIGHBOR_UPDATE_INTERVAL, NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
+import { 
+    StrictContentDeliveryLayerNodeOptions,
+    ContentDeliveryLayerNode,
+    DEFAULT_NODE_VIEW_SIZE,
+    DEFAULT_ACCEPT_PROXY_CONNECTIONS,
+    DEFAULT_NEIGHBOR_TARGET_COUNT
+} from './ContentDeliveryLayerNode'
 import { NodeList } from './NodeList'
-import { Propagation } from './propagation/Propagation'
-import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    DEFAULT_MIN_PROPAGATION_TARGETS,
+    DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+    DEFAULT_PROPAGATION_BUFFER_TTL,
+    Propagation
+} from './propagation/Propagation'
+import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import type { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
@@ -21,19 +32,22 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
+        maxPropagationBufferSize?: number
+        doNotBufferWhileConnecting?: boolean
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
-    const ownNodeId = getNodeIdFromPeerDescriptor(options.localPeerDescriptor)
+    const ownNodeId = toNodeId(options.localPeerDescriptor)
     const rpcCommunicator = options.rpcCommunicator ?? new ListeningRpcCommunicator(
         formStreamPartContentDeliveryServiceId(options.streamPartId),
         options.transport
     )
-    const neighborTargetCount = options.neighborTargetCount ?? 4
-    const maxContactCount = options.maxContactCount ?? 20
-    const minPropagationTargets = options.minPropagationTargets ?? 2
-    const acceptProxyConnections = options.acceptProxyConnections ?? false
-    const neighborUpdateInterval = options.neighborUpdateInterval ?? 10000
+    const neighborTargetCount = options.neighborTargetCount ?? DEFAULT_NEIGHBOR_TARGET_COUNT
+    const maxContactCount = options.maxContactCount ?? DEFAULT_NODE_VIEW_SIZE
+    const acceptProxyConnections = options.acceptProxyConnections ?? DEFAULT_ACCEPT_PROXY_CONNECTIONS
+    const neighborUpdateInterval = options.neighborUpdateInterval ?? DEFAULT_NEIGHBOR_UPDATE_INTERVAL
+    const minPropagationTargets = options.minPropagationTargets ?? DEFAULT_MIN_PROPAGATION_TARGETS
+    const maxPropagationBufferSize = options.maxPropagationBufferSize ?? DEFAULT_MAX_PROPAGATION_BUFFER_SIZE
     const neighbors = options.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const leftNodeView = options.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = options.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
@@ -54,11 +68,13 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     }) : undefined
     const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,
+        maxMessages: maxPropagationBufferSize,
+        ttl: DEFAULT_PROPAGATION_BUFFER_TTL,
         sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
             const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
-                await remote.sendStreamMessage(msg)
+                await remote.sendStreamMessage(msg, options.doNotBufferWhileConnecting)
             } else if (proxyConnection) {
                 await proxyConnection.remote.sendStreamMessage(msg)
             } else {

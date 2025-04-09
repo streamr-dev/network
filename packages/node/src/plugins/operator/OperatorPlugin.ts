@@ -1,7 +1,4 @@
 import {
-    OperatorDiscoveryRequest,
-    OperatorDiscoveryResponse,
-    peerDescriptorTranslator,
     ReviewRequestEvent,
     SignerWithProvider,
     StreamrClient
@@ -13,7 +10,7 @@ import {
     Logger,
     scheduleAtInterval,
     setAbortableInterval,
-    StreamPartIDUtils,
+    StreamPartID,
     toEthereumAddress
 } from '@streamr/utils'
 import { Schema } from 'ajv'
@@ -122,15 +119,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await fleetState.start()
         await maintainTopologyHelper.start()
 
-        const networkNode = await streamrClient.getNode()
-
-        const rpcServerFunction = async (request: OperatorDiscoveryRequest) => {
-            const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
-            const operators = streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
-            return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
-        }
-
-        await networkNode.registerExternalRpcMethod(OperatorDiscoveryRequest, OperatorDiscoveryResponse, 'discoverOperators', rpcServerFunction)
+        await streamrClient.getNode().registerOperator({
+            getAssignedNodesForStreamPart: (streamPartId: StreamPartID) => streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
+        })
 
         this.abortController.signal.addEventListener('abort', async () => {
             await fleetState.destroy()
@@ -173,7 +164,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         try {
                             await maintainOperatorValue(
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
-                                this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                                BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
                                 this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
                                 operator
                             )
@@ -224,7 +215,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     operator,
                     streamrClient,
                     () => stakedOperatorsCache.get(),
-                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    BigInt(this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw),
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })

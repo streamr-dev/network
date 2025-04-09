@@ -45,11 +45,11 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     end(err?: Error): void {
-        return this.source.end(err)
+        this.source.end(err)
     }
 
     endWrite(err?: Error): void {
-        return this.source.endWrite(err)
+        this.source.endWrite(err)
     }
 
     isDone(): boolean {
@@ -61,6 +61,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     clear(): void {
-        return this.source.clear()
+        this.source.clear()
     }
 }

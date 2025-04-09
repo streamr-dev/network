@@ -1,5 +1,5 @@
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { sample } from 'lodash'
+import { DhtAddress, toNodeId } from '@streamr/dht'
+import sample from 'lodash/sample'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 
@@ -36,7 +36,7 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     add(remote: ContentDeliveryRpcRemote): void {
-        const nodeId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
+        const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
@@ -107,7 +107,8 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     stop(): void {
-        this.nodes.forEach((node) => this.remove(getNodeIdFromPeerDescriptor(node.getPeerDescriptor())))
+        this.nodes.forEach((node) => this.remove(toNodeId(node.getPeerDescriptor())))
         this.removeAllListeners()
     }
+
 }

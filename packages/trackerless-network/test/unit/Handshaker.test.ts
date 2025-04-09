@@ -1,6 +1,6 @@
-import { ListeningRpcCommunicator, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { NodeList } from '../../src/logic/NodeList'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '../utils/utils'
@@ -28,7 +28,7 @@ describe('Handshaker', () => {
         await simulatorTransport.start()
         const rpcCommunicator = new ListeningRpcCommunicator(streamPartId, simulatorTransport)
 
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         neighbors = new NodeList(nodeId, 10)
         leftNodeView = new NodeList(nodeId, 20)
         rightNodeView = new NodeList(nodeId, 20)

@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { StreamPartIDUtils, hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, wait, until, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
@@ -10,7 +10,7 @@ import {
     ProxyDirection,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomUserId()
@@ -21,7 +21,7 @@ const MESSAGE: StreamMessage = {
         streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         timestamp: 666,
         sequenceNumber: 0,
-        publisherId: hexToBinary(randomEthereumAddress()),
+        publisherId: toUserIdRaw(randomUserId()),
         messageChainId: 'msgChainId'
     },
     previousMessageRef: {
@@ -79,7 +79,6 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode1.start()
-        proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxyNode2 = createNetworkNode({
             layer0: {
@@ -92,7 +91,6 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode2.start()
-        proxyNode2.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         proxyNode2.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxiedNode = createNetworkNode({
             layer0: {
@@ -131,7 +129,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false) 
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
 
     it('can leave proxy subscribe connection', async () => {
@@ -140,7 +138,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
 
     it('can open multiple proxy connections', async () => {
@@ -167,7 +165,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
+        await until(() => hasConnectionFromProxy(proxyNode2) === false)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     })
 
@@ -184,8 +182,8 @@ describe('Proxy connections', () => {
 
         await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode1) === false)
-        await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
+        await until(() => hasConnectionFromProxy(proxyNode1) === false)
+        await until(() => hasConnectionFromProxy(proxyNode2) === false)
     })
 
     it('will reconnect if proxy node goes offline and comes back online', async () => {
@@ -197,10 +195,10 @@ describe('Proxy connections', () => {
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         await proxyNode1.leave(STREAM_PART_ID)
-        await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
         proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
-        await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
         // TODO why wait is needed?
         await wait(100)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)

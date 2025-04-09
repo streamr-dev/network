@@ -8,7 +8,7 @@ import { StreamMessage } from './protocol/StreamMessage'
 export interface StreamrClientEvents {
     streamCreated: (payload: StreamCreationEvent) => void
     streamAddedToStorageNode: (payload: StorageNodeAssignmentEvent) => void
-    streamRemovedFromFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
+    streamRemovedFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
     /** @internal */
     encryptionKeyStoredToLocalStore: (keyId: string) => void
     /** @internal */

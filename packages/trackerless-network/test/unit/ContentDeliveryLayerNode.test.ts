@@ -1,5 +1,5 @@
-import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { NodeList } from '../../src/logic/NodeList'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
@@ -22,7 +22,7 @@ describe('ContentDeliveryLayerNode', () => {
     let discoveryLayerNode: MockDiscoveryLayerNode
 
     beforeEach(async () => {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
 
         neighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
@@ -54,14 +54,14 @@ describe('ContentDeliveryLayerNode', () => {
         const mockRemote = createMockContentDeliveryRpcRemote()
         neighbors.add(mockRemote)
         const result = contentDeliveryLayerNode.getNeighbors()
-        expect(getNodeIdFromPeerDescriptor(result[0])).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(toNodeId(result[0])).toEqual(toNodeId(mockRemote.getPeerDescriptor()))
     })
 
     it('getNearbyNodeView', () => {
         const mockRemote = createMockContentDeliveryRpcRemote()
         nearbyNodeView.add(mockRemote)
         const ids = contentDeliveryLayerNode.getNearbyNodeView().getIds()
-        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(toNodeId(mockRemote.getPeerDescriptor()))
     })
 
     it('Adds Closest Nodes from layer1 nearbyContactAdded event to nearbyNodeView', async () => {
@@ -69,9 +69,9 @@ describe('ContentDeliveryLayerNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         discoveryLayerNode.setClosestContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('nearbyContactAdded', peerDescriptor1)
-        await waitForCondition(() => nearbyNodeView.size() === 2)
-        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        await until(() => nearbyNodeView.size() === 2)
+        expect(nearbyNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(toNodeId(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Random Nodes from layer1 randomContactAdded event to randomNodeView', async () => {
@@ -79,9 +79,9 @@ describe('ContentDeliveryLayerNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         discoveryLayerNode.setRandomContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('randomContactAdded', peerDescriptor1)
-        await waitForCondition(() => randomNodeView.size() === 2)
-        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        await until(() => randomNodeView.size() === 2)
+        expect(randomNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()
+        expect(randomNodeView.get(toNodeId(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Nodes from layer1 neighbors to nearbyNodeView if its size is below nodeViewSize', async () => {
@@ -90,11 +90,23 @@ describe('ContentDeliveryLayerNode', () => {
         discoveryLayerNode.addNewRandomPeerToKBucket()
         discoveryLayerNode.setClosestContacts([peerDescriptor1, peerDescriptor2])
         discoveryLayerNode.emit('nearbyContactAdded', peerDescriptor1)
-        await waitForCondition(() => {
+        await until(() => {
             return nearbyNodeView.size() === 3
         }, 20000)
-        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        expect(nearbyNodeView.get(toNodeId(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(toNodeId(peerDescriptor2))).toBeTruthy()
     }, 25000)
 
+    it('getInfo', () => {
+        const nodeWithRtt = createMockContentDeliveryRpcRemote()
+        neighbors.add(nodeWithRtt)
+        const nodeWithoutRtt = createMockContentDeliveryRpcRemote()
+        neighbors.add(nodeWithoutRtt)
+        nodeWithRtt.setRtt(100)
+        const info = contentDeliveryLayerNode.getInfos()
+        expect(info[0].rtt).toEqual(100)
+        expect(info[0].peerDescriptor).toEqual(nodeWithRtt.getPeerDescriptor())
+        expect(info[1].rtt).toBeUndefined()
+        expect(info[1].peerDescriptor).toEqual(nodeWithoutRtt.getPeerDescriptor())
+    })
 })

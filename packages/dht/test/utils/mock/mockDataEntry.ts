@@ -1,10 +1,10 @@
 import { MessageType as MessageType$, ScalarType } from '@protobuf-ts/runtime'
 import { randomString } from '@streamr/utils'
-import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
-import { Any } from '../../../src/proto/google/protobuf/any'
-import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
-import { omit } from 'lodash'
+import { Timestamp } from '../../../generated/google/protobuf/timestamp'
+import { Any } from '../../../generated/google/protobuf/any'
+import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../../src/identifiers'
+import omit from 'lodash/omit'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {
@@ -18,9 +18,9 @@ export const createMockDataEntry = (
     entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DhtAddress, creator: DhtAddress }> = {}
 ): DataEntry => {
     return { 
-        key: getRawFromDhtAddress(entry.key ?? createRandomDhtAddress()),
+        key: toDhtAddressRaw(entry.key ?? randomDhtAddress()),
         data: Any.pack({ foo: randomString(5) }, MockData),
-        creator: getRawFromDhtAddress(entry.creator ?? createRandomDhtAddress()),
+        creator: toDhtAddressRaw(entry.creator ?? randomDhtAddress()),
         ttl: 10000,
         stale: false,
         deleted: false,

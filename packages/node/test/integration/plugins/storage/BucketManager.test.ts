@@ -2,7 +2,7 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 const { TimeUuid } = cassandraTypes
 import { BucketManager } from '../../../../src/plugins/storage/BucketManager'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -17,7 +17,6 @@ describe('BucketManager', () => {
     const insertBuckets = async (startTimestamp: Date) => {
         for (let i = 0; i < 100; i++) {
             const currentTimestamp = new Date(startTimestamp.getTime() + i * 60 * 1000) // + "i" minutes
-            // eslint-disable-next-line no-await-in-loop
             await cassandraClient.execute('INSERT INTO bucket (stream_id, partition, date_create, id, records, size) '
                 + 'VALUES (?, 0, ?, ?, 5, 5)', [
                 streamId,
@@ -69,7 +68,7 @@ describe('BucketManager', () => {
         expect(result.rows.length).toEqual(0)
 
         // first time we call in constructor, second after timeout
-        await waitForCondition(() => storeBucketsSpy.mock.calls.length === 2)
+        await until(() => storeBucketsSpy.mock.calls.length === 2)
         expect(storeBucketsSpy).toHaveBeenCalled()
 
         const foundBucketId = bucketManager.getBucketId(streamId, 0, timestamp)!
@@ -77,7 +76,7 @@ describe('BucketManager', () => {
         expect(bucketManager.buckets[foundBucketId].size).toEqual(0)
         expect(bucketManager.buckets[foundBucketId].records).toEqual(0)
 
-        await waitForCondition(() => bucketManager.buckets[foundBucketId].isStored() === true)
+        await until(() => bucketManager.buckets[foundBucketId].isStored() === true)
         expect(bucketManager.buckets[foundBucketId].isStored()).toBeTruthy()
 
         bucketManager.incrementBucket(foundBucketId, 3)
@@ -86,7 +85,7 @@ describe('BucketManager', () => {
         expect(bucketManager.buckets[foundBucketId].records).toEqual(2)
         expect(bucketManager.buckets[foundBucketId].isStored()).toBeFalsy()
 
-        await waitForCondition(() => bucketManager.buckets[foundBucketId].isStored())
+        await until(() => bucketManager.buckets[foundBucketId].isStored())
         result = await cassandraClient.execute('SELECT * FROM bucket WHERE stream_id = ? ALLOW FILTERING', [
             streamId
         ])
@@ -105,7 +104,7 @@ describe('BucketManager', () => {
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
         expect(bucketManager.streamParts[`${streamId}-0`].minTimestamp).toEqual(timestamp)
 
-        await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
+        await until(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
         expect(bucketManager.streamParts[`${streamId}-0`].minTimestamp).toBeUndefined()
 
         // future timestamp will give latest not full bucket
@@ -119,12 +118,12 @@ describe('BucketManager', () => {
 
         // find or create bucketId for NOW timestamp
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
-        await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
+        await until(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
         const lastBucketId = bucketManager.getBucketId(streamId, 0, timestamp)!
 
         // find or create bucketId for NOW - 5 minutes timestamp
         expect(bucketManager.getBucketId(streamId, 0, timestamp5ago)).toBeUndefined()
-        await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp5ago) !== undefined)
+        await until(() => bucketManager.getBucketId(streamId, 0, timestamp5ago) !== undefined)
         const bucketId5minAgo = bucketManager.getBucketId(streamId, 0, timestamp5ago)!
 
         // bucketId is not latest
@@ -134,8 +133,8 @@ describe('BucketManager', () => {
         bucketManager.incrementBucket(lastBucketId, 1)
         bucketManager.incrementBucket(bucketId5minAgo, 1)
 
-        await waitForCondition(() => bucketManager.buckets[lastBucketId].isStored())
-        await waitForCondition(() => bucketManager.buckets[bucketId5minAgo].isStored())
+        await until(() => bucketManager.buckets[lastBucketId].isStored())
+        await until(() => bucketManager.buckets[bucketId5minAgo].isStored())
 
         // get latest sorted
         const lastBuckets = await bucketManager.getLastBuckets(streamId, 0, 5)
@@ -206,12 +205,12 @@ describe('BucketManager', () => {
 
         // load latest bucket into memory
         const latestTimestamp = timestamp.getTime() + 100 * 60 * 1000
-        await waitForCondition(() => bucketManager.getBucketId(streamId, 0, latestTimestamp) !== undefined)
+        await until(() => bucketManager.getBucketId(streamId, 0, latestTimestamp) !== undefined)
         const bucketId = bucketManager.getBucketId(streamId, 0, latestTimestamp)!
         const bucket = bucketManager.buckets[bucketId]
 
         // bucket got removed after 3 seconds
-        await waitForCondition(() => bucket.isAlive() === false)
-        await waitForCondition(() => Object.values(bucketManager.buckets).length === 0)
+        await until(() => bucket.isAlive() === false)
+        await until(() => Object.values(bucketManager.buckets).length === 0)
     }, 10000)
 })

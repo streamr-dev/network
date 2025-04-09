@@ -6,9 +6,9 @@ export const LOCAL_PROTOCOL_VERSION = '1.1'
  * 
  * The older version assumes optimistically that it may be supported by the newer
  * version. It can't know for sure, but the other node will tell if it is not
- * supported (e.g. rejecting the handshake with UNSUPPORTED_VERSION error).
+ * supported (e.g. rejecting the handshake with UNSUPPORTED_PROTOCOL_VERSION error).
  */
-export const isMaybeSupportedVersion = (remoteVersion: string): boolean => {
+export const isMaybeSupportedProtocolVersion = (remoteVersion: string): boolean => {
     const localMajor = parseVersion(LOCAL_PROTOCOL_VERSION)!.major
     const remoteMajor = parseVersion(remoteVersion)?.major
     if ((remoteMajor === undefined) || (remoteMajor < localMajor)) {

@@ -1,8 +1,8 @@
-import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorOptions } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { ServiceID } from '../types/ServiceID'
 import { DEFAULT_SEND_OPTIONS, SendOptions } from './ITransport'
 
@@ -46,10 +46,13 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
                     // is no point in trying form a new connection
                     connect: false,
                     // TODO maybe this options could be removed?
-                    sendIfStopped: true
+                    sendIfStopped: true,
+                    // Responses should be buffered if necessary
+                    doNotBufferWhileConnecting: false
                 } : {
                     connect: callContext?.connect ?? DEFAULT_SEND_OPTIONS.connect,
-                    sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped
+                    sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped,
+                    doNotBufferWhileConnecting: callContext?.doNotBufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.doNotBufferWhileConnecting
                 }
             return this.sendFn(message, sendOpts)
         })

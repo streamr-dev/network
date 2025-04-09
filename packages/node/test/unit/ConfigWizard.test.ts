@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import { getNodeMnemonic, start } from '../../src/config/ConfigWizard'
@@ -52,17 +52,6 @@ const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(
     () => '{"data":{"operator":{"nodes":[]}}}'
 )
 
-jest.mock('node-fetch', () => {
-    return () => {
-        const result = fakeFetchResponseBody()
-        if (typeof result === 'string') {
-            return Promise.resolve(new Response(result))
-        } else {
-            return Promise.reject(result)
-        }
-    }
-})
-
 interface AnswerMock {
     prompt: jest.MockedFunction<any>
     question: RegExp
@@ -78,10 +67,25 @@ const IMPORTED_PRIVATE_KEY =
 
 const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
-describe('Config wizard', () => {
-    let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
+const extractStoragePath = (summary: string): string | undefined => {
+    const match = summary.match(/streamr-node ([^\s]w+)/)
+    return (match !== null) ? match[1] : undefined
+}
 
-    let storagePath = path.join(tempDir, 'config.json')
+const expectPathsEqual = (actual: string | undefined, expected: string): void => {
+    if (actual !== undefined) {
+        const normalizedActual = path.normalize(realpathSync(actual))
+        const normaliszedExpected = path.normalize(realpathSync(expected))
+        expect(normalizedActual).toEqual(normaliszedExpected)
+    } else {
+        expect.fail('Path is undefined')
+    }
+}
+
+describe('Config wizard', () => {
+    let tempDir: string
+
+    let storagePath: string
 
     const fakeBalance = jest.fn(() => '0.0')
 
@@ -104,6 +108,14 @@ describe('Config wizard', () => {
         )
 
         fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
+
+        jest.spyOn(global, 'fetch').mockImplementation(() => {
+            const result = fakeFetchResponseBody()
+
+            return typeof result === 'string'
+                ? Promise.resolve(new Response(result))
+                : Promise.reject(result)
+        })
     })
 
     afterAll(() => {
@@ -157,7 +169,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('prints out the generated private key onto the screen if told to', async () => {
@@ -220,7 +232,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Flee Kit Stomach\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates given private key', async () => {
@@ -299,7 +311,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates the operator address', async () => {
@@ -387,7 +399,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables websocket plugin on a custom port', async () => {
@@ -445,7 +457,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on the default port', async () => {
@@ -507,7 +519,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on a custom port', async () => {
@@ -569,7 +581,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on the default port', async () => {
@@ -632,7 +644,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on a custom port', async () => {
@@ -693,7 +705,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on default ports', async () => {
@@ -766,7 +778,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on custom ports', async () => {
@@ -837,7 +849,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('validates port number values', async () => {
@@ -947,7 +959,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('disallows taking default ports if they are inexplicitly used', async () => {
@@ -1024,7 +1036,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('allows to uses a custom file path for the config file', async () => {
@@ -1234,7 +1246,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(extractStoragePath(summary), storagePath)
     })
 
     it('tells the user to fund their node address if the balance is too low', async () => {
@@ -1477,11 +1489,13 @@ function act(
         for (const action of actions) {
             await (async () => {
                 if (action === 'abort') {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw 'abort'
                 }
 
                 if (action === 'enter') {
-                    return void events.keypress('enter')
+                    events.keypress('enter')
+                    return
                 }
 
                 if ('find' in action) {
@@ -1497,6 +1511,7 @@ function act(
                             : screen.includes(find)
 
                     if (!found) {
+                        // eslint-disable-next-line @typescript-eslint/only-throw-error
                         throw `Failed to find ${find} in\n${screen}`
                     }
 
@@ -1504,7 +1519,8 @@ function act(
                 }
 
                 if ('type' in action) {
-                    return void events.type(action.type)
+                    events.type(action.type)
+                    return
                 }
 
                 events.keypress(action.keypress)
@@ -1607,6 +1623,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             case select:
                 return inquirer.select
             default:
+                // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw 'Unknown prompt mock'
         }
     }
@@ -1640,7 +1657,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
         jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
     }
 
-    void [checkbox, confirm, input, password, select].forEach((prompt) => {
+    [checkbox, confirm, input, password, select].forEach((prompt) => {
         prompt.mockImplementation(async (config: any) => {
             const inq = mocksCopy.find(
                 (inq) =>
@@ -1648,8 +1665,9 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             )
 
             if (!inq) {
+                // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw `Missing mock for ${chalk.whiteBright(
-                    `"${config.message}"`
+                    `"${config.message}"`  // eslint-disable-line @typescript-eslint/restrict-template-expressions
                 )}`
             }
 

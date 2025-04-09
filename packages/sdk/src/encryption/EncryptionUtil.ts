@@ -1,13 +1,7 @@
 import crypto, { CipherKey } from 'crypto'
-import { StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
-import { StreamMessageError } from '../protocol/StreamMessageError'
+import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
+import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
-
-export class DecryptError extends StreamMessageError {
-    constructor(streamMessage: StreamMessage, message = '') {
-        super(`Decrypt error: ${message}`, streamMessage)
-    }
-}
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 
@@ -53,16 +47,16 @@ export class EncryptionUtil {
         let content: Uint8Array
         try {
             content = this.decryptWithAES(streamMessage.content, groupKey.data)
-        } catch (err) {
-            throw new DecryptError(streamMessage, err.stack)
+        } catch {
+            throw new StreamrClientError('AES decryption failed', 'DECRYPT_ERROR', streamMessage)
         }
 
         let newGroupKey: GroupKey | undefined = undefined
         if (streamMessage.newGroupKey) {
             try {
                 newGroupKey = groupKey.decryptNextGroupKey(streamMessage.newGroupKey)
-            } catch (err) {
-                throw new DecryptError(streamMessage, `Could not decrypt new group key: ${err.stack}`)
+            } catch {
+                throw new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', streamMessage)
             }
         }
 

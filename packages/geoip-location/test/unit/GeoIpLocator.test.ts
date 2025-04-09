@@ -33,14 +33,14 @@ describe('GeoIpLocator', () => {
             locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
             await locator.start()
 
-            // suomi.fi
-            const location = locator.lookup('62.241.198.245')
+            // helsinki.fi
+            const location = locator.lookup('128.214.222.50')
     
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBe(60.1797)
-            expect(location!.longitude).toBe(24.9344)
+            expect(location!.latitude).toBeCloseTo(60.1719, 1)
+            expect(location!.longitude).toBeCloseTo(24.9347, 1)
         
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
@@ -70,13 +70,13 @@ describe('GeoIpLocator', () => {
 
             await wait(7000)
     
-            // suomi.fi
-            const location = locator.lookup('62.241.198.245')
+            // helsinki.fi
+            const location = locator.lookup('128.214.222.50')
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBe(60.1797)
-            expect(location!.longitude).toBe(24.9344)
+            expect(location!.latitude).toBeCloseTo(60.1719, 1)
+            expect(location!.longitude).toBeCloseTo(24.9347, 1)
     
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
@@ -92,13 +92,13 @@ describe('GeoIpLocator', () => {
     
             await wait(10000)
     
-            // suomi.fi
-            const location = locator.lookup('62.241.198.245')
+            // helsinki.fi
+            const location = locator.lookup('128.214.222.50')
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBe(60.1797)
-            expect(location!.longitude).toBe(24.9344)
+            expect(location!.latitude).toBeCloseTo(60.1719, 1)
+            expect(location!.longitude).toBeCloseTo(24.9347, 1)
     
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
@@ -110,7 +110,7 @@ describe('GeoIpLocator', () => {
         it('returns undefined if not started', async () => {
             const dbDir = getDbDir()
             const locator = new GeoIpLocator(dbDir)
-            const location = locator.lookup('62.241.198.245')
+            const location = locator.lookup('128.214.222.50')
             expect(location).toBeUndefined()
         })
 

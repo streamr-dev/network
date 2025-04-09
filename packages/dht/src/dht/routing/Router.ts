@@ -1,11 +1,11 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
 import { RoutingTablesCache } from './RoutingTablesCache'
 
 export interface RouterOptions {
@@ -75,7 +75,7 @@ export class Router {
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
         msg.sourceDescriptor = this.options.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
-        const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
+        const forwardingEntry = this.forwardingTable.get(toNodeId(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
             const forwardedMessage: RouteMessageWrapper = {
                 message: msg,
@@ -116,16 +116,14 @@ export class Router {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getDhtAddressFromRaw(routedMessage.target)}`)
+        logger.trace(`Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} `
+            + `to ${toDhtAddress(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
-            // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
@@ -154,7 +152,7 @@ export class Router {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: DhtAddress): RoutingSession {
-        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => toNodeId(descriptor)))
         if (excludedNode) {
             excludedNodeIds.add(excludedNode)
         }
@@ -196,7 +194,7 @@ export class Router {
     }
 
     onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        this.routingTablesCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+        this.routingTablesCache.onNodeDisconnected(toNodeId(peerDescriptor))
     }
 
     public resetCache(): void {
@@ -230,7 +228,7 @@ export class Router {
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
-            const sourceNodeId = getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)
+            const sourceNodeId = toNodeId(routedMessage.sourcePeer!)
             if (this.forwardingTable.has(sourceNodeId)) {
                 const oldEntry = this.forwardingTable.get(sourceNodeId)
                 clearTimeout(oldEntry!.timeout)

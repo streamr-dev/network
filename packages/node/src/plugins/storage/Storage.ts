@@ -1,5 +1,5 @@
 import { StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
-import { Logger, MetricsContext, RateMetric } from '@streamr/utils'
+import { Logger, MetricsContext, RateMetric, UserID } from '@streamr/utils'
 import { Client, auth, tracker, types } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import merge2 from 'merge2'
@@ -118,7 +118,6 @@ export class Storage extends EventEmitter {
 
     requestLast(streamId: string, partition: number, limit: number): Readable {
         if (limit > MAX_RESEND_LAST) {
-            // eslint-disable-next-line no-param-reassign
             limit = MAX_RESEND_LAST
         }
 
@@ -198,7 +197,7 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
+    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: UserID): Readable {
         return this.fetchRange(
             streamId,
             partition,
@@ -217,7 +216,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number,
         toTimestamp: number,
         toSequenceNo: number,
-        publisherId: string | undefined,
+        publisherId: UserID | undefined,
         msgChainId: string | undefined
     ): Readable {
         // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?
@@ -539,7 +538,7 @@ export const startCassandraStorage = async ({
     password,
     opts
 }: StartCassandraOptions): Promise<Storage> => {
-    const authProvider = new auth.PlainTextAuthProvider(username || '', password || '')
+    const authProvider = new auth.PlainTextAuthProvider(username ?? '', password ?? '')
     const requestLogger = new tracker.RequestLogger({
         slowThreshold: 10 * 1000, // 10 secs
     })
@@ -561,10 +560,9 @@ export const startCassandraStorage = async ({
     let retryCount = nbTrials
     let lastError = ''
     while (retryCount > 0) {
-        /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err) => { throw err })
-            return new Storage(cassandraClient, opts || {})
+            return new Storage(cassandraClient, opts ?? {})
         } catch (err) {
             // eslint-disable-next-line no-console
             console.log('Cassandra not responding yet...')
@@ -572,7 +570,6 @@ export const startCassandraStorage = async ({
             await sleep(5000)
             lastError = err
         }
-        /* eslint-enable no-await-in-loop */
     }
     throw new Error(`Failed to connect to Cassandra after ${nbTrials} trials: ${lastError.toString()}`)
 }

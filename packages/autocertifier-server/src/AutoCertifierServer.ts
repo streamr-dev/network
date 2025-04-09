@@ -188,7 +188,6 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     }
 
     // ChallengeManager implementation
-    // eslint-disable-next-line class-methods-use-this
     public async deleteChallenge(fqdn: string, value: string): Promise<void> {
         if (this.route53Api !== undefined) {
             logger.trace(`Deleting acme challenge for ${fqdn} with value ${value} to Route53`)

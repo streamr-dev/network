@@ -1,9 +1,8 @@
 import { StreamID, StreamPartID, UserID, binaryToUtf8 } from '@streamr/utils'
+import { StreamrClientError } from '../StreamrClientError'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
-import { InvalidJsonError } from './InvalidJsonError'
 import { MessageID } from './MessageID'
 import { MessageRef } from './MessageRef'
-import { StreamMessageError } from './StreamMessageError'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
 
@@ -68,13 +67,13 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
     }
     if (comparison < 0) {
         throw new ValidationError(
-            // eslint-disable-next-line max-len
             `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
         )
     }
 }
 
 export class StreamMessage implements StreamMessageOptions {
+
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
@@ -148,21 +147,18 @@ export class StreamMessage implements StreamMessageOptions {
     }
 
     // TODO: consider replacing later half of type with a "JSON type" from a ts-toolbelt or type-fest or ts-essentials
-    getParsedContent(): Uint8Array | Record<string, unknown> | Array<unknown> {
+    getParsedContent(): Uint8Array | Record<string, unknown> | unknown[] {
         if (this.encryptionType !== EncryptionType.NONE || this.contentType === ContentType.BINARY) {
             return this.content
         } else if (this.contentType === ContentType.JSON) {
             try {
                 return JSON.parse(binaryToUtf8(this.content))
             } catch (err: any) {
-                throw new InvalidJsonError(
-                    this.getStreamId(),
-                    err,
-                    this,
-                )
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                throw new StreamrClientError(`Unable to parse JSON: ${err}`, 'INVALID_MESSAGE_CONTENT', this)
             }
         } else {
-            throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
+            throw new StreamrClientError(`Unknown content type: ${this.contentType}`, 'ASSERTION_FAILED', this)
         }
     }
 

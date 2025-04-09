@@ -1,5 +1,5 @@
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartID, StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import {
     ContentType,
@@ -7,7 +7,7 @@ import {
     ProxyDirection,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomUserId()
@@ -19,7 +19,7 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary(randomEthereumAddress()),
+            publisherId: toUserIdRaw(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {

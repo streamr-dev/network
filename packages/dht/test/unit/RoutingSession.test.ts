@@ -1,10 +1,10 @@
 import { v4 } from 'uuid'
 import { RoutingMode, RoutingSession } from '../../src/dht/routing/RoutingSession'
-import { Message, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, toNodeId } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { RoutingTablesCache } from '../../src/dht/routing/RoutingTablesCache'
 
@@ -63,17 +63,24 @@ describe('RoutingSession', () => {
     })
 
     it('findMoreContacts', () => {
-        connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        connections.set(toNodeId(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         const contacts = session.updateAndGetRoutablePeers()
         expect(contacts.length).toBe(1)
     })
 
     it('findMoreContacts peer disconnects', () => {
-        connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        connections.set(toNodeId(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(1)
-        connections.delete(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
-        routingTablesCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
+        connections.delete(toNodeId(mockPeerDescriptor2))
+        routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
+    })
+
+    it('recalculates Routing Table if it is empty', () => {
+        connections.set(toNodeId(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
+        routingTablesCache.onNodeDisconnected(toNodeId(mockPeerDescriptor2))
+        expect(session.updateAndGetRoutablePeers().length).toBe(1)
     })
 
 })

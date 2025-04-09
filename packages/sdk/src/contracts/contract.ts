@@ -11,6 +11,7 @@ import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { ChainEventPoller, EventListenerDefinition } from './ChainEventPoller'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -69,6 +70,7 @@ const withErrorHandling = async <T>(
         return await execute()
     } catch (e: any) {
         const suffixes = without(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
             undefined
         )
@@ -147,7 +149,7 @@ export const createDecoratedContract = <T extends BaseContract>(
      * single-value results: the return type of contract.functions[methodName] is always
      * Promise<Result> (see https://docs.ethers.org/v6/api/contract/#BaseContract)
      */
-    const methodNames = contract['interface'].fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
+    const methodNames = contract.interface.fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => f.name)
     methodNames.forEach((methodName) => {
         decoratedContract[methodName] = createWrappedContractMethod(
             contract,
@@ -165,16 +167,12 @@ export const createDecoratedContract = <T extends BaseContract>(
 
 export const initContractEventGateway = <
     TSourcePayloads extends any[],
-    TSourceName extends string,
     TTarget extends Events<TTarget>,
     TTargetName extends keyof TTarget
 >(opts: {
-    sourceName: TSourceName
+    sourceDefinition: Omit<EventListenerDefinition, 'onEvent'>
     targetName: TTargetName
-    sourceEmitter: {
-        on: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
-        off: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
-    }
+    sourceEmitter: ChainEventPoller
     targetEmitter: ObservableEventEmitter<TTarget>
     transformation: (...args: TSourcePayloads) => Parameters<TTarget[TTargetName]>[0]
     loggerFactory: LoggerFactory
@@ -197,11 +195,17 @@ export const initContractEventGateway = <
                 }
                 emit(targetEvent)
             }
-            opts.sourceEmitter.on(opts.sourceName, listener)
+            opts.sourceEmitter.on({
+                onEvent: listener,
+                ...opts.sourceDefinition
+            })
             return listener
         },
         (listener: Listener) => {
-            opts.sourceEmitter.off(opts.sourceName, listener)
+            opts.sourceEmitter.off({
+                onEvent: listener,
+                ...opts.sourceDefinition
+            })
         },
         opts.targetEmitter
     )

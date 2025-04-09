@@ -1,10 +1,10 @@
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
+import { ClosestPeersRequest, ClosestPeersResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
+import { toNodeId } from '../../src/identifiers'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
@@ -53,7 +53,7 @@ describe('DhtRpc', () => {
             }
         )
         const res1 = await response1
-        expect(res1.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
+        expect(res1.peers.map((p) => toNodeId(p))).toEqual(neighbors.map((n) => toNodeId(n)))
 
         const response2 = client2.getClosestPeers(
             { nodeId: peerDescriptor2.nodeId, requestId: '1' },
@@ -63,7 +63,7 @@ describe('DhtRpc', () => {
             }
         )
         const res2 = await response2
-        expect(res2.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
+        expect(res2.peers.map((p) => toNodeId(p))).toEqual(neighbors.map((n) => toNodeId(n)))
     })
 
     it('Default RPC timeout, client side', async () => {

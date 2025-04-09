@@ -1,14 +1,13 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
-import { collect, toStreamPartID } from '@streamr/utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
+import { collect, toStreamPartID, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessageType } from '../../src/protocol/StreamMessage'
-import { until } from '../../src/utils/promises'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
@@ -46,13 +45,13 @@ describe('Group Key Persistence', () => {
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
-            await stream.addToStorageNode(storageNode.getAddress())
+            await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
         beforeEach(async () => {
-            publisherPrivateKey = fastPrivateKey()
-            subscriberPrivateKey = fastPrivateKey()
+            publisherPrivateKey = await createTestPrivateKey()
+            subscriberPrivateKey = await createTestPrivateKey()
 
             publisher = await setupPublisher({
                 id: 'publisher',
@@ -66,9 +65,9 @@ describe('Group Key Persistence', () => {
                     privateKey: subscriberPrivateKey,
                 }
             })
-            const otherUser = await subscriber.getAddress()
+            const otherUser = await subscriber.getUserId()
             await stream.grantPermissions({
-                user: otherUser,
+                userId: otherUser,
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const groupKey = GroupKey.generate()
@@ -107,7 +106,7 @@ describe('Group Key Persistence', () => {
             })
 
             it('works', async () => {
-                await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
+                await startPublisherKeyExchangeSubscription(publisher2, (await stream.getStreamParts())[0])
 
                 const received: Message[] = []
                 const sub = await subscriber.resend(
@@ -317,9 +316,8 @@ describe('Group Key Persistence', () => {
                 })
 
                 for (let i = 0; i < NUM_STREAMS; i++) {
-
                     const s = await createTestStream(publisher, module)
-                    await s.addToStorageNode(storageNode.getAddress())
+                    await s.addToStorageNode(storageNode.getAddress(), { wait: true })
                     streams.push(s)
                 }
             })

@@ -1,8 +1,8 @@
-import { verifySignature } from '@streamr/utils'
+import { toEthereumAddress, toUserIdRaw, verifySignature } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { SignatureType, StreamMessage } from '../protocol/StreamMessage'
-import { StreamMessageError } from '../protocol/StreamMessageError'
+import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
 
@@ -23,10 +23,11 @@ export class SignatureValidator {
         try {
             success = await this.validate(streamMessage)
         } catch (err) {
-            throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            throw new StreamrClientError(`An error occurred during address recovery from signature: ${err}`, 'INVALID_SIGNATURE', streamMessage)
         }
         if (!success) {
-            throw new StreamMessageError('Signature validation failed', streamMessage)
+            throw new StreamrClientError('Signature validation failed', 'INVALID_SIGNATURE', streamMessage)
         }
     }
 
@@ -34,19 +35,19 @@ export class SignatureValidator {
         switch (streamMessage.signatureType) {
             case SignatureType.LEGACY_SECP256K1:
                 return verifySignature(
-                    streamMessage.getPublisherId(),
+                    toUserIdRaw(streamMessage.getPublisherId()),
                     createLegacySignaturePayload(streamMessage),
                     streamMessage.signature
                 )
             case SignatureType.SECP256K1:
                 return verifySignature(
-                    streamMessage.getPublisherId(),
+                    toUserIdRaw(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )
             case SignatureType.ERC_1271:
                 return this.erc1271ContractFacade.isValidSignature(
-                    streamMessage.getPublisherId(),
+                    toEthereumAddress(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )

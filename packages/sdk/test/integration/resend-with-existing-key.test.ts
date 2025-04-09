@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 
-import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { createTestWallet } from '@streamr/test-utils'
+import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -18,8 +18,8 @@ import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } 
  */
 describe('resend with existing key', () => {
 
-    const subscriberWallet = fastWallet()
-    const publisherWallet = fastWallet()
+    let subscriberWallet: Wallet
+    let publisherWallet: Wallet
     let subscriber: StreamrClient
     let stream: Stream
     let initialKey: GroupKey
@@ -40,8 +40,8 @@ describe('resend with existing key', () => {
         storageNode.storeMessage(message)
     }
 
-    const resendRange = (fromTimestamp: number, toTimestamp: number) => {
-        return subscriber.resend(stream.getStreamParts()[0], {
+    const resendRange = async (fromTimestamp: number, toTimestamp: number) => {
+        return subscriber.resend((await stream.getStreamParts())[0], {
             from: {
                 timestamp: fromTimestamp
             },
@@ -56,7 +56,7 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         const messages = await collect(messageStream)
-        expect(onError).not.toBeCalled()
+        expect(onError).not.toHaveBeenCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.timestamp)).toEqual(expectedTimestamps)
     }
@@ -66,10 +66,17 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         await collect(messageStream)
-        expect(onError).toBeCalled()
+        expect(onError).toHaveBeenCalled()
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(DecryptError)
+        expect(error).toEqualStreamrClientError({
+            code: 'DECRYPT_ERROR'
+        })
     }
+
+    beforeAll(async () => {
+        subscriberWallet = await createTestWallet()
+        publisherWallet = await createTestWallet()
+    })
 
     beforeEach(async () => {
         const streamId = toStreamID(createRelativeTestStreamId(module), toEthereumAddress(publisherWallet.address))
@@ -86,7 +93,7 @@ describe('resend with existing key', () => {
             id: streamId
         })
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         const storageNode = await environment.startStorageNode()
@@ -119,7 +126,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(initialKey.id, toEthereumAddress(publisherWallet.address), initialKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(initialKey.id, toUserId(publisherWallet.address), initialKey.data)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -137,7 +144,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rotatedKey.id, toEthereumAddress(publisherWallet.address), rotatedKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rotatedKey.id, toUserId(publisherWallet.address), rotatedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -152,7 +159,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rekeyedKey.id, toEthereumAddress(publisherWallet.address), rekeyedKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rekeyedKey.id, toUserId(publisherWallet.address), rekeyedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

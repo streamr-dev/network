@@ -9,7 +9,7 @@ const WAIT = 20
 
 async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
-    for await (const item of items) {
+    for (const item of items) {
         await wait(waitTime * 0.1)
         yield item
         await wait(waitTime * 0.1)
@@ -174,19 +174,19 @@ describe.skip('PushBuffer', () => {
         it('errors on bad buffer size', async () => {
             expect(() => {
                 new PushBuffer(0)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(-1)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(Number.MAX_SAFE_INTEGER + 10)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(1.5)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(0.5)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
         })
 
         it('can push inside pull', async () => {
@@ -282,25 +282,6 @@ describe.skip('PushBuffer', () => {
             for await (const msg of pushBuffer) {
                 received.push(msg)
             }
-
-            expect(received).toEqual(expected.slice(0, 3))
-        })
-
-        it('can defer error with endWrite', async () => {
-            const err = new Error(counterId('expected'))
-            const pushBuffer = new PushBuffer<number>()
-            await pushBuffer.push(expected[0])
-            await pushBuffer.push(expected[1])
-            await pushBuffer.push(expected[2])
-            pushBuffer.endWrite(err)
-            const ok = await pushBuffer.push(expected[3])
-            expect(ok).toEqual(false)
-            const received: number[] = []
-            await expect(async () => {
-                for await (const msg of pushBuffer) {
-                    received.push(msg)
-                }
-            }).rejects.toThrow(err)
 
             expect(received).toEqual(expected.slice(0, 3))
         })

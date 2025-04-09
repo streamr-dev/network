@@ -1,10 +1,10 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import { RouterRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -39,9 +39,9 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? getNodeIdFromPeerDescriptor(previousPeer)
-                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+                ? toNodeId(previousPeer)
+                : toNodeId(params.sourcePeer!)
+            const toNode = toNodeId(this.getPeerDescriptor())
             logger.trace(`Failed to send routeMessage from ${fromNode} to ${toNode}`, { err })
             return false
         }
@@ -69,9 +69,9 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? getNodeIdFromPeerDescriptor(previousPeer)
-                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+                ? toNodeId(previousPeer)
+                : toNodeId(params.sourcePeer!)
+            const toNode = toNodeId(this.getPeerDescriptor())
             logger.trace(`Failed to send forwardMessage from ${fromNode} to ${toNode}`, { err })
             return false
         }

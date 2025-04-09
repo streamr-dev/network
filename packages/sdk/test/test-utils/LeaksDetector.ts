@@ -83,6 +83,7 @@ export class LeaksDetector {
             const pathString = path.join('/')
             const constructor = value.constructor?.name
             const type = constructor === 'Object' ? undefined : constructor
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             return pathString + (type ? `-${type}` : '')
         })()
 
@@ -128,7 +129,7 @@ export class LeaksDetector {
             }
 
             const id = this.getID(path, value)
-            const paths = this.idToPaths.get(id) || new Set()
+            const paths = this.idToPaths.get(id) ?? new Set()
             paths.add(pathString)
             this.idToPaths.set(id, paths)
             if (!this.seen.has(value)) {
@@ -154,7 +155,7 @@ export class LeaksDetector {
         const results = (await Promise.all(tasks)).filter(Boolean) as string[]
 
         const leaks = results.reduce((o, id) => Object.assign(o, {
-            [id]: [...(this.idToPaths.get(id) || [])],
+            [id]: [...(this.idToPaths.get(id) ?? [])],
         }), {})
 
         logger.debug(`checking for leaks with ${this.leakDetectors.size} items <<`)
@@ -176,6 +177,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items, including id ${id}: ${leaks}`
             this.clear()
             throw new Error(msg)

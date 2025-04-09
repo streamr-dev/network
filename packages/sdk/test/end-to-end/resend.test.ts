@@ -1,14 +1,14 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestStream, createTestClient } from '../test-utils/utils'
+import { createTestPrivateKey } from '@streamr/test-utils'
+import { until, wait } from '@streamr/utils'
+import { randomBytes } from 'crypto'
+import random from 'lodash/random'
 import range from 'lodash/range'
+import shuffle from 'lodash/shuffle'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { wait, waitForCondition } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { randomBytes } from 'crypto'
-import shuffle from 'lodash/shuffle'
-import random from 'lodash/random'
+import { StreamrClient } from '../../src/StreamrClient'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const NUM_OF_MESSAGES = 20
 const MESSAGE_STORE_TIMEOUT = 10 * 1000
@@ -17,11 +17,11 @@ const TIMEOUT = 60 * 1000
 describe('resend', () => {
     let publisherClient: StreamrClient
     let resendClient: StreamrClient
-    let payloads: Array<Uint8Array | { idx: number }>
+    let payloads: (Uint8Array | { idx: number })[]
 
     beforeEach(async () => {
-        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
-        resendClient = createTestClient(fastPrivateKey(), 43233)
+        publisherClient = createTestClient(await createTestPrivateKey({ gas: true }), 43232)
+        resendClient = createTestClient(undefined, 43233)
         const binaryPayloads = range(NUM_OF_MESSAGES / 2).map(() => randomBytes(random(0, 256)))
         const jsonPayloads = range(NUM_OF_MESSAGES / 2).map((idx) => ({ idx }))
         payloads = shuffle([...binaryPayloads, ...jsonPayloads])
@@ -29,8 +29,8 @@ describe('resend', () => {
 
     afterEach(async () => {
         await Promise.allSettled([
-            publisherClient?.destroy(),
-            resendClient?.destroy(),
+            publisherClient.destroy(),
+            resendClient.destroy(),
         ])
     }, TIMEOUT)
 
@@ -41,9 +41,9 @@ describe('resend', () => {
             stream = await createTestStream(publisherClient, module, { partitions: 3 })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: await resendClient.getAddress()
+                userId: await resendClient.getUserId()
             })
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { wait: true })
             for (const payload of payloads) {
                 await publisherClient.publish({ id: stream.id, partition: 0 }, payload)
             }
@@ -58,7 +58,7 @@ describe('resend', () => {
             }, { last: NUM_OF_MESSAGES }, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(
+            await until(
                 () => messages.length >= NUM_OF_MESSAGES,
                 TIMEOUT - 1000,
                 250,

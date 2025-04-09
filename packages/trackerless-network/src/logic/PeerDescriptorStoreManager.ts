@@ -5,7 +5,7 @@ import {
     areEqualPeerDescriptors
 } from '@streamr/dht'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { Any } from '../proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 
 const parsePeerDescriptor = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
@@ -32,7 +32,6 @@ export class PeerDescriptorStoreManager {
 
     private readonly abortController: AbortController
     private readonly options: PeerDescriptorStoreManagerOptions
-    // eslint-disable-next-line no-underscore-dangle
     private isLocalNodeStored_ = false
 
     constructor(options: PeerDescriptorStoreManagerOptions) {

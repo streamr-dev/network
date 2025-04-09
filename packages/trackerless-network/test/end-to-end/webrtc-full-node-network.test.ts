@@ -1,6 +1,6 @@
-import { getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { range } from 'lodash'
+import { toNodeId, getRandomRegion } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import range from 'lodash/range'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
@@ -32,7 +32,6 @@ describe('Full node network with WebRTC connections', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
         entryPoint.getContentDeliveryManager().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async () => {
@@ -45,7 +44,6 @@ describe('Full node network with WebRTC connections', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
             node.getContentDeliveryManager().joinStreamPart(streamPartId)
         }))
 
@@ -60,7 +58,7 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
-            waitForCondition(() => {
+            until(() => {
                 return node.getContentDeliveryManager().getNeighbors(streamPartId).length >= 3
             }
             , 30000)
@@ -69,7 +67,7 @@ describe('Full node network with WebRTC connections', () => {
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getContentDeliveryManager().on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
+                successIds.push(toNodeId(node.getContentDeliveryManager().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })
@@ -79,7 +77,7 @@ describe('Full node network with WebRTC connections', () => {
             randomUserId()
         )
         entryPoint.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
+        await until(() => receivedMessageCount === NUM_OF_NODES)
     }, 120000)
 
 })

@@ -1,16 +1,16 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebrtcConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
     RtcAnswer,
     RtcOffer,
     WebrtcConnectionRequest
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { Empty } from '../../generated/google/protobuf/empty'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { IWebrtcConnectorRpc } from '../../src/proto/packages/dht/protos/DhtRpc.server'
-import { waitForCondition } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { IWebrtcConnectorRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
+import { until } from '@streamr/utils'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
@@ -86,7 +86,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor, notification: true }
         )
 
-        await waitForCondition(() => requestConnectionCounter === 1)
+        await until(() => requestConnectionCounter === 1)
     })
 
     it('send rtcOffer', async () => {
@@ -97,7 +97,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor, notification: true }
         )
 
-        await waitForCondition(() => rtcOfferCounter === 1)
+        await until(() => rtcOfferCounter === 1)
     })
 
     it('send rtcAnswer', async () => {
@@ -108,7 +108,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor, notification: true }
         )
 
-        await waitForCondition(() => rtcAnswerCounter === 1)
+        await until(() => rtcAnswerCounter === 1)
     })
 
     it('send iceCandidate', async () => {
@@ -120,6 +120,6 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor, notification: true }
         )
 
-        await waitForCondition(() => iceCandidateCounter === 1)
+        await until(() => iceCandidateCounter === 1)
     })
 })

@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
 import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
@@ -23,16 +22,12 @@ describe('NetworkNodeFacade', () => {
 
         let client: StreamrClient
 
-        const getNode = (): Promise<NetworkNodeStub> => {
+        const getNode = (): Promise<Omit<NetworkNodeStub, 'start' | 'stop'>> => {
             return client.getNode().getNode()
         }
 
         beforeEach(async () => {
-            client = environment.createClient({
-                auth: {
-                    privateKey: fastPrivateKey()
-                }
-            })
+            client = environment.createClient()
         })
 
         it('caches node', async () => {
@@ -55,7 +50,7 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await getNode()
-                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrClientError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can call destroy multiple times', async () => {
@@ -67,14 +62,14 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await getNode()
-                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrClientError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy before start', async () => {
                 await client.destroy()
                 await expect(async () => {
                     await getNode()
-                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrClientError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy during start', async () => {
@@ -85,7 +80,7 @@ describe('NetworkNodeFacade', () => {
                     ]
                     await Promise.allSettled(tasks)
                     await Promise.all(tasks)
-                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrClientError({ code: 'CLIENT_DESTROYED' })
             })
         })
     })

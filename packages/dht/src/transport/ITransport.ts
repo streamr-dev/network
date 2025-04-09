@@ -1,5 +1,6 @@
-import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { EventEmitterType } from '@streamr/utils'
+
 export interface TransportEvents {
     connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
@@ -9,11 +10,13 @@ export interface TransportEvents {
 export interface SendOptions {
     connect: boolean
     sendIfStopped: boolean
+    doNotBufferWhileConnecting: boolean
 }
 
 export const DEFAULT_SEND_OPTIONS = {
     connect: true,
-    sendIfStopped: false
+    sendIfStopped: false,
+    doNotBufferWhileConnecting: false
 }
 
 export interface ITransport extends EventEmitterType<TransportEvents> {

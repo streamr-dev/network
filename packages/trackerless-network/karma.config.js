@@ -18,5 +18,14 @@ module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
             path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
         '@streamr/dht': path.resolve('../dht/src/exports.ts'),
         '@streamr/proto-rpc': path.resolve('../proto-rpc/src/exports.ts'),
+    },
+    fallback: {
+        module: false
+    },
+    externals: {
+        'node-datachannel': 'commonjs node-datachannel',
+        express: 'Express',
+        http: 'HTTP',
+        ws: 'WebSocket',
     }
-}))
+}), __dirname)

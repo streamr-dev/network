@@ -2,9 +2,10 @@ import {
     EthereumAddress,
     Logger,
     ObservableEventEmitter, StreamID, TheGraphClient,
+    WeiAmount,
     collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
-import { Overrides } from 'ethers'
+import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
 import { Authentication } from '../Authentication'
 import { DestroySignal } from '../DestroySignal'
@@ -25,8 +26,8 @@ interface RawResult {
 
 interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
-    sumDataWei: bigint
-    maxAllowedEarningsDataWei: bigint
+    sum: WeiAmount
+    maxAllowedEarnings: WeiAmount
 }
 
 /**
@@ -150,12 +151,12 @@ export class Operator {
         contractAddress: EthereumAddress,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
+        chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         authentication: Authentication,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         getEthersOverrides: () => Promise<Overrides>,
-        eventPollInterval: number
     ) {
         this.contractAddress = contractAddress
         this.contractFactory = contractFactory
@@ -169,7 +170,7 @@ export class Operator {
         this.theGraphClient = theGraphClient
         this.authentication = authentication
         this.getEthersOverrides = getEthersOverrides
-        this.initEventGateways(contractAddress, loggerFactory, eventPollInterval)
+        this.initEventGateways(contractAddress, chainEventPoller, loggerFactory)
         destroySignal.onDestroy.listen(() => {
             this.eventEmitter.removeAllListeners()
         })
@@ -177,17 +178,18 @@ export class Operator {
 
     private initEventGateways(
         contractAddress: EthereumAddress,
-        loggerFactory: LoggerFactory,
-        eventPollInterval: number
+        chainEventPoller: ChainEventPoller,
+        loggerFactory: LoggerFactory
     ): void {
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
-        }), eventPollInterval)
+        const contractInterface = new Interface(OperatorArtifact)
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
         initContractEventGateway({
-            sourceName: 'Staked',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Staked')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'staked',
             targetEmitter: this.eventEmitter,
@@ -195,7 +197,10 @@ export class Operator {
             loggerFactory
         })
         initContractEventGateway({
-            sourceName: 'Unstaked',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('Unstaked')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'unstaked',
             targetEmitter: this.eventEmitter,
@@ -219,7 +224,10 @@ export class Operator {
             }
         }
         initContractEventGateway({
-            sourceName: 'ReviewRequest',
+            sourceDefinition: {
+                contractInterfaceFragment: contractInterface.getEvent('ReviewRequest')!,
+                contractAddress
+            },
             sourceEmitter: chainEventPoller,
             targetName: 'reviewRequested',
             targetEmitter: this.eventEmitter,
@@ -242,6 +250,7 @@ export class Operator {
                 }
             }`
         })
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         if (result.operator === null || result.operator.latestHeartbeatTimestamp === null) {
             return undefined
         } else {
@@ -400,30 +409,29 @@ export class Operator {
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
     async getEarnings(
-        minSponsorshipEarningsInWithdraw: number,
+        minSponsorshipEarningsInWithdraw: WeiAmount,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
             maxAllowedEarnings,
         } = await this.contractReadonly.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
             addresses: string[]
-            earnings: bigint[]
-            maxAllowedEarnings: bigint
+            earnings: WeiAmount[]
+            maxAllowedEarnings: WeiAmount
         }
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
-            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
+            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdraw)
             .sort((a, b) => compareBigInts(a.earnings, b.earnings)) // TODO: after Node 20, use .toSorted() instead
             .slice(0, maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
-            sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
-            maxAllowedEarningsDataWei: maxAllowedEarnings
+            sum: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
+            maxAllowedEarnings: maxAllowedEarnings
         }
     }
 
@@ -576,7 +584,7 @@ export class Operator {
             sponsorshipAddress,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit }
+            { ...(await this.getEthersOverrides()), gasLimit }
         )).wait()
     }
 

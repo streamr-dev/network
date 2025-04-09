@@ -21,9 +21,9 @@ const ajv = new Ajv({
 })
 // addFormats(ajv) does not work properly when generating stand-alone code
 // (https://github.com/ajv-validator/ajv-formats/issues/68) so adding formats one-by-one
-ajv.addFormat('uri', fastFormats['uri'])
-ajv.addFormat('ipv4', fullFormats['ipv4'])
-ajv.addFormat('hostname', fullFormats['hostname'])
+ajv.addFormat('uri', fastFormats.uri)
+ajv.addFormat('ipv4', fullFormats.ipv4)
+ajv.addFormat('hostname', fullFormats.hostname)
 ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
 ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
 

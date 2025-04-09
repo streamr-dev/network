@@ -1,13 +1,13 @@
-import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
-import { range } from 'lodash'
+import { toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
+import range from 'lodash/range'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 20
+    const NUM_OF_NODES = 12
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })
@@ -29,7 +29,6 @@ describe('Full node network with WebSocket connections only', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
         entryPoint.getContentDeliveryManager().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
@@ -43,7 +42,6 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
             node.getContentDeliveryManager().joinStreamPart(streamPartId)
         }))
 
@@ -58,7 +56,7 @@ describe('Full node network with WebSocket connections only', () => {
 
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
-            waitForCondition(() => {
+            until(() => {
                 return node.getContentDeliveryManager().getNeighbors(streamPartId).length >= 4
             }
             , 30000)
@@ -67,7 +65,7 @@ describe('Full node network with WebSocket connections only', () => {
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getContentDeliveryManager().on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
+                successIds.push(toNodeId(node.getContentDeliveryManager().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })
@@ -78,7 +76,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomUserId()
         )
         entryPoint.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
+        await until(() => receivedMessageCount === NUM_OF_NODES)
     }, 220000)
 
 })

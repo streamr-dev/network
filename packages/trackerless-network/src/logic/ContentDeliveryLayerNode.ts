@@ -4,7 +4,7 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -16,8 +16,8 @@ import {
     StreamMessage,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -31,6 +31,7 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
+import { ContentDeliveryLayerNeighborInfo } from '../types'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -64,7 +65,9 @@ export interface StrictContentDeliveryLayerNodeOptions {
     rpcRequestTimeout?: number
 }
 
-const RANDOM_NODE_VIEW_SIZE = 20
+export const DEFAULT_NODE_VIEW_SIZE = 20
+export const DEFAULT_NEIGHBOR_TARGET_COUNT = 4
+export const DEFAULT_ACCEPT_PROXY_CONNECTIONS = false
 
 const logger = new Logger(module)
 
@@ -92,9 +95,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     return
                 }
                 const contact = this.options.nearbyNodeView.get(remoteNodeId)
-                || this.options.randomNodeView.get(remoteNodeId)
-                || this.options.neighbors.get(remoteNodeId)
-                || this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
+                ?? this.options.randomNodeView.get(remoteNodeId)
+                ?? this.options.neighbors.get(remoteNodeId)
+                ?? this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.options.discoveryLayerNode.removeContact(remoteNodeId)
@@ -165,7 +168,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             (id, remote) => {
                 this.options.propagation.onNeighborJoined(id)
                 this.options.connectionLocker.weakLockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
                 this.emit('neighborConnected', id)
@@ -177,7 +180,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             'nodeRemoved',
             (_id, remote) => {
                 this.options.connectionLocker.weakUnlockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
             },
@@ -283,7 +286,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,
@@ -303,7 +306,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.options.discoveryLayerNode.getRandomContacts(this.options.nodeViewSize)
         this.options.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.options.localPeerDescriptor,
@@ -316,7 +319,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         if (this.options.neighbors.has(nodeId)) {
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
@@ -340,7 +343,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.options.neighbors.getAll().map((remote) => {
             remote.leaveStreamPartNotice(this.options.streamPartId, this.options.isLocalNodeEntryPoint())
             this.options.connectionLocker.weakUnlockConnection(
-                getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                toNodeId(remote.getPeerDescriptor()),
                 this.options.streamPartId
             )
         })
@@ -378,7 +381,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     getOwnNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        return toNodeId(this.options.localPeerDescriptor)
     }
 
     getOutgoingHandshakeCount(): number {
@@ -390,6 +393,15 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             return []
         }
         return this.options.neighbors.getAll().map((n) => n.getPeerDescriptor())
+    }
+
+    getInfos(): ContentDeliveryLayerNeighborInfo[] {
+        return this.options.neighbors.getAll().map((n) => {
+            return {
+                peerDescriptor: n.getPeerDescriptor(),
+                rtt: n.getRtt()
+            }
+        })
     }
 
     getNearbyNodeView(): NodeList {

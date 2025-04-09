@@ -1,19 +1,13 @@
-import {
-    ListeningRpcCommunicator,
-    NodeType,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport
-} from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { Empty } from '../../src/proto/google/protobuf/empty'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createStreamMessage } from '../utils/utils'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcRemote', () => {
@@ -21,14 +15,8 @@ describe('ContentDeliveryRpcRemote', () => {
     let clientRpc: ListeningRpcCommunicator
     let rpcRemote: ContentDeliveryRpcRemote
 
-    const clientNode: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
-    const serverNode: PeerDescriptor = {
-        nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
-    }
+    const clientNode = createMockPeerDescriptor()
+    const serverNode = createMockPeerDescriptor()
 
     let recvCounter: number
 
@@ -89,12 +77,12 @@ describe('ContentDeliveryRpcRemote', () => {
         )
 
         await rpcRemote.sendStreamMessage(msg)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
         rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
 })

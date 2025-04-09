@@ -5,10 +5,10 @@
         "noImplicitOverride": false
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "generated/**/*"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" }
+        { "path": "../utils/tsconfig.node.json" }
     ]
 }

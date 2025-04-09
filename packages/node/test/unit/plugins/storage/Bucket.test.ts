@@ -1,4 +1,3 @@
-/* eslint-disable no-new */
 import { Bucket } from '../../../../src/plugins/storage/Bucket'
 
 describe('Bucket', () => {

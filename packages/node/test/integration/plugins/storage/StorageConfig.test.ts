@@ -1,15 +1,15 @@
+import { Stream, StreamrClient, convertBytesToStreamMessage } from '@streamr/sdk'
+import { createTestWallet } from '@streamr/test-utils'
+import { until } from '@streamr/utils'
 import cassandra, { Client } from 'cassandra-driver'
-import { StreamrClient, Stream, convertBytesToStreamMessage } from '@streamr/sdk'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Broker } from '../../../../src/broker'
 import {
-    createClient,
     STREAMR_DOCKER_DEV_HOST,
+    createClient,
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from '../../../../src/broker'
-import { waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -28,8 +28,8 @@ describe('StorageConfig', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        publisherAccount = await createTestWallet({ gas: true })
+        storageNodeAccount = await createTestWallet({ gas: true })
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -38,7 +38,7 @@ describe('StorageConfig', () => {
     })
 
     afterAll(async () => {
-        await cassandraClient?.shutdown()
+        await cassandraClient.shutdown()
     })
 
     beforeEach(async () => {
@@ -50,16 +50,16 @@ describe('StorageConfig', () => {
     afterEach(async () => {
         await client.destroy()
         await Promise.allSettled([
-            storageNode?.stop(),
+            storageNode.stop(),
         ])
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        await stream.addToStorageNode(storageNodeAccount.address)
+        await stream.addToStorageNode(storageNodeAccount.address, { wait: true })
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })
-        await waitForCondition(async () => {
+        await until(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)
         })

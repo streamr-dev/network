@@ -12,7 +12,7 @@ interface Options {
 export class GroupKeyResponse {
     readonly requestId: string
     readonly recipient: UserID
-    readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
+    readonly encryptedGroupKeys: readonly EncryptedGroupKey[]
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
         this.requestId = requestId
@@ -22,6 +22,7 @@ export class GroupKeyResponse {
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
                 throw new ValidationError(
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
                 )
             }

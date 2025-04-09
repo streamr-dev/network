@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('custom matchers', () => {
@@ -12,5 +12,23 @@ describe('custom matchers', () => {
 
     it('no match', () => {
         expect(createMockPeerDescriptor()).not.toEqualPeerDescriptor(createMockPeerDescriptor())
+    })
+
+    describe('error message', () => {
+
+        it('normal', () => {
+            const actual = createMockPeerDescriptor()
+            const expected = createMockPeerDescriptor()
+            expect(() => {
+                expect(actual).toEqualPeerDescriptor(expected)
+            }).toThrow('PeerDescriptor nodeId values don\'t match')
+        })
+
+        it('inverse', () => {
+            const peerDescriptor = createMockPeerDescriptor()
+            expect(() => {
+                expect(peerDescriptor).not.toEqualPeerDescriptor(peerDescriptor)
+            }).toThrow('PeerDescriptors are equal')
+        })
     })
 })

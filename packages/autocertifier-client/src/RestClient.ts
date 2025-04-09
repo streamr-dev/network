@@ -1,14 +1,12 @@
 import { Session } from './data/Session'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
-import request, { Response } from 'request'
 import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
-import { ServerError } from './errors'
 import { Logger } from '@streamr/utils'
+import { makeHttpRequest } from './makeHttpRequest'
 
 const logger = new Logger(module)
 
-// TODO: use a non-deprecated HTTP client that support async/await instead of request
 export class RestClient {
 
     private readonly baseUrl: string
@@ -23,7 +21,7 @@ export class RestClient {
     public async createSession(): Promise<string> {
         const url = this.baseUrl + '/sessions'
         try {
-            const response = await this.post<Session>(url, {})
+            const response = await makeHttpRequest<Session>('POST', url, {})
             return response.id
         } catch (err) {
             logger.debug(err)
@@ -37,8 +35,7 @@ export class RestClient {
             streamrWebSocketPort,
             sessionId
         }
-        const response = await this.patch<CertifiedSubdomain>(url, body, 2 * 60 * 1000)
-        return response
+        return await makeHttpRequest<CertifiedSubdomain>('PATCH', url, body, 2 * 60 * 1000)
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<CertifiedSubdomain> {
@@ -48,8 +45,7 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        const response = await this.patch<CertifiedSubdomain>(url, body)
-        return response
+        return await makeHttpRequest<CertifiedSubdomain>('PATCH', url, body)
     }
 
     public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
@@ -61,51 +57,6 @@ export class RestClient {
             sessionId,
             streamrWebSocketPort
         }
-        await this.put<any>(url, body)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private post<T>(url: string, body: any): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.post(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private put<T>(url: string, body: any): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.put(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private patch<T>(url: string, body: any, timeout?: number): Promise<T> {
-        return new Promise((resolve, reject) => {
-            request.patch(url, { json: body, rejectUnauthorized: false, timeout }, (error: any, response: Response, body: any) => {
-                if (error) {
-                    reject(error)
-                } else if (response.statusCode >= 200 && response.statusCode < 300) {
-                    resolve(body)
-                } else {
-                    reject(new ServerError(body))
-                }
-            })
-        })
+        await makeHttpRequest<undefined>('PUT', url, body)
     }
 }

@@ -1,8 +1,10 @@
+/// <reference lib="dom" />
+
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
-import { IceServer } from './WebrtcConnector'
+import { EARLY_TIMEOUT, IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
 
 enum DisconnectedRtcPeerConnectionStateEnum {
@@ -32,11 +34,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private makingOffer = false
     private isOffering = false
     private closed = false
+    private earlyTimeout: NodeJS.Timeout
 
     constructor(params: Params) {
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
+        this.earlyTimeout = setTimeout(() => {
+            this.doClose(false, 'timed out due to remote descriptor not being set')
+        }, EARLY_TIMEOUT)
     }
 
     public start(isOffering: boolean): void {
@@ -49,6 +55,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
+            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
             if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
@@ -95,6 +102,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
         try {
             await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
+            clearTimeout(this.earlyTimeout)
         } catch (err) {
             logger.warn('Failed to set remote description', { err })
         }
@@ -132,6 +140,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         if (!this.closed) {
             this.closed = true
             this.lastState = 'closed'
+            clearTimeout(this.earlyTimeout)
 
             this.stopListening()
             this.emit('disconnected', gracefulLeave, undefined, reason)

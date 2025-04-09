@@ -44,15 +44,18 @@ export class GroupKey {
             throw new GroupKeyError(`value must be a ${this.name}: ${maybeGroupKey}`, maybeGroupKey)
         }
         if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new GroupKeyError(`${this.name} id must be a string: ${maybeGroupKey}`, maybeGroupKey)
         }
         if (maybeGroupKey.id.includes('---BEGIN')) {
             throw new GroupKeyError(
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `${this.name} public/private key is not a valid group key id: ${maybeGroupKey}`,
                 maybeGroupKey
             )
         }
         if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new GroupKeyError(`${this.name} data must be a Buffer: ${maybeGroupKey}`, maybeGroupKey)
         }
         if (maybeGroupKey.data.length !== 32) {

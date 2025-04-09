@@ -1,7 +1,7 @@
-import { EventEmitter } from 'eventemitter3'
-import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { binaryToHex } from '@streamr/utils'
 import { DhtAddress } from '@streamr/dht'
+import { toUserId } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export interface Events {
     done: () => void
@@ -12,8 +12,9 @@ interface InspectSessionOptions {
 }
 
 const createMessageKey = (messageId: MessageID): string => {
-    return `${binaryToHex(messageId.publisherId)}:${messageId.messageChainId}:${messageId.timestamp}:${messageId.sequenceNumber}`
+    return `${toUserId(messageId.publisherId)}:${messageId.messageChainId}:${messageId.timestamp}:${messageId.sequenceNumber}`
 }
+
 export class InspectSession extends EventEmitter<Events> {
     
     // Boolean indicates if the message has been received by the inspected node

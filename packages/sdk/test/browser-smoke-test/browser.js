@@ -1,4 +1,4 @@
-/* eslint-disable no-undef, @typescript-eslint/no-require-imports */
+/* eslint-disable no-undef */
 
 const TARGET_SUBSCRIBE_MSG_COUNT = 50
 const RESEND_SUBSCRIBE_MSG_COUNT = TARGET_SUBSCRIBE_MSG_COUNT - 10 // some may not have landed in storage yet
@@ -31,6 +31,7 @@ describe('StreamrClient', () => {
     after(async (browser) => {
         await browser.getLog('browser', (logs) => {
             logs.forEach((l) => {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 console.info(`[${l.level}]: ${l.message}`)
             })
         })

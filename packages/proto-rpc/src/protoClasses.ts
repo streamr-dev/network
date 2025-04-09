@@ -1,4 +1,4 @@
 import { IMessageType } from '@protobuf-ts/runtime'
-import { RpcMessage } from './proto/ProtoRpc'
+import { RpcMessage } from '../generated/ProtoRpc'
 
-export const protoClasses: Array<IMessageType<any>> = [ RpcMessage ]
+export const protoClasses: IMessageType<any>[] = [ RpcMessage ]

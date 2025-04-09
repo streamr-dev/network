@@ -9,30 +9,7 @@ import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignment
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-
-const authentication = createRandomAuthentication()
-const messageSigner = new MessageSigner(authentication)
-
-async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-    return messageSigner.createSignedMessage({
-        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
-        messageType: StreamMessageType.MESSAGE,
-        content: utf8ToBinary(JSON.stringify(content)),
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
-}
-
-async function createAssignmentMessagesFor(stream: {
-    id: StreamID
-    partitions: number
-}): Promise<StreamMessage[]> {
-    return Promise.all(range(0, stream.partitions).map((partition) => (
-        makeMsg(partition * 1000, {
-            streamPart: toStreamPartID(stream.id, partition)
-        })
-    )))
-}
+import { Authentication } from '../../src/Authentication'
 
 const RACE_TIMEOUT_IN_MS = 20
 
@@ -42,9 +19,36 @@ const TARGET_STREAM = Object.freeze({
 })
 
 describe(waitForAssignmentsToPropagate, () => {
+
     let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
+    let authentication: Authentication
+
+    async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
+        return new MessageSigner(authentication).createSignedMessage({
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
+            messageType: StreamMessageType.MESSAGE,
+            content: utf8ToBinary(JSON.stringify(content)),
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+        }, SignatureType.SECP256K1)
+    }
+
+    async function createAssignmentMessagesFor(stream: {
+        id: StreamID
+        partitions: number
+    }): Promise<StreamMessage[]> {
+        return Promise.all(range(0, stream.partitions).map((partition) => (
+            makeMsg(partition * 1000, {
+                streamPart: toStreamPartID(stream.id, partition)
+            })
+        )))
+    }
+
+    beforeAll(async () => {
+        authentication = await createRandomAuthentication()
+    })
 
     beforeEach(() => {
         messageStream = new MessageStream()
