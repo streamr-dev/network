@@ -263,7 +263,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.options.rpcRequestTimeout }
         )
 
-        addManagedEventListener<'message', (message: Message) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+        /* eslint-disable indent */
+        addManagedEventListener<'message', (message: Message) => void>(  // TODO remove explicit type in NET-1449
             this.transport,
             'message',
             (message: Message) => this.handleMessageFromTransport(message),
@@ -387,7 +388,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 }
             }
         })
-        addManagedEventListener<'connected', (eerDescriptor: PeerDescriptor) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+        /* eslint-disable indent */
+        addManagedEventListener<'connected', (peerDescriptor: PeerDescriptor) => void>(  // TODO remove explicit type in NET-1449
             this.transport!,
             'connected',
             (peerDescriptor: PeerDescriptor) => {
@@ -396,7 +398,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             },
             this.abortController.signal
         )
-        addManagedEventListener<'disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void>(  // TODO refactor ITransport so that explicit generic type is not needed
+        /* eslint-disable indent, max-len */
+        addManagedEventListener<'disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void>(  // TODO remove explicit type in NET-1449
             this.transport!,
             'disconnected',
             (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
