@@ -31,7 +31,7 @@ export const resend = async (
             await client.resend(streamId, resendOpts, handler)
         }
     } catch (err) {
-        console.error(err.message ? err.message : err)
+        console.error(err.message ?? err)
         process.exit(1)
     }
 }
