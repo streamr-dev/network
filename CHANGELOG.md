@@ -34,6 +34,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+- Fix memory leak in `DhtNode` (https://github.com/streamr-dev/network/pull/3065)
+
 #### Security
 
 ### @streamr/node
