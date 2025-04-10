@@ -119,9 +119,7 @@ export default class ServerPersistence implements PersistenceContext {
             this.store = store
         } catch (err) {
             this.logger.trace('Failed to open database', err)
-            if (!this.error) {
-                this.error = err
-            }
+            this.error ??= err
         }
 
         if (this.error) {

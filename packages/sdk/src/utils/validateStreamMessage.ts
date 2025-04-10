@@ -16,9 +16,7 @@ export const validateStreamMessage = async (
         // here if e.g. contract call fails? TODO is this really needed as
         // the onError callback in messagePipeline knows which message
         // it is handling?
-        if (!err.streamMessage) {
-            err.streamMessage = msg
-        }
+        err.streamMessage ??= msg
         throw err
     })
 }
