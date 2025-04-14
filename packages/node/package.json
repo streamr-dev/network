@@ -73,7 +73,7 @@
     "@types/merge2": "^1.4.4",
     "@types/qs": "^6.9.18",
     "@types/stream-to-array": "^2.3.3",
-    "@types/supertest": "^6.0.2",
+    "@types/supertest": "^6.0.3",
     "@types/ws": "^8.18.1",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
