@@ -7,7 +7,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
+import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
 
 const streamId = toStreamID('mock-stream')
 
@@ -20,7 +20,7 @@ describe('GroupKeyQueue', () => {
 
     beforeEach(async () => {
         groupKeyStore = mock<LocalGroupKeyStore>()
-        authentication = await createRandomAuthentication()
+        authentication = await createRandomIdentity()
         groupKeyManager = await createGroupKeyManager(groupKeyStore, authentication)
         queue = await GroupKeyQueue.createInstance(streamId, authentication, groupKeyManager)
     })

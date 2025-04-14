@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { UserID, hexToBinary, toStreamID, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
-import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { mock } from 'jest-mock-extended'
 import { Identity } from '../../src/identity/Identity'
 import { StreamMetadata } from '../../src/StreamMetadata'
@@ -9,10 +9,10 @@ import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
-import { MOCK_CONTENT, createRandomAuthentication } from '../test-utils/utils'
+import { MOCK_CONTENT, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
@@ -28,7 +28,7 @@ const groupKeyRequestToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_REQUEST,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    }, SignatureType.EVM_SECP256K1)
 }
 
 const groupKeyResponseToStreamMessage = async (
@@ -45,7 +45,7 @@ const groupKeyResponseToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    }, SignatureType.EVM_SECP256K1)
 }
 
 describe('Validator2', () => {
@@ -72,8 +72,8 @@ describe('Validator2', () => {
     }
 
     beforeAll(async () => {
-        publisherAuthentication = await createRandomAuthentication()
-        subscriberAuthentication = await createRandomAuthentication()
+        publisherAuthentication = await createRandomIdentity()
+        subscriberAuthentication = await createRandomIdentity()
     })
 
     beforeEach(async () => {
@@ -98,7 +98,7 @@ describe('Validator2', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
 
         msgWithNewGroupKey = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
@@ -107,7 +107,7 @@ describe('Validator2', () => {
             newGroupKey: { id: 'groupKeyId', data: hexToBinary('0x1111') },
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
         expect(msg.signature).not.toEqualBinary(msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
@@ -117,7 +117,7 @@ describe('Validator2', () => {
             prevMsgRef: new MessageRef(1000, 0),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
         expect(msg.signature).not.toEqualBinary(msgWithPrevMsgRef.signature)
 
         groupKeyRequest = await groupKeyRequestToStreamMessage({

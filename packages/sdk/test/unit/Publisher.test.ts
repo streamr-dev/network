@@ -5,11 +5,11 @@ import { Publisher } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
+import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
 
 describe('Publisher', () => {
     it('error message', async () => {
-        const authentication = await createRandomAuthentication()
+        const authentication = await createRandomIdentity()
         const streamIdBuilder = new StreamIDBuilder(authentication)
         const streamRegistry = {
             isStreamPublisher: async () => false,

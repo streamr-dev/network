@@ -10,9 +10,9 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
-import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
+import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -39,14 +39,14 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        const authentication = createEthereumPrivateKeyAuthentication(publisherWallet.privateKey)
+        const identity = new EthereumPrivateKeyIdentity(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
-            identity: authentication,
+            identity,
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
-            groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+            groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication)
+            messageSigner: new MessageSigner(identity)
         })
     })
 

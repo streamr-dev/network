@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { createTestPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
-import { createSignature, hash, hexToBinary } from '@streamr/utils'
+import { EVM_SECP256K1, hexToBinary } from '@streamr/utils'
 import { Provider } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { RpcProviderSource } from '../../src/RpcProviderSource'
@@ -22,7 +22,7 @@ describe('ERC1271ContractFacade', () => {
     let signature: Uint8Array
 
     beforeAll(async () => {
-        signature = createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
+        signature = EVM_SECP256K1.createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
     })
 
     beforeEach(() => {
@@ -46,7 +46,7 @@ describe('ERC1271ContractFacade', () => {
 
     it('isValidSignature delegates to isValidSignature', async () => {
         await contractFacade.isValidSignature(CONTRACT_ADDRESS_ONE, PAYLOAD, signature)
-        expect(contractOne.isValidSignature).toHaveBeenCalledWith(hash(PAYLOAD), signature)
+        expect(contractOne.isValidSignature).toHaveBeenCalledWith(EVM_SECP256K1.keccakHash(PAYLOAD), signature)
     })
 
     it('isValidSignature: valid case', async () => {

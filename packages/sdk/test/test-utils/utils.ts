@@ -21,7 +21,8 @@ import { mock } from 'jest-mock-extended'
 import { AddressInfo } from 'net'
 import path from 'path'
 import { DependencyContainer } from 'tsyringe'
-import { Identity, createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
+import { Identity } from '../../src/identity/Identity'
+import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
 import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -129,18 +130,18 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
-    const authentication = createEthereumPrivateKeyAuthentication(opts.publisher.privateKey)
+    const identity = new EthereumPrivateKeyIdentity(opts.publisher.privateKey)
     const factory = new MessageFactory({
-        identity: authentication,
+        identity: identity,
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
+        groupKeyQueue: await createGroupKeyQueue(identity, opts.encryptionKey, opts.nextEncryptionKey),
         signatureValidator: mock<SignatureValidator>(),
-        messageSigner: new MessageSigner(authentication)
+        messageSigner: new MessageSigner(identity)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -176,8 +177,8 @@ export const startPublisherKeyExchangeSubscription = async (
     await node.join(streamPartId)
 }
 
-export const createRandomAuthentication = async (): Promise<Identity> => {
-    return createEthereumPrivateKeyAuthentication(await createTestPrivateKey())
+export const createRandomIdentity = async (): Promise<Identity> => {
+    return new EthereumPrivateKeyIdentity(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {
@@ -218,7 +219,7 @@ export const createGroupKeyManager = async (
                 requireQuantumResistantKeyExchange: false,
             }
         },
-        authentication ?? await createRandomAuthentication(),
+        authentication ?? await createRandomIdentity(),
         new StreamrClientEventEmitter(),
         new DestroySignal()
     )

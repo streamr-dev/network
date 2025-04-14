@@ -15,7 +15,7 @@ import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
-import { Identity, IdentityInjectionToken, SignerWithProvider, createIdentityFromConfig } from './identity/Identity'
+import { Identity, IdentityInjectionToken, SignerWithProvider } from './identity/Identity'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -58,6 +58,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { createIdentityFromConfig } from './identity/createIdentityFromConfig'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions

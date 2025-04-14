@@ -4,7 +4,6 @@ import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toUserId, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
-import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
@@ -20,7 +19,9 @@ import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
+import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
 
 const CONTENT = {
     foo: 'bar'
@@ -40,7 +41,7 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const messageSigner = new MessageSigner(createEthereumPrivateKeyAuthentication(publisher.privateKey))
+        const messageSigner = new MessageSigner(new EthereumPrivateKeyIdentity(publisher.privateKey))
         return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,
@@ -55,7 +56,7 @@ describe('messagePipeline', () => {
             contentType: opts.contentType ?? ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             ...opts
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
     }
 
     beforeEach(async () => {
@@ -86,7 +87,7 @@ describe('messagePipeline', () => {
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
                 config,
-                createEthereumPrivateKeyAuthentication(publisher.privateKey),
+                new EthereumPrivateKeyIdentity(publisher.privateKey),
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),

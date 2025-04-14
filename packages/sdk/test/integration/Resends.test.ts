@@ -3,7 +3,6 @@ import 'reflect-metadata'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
-import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -13,6 +12,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
+import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
 
 describe('Resends', () => {
 
@@ -39,14 +39,14 @@ describe('Resends', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()
-        const authentication = createEthereumPrivateKeyAuthentication(publisherPrivateKey)
+        const identity = new EthereumPrivateKeyIdentity(publisherPrivateKey)
         messageFactory = new MessageFactory({
-            identity: authentication,
+            identity,
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
-            groupKeyQueue: await createGroupKeyQueue(authentication, groupKey),
+            groupKeyQueue: await createGroupKeyQueue(identity, groupKey),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication)
+            messageSigner: new MessageSigner(identity)
         })
         // store the encryption key publisher's local group key store
         await publisher.updateEncryptionKey({

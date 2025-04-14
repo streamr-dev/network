@@ -6,10 +6,11 @@ import shuffle from 'lodash/shuffle'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
+import { createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { Identity } from '../../src/identity/Identity'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const RACE_TIMEOUT_IN_MS = 20
 
@@ -32,7 +33,7 @@ describe(waitForAssignmentsToPropagate, () => {
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
     }
 
     async function createAssignmentMessagesFor(stream: {
@@ -47,7 +48,7 @@ describe(waitForAssignmentsToPropagate, () => {
     }
 
     beforeAll(async () => {
-        authentication = await createRandomAuthentication()
+        authentication = await createRandomIdentity()
     })
 
     beforeEach(() => {

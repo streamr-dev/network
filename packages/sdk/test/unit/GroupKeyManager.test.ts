@@ -4,13 +4,13 @@ import { createTestWallet, randomUserId } from '@streamr/test-utils'
 import { toStreamID, toStreamPartID, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
 
 const STREAM_ID = toStreamID('test.eth/foobar')
 const GROUP_KEY = GroupKey.generate('groupKeyId-123')
@@ -35,7 +35,7 @@ describe('GroupKeyManager', () => {
                     keyRequestTimeout: 100
                 } as any
             },
-            createEthereumPrivateKeyAuthentication(wallet.privateKey),
+            new EthereumPrivateKeyIdentity(wallet.privateKey),
             eventEmitter,
             new DestroySignal()
         )

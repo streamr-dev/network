@@ -8,10 +8,11 @@ import { StreamPermission } from '../../src/permission'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { MOCK_CONTENT, createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
+import { MOCK_CONTENT, createRandomIdentity, createRelativeTestStreamId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessageType } from './../../src/protocol/StreamMessage'
 import { randomUserId } from '@streamr/test-utils'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const PUBLISHER_ID = randomUserId()
 
@@ -24,7 +25,7 @@ describe('waitForStorage', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(await createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomIdentity())
         environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await client.createStream({
@@ -73,7 +74,7 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1))
+        }, SignatureType.EVM_SECP256K1))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
             timeout: 100,
@@ -91,7 +92,7 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1))
+        }, SignatureType.EVM_SECP256K1))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {
                 return true

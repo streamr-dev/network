@@ -20,8 +20,8 @@ import {
     createRelativeTestStreamId,
     getLocalGroupKeyStore
 } from '../test-utils/utils'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { AsymmetricEncryptionType, GroupKeyRequest } from '@streamr/trackerless-network'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, SignatureType } from '@streamr/trackerless-network'
 import { StreamrClientConfig } from '../../src'
 
 describe('SubscriberKeyExchange', () => {
@@ -130,7 +130,7 @@ describe('SubscriberKeyExchange', () => {
             streamPartId,
             [groupKey.id],
             toUserId(subscriberWallet.address),
-            SignatureType.SECP256K1
+            SignatureType.EVM_SECP256K1
         )
         const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
         await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
@@ -194,7 +194,7 @@ describe('SubscriberKeyExchange', () => {
             streamPartId,
             [groupKey.id],
             toUserId(subscriberWallet.address),
-            SignatureType.SECP256K1,
+            SignatureType.EVM_SECP256K1,
             AsymmetricEncryptionType.ML_KEM,
         )
         const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))

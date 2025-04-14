@@ -2,7 +2,7 @@ import { ML_DSA_87 } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 
-export class ML_DSA_Identity extends KeyPairIdentity {
+export class MLDSAKeyPairIdentity extends KeyPairIdentity {
 
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
