@@ -1,5 +1,6 @@
 import { HexString, StreamID } from '@streamr/utils'
-import { SignatureType, StreamMessage } from './protocol/StreamMessage'
+import { StreamMessage } from './protocol/StreamMessage'
+import { SignatureType } from '@streamr/trackerless-network'
 
 /**
  * Represents a message in the Streamr Network.
@@ -65,9 +66,9 @@ export type MessageMetadata = Omit<Message, 'content'>
 
 function signatureTypeToString(signatureType: SignatureType): 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' {
     switch (signatureType) {
-        case SignatureType.LEGACY_SECP256K1:
+        case SignatureType.LEGACY_EVM_SECP256K1:
             return 'LEGACY_SECP256K1'
-        case SignatureType.SECP256K1:
+        case SignatureType.EVM_SECP256K1:
             return 'SECP256K1'
         case SignatureType.ERC_1271:
             return 'ERC_1271'

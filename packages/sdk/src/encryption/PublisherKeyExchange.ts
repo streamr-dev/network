@@ -6,7 +6,8 @@ import {
     toUserIdRaw,
     UserID
 } from '@streamr/utils'
-import { AsymmetricEncryptionType, GroupKeyResponse, EncryptedGroupKey, GroupKeyRequest } from '@streamr/trackerless-network'
+import { AsymmetricEncryptionType, GroupKeyResponse, EncryptedGroupKey, 
+    GroupKeyRequest, SignatureType, ContentType, EncryptionType } from '@streamr/trackerless-network'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
@@ -14,7 +15,7 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamrClientEventEmitter } from '../events'
 import { MessageID } from '../protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -45,7 +46,7 @@ export class PublisherKeyExchange {
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly logger: Logger
     private readonly erc1271Publishers = new Set<UserID>()
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
@@ -56,7 +57,7 @@ export class PublisherKeyExchange {
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
-        @inject(IdentityInjectionToken) authentication: Identity,
+        @inject(IdentityInjectionToken) identity: Identity,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
@@ -66,7 +67,7 @@ export class PublisherKeyExchange {
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
         this.store = store
-        this.authentication = authentication
+        this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.config = config
         networkNodeFacade.once('start', async () => {
@@ -101,7 +102,7 @@ export class PublisherKeyExchange {
                     this.logger.debug('Handling group key request', 
                         { requestId, responseType, keyEncryptionType: AsymmetricEncryptionType[keyEncryptionType] })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
-                    const authenticatedUser = await this.authentication.getUserId()
+                    const authenticatedUser = await this.identity.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -136,7 +137,7 @@ export class PublisherKeyExchange {
     }
 
     private async getResponseType(publisherId: UserID): Promise<ResponseType> {
-        const authenticatedUser = await this.authentication.getUserId()
+        const authenticatedUser = await this.identity.getUserId()
         if (publisherId === authenticatedUser) {
             return ResponseType.NORMAL
         } else if (this.erc1271Publishers.has(publisherId)) {
@@ -179,7 +180,7 @@ export class PublisherKeyExchange {
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,
-        }, responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
+        }, responseType === ResponseType.NORMAL ? this.identity.getSignatureType() : SignatureType.ERC_1271)
         return response
     }
 }

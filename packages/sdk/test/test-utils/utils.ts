@@ -131,7 +131,7 @@ export const createMockMessage = async (
     )
     const authentication = createEthereumPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
-        authentication,
+        identity: authentication,
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,

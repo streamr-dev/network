@@ -2,6 +2,7 @@ import { Identity, SignerWithProvider } from './Identity'
 import { EVM_SECP256K1, hexToBinary, toUserId, UserID } from '@streamr/utils'
 import { computeAddress, Wallet } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
+import { SignatureType } from '@streamr/trackerless-network'
 
 export class EthereumPrivateKeyIdentity extends Identity {
     private userId: UserID
@@ -17,6 +18,11 @@ export class EthereumPrivateKeyIdentity extends Identity {
 
     async getUserId(): Promise<UserID> { 
         return this.userId
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getSignatureType(): SignatureType {
+        return SignatureType.EVM_SECP256K1
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {

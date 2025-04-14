@@ -1,10 +1,11 @@
-import { toEthereumAddress, toUserIdRaw, verifySignature } from '@streamr/utils'
+import { toEthereumAddress, toUserIdRaw, EVM_SECP256K1, ML_DSA_87, hexToBinary } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
-import { SignatureType, StreamMessage } from '../protocol/StreamMessage'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
+import { SignatureType } from '@streamr/trackerless-network'
 
 @scoped(Lifecycle.ContainerScoped)
 export class SignatureValidator {
@@ -33,15 +34,17 @@ export class SignatureValidator {
 
     private async validate(streamMessage: StreamMessage): Promise<boolean> {
         switch (streamMessage.signatureType) {
-            case SignatureType.LEGACY_SECP256K1:
-                return verifySignature(
+            case SignatureType.EVM_SECP256K1:
+                return EVM_SECP256K1.verifySignature(
+                    // publisherId is hex encoded address string
                     toUserIdRaw(streamMessage.getPublisherId()),
-                    createLegacySignaturePayload(streamMessage),
+                    createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )
-            case SignatureType.SECP256K1:
-                return verifySignature(
-                    toUserIdRaw(streamMessage.getPublisherId()),
+            case SignatureType.ML_DSA_87:
+                return ML_DSA_87.verifySignature(
+                    // TODO: should not be hex encoded, fix!
+                    hexToBinary(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )
@@ -49,6 +52,13 @@ export class SignatureValidator {
                 return this.erc1271ContractFacade.isValidSignature(
                     toEthereumAddress(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
+                    streamMessage.signature
+                )
+            case SignatureType.LEGACY_EVM_SECP256K1:
+                return EVM_SECP256K1.verifySignature(
+                    // publisherId is hex encoded address string
+                    toUserIdRaw(streamMessage.getPublisherId()),
+                    createLegacySignaturePayload(streamMessage),
                     streamMessage.signature
                 )
             default:

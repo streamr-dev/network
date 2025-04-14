@@ -66,7 +66,7 @@ describe('parallel key exchange', () => {
             const authentication = createEthereumPrivateKeyAuthentication(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication,
+                identity: authentication,
                 streamRegistry: createStreamRegistry({
                     partitionCount: 1,
                     isPublicStream: false,

@@ -130,7 +130,7 @@ export class Publisher {
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
         return new MessageFactory({
             streamId,
-            authentication: this.authentication,
+            identity: this.authentication,
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,

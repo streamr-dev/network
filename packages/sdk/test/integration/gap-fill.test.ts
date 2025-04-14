@@ -41,7 +41,7 @@ describe('gap fill', () => {
         stream = await createTestStream(publisher, module)
         const authentication = createEthereumPrivateKeyAuthentication(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
-            authentication,
+            identity: authentication,
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),

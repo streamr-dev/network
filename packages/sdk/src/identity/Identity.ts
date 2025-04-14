@@ -4,6 +4,7 @@ import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } f
 import { RpcProviderSource } from '../RpcProviderSource'
 import { EthereumPrivateKeyIdentity } from './EthereumPrivateKeyIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
+import { SignatureType } from '@streamr/trackerless-network'
 
 export const IdentityInjectionToken = Symbol('Identity')
 
@@ -14,6 +15,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 export abstract class Identity {
     abstract getUserId(): Promise<UserID>
+    abstract getSignatureType(): SignatureType
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>
     abstract getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider>
 }

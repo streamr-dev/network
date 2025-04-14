@@ -53,7 +53,7 @@ describe('resend subscription', () => {
         outputMessages = new Queue<Message>
         const authentication = await createRandomAuthentication()
         messageFactory = new MessageFactory({
-            authentication,
+            identity: authentication,
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamRegistry: createStreamRegistry({
                 isPublicStream: true

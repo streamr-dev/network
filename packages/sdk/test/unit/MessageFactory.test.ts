@@ -49,7 +49,7 @@ describe('MessageFactory', () => {
             merge<MessageFactoryOptions>(
                 {
                     streamId: getStreamId(),
-                    authentication,
+                    identity: authentication,
                     streamRegistry: createStreamRegistry({
                         partitionCount: PARTITION_COUNT,
                         isPublicStream: false,

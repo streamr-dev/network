@@ -1,5 +1,5 @@
 import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, toUserId, utf8ToBinary } from '@streamr/utils'
-import { EncryptedGroupKey } from '@streamr/trackerless-network'
+import { ContentType, EncryptedGroupKey, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 import random from 'lodash/random'
 import { Identity } from '../identity/Identity'
 import { getPartitionCount } from '../StreamMetadata'
@@ -10,9 +10,6 @@ import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
 import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamMessage,
     StreamMessageType
 } from '../protocol/StreamMessage'
@@ -26,7 +23,7 @@ import { createMessageRef, createRandomMsgChainId } from './messageChain'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
-    authentication: Identity
+    identity: Identity
     streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
@@ -36,7 +33,7 @@ export interface MessageFactoryOptions {
 export class MessageFactory {
 
     private readonly streamId: StreamID
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
@@ -49,7 +46,7 @@ export class MessageFactory {
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
-        this.authentication = opts.authentication
+        this.identity = opts.identity
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
@@ -127,7 +124,7 @@ export class MessageFactory {
             groupKeyId,
             newGroupKey,
             contentType
-        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1)
+        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : this.identity.getSignatureType())
 
         // Assert the signature is valid for the first message. This is done here to improve user experience
         // in case the client signer is not authorized for the ERC-1271 contract.
@@ -146,7 +143,7 @@ export class MessageFactory {
             // calling also toEthereumAddress() as it has stricter input validation than toUserId()
             return toUserId(toEthereumAddress(metadata.erc1271Contract))
         } else {
-            return this.authentication.getUserId()
+            return this.identity.getUserId()
         }
     }
 

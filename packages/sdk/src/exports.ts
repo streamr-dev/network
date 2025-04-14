@@ -52,7 +52,8 @@ export { Identity, SignerWithProvider } from './identity/Identity'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'
-export { EncryptedGroupKey, ProxyDirection } from '@streamr/trackerless-network'
+export { ContentType, EncryptedGroupKey, EncryptionType,
+    ProxyDirection, SignatureType } from '@streamr/trackerless-network'
 export type { 
     StreamID,
     StreamPartID,
@@ -71,9 +72,6 @@ export type { UserID } from '@streamr/utils'
 export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
 export {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamMessage,
     StreamMessageAESEncrypted,
     StreamMessageOptions,

@@ -41,7 +41,7 @@ describe('Resends', () => {
         const groupKey = GroupKey.generate()
         const authentication = createEthereumPrivateKeyAuthentication(publisherPrivateKey)
         messageFactory = new MessageFactory({
-            authentication,
+            identity: authentication,
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey),

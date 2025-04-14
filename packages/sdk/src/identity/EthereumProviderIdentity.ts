@@ -1,9 +1,10 @@
 import { hexToBinary, toUserId, UserID, wait } from '@streamr/utils'
 import { JsonRpcApiProvider } from 'ethers'
 import { pLimitFn } from '../utils/promises'
-import { SignerWithProvider } from './Identity'
+import { Identity, SignerWithProvider } from './Identity'
+import { SignatureType } from '@streamr/trackerless-network'
 
-export class EthereumProviderIdentity {
+export class EthereumProviderIdentity extends Identity {
     private provider: JsonRpcApiProvider
     private expectedChainId: number | undefined
     private signer: Promise<SignerWithProvider>
@@ -11,6 +12,7 @@ export class EthereumProviderIdentity {
     private rateLimitedSigner: (payload: Uint8Array) => Promise<Uint8Array>
 
     constructor(provider: JsonRpcApiProvider, expectedChainId: number | undefined) {
+        super()
         this.provider = provider
         this.expectedChainId = expectedChainId
         this.signer = provider.getSigner()
@@ -29,6 +31,11 @@ export class EthereumProviderIdentity {
             this.cachedUserId = toUserId(await (await this.signer).getAddress())
         }
         return this.cachedUserId
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getSignatureType(): SignatureType {
+        return SignatureType.EVM_SECP256K1
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
