@@ -9,7 +9,7 @@ import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignment
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 
 const RACE_TIMEOUT_IN_MS = 20
 
@@ -23,7 +23,7 @@ describe(waitForAssignmentsToPropagate, () => {
     let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
-    let authentication: Authentication
+    let authentication: Identity
 
     async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
         return new MessageSigner(authentication).createSignedMessage({

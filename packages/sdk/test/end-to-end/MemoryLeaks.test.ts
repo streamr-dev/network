@@ -4,7 +4,7 @@ import { Defer, merge, TheGraphClient, wait } from '@streamr/utils'
 import 'reflect-metadata'
 import { DependencyContainer, container as rootContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
-import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { IdentityInjectionToken, createIdentityFromConfig } from '../../src/identity/Identity'
 import { ConfigInjectionToken, createStrictConfig, StreamrClientConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
@@ -84,7 +84,7 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                     )
                 )
                 const childContainer = rootContainer.createChildContainer()
-                childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
+                childContainer.register(IdentityInjectionToken, { useValue: createIdentityFromConfig(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
                 childContainer.register(TheGraphClient, { useValue:
                     createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)

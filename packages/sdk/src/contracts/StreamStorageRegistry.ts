@@ -2,7 +2,7 @@ import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumA
 import { Interface } from 'ethers'
 import min from 'lodash/min'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -44,7 +44,7 @@ export class StreamStorageRegistry {
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly logger: Logger
     private readonly storageNodesCache: Mapping<StreamID | typeof GET_ALL_STORAGE_NODES, EthereumAddress[]>
 
@@ -55,7 +55,7 @@ export class StreamStorageRegistry {
         chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {

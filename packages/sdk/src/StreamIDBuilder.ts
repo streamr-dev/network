@@ -9,7 +9,7 @@ import {
     toStreamPartID
 } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { StreamDefinition } from './types'
 
 export const DEFAULT_PARTITION = 0
@@ -40,9 +40,9 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
 
-    private authentication: Authentication
+    private authentication: Identity
 
-    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
+    constructor(@inject(IdentityInjectionToken) authentication: Identity) {
         this.authentication = authentication
     }
 

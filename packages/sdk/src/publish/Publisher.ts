@@ -2,7 +2,7 @@ import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
@@ -49,7 +49,7 @@ export class Publisher {
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
 
@@ -58,7 +58,7 @@ export class Publisher {
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner
     ) {

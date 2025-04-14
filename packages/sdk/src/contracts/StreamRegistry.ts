@@ -17,7 +17,7 @@ import {
 import { ContractTransactionResponse, Interface } from 'ethers'
 import intersection from 'lodash/intersection'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -123,7 +123,7 @@ export class StreamRegistry {
     private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly logger: Logger
     private readonly metadataCache: Mapping<StreamID, StreamMetadata>
     private readonly publisherCache: Mapping<[StreamID, UserID], boolean>
@@ -138,7 +138,7 @@ export class StreamRegistry {
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {

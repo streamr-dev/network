@@ -9,7 +9,7 @@ import {
 import { AsymmetricEncryptionType, GroupKeyResponse, EncryptedGroupKey, GroupKeyRequest } from '@streamr/trackerless-network'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamrClientEventEmitter } from '../events'
@@ -45,7 +45,7 @@ export class PublisherKeyExchange {
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly logger: Logger
     private readonly erc1271Publishers = new Set<UserID>()
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
@@ -56,7 +56,7 @@ export class PublisherKeyExchange {
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory

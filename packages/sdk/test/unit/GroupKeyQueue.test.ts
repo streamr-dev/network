@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -14,7 +14,7 @@ const streamId = toStreamID('mock-stream')
 describe('GroupKeyQueue', () => {
 
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
-    let authentication: Authentication
+    let authentication: Identity
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
 

@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { join } from 'path'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Persistence } from './utils/persistence/Persistence'
@@ -17,12 +17,12 @@ export const NAMESPACES = {
 export class PersistenceManager {
 
     private persistence?: ServerPersistence
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly loggerFactory: LoggerFactory
 
     /* eslint-disable indent */
     constructor(
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory
     ) {

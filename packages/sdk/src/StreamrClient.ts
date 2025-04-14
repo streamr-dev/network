@@ -15,7 +15,7 @@ import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
-import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
+import { Identity, IdentityInjectionToken, SignerWithProvider, createIdentityFromConfig } from './identity/Identity'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -105,7 +105,7 @@ export class StreamrClient {
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
@@ -116,10 +116,10 @@ export class StreamrClient {
         parentContainer = rootContainer
     ) {
         const strictConfig = createStrictConfig(config)
-        const authentication = createAuthentication(strictConfig)
+        const authentication = createIdentityFromConfig(strictConfig)
         redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
-        container.register(AuthenticationInjectionToken, { useValue: authentication })
+        container.register(IdentityInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         const theGraphClient = createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig)
         container.register(TheGraphClient, { useValue: theGraphClient })

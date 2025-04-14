@@ -4,7 +4,7 @@ import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toUserId, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
@@ -40,7 +40,7 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const messageSigner = new MessageSigner(createPrivateKeyAuthentication(publisher.privateKey))
+        const messageSigner = new MessageSigner(createEthereumPrivateKeyAuthentication(publisher.privateKey))
         return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,
@@ -86,7 +86,7 @@ describe('messagePipeline', () => {
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
                 config,
-                createPrivateKeyAuthentication(publisher.privateKey),
+                createEthereumPrivateKeyAuthentication(publisher.privateKey),
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),

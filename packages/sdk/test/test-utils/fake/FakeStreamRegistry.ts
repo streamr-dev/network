@@ -1,7 +1,7 @@
 import { Methods } from '@streamr/test-utils'
 import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
+import { Identity, IdentityInjectionToken } from '../../../src/identity/Identity'
 import { Stream } from '../../../src/Stream'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamMetadata } from '../../../src/StreamMetadata'
@@ -22,12 +22,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     
     constructor(
         chain: FakeChain,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication
+        @inject(IdentityInjectionToken) authentication: Identity
     ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder

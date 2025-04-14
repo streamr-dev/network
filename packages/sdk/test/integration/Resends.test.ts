@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -39,7 +39,7 @@ describe('Resends', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()
-        const authentication = createPrivateKeyAuthentication(publisherPrivateKey)
+        const authentication = createEthereumPrivateKeyAuthentication(publisherPrivateKey)
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { createTestWallet } from '@streamr/test-utils'
 import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { DestroySignal } from '../../src/DestroySignal'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -42,7 +42,7 @@ describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
         const wallet = await createTestWallet()
-        const groupKeyManager = await createGroupKeyManager(undefined, createPrivateKeyAuthentication(wallet.privateKey))
+        const groupKeyManager = await createGroupKeyManager(undefined, createEthereumPrivateKeyAuthentication(wallet.privateKey))
         const destroySignal = new DestroySignal()
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

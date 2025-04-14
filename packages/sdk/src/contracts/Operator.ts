@@ -7,7 +7,7 @@ import {
 } from '@streamr/utils'
 import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
-import { Authentication } from '../Authentication'
+import { Identity } from '../identity/Identity'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
@@ -143,7 +143,7 @@ export class Operator {
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly getEthersOverrides: () => Promise<Overrides>
     private readonly eventEmitter: ObservableEventEmitter<OperatorEvents> = new ObservableEventEmitter()
 
@@ -153,7 +153,7 @@ export class Operator {
         rpcProviderSource: RpcProviderSource,
         chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
-        authentication: Authentication,
+        authentication: Identity,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         getEthersOverrides: () => Promise<Overrides>,

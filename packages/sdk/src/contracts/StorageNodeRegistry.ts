@@ -1,6 +1,6 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamrClientError } from '../StreamrClientError'
@@ -25,13 +25,13 @@ export class StorageNodeRegistry {
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
 
     constructor(
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
     ) {
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource

@@ -1,7 +1,7 @@
 import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, toUserId, utf8ToBinary } from '@streamr/utils'
 import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import random from 'lodash/random'
-import { Authentication } from '../Authentication'
+import { Identity } from '../identity/Identity'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
@@ -26,7 +26,7 @@ import { createMessageRef, createRandomMsgChainId } from './messageChain'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
-    authentication: Authentication
+    authentication: Identity
     streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
@@ -36,7 +36,7 @@ export interface MessageFactoryOptions {
 export class MessageFactory {
 
     private readonly streamId: StreamID
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()

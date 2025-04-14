@@ -1,7 +1,7 @@
 import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
@@ -39,7 +39,7 @@ export class SubscriberKeyExchange {
     private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
     private readonly subscriber: Subscriber
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => Promise<void>
@@ -52,7 +52,7 @@ export class SubscriberKeyExchange {
         store: LocalGroupKeyStore,
         subscriber: Subscriber,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade

@@ -1,14 +1,14 @@
 import { MarkRequired } from 'ts-essentials'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { SignatureType, StreamMessage, StreamMessageOptions } from '../protocol/StreamMessage'
 import { createSignaturePayload } from './createSignaturePayload'
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessageSigner {
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
 
-    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
+    constructor(@inject(IdentityInjectionToken) authentication: Identity) {
         this.authentication = authentication
     }
 

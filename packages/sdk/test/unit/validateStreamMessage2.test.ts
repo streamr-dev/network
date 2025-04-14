@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { UserID, hexToBinary, toStreamID, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
 import { mock } from 'jest-mock-extended'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageSigner } from '../../src/signature/MessageSigner'
@@ -18,7 +18,7 @@ const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Authentication
+    authentication: Identity
 ): Promise<StreamMessage> => {
     const messageSigner = new MessageSigner(authentication)
     return messageSigner.createSignedMessage({
@@ -35,7 +35,7 @@ const groupKeyResponseToStreamMessage = async (
     groupKeyResponse: GroupKeyResponse,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Authentication
+    authentication: Identity
 ): Promise<StreamMessage> => {
     const messageSigner = new MessageSigner(authentication)
     return messageSigner.createSignedMessage({
@@ -53,8 +53,8 @@ describe('Validator2', () => {
     let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
-    let publisherAuthentication: Authentication
-    let subscriberAuthentication: Authentication
+    let publisherAuthentication: Identity
+    let subscriberAuthentication: Identity
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage

@@ -1,5 +1,5 @@
 import { StreamID } from '@streamr/utils'
-import { Authentication } from '../Authentication'
+import { Identity } from '../identity/Identity'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
@@ -13,12 +13,12 @@ export class GroupKeyQueue {
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private readonly streamId: StreamID
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly groupKeyManager: GroupKeyManager
 
     static async createInstance(
         streamId: StreamID,
-        authentication: Authentication,
+        authentication: Identity,
         groupKeyManager: GroupKeyManager
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
@@ -29,7 +29,7 @@ export class GroupKeyQueue {
         return instance
     }
 
-    private constructor(streamId: StreamID, authentication: Authentication, groupKeyManager: GroupKeyManager) {
+    private constructor(streamId: StreamID, authentication: Identity, groupKeyManager: GroupKeyManager) {
         this.streamId = streamId
         this.authentication = authentication
         this.groupKeyManager = groupKeyManager

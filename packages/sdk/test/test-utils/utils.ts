@@ -21,7 +21,7 @@ import { mock } from 'jest-mock-extended'
 import { AddressInfo } from 'net'
 import path from 'path'
 import { DependencyContainer } from 'tsyringe'
-import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
+import { Identity, createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -129,7 +129,7 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
-    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
+    const authentication = createEthereumPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
         authentication,
         streamId,
@@ -176,8 +176,8 @@ export const startPublisherKeyExchangeSubscription = async (
     await node.join(streamPartId)
 }
 
-export const createRandomAuthentication = async (): Promise<Authentication> => {
-    return createPrivateKeyAuthentication(await createTestPrivateKey())
+export const createRandomAuthentication = async (): Promise<Identity> => {
+    return createEthereumPrivateKeyAuthentication(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {
@@ -205,7 +205,7 @@ export const createStreamRegistry = (opts?: {
 
 export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    authentication?: Authentication 
+    authentication?: Identity 
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
@@ -224,7 +224,7 @@ export const createGroupKeyManager = async (
     )
 }
 
-export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+export const createGroupKeyQueue = async (authentication: Identity, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
         authentication,

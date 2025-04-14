@@ -48,7 +48,7 @@ export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
-export { SignerWithProvider } from './Authentication'
+export { Identity, SignerWithProvider } from './identity/Identity'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'

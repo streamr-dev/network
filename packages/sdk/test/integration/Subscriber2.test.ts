@@ -4,7 +4,7 @@ import { createTestWallet } from '@streamr/test-utils'
 import { Defer, StreamID, collect, toUserId, until, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -69,7 +69,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        const publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
+        const publisherAuthentication = createEthereumPrivateKeyAuthentication(publisherWallet.privateKey)
         messageSigner = new MessageSigner(publisherAuthentication)
     })
 

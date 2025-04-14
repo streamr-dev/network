@@ -10,7 +10,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
-import { createPrivateKeyAuthentication } from './../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 
@@ -39,7 +39,7 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        const authentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
+        const authentication = createEthereumPrivateKeyAuthentication(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,

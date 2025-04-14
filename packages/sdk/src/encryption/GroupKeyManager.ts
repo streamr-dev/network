@@ -1,7 +1,7 @@
 import { StreamID, StreamPartID, UserID, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { StreamrClientEventEmitter } from '../events'
@@ -16,7 +16,7 @@ export class GroupKeyManager {
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
-    private readonly authentication: Authentication
+    private readonly authentication: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
 
@@ -24,7 +24,7 @@ export class GroupKeyManager {
         subscriberKeyExchange: SubscriberKeyExchange,
         localGroupKeyStore: LocalGroupKeyStore,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) authentication: Identity,
         eventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal
     ) {

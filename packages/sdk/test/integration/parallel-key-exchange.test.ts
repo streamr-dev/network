@@ -5,7 +5,7 @@ import { collect, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import range from 'lodash/range'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -63,7 +63,7 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of publishers) {
-            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey)
+            const authentication = createEthereumPrivateKeyAuthentication(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 authentication,

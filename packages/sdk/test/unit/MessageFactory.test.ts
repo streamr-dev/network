@@ -3,7 +3,7 @@ import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStrea
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import random from 'lodash/random'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createEthereumPrivateKeyAuthentication } from '../../src/identity/Identity'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -44,7 +44,7 @@ describe('MessageFactory', () => {
         groupKeyQueue?: GroupKeyQueue
         erc1271ContractFacade?: ERC1271ContractFacade
     }) => {
-        const authentication = createPrivateKeyAuthentication(wallet.privateKey)
+        const authentication = createEthereumPrivateKeyAuthentication(wallet.privateKey)
         return new MessageFactory(
             merge<MessageFactoryOptions>(
                 {
@@ -179,7 +179,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(wallet.privateKey), GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(createEthereumPrivateKeyAuthentication(wallet.privateKey), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
