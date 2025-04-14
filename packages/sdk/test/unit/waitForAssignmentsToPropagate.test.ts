@@ -24,11 +24,11 @@ describe(waitForAssignmentsToPropagate, () => {
     let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
-    let authentication: Identity
+    let identity: Identity
 
     async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-        return new MessageSigner(authentication).createSignedMessage({
-            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
+        return new MessageSigner(identity).createSignedMessage({
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await identity.getUserId(), 'msgChain'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
@@ -48,7 +48,7 @@ describe(waitForAssignmentsToPropagate, () => {
     }
 
     beforeAll(async () => {
-        authentication = await createRandomIdentity()
+        identity = await createRandomIdentity()
     })
 
     beforeEach(() => {

@@ -9,8 +9,8 @@ import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils
 
 describe('Publisher', () => {
     it('error message', async () => {
-        const authentication = await createRandomIdentity()
-        const streamIdBuilder = new StreamIDBuilder(authentication)
+        const identity = await createRandomIdentity()
+        const streamIdBuilder = new StreamIDBuilder(identity)
         const streamRegistry = {
             isStreamPublisher: async () => false,
             invalidatePermissionCaches: () => {}
@@ -18,9 +18,9 @@ describe('Publisher', () => {
         const publisher = new Publisher(
             undefined as any,
             streamRegistry as any,
-            await createGroupKeyManager(undefined, authentication),
+            await createGroupKeyManager(undefined, identity),
             streamIdBuilder,
-            authentication,
+            identity,
             mock<SignatureValidator>(),
             mock<MessageSigner>()
         )
@@ -30,7 +30,7 @@ describe('Publisher', () => {
         }).rejects.toThrowStreamrClientError({
             code: 'MISSING_PERMISSION',
             // eslint-disable-next-line max-len
-            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await authentication.getUserId()}`
+            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await identity.getUserId()}`
         })
     })
 })

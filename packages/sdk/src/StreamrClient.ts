@@ -106,7 +106,7 @@ export class StreamrClient {
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
@@ -117,16 +117,16 @@ export class StreamrClient {
         parentContainer = rootContainer
     ) {
         const strictConfig = createStrictConfig(config)
-        const authentication = createIdentityFromConfig(strictConfig)
+        const identity = createIdentityFromConfig(strictConfig)
         redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
-        container.register(IdentityInjectionToken, { useValue: authentication })
+        container.register(IdentityInjectionToken, { useValue: identity })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         const theGraphClient = createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig)
         container.register(TheGraphClient, { useValue: theGraphClient })
         this.id = strictConfig.id
         this.config = strictConfig
-        this.authentication = authentication
+        this.identity = identity
         this.theGraphClient = theGraphClient
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -627,21 +627,21 @@ export class StreamrClient {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Authentication
+    // Identity
     // --------------------------------------------------------------------------------------------
 
     /**
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getTransactionSigner(this.rpcProviderSource)
+        return this.identity.getTransactionSigner(this.rpcProviderSource)
     }
 
     /**
      * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
-        return await this.authentication.getUserId()
+        return await this.identity.getUserId()
     }
 
     /**
@@ -781,7 +781,7 @@ export class StreamrClient {
             this.rpcProviderSource,
             this.chainEventPoller,
             this.theGraphClient,
-            this.authentication,
+            this.identity,
             this.destroySignal,
             this.loggerFactory,
             () => this.getEthersOverrides()

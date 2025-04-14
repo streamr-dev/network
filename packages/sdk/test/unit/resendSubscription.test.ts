@@ -51,16 +51,16 @@ describe('resend subscription', () => {
 
     beforeEach(async () => {
         outputMessages = new Queue<Message>
-        const authentication = await createRandomIdentity()
+        const identity = await createRandomIdentity()
         messageFactory = new MessageFactory({
-            identity: authentication,
+            identity: identity,
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamRegistry: createStreamRegistry({
                 isPublicStream: true
             }),
-            groupKeyQueue: await createGroupKeyQueue(authentication),
+            groupKeyQueue: await createGroupKeyQueue(identity),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication)
+            messageSigner: new MessageSigner(identity)
         })
     })
 

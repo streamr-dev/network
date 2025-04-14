@@ -49,7 +49,7 @@ export class EthereumProviderIdentity extends Identity {
         const actualChainId = (await this.provider.getNetwork()).chainId
         if (actualChainId !== BigInt(this.expectedChainId)) {
             throw new Error(
-                `Please connect the custom authentication provider with chainId ${this.expectedChainId} (current chainId is ${actualChainId})`
+                `Connect your wallet to the chain with chainId ${this.expectedChainId} (chainId of currently selected chain is ${actualChainId})`
             )
         }
         return this. signer

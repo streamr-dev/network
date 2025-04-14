@@ -18,9 +18,9 @@ const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Identity
+    identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(authentication)
+    const messageSigner = new MessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
@@ -35,9 +35,9 @@ const groupKeyResponseToStreamMessage = async (
     groupKeyResponse: GroupKeyResponse,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Identity
+    identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(authentication)
+    const messageSigner = new MessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,

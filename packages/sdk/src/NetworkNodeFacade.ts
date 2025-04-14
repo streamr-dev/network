@@ -99,7 +99,7 @@ export class NetworkNodeFacade {
     private readonly networkNodeFactory: NetworkNodeFactory
     private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly eventEmitter: EventEmitter<Events>
     private readonly destroySignal: DestroySignal
 
@@ -107,13 +107,13 @@ export class NetworkNodeFacade {
         networkNodeFactory: NetworkNodeFactory,
         operatorRegistry: OperatorRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
-        @inject(IdentityInjectionToken) authentication: Identity,
+        @inject(IdentityInjectionToken) identity: Identity,
         destroySignal: DestroySignal
     ) {
         this.networkNodeFactory = networkNodeFactory
         this.operatorRegistry = operatorRegistry
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.eventEmitter = new EventEmitter<Events>()
         this.destroySignal = destroySignal
         destroySignal.onDestroy.listen(this.destroy)
@@ -294,7 +294,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getUserId(),
+            await this.identity.getUserId(),
             connectionCount
         )
     }

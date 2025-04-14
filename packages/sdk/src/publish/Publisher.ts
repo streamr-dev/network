@@ -49,7 +49,7 @@ export class Publisher {
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
 
@@ -58,14 +58,14 @@ export class Publisher {
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(IdentityInjectionToken) authentication: Identity,
+        @inject(IdentityInjectionToken) identity: Identity,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
-        this.authentication = authentication
+        this.identity = identity
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
         this.messageFactories = createLazyMap({
@@ -75,7 +75,7 @@ export class Publisher {
         })
         this.groupKeyQueues = createLazyMap({
             valueFactory: async (streamId) => {
-                return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+                return GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
             }
         })
     }
@@ -130,7 +130,7 @@ export class Publisher {
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
         return new MessageFactory({
             streamId,
-            identity: this.authentication,
+            identity: this.identity,
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,

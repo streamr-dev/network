@@ -14,22 +14,22 @@ const streamId = toStreamID('mock-stream')
 describe('GroupKeyQueue', () => {
 
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
-    let authentication: Identity
+    let identity: Identity
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
 
     beforeEach(async () => {
         groupKeyStore = mock<LocalGroupKeyStore>()
-        authentication = await createRandomIdentity()
-        groupKeyManager = await createGroupKeyManager(groupKeyStore, authentication)
-        queue = await GroupKeyQueue.createInstance(streamId, authentication, groupKeyManager)
+        identity = await createRandomIdentity()
+        groupKeyManager = await createGroupKeyManager(groupKeyStore, identity)
+        queue = await GroupKeyQueue.createInstance(streamId, identity, groupKeyManager)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(groupKeyStore.set).toHaveBeenCalledTimes(1)
-        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await authentication.getUserId(), groupKey.data)
+        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await identity.getUserId(), groupKey.data)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

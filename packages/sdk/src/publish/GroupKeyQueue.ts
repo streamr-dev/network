@@ -13,25 +13,25 @@ export class GroupKeyQueue {
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private readonly streamId: StreamID
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly groupKeyManager: GroupKeyManager
 
     static async createInstance(
         streamId: StreamID,
-        authentication: Identity,
+        identity: Identity,
         groupKeyManager: GroupKeyManager
     ): Promise<GroupKeyQueue> {
-        const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
+        const instance = new GroupKeyQueue(streamId, identity, groupKeyManager)
         instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
-            await authentication.getUserId(),
+            await identity.getUserId(),
             streamId,
         )
         return instance
     }
 
-    private constructor(streamId: StreamID, authentication: Identity, groupKeyManager: GroupKeyManager) {
+    private constructor(streamId: StreamID, identity: Identity, groupKeyManager: GroupKeyManager) {
         this.streamId = streamId
-        this.authentication = authentication
+        this.identity = identity
         this.groupKeyManager = groupKeyManager
     }
 
@@ -55,14 +55,14 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.authentication.getUserId()
+        const publisherId = await this.identity.getUserId()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.queuedGroupKey = newKey
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.authentication.getUserId()
+        const publisherId = await this.identity.getUserId()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined

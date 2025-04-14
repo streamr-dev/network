@@ -16,7 +16,7 @@ export class GroupKeyManager {
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
-    private readonly authentication: Identity
+    private readonly identity: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
 
@@ -24,14 +24,14 @@ export class GroupKeyManager {
         subscriberKeyExchange: SubscriberKeyExchange,
         localGroupKeyStore: LocalGroupKeyStore,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
-        @inject(IdentityInjectionToken) authentication: Identity,
+        @inject(IdentityInjectionToken) identity: Identity,
         eventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal
     ) {
         this.subscriberKeyExchange = subscriberKeyExchange
         this.localGroupKeyStore = localGroupKeyStore
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
     }
@@ -58,7 +58,7 @@ export class GroupKeyManager {
     }
 
     async fetchLatestEncryptionKey(publisherId: UserID, streamId: StreamID): Promise<GroupKey | undefined> {
-        if (publisherId !== (await this.authentication.getUserId())) {
+        if (publisherId !== (await this.identity.getUserId())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
         const keyId = await this.localGroupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
@@ -66,7 +66,7 @@ export class GroupKeyManager {
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: UserID, streamId: StreamID): Promise<GroupKey> {
-        if (publisherId !== (await this.authentication.getUserId())) { // TODO: unit test?
+        if (publisherId !== (await this.identity.getUserId())) { // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {

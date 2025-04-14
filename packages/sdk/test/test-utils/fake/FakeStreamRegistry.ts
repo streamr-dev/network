@@ -22,23 +22,23 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Identity
+    private readonly identity: Identity
     
     constructor(
         chain: FakeChain,
         streamIdBuilder: StreamIDBuilder,
-        @inject(IdentityInjectionToken) authentication: Identity
+        @inject(IdentityInjectionToken) identity: Identity
     ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
-        this.authentication = authentication
+        this.identity = identity
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser = await this.authentication.getUserId()
+        const authenticatedUser = await this.identity.getUserId()
         const permissions = new Multimap<UserID, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {

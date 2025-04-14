@@ -155,13 +155,13 @@ export const createMockMessage = async (
 export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
-    const authentication = {
+    const identity = {
         getUserId: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
         new PersistenceManager(
-            authentication,
+            identity,
             new DestroySignal(),
             loggerFactory
         ),
@@ -206,7 +206,7 @@ export const createStreamRegistry = (opts?: {
 
 export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    authentication?: Identity 
+    identity?: Identity 
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
@@ -219,17 +219,17 @@ export const createGroupKeyManager = async (
                 requireQuantumResistantKeyExchange: false,
             }
         },
-        authentication ?? await createRandomIdentity(),
+        identity ?? await createRandomIdentity(),
         new StreamrClientEventEmitter(),
         new DestroySignal()
     )
 }
 
-export const createGroupKeyQueue = async (authentication: Identity, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+export const createGroupKeyQueue = async (identity: Identity, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
-        authentication,
-        await createGroupKeyManager(undefined, authentication)
+        identity,
+        await createGroupKeyManager(undefined, identity)
     )
     if (current !== undefined) {
         await queue.rekey(current)
