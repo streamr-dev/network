@@ -50,7 +50,7 @@
         "jest-mock-extended": "^3.0.5",
         "lerna": "^8.2.2",
         "semver": "^7.7.1",
-        "ts-jest": "^29.3.1",
+        "ts-jest": "^29.3.2",
         "typescript": "^5.8.2",
         "typescript-eslint": "^8.29.1",
         "yarn": "^1.22.22",
