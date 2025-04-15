@@ -6,6 +6,10 @@ import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 
 export type ValidKeyTypeString = 'secp256k1' | 'ml-dsa-87'
+const factoryByKeyType: Record<ValidKeyTypeString, (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity> = {
+    'secp256k1': EthereumKeyPairIdentity.fromConfig,
+    'ml-dsa-87': MLDSAKeyPairIdentity.fromConfig,
+}
 
 /**
  * Creates an Identity instance based on what's in the StreamrClient config
@@ -16,10 +20,8 @@ export const createIdentityFromConfig = (config: Pick<StrictStreamrClientConfig,
         // Default key type is secp256k1 private key (="Ethereum private key")
         const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? 'secp256k1'
 
-        if (keyType === 'secp256k1') {
-            return EthereumKeyPairIdentity.fromConfig(config)
-        } else if (keyType === 'ml-dsa-87') {
-            return MLDSAKeyPairIdentity.fromConfig(config)
+        if (factoryByKeyType[keyType]) {
+            return factoryByKeyType[keyType](config)
         } else {
             throw new Error(`Unsupported keyType given in config: ${keyType}`)
         }

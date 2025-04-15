@@ -8,7 +8,7 @@ import { KeyPairIdentity } from './KeyPairIdentity'
 
 /**
  * An Identity that derives an Ethereum address from a secp256k1 private key
- * and uses that as the UserID.
+ * and uses that as the UserID instead of the actual public key.
  */
 export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
@@ -19,6 +19,17 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
         return SignatureType.EVM_SECP256K1
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getExpectedPublicKeyLength(): number {
+        // Address, not actual public key
+        return 20
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getExpectedPrivateKeyLength(): number {
+        return 32
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {

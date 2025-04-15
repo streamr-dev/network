@@ -12,6 +12,16 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
         return SignatureType.ML_DSA_87
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    getExpectedPublicKeyLength(): number {
+        return 2592
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getExpectedPrivateKeyLength(): number {
+        return 4896
+    }
+
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
         return ML_DSA_87.createSignature(payload, this.privateKey)
     }
