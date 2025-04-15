@@ -21,7 +21,7 @@ import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const CONTENT = {
     foo: 'bar'
@@ -41,7 +41,7 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const messageSigner = new MessageSigner(new EthereumPrivateKeyIdentity(publisher.privateKey))
+        const messageSigner = new MessageSigner(new EthereumKeyPairIdentity(publisher.privateKey))
         return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,
@@ -87,7 +87,7 @@ describe('messagePipeline', () => {
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
                 config,
-                new EthereumPrivateKeyIdentity(publisher.privateKey),
+                new EthereumKeyPairIdentity(publisher.privateKey),
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),

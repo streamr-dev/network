@@ -15,7 +15,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -63,7 +63,7 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of publishers) {
-            const identity = new EthereumPrivateKeyIdentity(publisher.wallet.privateKey)
+            const identity = new EthereumKeyPairIdentity(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 identity: identity,

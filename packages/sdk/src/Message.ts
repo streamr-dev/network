@@ -3,7 +3,7 @@ import { StreamMessage } from './protocol/StreamMessage'
 import { SignatureType } from '@streamr/trackerless-network'
 
 /**
- * Represents a message in the Streamr Network.
+ * Represents a message in the Streamr Network. This is an application-facing class, whereas StreamMessage is considered internal.
  *
  * @category Important
  */

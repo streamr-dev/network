@@ -250,7 +250,7 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = toEthereumAddress(await this.identity.getUserId())
+        const userAddress = toEthereumAddress(await this.identity.getPublicKeyAsString()())
         if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }

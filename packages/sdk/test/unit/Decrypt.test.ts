@@ -11,7 +11,7 @@ import { decrypt } from '../../src/encryption/decrypt'
 import { createGroupKeyManager, createMockMessage } from '../test-utils/utils'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
 import { EncryptionType } from '@streamr/trackerless-network'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 describe('Decrypt', () => {
 
@@ -43,7 +43,7 @@ describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
         const wallet = await createTestWallet()
-        const groupKeyManager = await createGroupKeyManager(undefined, new EthereumPrivateKeyIdentity(wallet.privateKey))
+        const groupKeyManager = await createGroupKeyManager(undefined, new EthereumKeyPairIdentity(wallet.privateKey))
         const destroySignal = new DestroySignal()
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

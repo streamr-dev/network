@@ -34,15 +34,22 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "publicKey": {
+                    "type": "string",
+                    "format": "hex-string"
+                },
                 "privateKey": {
                     "type": "string",
-                    "format": "ethereum-private-key"
+                    "format": "hex-string"
                 },
-                "address": {
+                "keyType": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "default": "secp256k1"
                 },
                 "ethereum": {
+                    "type": "object"
+                },
+                "identity": {
                     "type": "object"
                 }
             }

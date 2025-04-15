@@ -61,7 +61,7 @@ describe('Config', () => {
                             address: 'foo'
                         }
                     } as any)
-                }).toThrow('/auth/address must match format "ethereum-address"')
+                }).toThrow('/auth/address must match format "hex-string"')
             })
 
             it('ethereum private key', () => {
@@ -71,7 +71,7 @@ describe('Config', () => {
                             privateKey: 'foo'
                         }
                     } as any)
-                }).toThrow('/auth/privateKey must match format "ethereum-private-key"')
+                }).toThrow('/auth/privateKey must match format "hex-string"')
             })
         })
     })

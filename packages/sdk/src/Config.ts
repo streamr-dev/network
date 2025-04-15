@@ -9,21 +9,32 @@ import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
+import { Identity } from './identity/Identity'
+import { ValidKeyTypeString } from './identity/createIdentityFromConfig'
 
-export interface ProviderAuthConfig {
-    /**
-     * The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type is from the `ethers` library.
-     */
+/**
+ * For passing in an Ethereum provider (= wallet) for signing
+ */
+export interface EthereumProviderIdentityConfig {
     ethereum: Eip1193Provider
 }
-
-export interface PrivateKeyAuthConfig {
+/**
+ * For configuring identities based on a cryptographic key / key pair
+ */
+export interface KeyPairIdentityConfig {
+    publicKey?: string
     privateKey: string
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: HexString
+    keyType?: ValidKeyTypeString
 }
+
+/**
+ * For passing in an Identity implementation
+ */
+export interface CustomIdentityConfig {
+    identity: Identity
+}
+
+export type IdentityConfig = KeyPairIdentityConfig | EthereumProviderIdentityConfig | CustomIdentityConfig
 
 export interface ControlLayerConfig {
 
@@ -251,10 +262,9 @@ export interface StreamrClientConfig {
     logLevel?: LogLevel
 
     /**
-    * The Ethereum identity to be used by the client. Either a private key
-    * or a window.ethereum object.
+    * The cryptographic identity to be used by the client.
     */
-    auth?: PrivateKeyAuthConfig | ProviderAuthConfig
+    auth?: IdentityConfig
 
     /**
      * Due to the distributed nature of the network, messages may occasionally
@@ -492,8 +502,8 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
 }
 
 export const redactConfig = (config: StrictStreamrClientConfig): void => {
-    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
-        (config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
+    if ((config.auth as KeyPairIdentityConfig)?.privateKey !== undefined) {
+        (config.auth as KeyPairIdentityConfig).privateKey = '(redacted)'
     }
 }
 

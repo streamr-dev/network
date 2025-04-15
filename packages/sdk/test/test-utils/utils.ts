@@ -22,7 +22,7 @@ import { AddressInfo } from 'net'
 import path from 'path'
 import { DependencyContainer } from 'tsyringe'
 import { Identity } from '../../src/identity/Identity'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -130,7 +130,7 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
-    const identity = new EthereumPrivateKeyIdentity(opts.publisher.privateKey)
+    const identity = new EthereumKeyPairIdentity(opts.publisher.privateKey)
     const factory = new MessageFactory({
         identity: identity,
         streamId,
@@ -178,7 +178,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomIdentity = async (): Promise<Identity> => {
-    return new EthereumPrivateKeyIdentity(await createTestPrivateKey())
+    return new EthereumKeyPairIdentity(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {

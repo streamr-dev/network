@@ -38,7 +38,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser = await this.identity.getUserId()
+        const authenticatedUser = await this.identity.getPublicKeyAsString()()
         const permissions = new Multimap<UserID, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {

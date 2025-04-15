@@ -12,7 +12,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -39,7 +39,7 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        const identity = new EthereumPrivateKeyIdentity(publisherWallet.privateKey)
+        const identity = new EthereumKeyPairIdentity(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
             identity,
             streamId: stream.id,

@@ -1,21 +1,40 @@
-import { BrowserProvider, Wallet } from 'ethers'
-import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from '../Config'
-import { EthereumPrivateKeyIdentity } from './EthereumPrivateKeyIdentity'
+import { Wallet } from 'ethers'
+import { KeyPairIdentityConfig, EthereumProviderIdentityConfig, StrictStreamrClientConfig, CustomIdentityConfig } from '../Config'
+import { EthereumKeyPairIdentity } from './EthereumKeyPairIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
+import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 
-export const createIdentityFromConfig = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts' | '_timeouts'>): Identity => {
-    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
-        const privateKey = (config.auth as PrivateKeyAuthConfig).privateKey
-        const normalizedPrivateKey = !privateKey.startsWith('0x')
-            ? `0x${privateKey}`
-            : privateKey
-        return new EthereumPrivateKeyIdentity(normalizedPrivateKey)
-    } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
-        const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
-        const provider = new BrowserProvider(ethereum)
-        return new EthereumProviderIdentity(provider, config.contracts.ethereumNetwork.chainId)
-    } else {
-        return new EthereumPrivateKeyIdentity(Wallet.createRandom().privateKey)
+export type ValidKeyTypeString = 'secp256k1' | 'ml-dsa-87'
+
+/**
+ * Creates an Identity instance based on what's in the StreamrClient config
+ */
+export const createIdentityFromConfig = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Identity => {
+    // Key pair -based identities
+    if ((config.auth as KeyPairIdentityConfig)?.privateKey !== undefined) {
+        // Default key type is secp256k1 private key (="Ethereum private key")
+        const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? 'secp256k1'
+
+        if (keyType === 'secp256k1') {
+            return EthereumKeyPairIdentity.fromConfig(config)
+        } else if (keyType === 'ml-dsa-87') {
+            return MLDSAKeyPairIdentity.fromConfig(config)
+        } else {
+            throw new Error(`Unsupported keyType given in config: ${keyType}`)
+        }
+    } 
+    
+    // If a custom identity implementation is given, simply use that
+    if ((config.auth as CustomIdentityConfig)?.identity !== undefined) {
+        return (config.auth as CustomIdentityConfig)?.identity
     }
+
+    // Ethereum provider
+    if ((config.auth as EthereumProviderIdentityConfig)?.ethereum !== undefined) {
+        return EthereumProviderIdentity.fromConfig(config)
+    }
+
+    // If no identity is configured, generate a random Ethereum identity
+    return new EthereumKeyPairIdentity(Wallet.createRandom().privateKey)
 }

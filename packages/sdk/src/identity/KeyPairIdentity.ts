@@ -1,27 +1,38 @@
-import { binaryToHex, toUserId, UserID } from '@streamr/utils'
+import { toUserId, UserID, UserIDRaw } from '@streamr/utils'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { Identity, SignerWithProvider } from './Identity'
+import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 
 export abstract class KeyPairIdentity extends Identity {
-    publicKey: Uint8Array
+    publicKeyString: UserID
+    publicKey: UserIDRaw
     privateKey: Uint8Array
-    private cachedUserId: UserID | undefined
 
     constructor(publicKey: Uint8Array, privateKey: Uint8Array) {
         super()
         this.publicKey = publicKey
         this.privateKey = privateKey
+        this.publicKeyString = toUserId(this.publicKey)
     }
 
-    async getUserId(): Promise<UserID> { 
-        if (!this.cachedUserId) {
-            this.cachedUserId = toUserId(binaryToHex(this.publicKey))
-        }
-        return this.cachedUserId
+    async getUserIdBytes(): Promise<UserIDRaw> { 
+        return this.publicKey
+    }
+
+    async getUserIdString(): Promise<UserID> { 
+        return this.publicKeyString
     }
 
     // eslint-disable-next-line class-methods-use-this
     async getTransactionSigner(_rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {
-        throw new Error('ML-DSA identities can not sign transactions!')
+        throw new Error('This key pair can not sign transactions!')
+    }
+
+    static getKeyPairFromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): KeyPairIdentityConfig {
+        const result = (config as KeyPairIdentityConfig)
+        if (!result.privateKey) {
+            throw new Error('A privateKey was expected in the config, but none is defined!')
+        }
+        return result
     }
 }

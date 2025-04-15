@@ -16,7 +16,7 @@ import { createTestStream } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -70,7 +70,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        const publisherIdentity = new EthereumPrivateKeyIdentity(publisherWallet.privateKey)
+        const publisherIdentity = new EthereumKeyPairIdentity(publisherWallet.privateKey)
         messageSigner = new MessageSigner(publisherIdentity)
     })
 

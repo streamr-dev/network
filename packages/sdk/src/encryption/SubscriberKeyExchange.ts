@@ -115,7 +115,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.identity.getUserId() : toUserId(erc1271contract),
+                erc1271contract === undefined ? await this.identity.getPublicKeyAsString()() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: GroupKeyRequest.toBinary(request),
@@ -150,7 +150,7 @@ export class SubscriberKeyExchange {
 
     private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.identity.getUserId()
+            const authenticatedUser = await this.identity.getPublicKeyAsString()()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
             return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }

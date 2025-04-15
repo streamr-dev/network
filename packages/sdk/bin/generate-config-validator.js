@@ -24,8 +24,7 @@ const ajv = new Ajv({
 ajv.addFormat('uri', fastFormats.uri)
 ajv.addFormat('ipv4', fullFormats.ipv4)
 ajv.addFormat('hostname', fullFormats.hostname)
-ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
-ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
+ajv.addFormat('hex-string', /^(0x)?[a-zA-Z0-9]+$/)
 
 const validate = ajv.compile(CONFIG_SCHEMA)
 const moduleCode = standaloneCode(ajv, validate)

@@ -12,7 +12,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { EthereumPrivateKeyIdentity } from '../../src/identity/EthereumPrivateKeyIdentity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 describe('Resends', () => {
 
@@ -39,7 +39,7 @@ describe('Resends', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()
-        const identity = new EthereumPrivateKeyIdentity(publisherPrivateKey)
+        const identity = new EthereumKeyPairIdentity(publisherPrivateKey)
         messageFactory = new MessageFactory({
             identity,
             streamId: stream.id,

@@ -1,14 +1,19 @@
-import { hexToBinary, toUserId, UserID, wait } from '@streamr/utils'
-import { JsonRpcApiProvider } from 'ethers'
+import { hexToBinary, toUserId, toUserIdRaw, UserID, UserIDRaw, wait } from '@streamr/utils'
+import { BrowserProvider, JsonRpcApiProvider } from 'ethers'
 import { pLimitFn } from '../utils/promises'
 import { Identity, SignerWithProvider } from './Identity'
 import { SignatureType } from '@streamr/trackerless-network'
+import { EthereumProviderIdentityConfig, StrictStreamrClientConfig } from '../Config'
 
+/**
+ * An identity that uses an Ethereum provider (= external wallet) to sign messages
+ */
 export class EthereumProviderIdentity extends Identity {
     private provider: JsonRpcApiProvider
     private expectedChainId: number | undefined
     private signer: Promise<SignerWithProvider>
-    private cachedUserId: UserID | undefined
+    private cachedUserIdString: UserID | undefined
+    private cachedUserIdBytes: UserIDRaw | undefined
     private rateLimitedSigner: (payload: Uint8Array) => Promise<Uint8Array>
 
     constructor(provider: JsonRpcApiProvider, expectedChainId: number | undefined) {
@@ -26,11 +31,18 @@ export class EthereumProviderIdentity extends Identity {
         }, 1)
     }
 
-    async getUserId(): Promise<UserID> {
-        if (!this.cachedUserId) {
-            this.cachedUserId = toUserId(await (await this.signer).getAddress())
+    async getUserIdBytes(): Promise<UserIDRaw> {
+        if (!this.cachedUserIdBytes) {
+            this.cachedUserIdBytes = toUserIdRaw(await this.getUserIdString())
         }
-        return this.cachedUserId
+        return this.cachedUserIdBytes
+    }
+
+    async getUserIdString(): Promise<UserID> {
+        if (!this.cachedUserIdString) {
+            this.cachedUserIdString = toUserId(await (await this.signer).getAddress())
+        }
+        return this.cachedUserIdString
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -59,5 +71,11 @@ export class EthereumProviderIdentity extends Identity {
         //   "We recommend reloading the page unless you have a very good reason not to"
         //   Of course we can't and won't do that, but if we need something chain-dependent...
         // ethereum.on('chainChanged', (chainId) => { window.location.reload() });
+    }
+
+    static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): EthereumProviderIdentity {
+        const ethereum = (config.auth as EthereumProviderIdentityConfig)?.ethereum
+        const provider = new BrowserProvider(ethereum)
+        return new EthereumProviderIdentity(provider, config.contracts.ethereumNetwork.chainId)
     }
 }
