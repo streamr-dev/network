@@ -9,13 +9,13 @@ const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()
 
 describe('StreamIDBuilder', () => {
-    let getUserId: jest.Mock<Promise<string>, []>
+    let getUserIdString: jest.Mock<Promise<string>, []>
     let streamIdBuilder: StreamIDBuilder
 
     beforeEach(() => {
-        getUserId = jest.fn()
+        getUserIdString = jest.fn()
         streamIdBuilder = new StreamIDBuilder({
-            getUserId
+            getUserIdString,
         } as unknown as Identity)
     })
 
@@ -33,14 +33,14 @@ describe('StreamIDBuilder', () => {
         })
 
         it('throws if given path-only format but ethereum address fetching rejects', () => {
-            getUserId.mockRejectedValue(new Error('random error for getUserId'))
+            getUserIdString.mockRejectedValue(new Error('random error for getUserId'))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .rejects
                 .toThrow('random error for getUserId')
         })
 
         it('returns full stream id given path-only format', () => {
-            getUserId.mockResolvedValue(toUserId(address))
+            getUserIdString.mockResolvedValue(toUserId(address))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .resolves
                 .toEqual(`${normalizedAddress}/foo/bar`)
