@@ -174,6 +174,7 @@ Changes before Tatum release are not documented in this file.
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 - Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
+- Fix analysis of WebRTC private address probing warning (https://github.com/streamr-dev/network/pull/3070)
 
 ### @streamr/cli-tools
 
