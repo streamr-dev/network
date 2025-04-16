@@ -262,7 +262,8 @@ export interface StreamrClientConfig {
     logLevel?: LogLevel
 
     /**
-    * The cryptographic identity to be used by the client.
+    * The cryptographic identity to be used by the client. The chosen identity
+    * also determines the type of signatures on published messages.
     */
     auth?: IdentityConfig
 
@@ -367,13 +368,25 @@ export interface StreamrClientConfig {
         rsaKeyLength?: number
 
         /**
-         * If true, ML-KEM-1024 will be used for key exchange instead of RSA.
+         * Default: false. If true, ML-KEM-1024 will be used for key exchange instead of RSA.
          * If true on subscribers, they will send key requests specifying an ML-KEM public key instead of an RSA one.
          * If true on publishers, they will *only* respond to key requests specifying an ML-KEM public key.
          * If false or undefined on publishers, they will respond to key requests with either RSA or ML-KEM
          * depending on what the subscriber requests.
          */
         requireQuantumResistantKeyExchange?: boolean
+
+        /**
+         * Default: false. If true, only data signed using quantum resistant algorithms will be accepted,
+         * and configuring a non-quantum-resistant identity key pair will produce an error.
+         */
+        requireQuantumResistantSignatures?: boolean
+
+        /**
+         * Default: false. If true, only data encrypted using quantum resistant algorithms will be accepted,
+         * and data using other algorithms as well as unencrypted data will be rejected.
+         */
+        requireQuantumResistantEncryption?: boolean
     }
 
     contracts?: {

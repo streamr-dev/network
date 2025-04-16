@@ -4,6 +4,7 @@ import { pLimitFn } from '../utils/promises'
 import { Identity, SignerWithProvider } from './Identity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { EthereumProviderIdentityConfig, StrictStreamrClientConfig } from '../Config'
+import { ValidKeyTypeConfig } from './createIdentityFromConfig'
 
 /**
  * An identity that uses an Ethereum provider (= external wallet) to sign messages
@@ -48,6 +49,11 @@ export class EthereumProviderIdentity extends Identity {
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
         return SignatureType.EVM_SECP256K1
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getSignatureTypeAsString(): ValidKeyTypeConfig {
+        return 'secp256k1'
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {

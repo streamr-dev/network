@@ -2,6 +2,7 @@ import { hexToBinary, ML_DSA_87 } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { StrictStreamrClientConfig } from '../Config'
+import { ValidKeyTypeConfig } from './createIdentityFromConfig'
 
 /**
  * An identity that uses a quantum-resistant ML-DSA-87 key pair to sign messages.
@@ -20,6 +21,11 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
     // eslint-disable-next-line class-methods-use-this
     getExpectedPrivateKeyLength(): number {
         return 4896
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getSignatureTypeAsString(): ValidKeyTypeConfig {
+        return 'ml-dsa-87'
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {

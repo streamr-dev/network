@@ -361,6 +361,14 @@
                 "requireQuantumResistantKeyExchange": {
                     "type": "boolean",
                     "default": false
+                },
+                "requireQuantumResistantSignatures": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "requireQuantumResistantEncryption": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "default": {}

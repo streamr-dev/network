@@ -59,6 +59,7 @@ import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 import { createIdentityFromConfig } from './identity/createIdentityFromConfig'
+import { assertCompliantIdentity } from './utils/encryptionCompliance'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -118,6 +119,7 @@ export class StreamrClient {
     ) {
         const strictConfig = createStrictConfig(config)
         const identity = createIdentityFromConfig(strictConfig)
+        assertCompliantIdentity(identity, strictConfig)
         redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
         container.register(IdentityInjectionToken, { useValue: identity })

@@ -20,6 +20,8 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
+import { StrictStreamrClientConfig } from '../exports'
+import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -28,6 +30,7 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
+    config: Pick<StrictStreamrClientConfig, 'encryption'>
 }
 
 export class MessageFactory {
@@ -42,6 +45,7 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
@@ -51,6 +55,7 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
+        this.config = opts.config
         this.defaultMessageChainIds = createLazyMap<number, string>({
             valueFactory: async () => {
                 return createRandomMsgChainId()
@@ -95,6 +100,9 @@ export class MessageFactory {
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        if (!isCompliantEncryptionType(encryptionType, this.config)) {
+            throw new Error(`Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`)
+        }
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let rawContent: Uint8Array

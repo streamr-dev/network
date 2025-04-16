@@ -25,6 +25,7 @@ import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { isCompliantAsymmetricEncryptionType } from '../utils/encryptionCompliance'
 
 /*
  * Sends group key responses
@@ -92,8 +93,8 @@ export class PublisherKeyExchange {
                     groupKeyIds, encryptionType: keyEncryptionType } = GroupKeyRequest.fromBinary(request.content)
                 const recipientUserId = toUserId(recipientId)
 
-                if (this.config.encryption.requireQuantumResistantKeyExchange && keyEncryptionType === AsymmetricEncryptionType.RSA) {
-                    throw new Error(`Received key request for RSA, but quantum resistant crypto is required. Can't answer!`)
+                if (!isCompliantAsymmetricEncryptionType(keyEncryptionType, this.config)) {
+                    throw new Error(`EncryptionType in key request (${keyEncryptionType}) is not compliant with encryption settings!`)
                 }
 
                 const responseType = await this.getResponseType(recipientUserId)

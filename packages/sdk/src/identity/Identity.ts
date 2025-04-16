@@ -2,6 +2,7 @@ import { UserID, UserIDRaw } from '@streamr/utils'
 import { AbstractSigner, Provider } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
+import { ValidKeyTypeConfig } from './createIdentityFromConfig'
 
 export const IdentityInjectionToken = Symbol('Identity')
 
@@ -14,6 +15,7 @@ export abstract class Identity {
     abstract getUserIdString(): Promise<UserID>
     abstract getUserIdBytes(): Promise<UserIDRaw>
     abstract getSignatureType(): SignatureType
+    abstract getSignatureTypeAsString(): ValidKeyTypeConfig
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>
     abstract getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider>
 }

@@ -18,6 +18,7 @@ import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
 import { StreamrClientError } from '../StreamrClientError'
 import { MessageID } from '../protocol/MessageID'
+import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
@@ -27,7 +28,7 @@ export interface MessagePipelineOptions {
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+    config: Pick<StrictStreamrClientConfig, 'encryption' | 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }
@@ -51,6 +52,13 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
+
+        if (!isCompliantEncryptionType(msg.encryptionType, opts.config)) {
+            throw new Error(`A message in stream ${
+                msg.getStreamId()
+            } was rejected because it violated encryption configuration (encryptionType: ${msg.encryptionType})!`)
+        }
+
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {

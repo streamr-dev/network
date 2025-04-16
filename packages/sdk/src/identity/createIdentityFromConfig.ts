@@ -5,12 +5,20 @@ import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 
-export type ValidKeyTypeConfig = 'secp256k1' | 'ml-dsa-87'
+export const validKeyTypeValues = ['secp256k1', 'ml-dsa-87'] as const
+export type ValidKeyTypeConfig = typeof validKeyTypeValues[number]
 
 const factoryByKeyType: Record<ValidKeyTypeConfig, (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity> = {
     'secp256k1': EthereumKeyPairIdentity.fromConfig,
     'ml-dsa-87': MLDSAKeyPairIdentity.fromConfig,
 }
+
+// Static check that all valid key types have corresponding factory functions above
+validKeyTypeValues.forEach((keyType) => {
+    if (!(keyType in factoryByKeyType)) {
+        throw new Error(`Missing factory function for keyType: ${keyType}`)
+    }
+})
 
 /**
  * Creates an Identity instance based on what's in the StreamrClient config
