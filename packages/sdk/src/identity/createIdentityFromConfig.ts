@@ -14,7 +14,7 @@ interface RequiredFactoryMethods {
     generate: () => Identity
 }
 
-const factoryByKeyType: Record<KeyTypeConfig, RequiredFactoryMethods> = {
+export const identityFactoryByKeyType: Record<KeyTypeConfig, RequiredFactoryMethods> = {
     'evm': { 
         fromConfig: EthereumKeyPairIdentity.fromConfig, 
         generate: EthereumKeyPairIdentity.generate, 
@@ -27,7 +27,7 @@ const factoryByKeyType: Record<KeyTypeConfig, RequiredFactoryMethods> = {
 
 // Static check that all valid key types have corresponding factory functions above
 validKeyTypeValues.forEach((keyType) => {
-    if (!(keyType in factoryByKeyType)) {
+    if (!(keyType in identityFactoryByKeyType)) {
         throw new Error(`Missing factory function for keyType: ${keyType}`)
     }
 })
@@ -41,8 +41,8 @@ export const createIdentityFromConfig = (config: Pick<StrictStreamrClientConfig,
         // Default key type is secp256k1 private key (="Ethereum private key")
         const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? DEFAULT_KEY_TYPE
 
-        if (factoryByKeyType[keyType]) {
-            return factoryByKeyType[keyType].fromConfig(config)
+        if (identityFactoryByKeyType[keyType]) {
+            return identityFactoryByKeyType[keyType].fromConfig(config)
         } else {
             throw new Error(`Unsupported keyType given in config: ${keyType}`)
         }

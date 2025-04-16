@@ -1,4 +1,4 @@
-import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, ValidKeyTypeConfig, validKeyTypeValues } from '@streamr/sdk'
+import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, KeyTypeConfig, validKeyTypeValues } from '@streamr/sdk'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
@@ -7,7 +7,7 @@ import { createFnParseEnum, formEnumArgValueDescription } from './common'
 export interface Options {
     publicKey?: string
     privateKey?: string
-    keyType?: ValidKeyTypeConfig
+    keyType?: KeyTypeConfig
     config?: string
     env?: EnvironmentId
     quantum?: boolean
@@ -34,8 +34,8 @@ export const createClientCommand = (
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'a private key to establish your identity')
-        .option('--key-type <key-type>', `one of: [${validKeyTypeValues.join(', ')}]`)
-        .option('--public-key <public-key>', 'a public key - required by some key types')
+        .option('--key-type [key-type]', `one of: [${validKeyTypeValues.join(', ')}]`)
+        .option('--public-key [public-key]', 'a public key - required by some key types')
         .option('--config <file>', 'read connection and authentication settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
             createFnParseEnum('env', ENVIRONMENT_IDS))

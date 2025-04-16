@@ -39,6 +39,10 @@ export abstract class KeyPairIdentity extends Identity {
         return this.publicKeyString
     }
 
+    async getPrivateKey(): Promise<Uint8Array> {
+        return this.privateKey
+    }
+
     abstract getExpectedPublicKeyLength(): number
     abstract getExpectedPrivateKeyLength(): number
 
