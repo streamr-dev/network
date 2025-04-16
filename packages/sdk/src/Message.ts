@@ -2,7 +2,7 @@ import { HexString, StreamID } from '@streamr/utils'
 import { StreamMessage } from './protocol/StreamMessage'
 import { SignatureType } from '@streamr/trackerless-network'
 
-type SignatureTypeString = 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' | 'ML-DSA-87'
+export type SignatureTypeString = 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' | 'ML-DSA-87'
 
 // Gives compile-time error if all valid SignatureType values are not covered
 const signatureTypeStrings: Record<SignatureType, SignatureTypeString> = {

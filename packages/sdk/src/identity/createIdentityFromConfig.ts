@@ -5,8 +5,9 @@ import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 
-export type ValidKeyTypeString = 'secp256k1' | 'ml-dsa-87'
-const factoryByKeyType: Record<ValidKeyTypeString, (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity> = {
+export type ValidKeyTypeConfig = 'secp256k1' | 'ml-dsa-87'
+
+const factoryByKeyType: Record<ValidKeyTypeConfig, (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity> = {
     'secp256k1': EthereumKeyPairIdentity.fromConfig,
     'ml-dsa-87': MLDSAKeyPairIdentity.fromConfig,
 }
