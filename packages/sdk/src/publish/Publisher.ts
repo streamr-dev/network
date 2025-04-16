@@ -15,6 +15,7 @@ import { StreamDefinition } from '../types'
 import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -52,6 +53,7 @@ export class Publisher {
     private readonly identity: Identity
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly config: StrictStreamrClientConfig
 
     constructor(
         node: NetworkNodeFacade,
@@ -60,7 +62,8 @@ export class Publisher {
         streamIdBuilder: StreamIDBuilder,
         @inject(IdentityInjectionToken) identity: Identity,
         signatureValidator: SignatureValidator,
-        messageSigner: MessageSigner
+        messageSigner: MessageSigner,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
@@ -68,6 +71,7 @@ export class Publisher {
         this.identity = identity
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
+        this.config = config
         this.messageFactories = createLazyMap({
             valueFactory: async (streamId) => {
                 return this.createMessageFactory(streamId)
@@ -134,7 +138,8 @@ export class Publisher {
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
-            messageSigner: this.messageSigner
+            messageSigner: this.messageSigner,
+            config: this.config,
         })
     }
 }

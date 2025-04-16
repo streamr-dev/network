@@ -46,12 +46,16 @@ export {
     DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
-export { validKeyTypeValues, ValidKeyTypeConfig } from './identity/createIdentityFromConfig'
+export { validKeyTypeValues, KeyTypeConfig as ValidKeyTypeConfig } from './identity/createIdentityFromConfig'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { Identity, SignerWithProvider } from './identity/Identity'
+export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
+export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
+export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
+
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'
@@ -108,7 +112,7 @@ import {
     getTestAdminWallet,
     getOperatorContract
 } from './contracts/operatorContractUtils'
-import { validKeyTypeValues } from './identity/createIdentityFromConfig'
+
 /**
  * @deprecated
  * @hidden

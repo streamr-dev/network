@@ -5,7 +5,6 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 import { KeyPairIdentity } from './KeyPairIdentity'
-import { ValidKeyTypeConfig } from './createIdentityFromConfig'
 
 /**
  * An Identity that derives an Ethereum address from a secp256k1 private key
@@ -33,11 +32,6 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         return 32
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    getSignatureTypeAsString(): ValidKeyTypeConfig {
-        return 'secp256k1'
-    }
-
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
         return EVM_SECP256K1.createSignature(payload, this.privateKey)
     }
@@ -50,5 +44,10 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): EthereumKeyPairIdentity {
         const privateKey = (config.auth as KeyPairIdentityConfig).privateKey
         return new EthereumKeyPairIdentity(privateKey)
+    }
+
+    static generate(): EthereumKeyPairIdentity {
+        const wallet = Wallet.createRandom()
+        return new EthereumKeyPairIdentity(wallet.privateKey)
     }
 }
