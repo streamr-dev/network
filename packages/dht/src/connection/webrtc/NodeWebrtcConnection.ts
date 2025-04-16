@@ -49,7 +49,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private remoteDescriptionSet = false
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
-    private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
+    private readonly bufferThresholdHigh: number
     private readonly bufferThresholdLow: number
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
@@ -64,7 +64,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
         // eslint-disable-next-line no-underscore-dangle
-        this._bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
+        this.bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
         this.remotePeerDescriptor = params.remotePeerDescriptor
         this.maxMessageSize = params.maxMessageSize ?? 1048576
@@ -140,7 +140,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     public send(data: Uint8Array): void {
         if (this.isOpen()) {
             try {
-                if (this.dataChannel!.bufferedAmount() < this._bufferThresholdHigh) {
+                if (this.dataChannel!.bufferedAmount() < this.bufferThresholdHigh) {
                     this.dataChannel!.sendMessageBinary(data as Buffer)
                 } else {
                     this.messageQueue.push(data)
@@ -209,7 +209,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         dataChannel.onError((err) => logger.error('error', { err }))
 
         dataChannel.onBufferedAmountLow(() => {
-            while (this.messageQueue.length > 0 && dataChannel.bufferedAmount() < this._bufferThresholdHigh) {
+            while (this.messageQueue.length > 0 && dataChannel.bufferedAmount() < this.bufferThresholdHigh) {
                 const data = this.messageQueue.shift()
                 try {
                     dataChannel.sendMessageBinary(data as Buffer)
