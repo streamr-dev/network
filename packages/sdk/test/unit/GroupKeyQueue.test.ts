@@ -29,7 +29,7 @@ describe('GroupKeyQueue', () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(groupKeyStore.set).toHaveBeenCalledTimes(1)
-        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await identity.getPublicKeyAsString()(), groupKey.data)
+        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await identity.getUserIdString(), groupKey.data)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

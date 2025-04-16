@@ -102,7 +102,7 @@ export class PublisherKeyExchange {
                     this.logger.debug('Handling group key request', 
                         { requestId, responseType, keyEncryptionType: AsymmetricEncryptionType[keyEncryptionType] })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
-                    const authenticatedUser = await this.identity.getPublicKeyAsString()()
+                    const authenticatedUser = await this.identity.getUserIdString()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -137,7 +137,7 @@ export class PublisherKeyExchange {
     }
 
     private async getResponseType(publisherId: UserID): Promise<ResponseType> {
-        const authenticatedUser = await this.identity.getPublicKeyAsString()()
+        const authenticatedUser = await this.identity.getUserIdString()
         if (publisherId === authenticatedUser) {
             return ResponseType.NORMAL
         } else if (this.erc1271Publishers.has(publisherId)) {

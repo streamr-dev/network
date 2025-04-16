@@ -23,7 +23,7 @@ export class GroupKeyQueue {
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, identity, groupKeyManager)
         instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
-            await identity.getPublicKeyAsString()(),
+            await identity.getUserIdString(),
             streamId,
         )
         return instance
@@ -55,14 +55,14 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.identity.getPublicKeyAsString()()
+        const publisherId = await this.identity.getUserIdString()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.queuedGroupKey = newKey
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        const publisherId = await this.identity.getPublicKeyAsString()()
+        const publisherId = await this.identity.getUserIdString()
         newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined

@@ -28,7 +28,7 @@ describe(waitForAssignmentsToPropagate, () => {
 
     async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
         return new MessageSigner(identity).createSignedMessage({
-            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await identity.getPublicKeyAsString()(), 'msgChain'),
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await identity.getUserIdString(), 'msgChain'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
