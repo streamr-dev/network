@@ -54,6 +54,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
     private readonly maxMessageSize?: number
+    private readonly messageQueue: Uint8Array[] = []
     private closed = false
     private offering?: boolean
     private readonly earlyTimeout: NodeJS.Timeout
@@ -139,7 +140,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     public send(data: Uint8Array): void {
         if (this.isOpen()) {
             try {
-                this.dataChannel!.sendMessageBinary(data as Buffer)
+                if (this.dataChannel!.bufferedAmount() < this._bufferThresholdHigh) {
+                    this.dataChannel!.sendMessageBinary(data as Buffer)
+                } else {
+                    this.messageQueue.push(data)
+                }
             } catch (err) {
                 const remoteNodeId = toNodeId(this.remotePeerDescriptor)
                 logger.debug('Failed to send binary message to ' + remoteNodeId + err)
@@ -204,7 +209,14 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         dataChannel.onError((err) => logger.error('error', { err }))
 
         dataChannel.onBufferedAmountLow(() => {
-            logger.trace(`dc.onBufferedAmountLow`)
+            while (this.messageQueue.length > 0 && dataChannel.bufferedAmount() < this._bufferThresholdHigh) {
+                const data = this.messageQueue.shift()
+                try {
+                    dataChannel.sendMessageBinary(data as Buffer)
+                } catch (err) {
+                    logger.debug('Failed to send binary message', { err })
+                }
+            }
         })
 
         dataChannel.onMessage((msg) => {
