@@ -63,7 +63,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
-        // eslint-disable-next-line no-underscore-dangle
         this.bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
         this.remotePeerDescriptor = params.remotePeerDescriptor

@@ -30,7 +30,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private lastState: RTCPeerConnectionState = 'connecting'
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
-    private readonly bufferThresholdHigh =  2 ** 17
+    private readonly bufferThresholdHigh = 2 ** 17
     private readonly bufferThresholdLow = 2 ** 15
     private dataChannel?: RTCDataChannel
     private makingOffer = false
