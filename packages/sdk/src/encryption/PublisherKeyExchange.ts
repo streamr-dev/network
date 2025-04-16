@@ -137,8 +137,8 @@ export class PublisherKeyExchange {
     }
 
     private async getResponseType(publisherId: UserID): Promise<ResponseType> {
-        const authenticatedUser = await this.identity.getUserIdString()
-        if (publisherId === authenticatedUser) {
+        const myId = await this.identity.getUserIdString()
+        if (publisherId === myId) {
             return ResponseType.NORMAL
         } else if (this.erc1271Publishers.has(publisherId)) {
             return ResponseType.ERC_1271

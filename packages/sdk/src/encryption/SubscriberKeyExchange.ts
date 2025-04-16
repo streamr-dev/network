@@ -150,9 +150,9 @@ export class SubscriberKeyExchange {
 
     private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.identity.getUserIdString()
+            const myId = await this.identity.getUserIdString()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
+            return (recipientId === myId) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }
         return false
     }
