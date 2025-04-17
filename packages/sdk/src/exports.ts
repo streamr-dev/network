@@ -28,8 +28,10 @@ export {
     StreamrClientConfig,
     ConnectionInfo,
     EthereumNetworkConfig,
-    ProviderAuthConfig,
-    PrivateKeyAuthConfig,
+    IdentityConfig,
+    KeyPairIdentityConfig,
+    EthereumProviderIdentityConfig,
+    CustomIdentityConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAMR_STORAGE_NODE_ADDRESS,
     NetworkConfig,
@@ -44,15 +46,21 @@ export {
     DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
+export { validKeyTypeValues, KeyTypeConfig, identityFactoryByKeyType } from './identity/createIdentityFromConfig'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
-export { SignerWithProvider } from './Authentication'
+export { Identity, SignerWithProvider } from './identity/Identity'
+export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
+export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
+export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
+
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export { DhtAddress } from '@streamr/dht'
-export { EncryptedGroupKey, ProxyDirection } from '@streamr/trackerless-network'
+export { ContentType, EncryptedGroupKey, EncryptionType,
+    ProxyDirection, SignatureType } from '@streamr/trackerless-network'
 export type { 
     StreamID,
     StreamPartID,
@@ -71,9 +79,6 @@ export type { UserID } from '@streamr/utils'
 export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
 export {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamMessage,
     StreamMessageAESEncrypted,
     StreamMessageOptions,
@@ -107,6 +112,7 @@ import {
     getTestAdminWallet,
     getOperatorContract
 } from './contracts/operatorContractUtils'
+
 /**
  * @deprecated
  * @hidden

@@ -13,8 +13,9 @@ import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMe
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
 import { randomUserId } from '@streamr/test-utils'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),
@@ -38,7 +39,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
         signature: hexToBinary('0x1324'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.EVM_SECP256K1
     })
 }
 

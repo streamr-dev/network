@@ -1,79 +1,26 @@
 import {
-    ContentType as NewContentType,
-    EncryptionType as NewEncryptionType,
+    ContentType,
+    EncryptionType,
     EncryptedGroupKey,
-    GroupKeyRequest as NewGroupKeyRequest,
-    GroupKeyResponse as NewGroupKeyResponse,
-    MessageID as NewMessageID,
-    MessageRef as NewMessageRef,
-    SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage
+    GroupKeyRequest,
+    GroupKeyResponse,
+    MessageID as ProtoMessageID,
+    MessageRef as ProtoMessageRef,
+    StreamMessage as ProtoStreamMessage
 } from '@streamr/trackerless-network'
 import { StreamID, toUserId, toUserIdRaw } from '@streamr/utils'
-import { MessageID as OldMessageID } from './MessageID'
-import { MessageRef as OldMessageRef } from './MessageRef'
+import { MessageID as StreamMessageID } from './MessageID'
+import { MessageRef as StreamMessageRef } from './MessageRef'
 import {
-    ContentType as OldContentType,
-    EncryptionType as OldEncryptionType,
-    SignatureType as OldSignatureType,
-    StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType
+    StreamMessage,
+    StreamMessageType
 } from './StreamMessage'
-
-const oldToNewEncryptionType = (type: OldEncryptionType): NewEncryptionType => {
-    if (type === OldEncryptionType.AES) {
-        return NewEncryptionType.AES
-    }
-    return NewEncryptionType.NONE
-}
-
-const newToOldEncryptionType = (type: NewEncryptionType): OldEncryptionType => {
-    if (type === NewEncryptionType.AES) {
-        return OldEncryptionType.AES
-    }
-    return OldEncryptionType.NONE
-}
-
-const oldToNewContentType = (type: OldContentType): NewContentType => {
-    if (type === OldContentType.JSON) {
-        return NewContentType.JSON
-    }
-    return NewContentType.BINARY
-}
-
-const newToOldContentType = (type: NewContentType): OldContentType => {
-    if (type === NewContentType.JSON) {
-        return OldContentType.JSON
-    }
-    return OldContentType.BINARY
-}
-
-const oldToNewSignatureType = (type: OldSignatureType): NewSignatureType => {
-    if (type === OldSignatureType.LEGACY_SECP256K1) {
-        return NewSignatureType.LEGACY_SECP256K1
-    }
-    if (type === OldSignatureType.ERC_1271) {
-        return NewSignatureType.ERC_1271
-    }
-    return NewSignatureType.SECP256K1
-}
-
-const newToOldSignatureType = (type: NewSignatureType): OldSignatureType => {
-    if (type === NewSignatureType.LEGACY_SECP256K1) {
-        return OldSignatureType.LEGACY_SECP256K1
-    }
-    if (type === NewSignatureType.ERC_1271) {
-        return OldSignatureType.ERC_1271
-    }
-    return OldSignatureType.SECP256K1
-
-}
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
-    static toProtobuf(msg: OldStreamMessage): NewStreamMessage {
-        const messageId: NewMessageID = {
+    static toProtobuf(msg: StreamMessage): ProtoStreamMessage {
+        const messageId: ProtoMessageID = {
             timestamp: msg.getTimestamp(),
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
@@ -81,15 +28,15 @@ export class StreamMessageTranslator {
             publisherId: toUserIdRaw(msg.getPublisherId()),
             messageChainId: msg.getMsgChainId()
         }
-        let previousMessageRef: NewMessageRef | undefined = undefined
+        let previousMessageRef: ProtoMessageRef | undefined = undefined
         if (msg.prevMsgRef) {
             previousMessageRef = {
                 timestamp: msg.prevMsgRef.timestamp,
                 sequenceNumber: msg.prevMsgRef.sequenceNumber
             }
         }
-        let body: NewStreamMessage['body']
-        if (msg.messageType === OldStreamMessageType.MESSAGE) {
+        let body: ProtoStreamMessage['body']
+        if (msg.messageType === StreamMessageType.MESSAGE) {
             let newGroupKey: EncryptedGroupKey | undefined = undefined
             if (msg.newGroupKey) {
                 newGroupKey = {
@@ -101,61 +48,61 @@ export class StreamMessageTranslator {
                 oneofKind: 'contentMessage',
                 contentMessage: {
                     content: msg.content,
-                    contentType: oldToNewContentType(msg.contentType),
-                    encryptionType: oldToNewEncryptionType(msg.encryptionType),
+                    contentType: msg.contentType,
+                    encryptionType: msg.encryptionType,
                     groupKeyId: msg.groupKeyId ?? undefined,
                     newGroupKey
                 }
             }
-        } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
+        } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             body = {
                 oneofKind: 'groupKeyRequest',
-                groupKeyRequest: NewGroupKeyRequest.fromBinary(msg.content)
+                groupKeyRequest: GroupKeyRequest.fromBinary(msg.content)
             }
-        } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_RESPONSE) {
+        } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             body = {
                 oneofKind: 'groupKeyResponse',
-                groupKeyResponse: NewGroupKeyResponse.fromBinary(msg.content)
+                groupKeyResponse: GroupKeyResponse.fromBinary(msg.content)
             }
         } else {
             throw new Error('invalid message type')
         }
-        const translated: NewStreamMessage = {
+        const translated: ProtoStreamMessage = {
             messageId,
             previousMessageRef,
             signature: msg.signature,
-            signatureType: oldToNewSignatureType(msg.signatureType),
+            signatureType: msg.signatureType,
             body
         }
         return translated
     }
 
-    static toClientProtocol(msg: NewStreamMessage): OldStreamMessage {
-        let messageType: OldStreamMessageType
+    static toClientProtocol(msg: ProtoStreamMessage): StreamMessage {
+        let messageType: StreamMessageType
         let content: Uint8Array
-        let contentType: OldContentType = OldContentType.BINARY
-        let encryptionType: OldEncryptionType = OldEncryptionType.NONE
+        let contentType: ContentType = ContentType.BINARY
+        let encryptionType: EncryptionType = EncryptionType.NONE
         let newGroupKey: EncryptedGroupKey | undefined = undefined
         let groupKeyId: string | undefined = undefined
         if (msg.body.oneofKind === 'contentMessage') {
-            messageType = OldStreamMessageType.MESSAGE
+            messageType = StreamMessageType.MESSAGE
             content = msg.body.contentMessage.content
-            contentType = newToOldContentType(msg.body.contentMessage.contentType)
-            encryptionType = newToOldEncryptionType(msg.body.contentMessage.encryptionType)
+            contentType = msg.body.contentMessage.contentType
+            encryptionType = msg.body.contentMessage.encryptionType
             newGroupKey = msg.body.contentMessage.newGroupKey
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {
-            messageType = OldStreamMessageType.GROUP_KEY_REQUEST
+            messageType = StreamMessageType.GROUP_KEY_REQUEST
             try {
-                content = NewGroupKeyRequest.toBinary(msg.body.groupKeyRequest)
+                content = GroupKeyRequest.toBinary(msg.body.groupKeyRequest)
             } catch (err) {
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key request: ${err}`)
             }
         } else if (msg.body.oneofKind === 'groupKeyResponse') {
-            messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
+            messageType = StreamMessageType.GROUP_KEY_RESPONSE
             try {
-                content = NewGroupKeyResponse.toBinary(msg.body.groupKeyResponse)
+                content = GroupKeyResponse.toBinary(msg.body.groupKeyResponse)
             } catch (err) {
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key response: ${err}`)
@@ -163,7 +110,7 @@ export class StreamMessageTranslator {
         } else {
             throw new Error('invalid message type')
         }
-        const messageId = new OldMessageID(
+        const messageId = new StreamMessageID(
             msg.messageId!.streamId as StreamID,
             msg.messageId!.streamPartition,
             Number(msg.messageId!.timestamp),
@@ -171,18 +118,18 @@ export class StreamMessageTranslator {
             toUserId(msg.messageId!.publisherId),
             msg.messageId!.messageChainId
         )
-        let prevMsgRef: OldMessageRef | undefined = undefined
+        let prevMsgRef: StreamMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
+            prevMsgRef = new StreamMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
-        const translated = new OldStreamMessage({
+        const translated = new StreamMessage({
             messageId,
             prevMsgRef,
             messageType,
             content,
             contentType,
             signature: msg.signature,
-            signatureType: newToOldSignatureType(msg.signatureType),
+            signatureType: msg.signatureType,
             encryptionType,
             groupKeyId,
             newGroupKey

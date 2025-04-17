@@ -7,8 +7,8 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { GroupKeyResponse } from '@streamr/trackerless-network'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { Stream, StreamrClientConfig } from '../../src'
 
 describe('PublisherKeyExchange', () => {
@@ -107,7 +107,7 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.SECP256K1)
+        await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
     })
 
     it('responds to a group key request using ERC-1271 identity', async () => {
@@ -145,7 +145,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.SECP256K1)
+            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
         })
 
         it('works when subscriber requests quantum security', async () => {
@@ -160,7 +160,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.SECP256K1)
+            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
         })
 
         it('fails when publisher requires it but subscriber does not', async () => {

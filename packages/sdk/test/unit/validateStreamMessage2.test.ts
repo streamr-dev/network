@@ -1,26 +1,26 @@
 import 'reflect-metadata'
 
 import { UserID, hexToBinary, toStreamID, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
-import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { mock } from 'jest-mock-extended'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
-import { MOCK_CONTENT, createRandomAuthentication } from '../test-utils/utils'
+import { MOCK_CONTENT, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Authentication
+    identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(authentication)
+    const messageSigner = new MessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
@@ -28,16 +28,16 @@ const groupKeyRequestToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_REQUEST,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    }, SignatureType.EVM_SECP256K1)
 }
 
 const groupKeyResponseToStreamMessage = async (
     groupKeyResponse: GroupKeyResponse,
     messageId: MessageID,
     prevMsgRef: MessageRef | undefined,
-    authentication: Authentication
+    identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(authentication)
+    const messageSigner = new MessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
@@ -45,7 +45,7 @@ const groupKeyResponseToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.SECP256K1)
+    }, SignatureType.EVM_SECP256K1)
 }
 
 describe('Validator2', () => {
@@ -53,8 +53,8 @@ describe('Validator2', () => {
     let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
-    let publisherAuthentication: Authentication
-    let subscriberAuthentication: Authentication
+    let publisherAuthentication: Identity
+    let subscriberAuthentication: Identity
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -72,13 +72,13 @@ describe('Validator2', () => {
     }
 
     beforeAll(async () => {
-        publisherAuthentication = await createRandomAuthentication()
-        subscriberAuthentication = await createRandomAuthentication()
+        publisherAuthentication = await createRandomIdentity()
+        subscriberAuthentication = await createRandomIdentity()
     })
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getUserId()
-        const subscriber = await subscriberAuthentication.getUserId()
+        const publisher = await publisherAuthentication.getUserIdString()
+        const subscriber = await subscriberAuthentication.getUserIdString()
         // Default stubs
         getStreamMetadata = async () => ({
             partitions: 10
@@ -98,7 +98,7 @@ describe('Validator2', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
 
         msgWithNewGroupKey = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
@@ -107,7 +107,7 @@ describe('Validator2', () => {
             newGroupKey: { id: 'groupKeyId', data: hexToBinary('0x1111') },
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
         expect(msg.signature).not.toEqualBinary(msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
@@ -117,7 +117,7 @@ describe('Validator2', () => {
             prevMsgRef: new MessageRef(1000, 0),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
         expect(msg.signature).not.toEqualBinary(msgWithPrevMsgRef.signature)
 
         groupKeyRequest = await groupKeyRequestToStreamMessage({
@@ -241,7 +241,7 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserId()
+            const publisher = await publisherAuthentication.getUserIdString()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -251,7 +251,7 @@ describe('Validator2', () => {
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserId()
+            const subscriber = await subscriberAuthentication.getUserIdString()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -298,7 +298,7 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserId()
+            const publisher = await publisherAuthentication.getUserIdString()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -308,7 +308,7 @@ describe('Validator2', () => {
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserId()
+            const subscriber = await subscriberAuthentication.getUserIdString()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'

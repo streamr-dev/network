@@ -5,11 +5,12 @@ import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
-import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
+import { createRandomIdentity, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessageType } from './../../src/protocol/StreamMessage'
 import { randomUserId } from '@streamr/test-utils'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const PUBLISHER_ID = randomUserId()
 
@@ -25,11 +26,11 @@ describe('MessageStream', () => {
             content: utf8ToBinary(JSON.stringify(Msg())),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.EVM_SECP256K1)
     }
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(await createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomIdentity())
     })
 
     it('onMessage', async () => {

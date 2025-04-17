@@ -7,7 +7,8 @@ import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessage
 import { Resends } from '../../src/subscribe/Resends'
 import { MOCK_CONTENT, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
@@ -66,7 +67,7 @@ describe('Resends', () => {
                     signature: hexToBinary('0x1234'),
                     contentType: ContentType.JSON,
                     encryptionType: EncryptionType.NONE,
-                    signatureType: SignatureType.SECP256K1
+                    signatureType: SignatureType.EVM_SECP256K1
                 })
                 res.write(toLengthPrefixedFrame(convertStreamMessageToBytes(msg)))
             }

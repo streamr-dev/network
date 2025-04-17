@@ -62,9 +62,10 @@ enum AsymmetricEncryptionType {
 }
 
 enum SignatureType {
-  LEGACY_SECP256K1 = 0;
-  SECP256K1 = 1;
+  LEGACY_EVM_SECP256K1 = 0;
+  EVM_SECP256K1 = 1;
   ERC_1271 = 2;
+  ML_DSA_87 = 3;
 }
 
 message StreamMessage {

@@ -2,8 +2,9 @@ import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
 import { randomUserId } from '@streamr/test-utils'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const STREAM_ID = toStreamID('stream')
 const PUBLISHER_ID = randomUserId()
@@ -17,7 +18,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.EVM_SECP256K1
     })
 }
 

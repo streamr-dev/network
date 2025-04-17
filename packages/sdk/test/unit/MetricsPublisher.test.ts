@@ -111,7 +111,7 @@ describe('MetricsPublisher', () => {
             await assertPublisherEnabled({}, DEFAULT_DURATIONS)
         })
 
-        it('ethereum authentication', async () => {
+        it('ethereum identity', async () => {
             await assertPublisherDisabled({
                 auth: {
                     ethereum: {} as any

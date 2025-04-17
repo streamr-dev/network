@@ -22,7 +22,7 @@ const createMockMessage = (i: number) => {
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.EVM_SECP256K1
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))
