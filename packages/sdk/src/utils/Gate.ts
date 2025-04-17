@@ -90,9 +90,7 @@ export class Gate {
             return
         }
 
-        if (!this.pending) {
-            this.pending = new Defer<undefined>()
-        }
+        this.pending ??= new Defer<undefined>()
     }
 
     /**

@@ -12,17 +12,16 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add support for quantum secure key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
-- Added support for quantum secure key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 
 #### Changed
 
-- **BREAKING CHANGE**: Browser exports improved, but polyfills now required.
-  - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field.
-  - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite).
+- **BREAKING CHANGE**: Browser exports improved, but polyfills now required
+  - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field
+  - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite)
 
-  Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details.
-
+  Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
 
 #### Deprecated
 
@@ -30,9 +29,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- *BREAKING* Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
+- **BREAKING CHANGE**: Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
 
 #### Fixed
+
+- Fix memory leak in `DhtNode` (https://github.com/streamr-dev/network/pull/3065)
 
 #### Security
 
@@ -172,6 +173,7 @@ Changes before Tatum release are not documented in this file.
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 - Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
+- Fix analysis of WebRTC private address probing warning (https://github.com/streamr-dev/network/pull/3070)
 
 ### @streamr/cli-tools
 

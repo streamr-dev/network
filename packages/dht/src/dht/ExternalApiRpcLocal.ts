@@ -5,7 +5,9 @@ import {
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
     RecursiveOperation,
-    PeerDescriptor
+    PeerDescriptor,
+    ExternalFindClosestNodesRequest,
+    ExternalFindClosestNodesResponse
 } from '../../generated/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
@@ -55,4 +57,17 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
             storers: result
         })
     }
+
+    async externalFindClosestNodes(request: ExternalFindClosestNodesRequest, context: ServerCallContext): Promise<ExternalFindClosestNodesResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const result = await this.options.executeRecursiveOperation(
+            toDhtAddress(request.nodeId),
+            RecursiveOperation.FIND_CLOSEST_NODES,
+            toNodeId(senderPeerDescriptor)
+        )
+        return ExternalFindClosestNodesResponse.create({
+            closestNodes: result.closestNodes
+        })
+    }
+
 }

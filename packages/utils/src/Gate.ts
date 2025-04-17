@@ -18,9 +18,7 @@ export class Gate {
     }
 
     close(): void {
-        if (this.pending === undefined) {
-            this.pending = new Defer<undefined>()
-        }
+        this.pending ??= new Defer<undefined>()
     }
 
     isOpen(): boolean {

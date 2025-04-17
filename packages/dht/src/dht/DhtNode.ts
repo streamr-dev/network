@@ -2,6 +2,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     Logger,
     MetricsContext,
+    addManagedEventListener,
     merge,
     scheduleAtInterval,
     until
@@ -262,7 +263,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.options.rpcRequestTimeout }
         )
 
-        this.transport.on('message', (message: Message) => this.handleMessageFromTransport(message))
+        /* eslint-disable indent */
+        addManagedEventListener<'message', (message: Message) => void>(  // TODO remove explicit type in NET-1449
+            this.transport,
+            'message',
+            (message: Message) => this.handleMessageFromTransport(message),
+            this.abortController.signal
+        )
 
         this.initPeerManager()
 
@@ -381,23 +388,35 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 }
             }
         })
-        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.router!.onNodeConnected(peerDescriptor)
-            this.emit('connected', peerDescriptor)
-        })
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            const isControlLayerNode = (this.connectionLocker !== undefined)
-            if (isControlLayerNode) {
-                const nodeId = toNodeId(peerDescriptor)
-                if (gracefulLeave) {
-                    this.peerManager!.removeContact(nodeId)
-                } else {
-                    this.peerManager!.removeNeighbor(nodeId)
+        /* eslint-disable indent */
+        addManagedEventListener<'connected', (peerDescriptor: PeerDescriptor) => void>(  // TODO remove explicit type in NET-1449
+            this.transport!,
+            'connected',
+            (peerDescriptor: PeerDescriptor) => {
+                this.router!.onNodeConnected(peerDescriptor)
+                this.emit('connected', peerDescriptor)
+            },
+            this.abortController.signal
+        )
+        /* eslint-disable indent, max-len */
+        addManagedEventListener<'disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void>(  // TODO remove explicit type in NET-1449
+            this.transport!,
+            'disconnected',
+            (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+                const isControlLayerNode = (this.connectionLocker !== undefined)
+                if (isControlLayerNode) {
+                    const nodeId = toNodeId(peerDescriptor)
+                    if (gracefulLeave) {
+                        this.peerManager!.removeContact(nodeId)
+                    } else {
+                        this.peerManager!.removeNeighbor(nodeId)
+                    }
                 }
-            }
-            this.router!.onNodeDisconnected(peerDescriptor)
-            this.emit('disconnected', peerDescriptor, gracefulLeave)
-        })
+                this.router!.onNodeDisconnected(peerDescriptor)
+                this.emit('disconnected', peerDescriptor, gracefulLeave)
+            },
+            this.abortController.signal
+        )
     }
 
     private bindRpcLocalMethods(): void {
@@ -604,8 +623,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
-        return result.closestNodes
+        return this.executeRecursiveOperation(
+            async () => {
+                const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
+                return result.closestNodes
+            },
+            (connectedEntryPoint) => this.findClosestNodesViaPeer(key, connectedEntryPoint)
+        )
+    }
+    private async findClosestNodesViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
+        return await rpcRemote.externalFindClosestNode(key)
     }
 
     public getTransport(): ITransport {

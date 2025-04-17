@@ -36,14 +36,12 @@ export class PersistenceManager {
     }
 
     private async ensureInitialized() {
-        if (this.persistence === undefined) {
-            this.persistence = await ServerPersistence.createInstance({
-                loggerFactory: this.loggerFactory,
-                ownerId: await this.identity.getUserIdString(),
-                namespaces: Object.values(NAMESPACES),
-                migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
-            })
-        }
+        this.persistence ??= await ServerPersistence.createInstance({
+            loggerFactory: this.loggerFactory,
+            ownerId: await this.identity.getUserIdString(),
+            namespaces: Object.values(NAMESPACES),
+            migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
+        })
     }
 
     async getPersistence(namespace: string): Promise<Persistence> {
