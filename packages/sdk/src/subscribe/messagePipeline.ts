@@ -18,7 +18,7 @@ import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
 import { StreamrClientError } from '../StreamrClientError'
 import { MessageID } from '../protocol/MessageID'
-import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
+import { isCompliantEncryptionType, isCompliantSignatureType } from '../utils/encryptionCompliance'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
@@ -56,7 +56,13 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         if (!isCompliantEncryptionType(msg.encryptionType, opts.config)) {
             throw new Error(`A message in stream ${
                 msg.getStreamId()
-            } was rejected because it violated encryption configuration (encryptionType: ${msg.encryptionType})!`)
+            } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`)
+        }
+
+        if (!isCompliantSignatureType(msg.signatureType, opts.config)) {
+            throw new Error(`A message in stream ${
+                msg.getStreamId()
+            } was rejected because the signature type violates configured requirements (signatureType: ${msg.encryptionType})!`)
         }
 
         let decrypted

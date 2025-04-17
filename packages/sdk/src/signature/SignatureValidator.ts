@@ -36,15 +36,13 @@ export class SignatureValidator {
         switch (streamMessage.signatureType) {
             case SignatureType.EVM_SECP256K1:
                 return EVM_SECP256K1.verifySignature(
-                    // publisherId is hex encoded address string
                     toUserIdRaw(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )
             case SignatureType.ML_DSA_87:
                 return ML_DSA_87.verifySignature(
-                    // TODO: should not be hex encoded, fix!
-                    hexToBinary(streamMessage.getPublisherId()),
+                    toUserIdRaw(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )

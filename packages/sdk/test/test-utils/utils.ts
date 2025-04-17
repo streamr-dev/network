@@ -132,7 +132,8 @@ export const createMockMessage = async (
     )
     const identity = new EthereumKeyPairIdentity(opts.publisher.privateKey)
     const factory = new MessageFactory({
-        identity: identity,
+        identity,
+        config: CONFIG_TEST,
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
@@ -217,6 +218,8 @@ export const createGroupKeyManager = async (
                 keyRequestTimeout: 50,
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!,
                 requireQuantumResistantKeyExchange: false,
+                requireQuantumResistantSignatures: false,
+                requireQuantumResistantEncryption: false,
             }
         },
         identity ?? await createRandomIdentity(),

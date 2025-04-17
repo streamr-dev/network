@@ -3,7 +3,7 @@ import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdent
 
 const PRIVATE_KEY = '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709'
 
-describe('EthereumPrivateKeyIdentity', () => {
+describe('EthereumKeyPairIdentity', () => {
 
     describe('createMessageSignature', () => {
 

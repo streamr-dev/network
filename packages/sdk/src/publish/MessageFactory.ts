@@ -20,7 +20,7 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { StrictStreamrClientConfig } from '../exports'
+import { StreamrClientConfig } from '../Config'
 import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessageFactoryOptions {
@@ -30,7 +30,7 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
-    config: Pick<StrictStreamrClientConfig, 'encryption'>
+    config: Pick<StreamrClientConfig, 'encryption'>
 }
 
 export class MessageFactory {
@@ -45,7 +45,7 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
-    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
+    private readonly config: Pick<StreamrClientConfig, 'encryption'>
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {

@@ -46,7 +46,8 @@ describe('gap fill', () => {
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(identity)
+            messageSigner: new MessageSigner(identity),
+            config: {},
         })
     })
 

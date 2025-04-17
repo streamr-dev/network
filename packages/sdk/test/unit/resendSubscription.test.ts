@@ -60,7 +60,8 @@ describe('resend subscription', () => {
             }),
             groupKeyQueue: await createGroupKeyQueue(identity),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(identity)
+            messageSigner: new MessageSigner(identity),
+            config: {},
         })
     })
 

@@ -50,7 +50,7 @@ describe('MessageFactory', () => {
             merge<MessageFactoryOptions>(
                 {
                     streamId: getStreamId(),
-                    identity: identity,
+                    identity,
                     streamRegistry: createStreamRegistry({
                         partitionCount: PARTITION_COUNT,
                         isPublicStream: false,
@@ -58,7 +58,8 @@ describe('MessageFactory', () => {
                     }),
                     groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
                     signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
-                    messageSigner: new MessageSigner(identity)
+                    messageSigner: new MessageSigner(identity),
+                    config: {},
                 },
                 opts
             )

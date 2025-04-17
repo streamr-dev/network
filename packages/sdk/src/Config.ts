@@ -368,17 +368,20 @@ export interface StreamrClientConfig {
         rsaKeyLength?: number
 
         /**
-         * Default: false. If true, ML-KEM-1024 will be used for key exchange instead of RSA.
-         * If true on subscribers, they will send key requests specifying an ML-KEM public key instead of an RSA one.
-         * If true on publishers, they will *only* respond to key requests specifying an ML-KEM public key.
-         * If false or undefined on publishers, they will respond to key requests with either RSA or ML-KEM
-         * depending on what the subscriber requests.
+         * Default: false. 
+         * 
+         * The default behavior on subscribers is to request key exchange using ML-KEM if a quantum secure
+         * identity key pair is configured, otherwise RSA.
+         * 
+         * The default behavior on publishers is to do key exchange using whichever method requested by subscribers.
+         * 
+         * If set to true, subscribers will always request using ML-KEM, and publishers will reject key requests that use RSA.
          */
         requireQuantumResistantKeyExchange?: boolean
 
         /**
-         * Default: false. If true, only data signed using quantum resistant algorithms will be accepted,
-         * and configuring a non-quantum-resistant identity key pair will produce an error.
+         * Default: false. If true, configuring a non-quantum-resistant identity key pair will produce an error,
+         * and subscribed messages will only be accepted if they are signed using a quantum resistant algorithm.
          */
         requireQuantumResistantSignatures?: boolean
 

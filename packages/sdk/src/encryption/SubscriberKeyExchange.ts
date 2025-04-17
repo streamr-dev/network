@@ -16,11 +16,10 @@ import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { RSAKeyPair } from './RSAKeyPair'
 import { EncryptionUtil } from './EncryptionUtil'
-import { MLKEMKeyPair } from './MLKEMKeyPair'
 import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
+import { createCompliantExchangeKeys } from '../utils/encryptionCompliance'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -64,11 +63,7 @@ export class SubscriberKeyExchange {
         this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            if (config.encryption.requireQuantumResistantKeyExchange) {
-                this.keyPair = MLKEMKeyPair.create()
-            } else {
-                this.keyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
-            }
+            this.keyPair = await createCompliantExchangeKeys(identity, config)
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })

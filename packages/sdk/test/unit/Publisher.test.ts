@@ -6,6 +6,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 describe('Publisher', () => {
     it('error message', async () => {
@@ -22,7 +23,8 @@ describe('Publisher', () => {
             streamIdBuilder,
             identity,
             mock<SignatureValidator>(),
-            mock<MessageSigner>()
+            mock<MessageSigner>(),
+            mock<StrictStreamrClientConfig>(),
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {

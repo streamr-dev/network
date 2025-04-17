@@ -4,10 +4,10 @@ import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 
-export const validKeyTypeValues = ['evm', 'ml-dsa-87'] as const
+export const validKeyTypeValues = ['evm_secp256k1', 'ml-dsa-87'] as const
 export type KeyTypeConfig = typeof validKeyTypeValues[number]
 
-const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm'
+const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm_secp256k1'
 
 interface RequiredFactoryMethods {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
@@ -15,7 +15,7 @@ interface RequiredFactoryMethods {
 }
 
 export const identityFactoryByKeyType: Record<KeyTypeConfig, RequiredFactoryMethods> = {
-    'evm': { 
+    'evm_secp256k1': { 
         fromConfig: EthereumKeyPairIdentity.fromConfig, 
         generate: EthereumKeyPairIdentity.generate, 
     },
