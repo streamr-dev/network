@@ -78,7 +78,7 @@
     "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.99.5",
+    "webpack": "^5.99.6",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
@@ -110,9 +110,9 @@
     "sqlite3": "^5.1.7",
     "ts-essentials": "^10.0.4",
     "ts-toolbelt": "^9.6.0",
-    "tsyringe": "^4.9.1",
+    "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.24.1"
+    "zod": "^3.24.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
