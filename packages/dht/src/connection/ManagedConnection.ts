@@ -10,6 +10,7 @@ import { createRandomConnectionId } from './Connection'
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     disconnected: (gracefulLeave: boolean) => void
+    bufferedAmountChanged: (bufferedAmount: number) => void
 }
 
 const logger = new Logger(module)
@@ -44,7 +45,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
         connection.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
-
+        connection.on('bufferedAmountChanged', (bufferedAmount: number) => this.emit('bufferedAmountChanged', bufferedAmount))
         this.lastUsedTimestamp = Date.now()
         this.remotePeerDescriptor = peerDescriptor
     }

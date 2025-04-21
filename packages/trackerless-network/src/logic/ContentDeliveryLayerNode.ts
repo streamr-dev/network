@@ -32,13 +32,14 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { Neighbor, NeighborList } from './NeighborList'
 
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
+    neighborListChanged: (neighbors: Neighbor[]) => void
     entryPointLeaveDetected: () => void
 }
-
 export interface StrictContentDeliveryLayerNodeOptions {
     streamPartId: StreamPartID
     discoveryLayerNode: DiscoveryLayerNode
@@ -50,7 +51,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
     randomNodeView: NodeList
     leftNodeView: NodeList
     rightNodeView: NodeList
-    neighbors: NodeList
+    neighbors: NeighborList
     handshaker: Handshaker
     neighborFinder: NeighborFinder
     neighborUpdateManager: NeighborUpdateManager
@@ -184,6 +185,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.options.streamPartId
                 )
             },
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.options.neighbors.emitter,
+            'neighborListChanged',
+            (neighbors) => this.emit('neighborListChanged', neighbors),
             this.abortController.signal
         )
         if (this.options.proxyConnectionRpcLocal !== undefined) {
@@ -324,6 +331,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
             this.options.temporaryConnectionRpcLocal.removeNode(nodeId)
+        }
+    }
+
+    private onBufferedAmountChanged(peerDescriptor: PeerDescriptor, bufferedAmount: number): void {
+        if (this.options.neighbors.has(toNodeId(peerDescriptor))) {
+            this.options.neighbors.get(toNodeId(peerDescriptor))!.setBufferedAmount(bufferedAmount)
         }
     }
 

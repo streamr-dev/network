@@ -8,11 +8,11 @@ export interface Events {
     nodeRemoved: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
 }
 
-const getValuesOfIncludedKeys = (
-    nodes: Map<DhtAddress, ContentDeliveryRpcRemote>,
+const getValuesOfIncludedKeys = <T extends ContentDeliveryRpcRemote>(
+    nodes: Map<DhtAddress, T>,
     exclude: DhtAddress[],
     wsOnly = false
-): ContentDeliveryRpcRemote[] => {
+): T[] => {
     const values = wsOnly 
         ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined)
         : Array.from(nodes.entries())
@@ -23,8 +23,8 @@ const getValuesOfIncludedKeys = (
 
 // The items in the list are in the insertion order
 
-export class NodeList extends EventEmitter<Events> {
-    private readonly nodes: Map<DhtAddress, ContentDeliveryRpcRemote>
+export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRemote> extends EventEmitter<Events> {
+    private readonly nodes: Map<DhtAddress, T>
     private readonly limit: number
     private ownId: DhtAddress
 
@@ -35,7 +35,7 @@ export class NodeList extends EventEmitter<Events> {
         this.ownId = ownId
     }
 
-    add(remote: ContentDeliveryRpcRemote): void {
+    add(remote: T): void {
         const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
             const isExistingNode = this.nodes.has(nodeId)
@@ -60,7 +60,7 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     // Replace nodes does not emit nodeRemoved events, use with caution
-    replaceAll(neighbors: ContentDeliveryRpcRemote[]): void {
+    replaceAll(neighbors: T[]): void {
         this.nodes.clear()
         const limited = neighbors.splice(0, this.limit)
         limited.forEach((remote) => {
@@ -72,7 +72,7 @@ export class NodeList extends EventEmitter<Events> {
         return Array.from(this.nodes.keys())
     }
 
-    get(id: DhtAddress): ContentDeliveryRpcRemote | undefined {
+    get(id: DhtAddress): T | undefined {
         return this.nodes.get(id)
     }
 
@@ -80,16 +80,16 @@ export class NodeList extends EventEmitter<Events> {
         return Array.from(this.nodes.keys()).filter((node) => !exclude.includes(node)).length
     }
 
-    getRandom(exclude: DhtAddress[]): ContentDeliveryRpcRemote | undefined {
+    getRandom(exclude: DhtAddress[]): T | undefined {
         return sample(getValuesOfIncludedKeys(this.nodes, exclude))
     }
 
-    getFirst(exclude: DhtAddress[], wsOnly = false): ContentDeliveryRpcRemote | undefined {
+    getFirst(exclude: DhtAddress[], wsOnly = false): T | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude, wsOnly)
         return included[0]
     }
 
-    getFirstAndLast(exclude: DhtAddress[]): ContentDeliveryRpcRemote[] {
+    getFirstAndLast(exclude: DhtAddress[]): T[] {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         if (included.length === 0) {
             return []
@@ -97,12 +97,12 @@ export class NodeList extends EventEmitter<Events> {
         return included.length > 1 ? [this.getFirst(exclude)!, this.getLast(exclude)!] : [this.getFirst(exclude)!]
     }
 
-    getLast(exclude: DhtAddress[]): ContentDeliveryRpcRemote | undefined {
+    getLast(exclude: DhtAddress[]): T | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[included.length - 1]
     }
 
-    getAll(): ContentDeliveryRpcRemote[] {
+    getAll(): T[] {
         return Array.from(this.nodes.values())
     }
 

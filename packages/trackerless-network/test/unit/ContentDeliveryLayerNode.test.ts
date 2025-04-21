@@ -8,14 +8,14 @@ import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
-
+import { createMockContentDeliveryRpcRemote, createMockNeighbor, createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
+import { NeighborList } from '../../src/logic/NeighborList'
 describe('ContentDeliveryLayerNode', () => {
 
     let contentDeliveryLayerNode: ContentDeliveryLayerNode
     const peerDescriptor = createMockPeerDescriptor()
 
-    let neighbors: NodeList
+    let neighbors: NeighborList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
 
@@ -24,7 +24,7 @@ describe('ContentDeliveryLayerNode', () => {
     beforeEach(async () => {
         const nodeId = toNodeId(peerDescriptor)
 
-        neighbors = new NodeList(nodeId, 10)
+        neighbors = new NeighborList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 10)
         discoveryLayerNode = new MockDiscoveryLayerNode()
@@ -51,7 +51,7 @@ describe('ContentDeliveryLayerNode', () => {
     })
 
     it('getNeighbors', () => {
-        const mockRemote = createMockContentDeliveryRpcRemote()
+        const mockRemote = createMockNeighbor()
         neighbors.add(mockRemote)
         const result = contentDeliveryLayerNode.getNeighbors()
         expect(toNodeId(result[0])).toEqual(toNodeId(mockRemote.getPeerDescriptor()))
@@ -98,9 +98,9 @@ describe('ContentDeliveryLayerNode', () => {
     }, 25000)
 
     it('getInfo', () => {
-        const nodeWithRtt = createMockContentDeliveryRpcRemote()
+        const nodeWithRtt = createMockNeighbor()
         neighbors.add(nodeWithRtt)
-        const nodeWithoutRtt = createMockContentDeliveryRpcRemote()
+        const nodeWithoutRtt = createMockNeighbor()
         neighbors.add(nodeWithoutRtt)
         nodeWithRtt.setRtt(100)
         const info = contentDeliveryLayerNode.getInfos()

@@ -38,6 +38,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private closed = false
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
+    private currentBufferedAmount = 0
 
     constructor(params: Params) {
         super()
@@ -179,6 +180,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public send(data: Uint8Array): void {
         if (this.lastState === 'connected') {
+            if (this.dataChannel!.bufferedAmount !== this.currentBufferedAmount) {
+                this.currentBufferedAmount = this.dataChannel!.bufferedAmount
+                this.emit('bufferedAmountChanged', this.currentBufferedAmount)
+            }
             if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
