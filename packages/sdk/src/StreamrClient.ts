@@ -43,7 +43,7 @@ import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchSt
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
-import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
+import { getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
@@ -89,8 +89,6 @@ const logger = new Logger(module)
  * @category Important
  */
 export class StreamrClient {
-    static readonly generateEthereumAccount = _generateEthereumAccount
-
     public readonly id: string
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
@@ -522,7 +520,7 @@ export class StreamrClient {
     }
 
     /**
-     * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
+     * Checks whether a given userId has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -530,7 +528,7 @@ export class StreamrClient {
     }
 
     /**
-     * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
+     * Checks whether a given userId has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -640,7 +638,7 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address or public key) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
         return await this.identity.getUserIdString()
