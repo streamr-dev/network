@@ -8,7 +8,7 @@ import { parseEther } from 'ethers'
 
 interface Options extends BaseOptions {
     earningsPerSecond: string
-    minOperatorCount: number
+    minOperatorCount?: number
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
@@ -29,5 +29,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .description('create sponsorship')
     .arguments('<streamId>')
     .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second')
-    .requiredOption('-c, --min-operator-count <number>', 'Minimum operator count')
+    .option('-c, --min-operator-count <number>', 'Minimum operator count')
     .parseAsync()
