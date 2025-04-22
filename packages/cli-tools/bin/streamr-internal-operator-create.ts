@@ -33,7 +33,7 @@ createClientCommand(async (client: StreamrClient, options: Options) => {
 })
     .description('create operator')
     .requiredOption('-c, --cut <number>', 'Operator\'s cut in percentage')
-    .option('-r, --redundancyFactor <number>', 'Redundancy factor')
-    .option('-n, --nodeAddresses <addresses>', 'Node addresses (comma separated list of Ethereum addresses)', 
+    .option('-r, --redundancy-factor <number>', 'Redundancy factor')
+    .option('-n, --node-addresses <addresses>', 'Node addresses (comma separated list of Ethereum addresses)', 
         createFnParseEthereumAddressList('nodeAddresses'))
     .parseAsync()
