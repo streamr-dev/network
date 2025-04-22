@@ -7,6 +7,15 @@ import { StrictStreamrClientConfig } from '../Config'
  * An identity that uses a quantum-resistant ML-DSA-87 key pair to sign messages.
  */
 export class MLDSAKeyPairIdentity extends KeyPairIdentity {
+    assertKeyPairIsValid(): void {
+        // Validity of key pair is tested by signing and validating something
+        const payload = Buffer.from('data-to-sign')
+        const signature = ML_DSA_87.createSignature(payload, this.privateKey)
+        if (!ML_DSA_87.verifySignature(this.publicKey, payload, signature)) {
+            throw new Error(`The given publicKey and privateKey don't seem to match!`)
+        }
+    }
+
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
         return SignatureType.ML_DSA_87

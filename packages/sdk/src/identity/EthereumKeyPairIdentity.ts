@@ -11,12 +11,20 @@ import { KeyPairIdentity } from './KeyPairIdentity'
  * and uses that as the UserID instead of the actual public key.
  */
 export class EthereumKeyPairIdentity extends KeyPairIdentity {
-
-    constructor(privateKey: string) {
+    constructor(privateKey: string, address?: string) {
+        const impliedAddress = new Wallet(privateKey).address.toLowerCase()
         super(
-            hexToBinary(new Wallet(privateKey).address), 
+            hexToBinary(impliedAddress), 
             hexToBinary(privateKey)
         )
+        if (address && address.toLowerCase() !== impliedAddress) {
+            throw new Error(`The given publicKey does not match the privateKey! The privateKey implies address: ${impliedAddress}`)
+        }
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    assertKeyPairIsValid(): void {
+        // Ensured by constructor
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -46,7 +54,8 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): EthereumKeyPairIdentity {
         const privateKey = (config.auth as KeyPairIdentityConfig).privateKey
-        return new EthereumKeyPairIdentity(privateKey)
+        const address = (config.auth as KeyPairIdentityConfig).publicKey
+        return new EthereumKeyPairIdentity(privateKey, address)
     }
 
     static generate(): EthereumKeyPairIdentity {

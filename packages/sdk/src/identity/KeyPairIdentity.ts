@@ -29,7 +29,14 @@ export abstract class KeyPairIdentity extends Identity {
                 this.privateKey.length
             } bytes.`)
         }
+
+        this.assertKeyPairIsValid()
     }
+
+    /**
+     * Should throw if the publicKey and privateKey don't match each other
+     */
+    abstract assertKeyPairIsValid(): void
 
     async getUserIdBytes(): Promise<UserIDRaw> { 
         return this.publicKey
@@ -52,7 +59,7 @@ export abstract class KeyPairIdentity extends Identity {
     }
 
     static getKeyPairFromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): KeyPairIdentityConfig {
-        const result = (config as KeyPairIdentityConfig)
+        const result = (config.auth as KeyPairIdentityConfig)
         if (!result.privateKey) {
             throw new Error('A privateKey was expected in the config, but none is defined!')
         }
