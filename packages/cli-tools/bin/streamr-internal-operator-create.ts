@@ -23,6 +23,7 @@ createClientCommand(async (client: StreamrClient, options: Options) => {
     if (options.nodeAddresses !== undefined) {
         await (await contract.setNodeAddresses(options.nodeAddresses)).wait()
     }
+    console.info(JSON.stringify({ address: await contract.getAddress() }, undefined, 4))
 })
     .description('create operator')
     .requiredOption('-c, --cut <number>', 'Operator\'s cut in percentage')
