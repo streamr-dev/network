@@ -1,31 +1,36 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # End-to-end encryption
-Confidentiality of events published on a stream can be guaranteed with end-to-end encryption. The publisher generates a AES-256 symmetric encryption key and encrypts the messages before publishing them to the network. As the publisher fully controls who can access their data, they are also responsible for communicating the key to subscribers - usually via the key exchange mechanism described below.
 
-The following algorithms are currently available:
+The Streamr Network ensures confidentiality of messages published to private streams through end-to-end encryption. This approach gives full control of data access to the publisher, who encrypts messages using a symmetric key, and shares the key with authorized subscribers via a secure key exchange.
+
+Streamr currently supports the following algorithms:
 - Message encryption: AES-256
-- Key exchange: RSA (default), ML-KEM (experimental)
+- Key exchange: RSA, ML-KEM-1024
 
-## Key exchange
-The subscribers need the symmetric group key in order to decrypt the data. They automatically obtain this key by performing a key exchange with the publisher. The key exchange happens using asymmetric encryption:
+## How to use encryption
 
--   Both the publisher and subscriber generate a temporary asymmetric key pair (RSA or ML-KEM, depending on configuration) to be used for the key exchange
--   The subscriber sends a key request to the publisher, containing the subscriber's public key, signed with the subscriber's Ethereum key
--   The publisher checks from the on-chain access control registry whether that subscriber should be able to access the stream, and if it does, the publisher responds by encrypting the AES symmetric key required to unlock the data. The key is encrypted with the publisher's temporary private key for the subscriber's temporary public key, and signed with the publisher's Ethereum key.
+Messages published to non-public (private) streams are automatically encrypted. The encryption and decryption processes are fully managed by the Streamr SDK, meaning that, in most use cases, you don't need to handle encryption keys manually.
 
-## Quantum security
-As an experimental feature, Streamr Network allows quantum resistant cryptographic algorithms to be used instead of traditional ones where applicable. Here's an overview of supported algorithms with commentary from the quantum security point of view:
-- Data encryption: AES-256 (quantum resistant, used by default)
-- Key exchange: ML-KEM-1024 (quantum resistant, available via config option), RSA (not quantum resistant, currently used by default)
-- Signatures: ECDSA with secp256k1 curve (not quantum resistant, used by default). Quantum resistant alternatives coming soon
+For public streams, encryption is skipped since confidentiality is not required.
+
+## Key Exchange
+
+To decrypt data, subscribers need the correct symmetric key. The key exchange mechanism handles this process automatically using asymmetric encryption.
+
+The process works as follows:
+1. Both publisher and subscriber generate temporary asymmetric key pairs (RSA or ML-KEM).
+2. The subscriber sends a key request signed with their [identity keys](signing-and-verification.md).
+3. The publisher verifies that the subscriber has the `subscribe` permission for this stream in the on-chain access control registry.
+4. If verified, the publisher encrypts the symmetric key using its own private key and the subscriber’s public key, and signs it with their [identity keys](signing-and-verification.md).
 
 ## Quantum resistant key exchange
-The ML-KEM-1024 based key exchange works as follows. As ML-KEM can only be used to generate a shared secret between the publisher and subscriber, by itself it's not sufficient to allow an arbitrary key to be transferred from the publisher to a subscriber. Therefore, the ML-KEM shared secret is used to derive an AES-256 'wrapper' key using HKDF. The wrapper key is obtained by both the publisher and subscriber by repeating the same key derivation starting with the shared secret. The wrapper key is used to encrypt and decrypt the actual data encryption key, which is the key being exchanged. All algorithms involved in this procedure are considered quantum resistant, therefore making the entirety of the key exchange quantum resistant.
 
-To start using the ML-KEM based key exchange, pass the following configuration to `StreamrClient` on *subscribers*:
+Key exchange is just one part of overall quantum security in Streamr. For an overview, see [Quantum security](./quantum-security.md).
+
+Subscribers configured with quantum-resistant [identity keys](signing-and-verification.md) automatically use ML-KEM-1024 to perform a quantum secure key exchange. Publishers respond based on the subscriber’s request. Optionally, you can configure publishers or subscribers to *only* allow quantum resistant key exchange:
 
 ```
 const streamr = new StreamrClient({
@@ -36,17 +41,63 @@ const streamr = new StreamrClient({
 })
 ```
 
-Publishers will automatically respond to key requests based on what algorithm the subscriber requests, so configuring publishers with the above is not necessary. However, if you do set the above config on publishers, they will *only* respond to key requests using ML-KEM, and will ignore requests for RSA. Note that both publishers and subscribers need to have a recent version of the Streamr libraries to use the quantum secure key exchange.
+ML-KEM-1024 allows a secure exchange of keys resistant to quantum attacks. However, ML-KEM only establishes a shared secret — it does not allow direct transfer of a key. Here's how ML-KEM is combined with other algorithms to encrypt the key:
+
+1. The shared secret from ML-KEM is used with HKDF to derive an AES-256 wrapper key.
+2. This wrapper key is used to encrypt/decrypt the actual data encryption key.
+
+All cryptographic steps in this process are quantum resistant.
 
 ## Publisher liveness
-To perform the key exchange with the subscribers, the publisher must be online and present in the Network. As the Streamr Network deals with real-time messages, publishers are often constantly online. However, it may happen that the publisher has disappeared since publishing the data, making those messages inaccessible to subscribers who have yet to receive the key. This is a consequence of the data publisher being in full control of who can access their data on the Network.
+
+For key exchange to succeed, the publisher must be online. If a subscriber joins after the publisher goes offline, they may not be able to decrypt earlier messages.
+
+Publishers store previously used keys locally. This enables historical decryption, as long as the publisher is available to respond to key requests. Subscribers also store locally previously used keys, reducing the need for new key exchanges when the same key continues to be used.
+
+## Typical key management workflow
+
+- The publisher generates a new key at the start of publishing, or looks up a previously used one from the local key store.
+- The key remains active unless explicitly rotated or re-keyed.
+- Subscribers can request the current key, and possibly previous keys (for historical data).
+- Periodic key rotation or targeted re-keying ensures access control and confidentiality, see below.
 
 ## Key rotation and re-key
-The AES key need not stay the same over time. There are two operations which the publisher can trigger to change the key:
 
-**Rotate**: provides _forward secrecy_, which means that new subscribers can not automatically access old messages that were published prior to the key rotation. The publisher generates a new AES symmetric key, encrypts it with the old key, and publishes it on the stream. Rotating the key is a fast operation that can be done quite frequently if desired for the use case.
+The Streamr SDK automatically encrypts messages and handles key exchange, but does not automatically rotate or re-key. The application may trigger these operations as needed:
 
-**Re-key**: is needed to revoke a subscriber's access to the stream. The publisher generates a new key and sends it (proactively or via the key exchange) to everyone else except the parties to be removed. Therefore re-keying is a more heavyweight operation than key rotation.
+**Rotate**: provides _forward secrecy_, which means that new subscribers can not automatically access old messages that were published prior to the key rotation. Upon a rotation, the publisher generates a new symmetric key, encrypts it with the old key, and publishes it on the stream. Rotating the key is a fast operation that can be done frequently if desired for the use case, for example once per hour on a timer. A key rotation is performed as follows:
 
-## The Streamr SDK
-The [Streamr SDK](https://www.npmjs.com/package/@streamr/node) library automatically encrypts messages published to non-public streams. Messages published to public streams are not encrypted, as it would be unnecessary. The library fully supports the automatic key exchange, and also provides methods for key rotation and re-key.
+```ts
+streamr.updateEncryptionKey({
+  streamId,
+  distributionMethod: 'rotate',
+});
+```
+
+**Re-key**: is needed to discontinue one or more subscribers' access to the stream after their `subscribe` permissions have been revoked or expired. Upon a re-key, the publisher generates a new symmetric key and sends it (proactively or via the key exchange) to everyone else except the revoked subscribers. Therefore re-keying is a more heavyweight operation than key rotation. If the stream has a large number of subscribers with frequent revocation or expiration of permissions, it's advisable to batch revoke permissions and do a single re-key, instead of doing a re-key after every individual revocation.
+
+```ts
+streamr.updateEncryptionKey({
+  streamId,
+  distributionMethod: 'rekey',
+});
+```
+
+## Pre-agreed keys
+
+If you don't want to exchange the keys via the network, you can pre-configure symmetric keys on both publishers and subscribers like this:
+
+```ts
+// Generates a new AES-256 key (32 random bytes)
+const key = new GroupKey('key-id', crypto.randomBytes(32))
+
+// Set the key on a publisher
+publisher.updateEncryptionKey({
+  key,
+  streamId,
+  distibutionMethod: 'rekey',
+})
+
+// Set the key on a subscriber
+subscriber.addEncryptionKey(key, streamId)
+```
