@@ -7,7 +7,7 @@ import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 export const validKeyTypeValues = ['evm_secp256k1', 'ml-dsa-87'] as const
 export type KeyTypeConfig = typeof validKeyTypeValues[number]
 
-const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm_secp256k1'
+export const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm_secp256k1'
 
 interface RequiredFactoryMethods {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity

@@ -1,6 +1,6 @@
 import { SignerWithProvider } from './Identity'
 import { binaryToHex, EVM_SECP256K1, hexToBinary } from '@streamr/utils'
-import { computeAddress, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
@@ -13,7 +13,10 @@ import { KeyPairIdentity } from './KeyPairIdentity'
 export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
     constructor(privateKey: string) {
-        super(hexToBinary(computeAddress(privateKey)), hexToBinary(privateKey))
+        super(
+            hexToBinary(new Wallet(privateKey).address), 
+            hexToBinary(privateKey)
+        )
     }
 
     // eslint-disable-next-line class-methods-use-this

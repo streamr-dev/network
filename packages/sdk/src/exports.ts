@@ -46,7 +46,7 @@ export {
     DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
-export { validKeyTypeValues, KeyTypeConfig, identityFactoryByKeyType } from './identity/createIdentityFromConfig'
+export { validKeyTypeValues, KeyTypeConfig, DEFAULT_KEY_TYPE, identityFactoryByKeyType } from './identity/createIdentityFromConfig'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { StreamDefinition } from './types'

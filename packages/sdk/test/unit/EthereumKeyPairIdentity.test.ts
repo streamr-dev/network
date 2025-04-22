@@ -1,9 +1,18 @@
 import { hexToBinary } from '@streamr/utils'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
-const PRIVATE_KEY = '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709'
+const PRIVATE_KEY = '348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709'
 
 describe('EthereumKeyPairIdentity', () => {
+
+    describe('instantiation', () => {
+        it('can be created with 0x prefix on private key', async () => {
+            expect(() => new EthereumKeyPairIdentity(PRIVATE_KEY)).not.toThrow()
+        })
+        it('can be created without 0x prefix on private key', async () => {
+            expect(() => new EthereumKeyPairIdentity(`0x${PRIVATE_KEY}`)).not.toThrow()
+        })
+    })
 
     describe('createMessageSignature', () => {
 
