@@ -30,8 +30,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private lastState: RTCPeerConnectionState = 'connecting'
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
-    private readonly bufferThresholdHigh = 2 ** 17
-    private readonly bufferThresholdLow = 2 ** 15
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
@@ -182,13 +180,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         if (this.lastState === 'connected') {
             if (this.dataChannel!.bufferedAmount !== this.currentBufferedAmount) {
                 this.currentBufferedAmount = this.dataChannel!.bufferedAmount
+                console.error('bufferedAmountChanged', this.currentBufferedAmount)
                 this.emit('bufferedAmountChanged', this.currentBufferedAmount)
             }
-            if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
-                this.messageQueue.push(data)
-            } else {
-                this.dataChannel?.send(data as Buffer)
-            }
+            this.dataChannel?.send(data as Buffer)
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }
@@ -197,7 +192,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         this.dataChannel.binaryType = 'arraybuffer'
-        this.dataChannel.bufferedAmountLowThreshold = this.bufferThresholdLow
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()
@@ -215,13 +209,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
-        }
-        dataChannel.onbufferedamountlow = () => {
-            logger.trace('dc.onBufferedAmountLow')
-            while (this.messageQueue.length > 0 && this.dataChannel!.bufferedAmount < this.bufferThresholdHigh) {
-                const data = this.messageQueue.shift()!
-                this.dataChannel!.send(data as Buffer)
-            }
         }
     }
 
