@@ -66,7 +66,7 @@ export async function setupOperatorContract(
  * @hidden
  */
 export interface DeployOperatorContractOpts {
-    deployer: Wallet
+    deployer: SignerWithProvider
     operatorsCutPercentage?: number
     metadata?: string
     operatorTokenName?: string
@@ -80,7 +80,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     logger.debug('Deploying OperatorContract')
     const abi = OperatorFactoryArtifact
     const operatorFactory = new Contract(TEST_CHAIN_CONFIG.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
-    const contractAddress = await operatorFactory.operators(opts.deployer.address)
+    const contractAddress = await operatorFactory.operators(await opts.deployer.getAddress())
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
     }
