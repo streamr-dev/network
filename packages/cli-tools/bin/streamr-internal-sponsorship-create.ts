@@ -18,12 +18,13 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         console.error('only "dev2" environment is supported')
         process.exit(1)
     }
-    await _operatorContractUtils.deploySponsorshipContract({
+    const contract = await _operatorContractUtils.deploySponsorshipContract({
         streamId: toStreamID(streamId, toEthereumAddress(await client.getUserId())),
         earningsPerSecond: parseEther(options.earningsPerSecond),
         deployer: await client.getSigner(),
         minOperatorCount: options.minOperatorCount
     })
+    console.info(JSON.stringify({ address: await contract.getAddress() }, undefined, 4))
 })
     .description('create sponsorship')
     .arguments('<streamId>')
