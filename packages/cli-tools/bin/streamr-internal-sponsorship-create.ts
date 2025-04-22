@@ -27,6 +27,6 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
 })
     .description('create sponsorship')
     .arguments('<streamId>')
-    .requiredOption('-e, --earningsPerSecond <number>', 'Earnings per second')
-    .requiredOption('-c, --minOperatorCount <number>', 'Minimum operator count')
+    .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second')
+    .requiredOption('-c, --min-operator-count <number>', 'Minimum operator count')
     .parseAsync()
