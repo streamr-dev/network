@@ -1,4 +1,4 @@
-import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, KeyTypeConfig, validKeyTypeValues } from '@streamr/sdk'
+import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, KeyTypeConfig, validKeyTypeValues, DEFAULT_KEY_TYPE } from '@streamr/sdk'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
@@ -34,7 +34,7 @@ export const createClientCommand = (
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'a private key to establish your identity')
-        .option('--key-type [key-type]', `one of: [${validKeyTypeValues.join(', ')}]`)
+        .option('--key-type [key-type]', `type of public/private key (one of: [${validKeyTypeValues.join(', ')}], default: ${DEFAULT_KEY_TYPE})`)
         .option('--public-key [public-key]', 'a public key - required by some key types')
         .option('--config <file>', 'read connection and authentication settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,

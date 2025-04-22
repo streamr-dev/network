@@ -13,8 +13,8 @@ createCommand()
             console.error('Error: Please provide the --key-type')
         } else {
             const identity = identityFactoryByKeyType[options.keyType].generate() as KeyPairIdentity
-            console.info(`Public key: ${await identity.getUserIdString()}\n\n`)
-            console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}`)
+            console.info(`Public key: ${await identity.getUserIdString()}\n`)
+            console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}\n`)
         }
     })
     .parse()
