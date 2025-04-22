@@ -7,6 +7,7 @@ import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from '.
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NodeInfo } from './types'
+import { ContentDeliveryRpcRemote } from './logic/ContentDeliveryRpcRemote'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -59,6 +60,10 @@ export class NetworkNode {
 
     addMessageListener(listener: (msg: StreamMessage) => void): void {
         this.stack.getContentDeliveryManager().on('newMessage', listener)
+    }
+
+    addNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: ContentDeliveryRpcRemote[]) => void): void {
+        this.stack.getContentDeliveryManager().on('neighborListUpdated', listener)
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {

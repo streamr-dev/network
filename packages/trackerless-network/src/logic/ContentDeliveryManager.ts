@@ -32,6 +32,7 @@ import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode
 import { ProxyClient } from './proxy/ProxyClient'
 import { StreamPartitionInfo } from '../types'
 import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './propagation/Propagation'
+import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -50,6 +51,7 @@ export type StreamPartDelivery = {
 
 export interface Events {
     newMessage: (msg: StreamMessage) => void
+    neighborListUpdated: (streamPartId: StreamPartID, neighbors: ContentDeliveryRpcRemote[]) => void
 }
 
 const logger = new Logger(module)
@@ -184,6 +186,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
+        })
+        node.on('neighborListUpdated', (neighbors: ContentDeliveryRpcRemote[]) => {
+            this.emit('neighborListUpdated', streamPartId, neighbors)
         })
         const handleEntryPointLeave = async () => {
             if (this.destroyed || peerDescriptorStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
