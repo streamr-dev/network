@@ -1,7 +1,7 @@
-import { DhtAddress, PeerDescriptor } from "@streamr/dht"
-import { ContentDeliveryRpcRemote } from "./ContentDeliveryRpcRemote"
-import { NodeList } from "./NodeList"
-import { EventEmitter } from "eventemitter3"
+import { DhtAddress } from '@streamr/dht'
+import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
+import { NodeList } from './NodeList'
+import { EventEmitter } from 'eventemitter3'
 
 export interface NeighborEvents {
     bufferedAmountChanged: () => void
