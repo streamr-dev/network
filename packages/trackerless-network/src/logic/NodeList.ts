@@ -6,13 +6,15 @@ import { EventEmitter } from 'eventemitter3'
 export interface Events {
     nodeAdded: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
     nodeRemoved: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
+    // !! notice: the params are not used for anything, this is a workaroud for a typing bug !!
+    nodeListUpdated: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
 }
 
-const getValuesOfIncludedKeys = <T extends ContentDeliveryRpcRemote>(
-    nodes: Map<DhtAddress, T>,
+const getValuesOfIncludedKeys = (
+    nodes: Map<DhtAddress, ContentDeliveryRpcRemote>,
     exclude: DhtAddress[],
     wsOnly = false
-): T[] => {
+): ContentDeliveryRpcRemote[] => {
     const values = wsOnly 
         ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined)
         : Array.from(nodes.entries())
@@ -23,8 +25,8 @@ const getValuesOfIncludedKeys = <T extends ContentDeliveryRpcRemote>(
 
 // The items in the list are in the insertion order
 
-export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRemote> extends EventEmitter<Events> {
-    private readonly nodes: Map<DhtAddress, T>
+export class NodeList extends EventEmitter<Events> {
+    private readonly nodes: Map<DhtAddress, ContentDeliveryRpcRemote>
     private readonly limit: number
     private ownId: DhtAddress
 
@@ -35,14 +37,18 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
         this.ownId = ownId
     }
 
-    add(remote: T): void {
+    add(remote: ContentDeliveryRpcRemote): void {
         const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
+            remote.emitter.on('bufferedAmountChanged', () => {
+                this.emit('nodeListUpdated', nodeId, remote)
+            })
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
             
             if (!isExistingNode) {
                 this.emit('nodeAdded', nodeId, remote)
+                this.emit('nodeListUpdated', nodeId, remote)
             }
         }
     }
@@ -50,8 +56,10 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
     remove(nodeId: DhtAddress): void {
         if (this.nodes.has(nodeId)) {
             const remote = this.nodes.get(nodeId)!
+            remote.emitter.off('bufferedAmountChanged')
             this.nodes.delete(nodeId)
             this.emit('nodeRemoved', nodeId, remote)
+            this.emit('nodeListUpdated', nodeId, remote)
         }   
     }
 
@@ -60,7 +68,7 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
     }
 
     // Replace nodes does not emit nodeRemoved events, use with caution
-    replaceAll(neighbors: T[]): void {
+    replaceAll(neighbors: ContentDeliveryRpcRemote[]): void {
         this.nodes.clear()
         const limited = neighbors.splice(0, this.limit)
         limited.forEach((remote) => {
@@ -72,7 +80,7 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
         return Array.from(this.nodes.keys())
     }
 
-    get(id: DhtAddress): T | undefined {
+    get(id: DhtAddress): ContentDeliveryRpcRemote | undefined {
         return this.nodes.get(id)
     }
 
@@ -80,16 +88,16 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
         return Array.from(this.nodes.keys()).filter((node) => !exclude.includes(node)).length
     }
 
-    getRandom(exclude: DhtAddress[]): T | undefined {
+    getRandom(exclude: DhtAddress[]): ContentDeliveryRpcRemote | undefined {
         return sample(getValuesOfIncludedKeys(this.nodes, exclude))
     }
 
-    getFirst(exclude: DhtAddress[], wsOnly = false): T | undefined {
+    getFirst(exclude: DhtAddress[], wsOnly = false): ContentDeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude, wsOnly)
         return included[0]
     }
 
-    getFirstAndLast(exclude: DhtAddress[]): T[] {
+    getFirstAndLast(exclude: DhtAddress[]): ContentDeliveryRpcRemote[] {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         if (included.length === 0) {
             return []
@@ -97,12 +105,12 @@ export class NodeList<T extends ContentDeliveryRpcRemote = ContentDeliveryRpcRem
         return included.length > 1 ? [this.getFirst(exclude)!, this.getLast(exclude)!] : [this.getFirst(exclude)!]
     }
 
-    getLast(exclude: DhtAddress[]): T | undefined {
+    getLast(exclude: DhtAddress[]): ContentDeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[included.length - 1]
     }
 
-    getAll(): T[] {
+    getAll(): ContentDeliveryRpcRemote[] {
         return Array.from(this.nodes.values())
     }
 

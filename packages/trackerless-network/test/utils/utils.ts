@@ -25,7 +25,6 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { Neighbor } from '../../src/logic/NeighborList'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -108,15 +107,6 @@ export const createMockPeerDescriptor = (opts?: Partial<PeerDescriptor>): PeerDe
 
 export const createMockContentDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): ContentDeliveryRpcRemote => {
     return new ContentDeliveryRpcRemote(
-        createMockPeerDescriptor(),
-        remotePeerDescriptor ?? createMockPeerDescriptor(),
-        new RpcCommunicator(),
-        ContentDeliveryRpcClient
-    )
-}
-
-export const createMockNeighbor = (remotePeerDescriptor?: PeerDescriptor): Neighbor => {
-    return new Neighbor(
         createMockPeerDescriptor(),
         remotePeerDescriptor ?? createMockPeerDescriptor(),
         new RpcCommunicator(),

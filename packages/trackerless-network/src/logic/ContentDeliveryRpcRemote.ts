@@ -5,13 +5,19 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-
+import { EventEmitter } from 'eventemitter3'
 const logger = new Logger(module)
+
+export interface ContentDeliveryRpcRemoteEvents {
+    bufferedAmountChanged: () => void
+}
 
 export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 
     private rtt?: number
-
+    private bufferedAmount = 0
+    public readonly emitter: EventEmitter<ContentDeliveryRpcRemoteEvents> = new EventEmitter<ContentDeliveryRpcRemoteEvents>()
+    
     async sendStreamMessage(msg: StreamMessage, doNotBufferWhileConnecting?: boolean): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true,
@@ -41,5 +47,16 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
 
     getRtt(): number | undefined {
         return this.rtt
+    }
+
+    setBufferedAmount(bufferedAmount: number): void {
+        if (bufferedAmount != this.bufferedAmount) {
+            this.bufferedAmount = bufferedAmount
+            this.emitter.emit('bufferedAmountChanged')
+        }
+    }
+
+    getBufferedAmount(): number {
+        return this.bufferedAmount
     }
 }

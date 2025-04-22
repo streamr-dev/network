@@ -22,7 +22,6 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
-import { NeighborList } from './NeighborList'
 
 type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNodeOptions,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
@@ -49,7 +48,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     const neighborUpdateInterval = options.neighborUpdateInterval ?? DEFAULT_NEIGHBOR_UPDATE_INTERVAL
     const minPropagationTargets = options.minPropagationTargets ?? DEFAULT_MIN_PROPAGATION_TARGETS
     const maxPropagationBufferSize = options.maxPropagationBufferSize ?? DEFAULT_MAX_PROPAGATION_BUFFER_SIZE
-    const neighbors = options.neighbors ?? new NeighborList(ownNodeId, maxContactCount)
+    const neighbors = options.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const leftNodeView = options.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = options.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const nearbyNodeView = options.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)

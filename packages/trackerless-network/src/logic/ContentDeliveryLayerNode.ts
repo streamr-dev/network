@@ -32,12 +32,10 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
-import { Neighbor, NeighborList } from './NeighborList'
-
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
-    neighborListChanged: (neighbors: Neighbor[]) => void
+    neighborListUpdated: (neighbors: ContentDeliveryRpcRemote[]) => void
     entryPointLeaveDetected: () => void
 }
 export interface StrictContentDeliveryLayerNodeOptions {
@@ -51,7 +49,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
     randomNodeView: NodeList
     leftNodeView: NodeList
     rightNodeView: NodeList
-    neighbors: NeighborList
+    neighbors: NodeList
     handshaker: Handshaker
     neighborFinder: NeighborFinder
     neighborUpdateManager: NeighborUpdateManager
@@ -188,9 +186,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
-            this.options.neighbors.emitter,
-            'neighborListChanged',
-            (neighbors) => this.emit('neighborListChanged', neighbors),
+            this.options.neighbors,
+            'nodeListUpdated',
+            (_id, _remote) => this.emit('neighborListUpdated', this.options.neighbors.getAll()),
             this.abortController.signal
         )
         if (this.options.proxyConnectionRpcLocal !== undefined) {
