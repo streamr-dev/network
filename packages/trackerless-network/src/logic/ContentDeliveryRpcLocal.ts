@@ -9,6 +9,7 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
+import { PlumTreeManager } from './plumtree/PlumTreeManager'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
@@ -18,6 +19,7 @@ export interface ContentDeliveryRpcLocalOptions {
     onLeaveNotice(remoteNodeId: DhtAddress, isLocalNodeEntryPoint: boolean): void
     markForInspection(remoteNodeId: DhtAddress, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
+    plumTreeManager?: PlumTreeManager
 }
 
 export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
@@ -29,10 +31,19 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     }
 
     async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
-        const previousNode = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
-        this.options.markForInspection(previousNode, message.messageId!)
-        if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
-            this.options.broadcast(message, previousNode)
+        const previousNode = (context as DhtCallContext).incomingSourceDescriptor!
+        const previousNodeId = toNodeId(previousNode)
+        this.options.markForInspection(previousNodeId, message.messageId!)
+        if (!this.options.plumTreeManager) {
+            if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+                this.options.broadcast(message, previousNodeId)
+            }
+        } else {
+            if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+                this.options.plumTreeManager!.broadcast(message, previousNodeId)
+            } else {
+                this.options.plumTreeManager!.pauseNeighbor(previousNode)
+            }
         }
         return Empty
     }

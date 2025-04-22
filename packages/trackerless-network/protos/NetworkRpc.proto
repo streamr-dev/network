@@ -32,6 +32,12 @@ service NodeInfoRpc {
   rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
+service PlumTreeRpc {
+  rpc pauseNeighbor (PauseNeighborRequest) returns (google.protobuf.Empty);
+  rpc resumeNeighbor (ResumeNeighborRequest) returns (google.protobuf.Empty);
+  rpc sendMetadata (MessageID) returns (google.protobuf.Empty);
+}
+
 message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
@@ -190,4 +196,12 @@ message NodeInfoResponse {
   repeated StreamPartitionInfo streamPartitions = 2;
   ControlLayerInfo controlLayer = 3;
   string applicationVersion = 4;
+}
+
+message PauseNeighborRequest {
+  dht.PeerDescriptor neighbor = 1;
+}
+
+message ResumeNeighborRequest {
+  dht.PeerDescriptor neighbor = 1;
 }

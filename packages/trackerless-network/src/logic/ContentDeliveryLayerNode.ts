@@ -32,6 +32,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { PlumTreeManager } from './plumtree/PlumTreeManager'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -63,6 +64,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
+    plumTreeManager?: PlumTreeManager
 }
 
 export const DEFAULT_NODE_VIEW_SIZE = 20
