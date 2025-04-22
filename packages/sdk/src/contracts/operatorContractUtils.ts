@@ -111,7 +111,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
  */
 export interface DeploySponsorshipContractOpts {
     streamId: string
-    deployer: Wallet
+    deployer: SignerWithProvider
     metadata?: string
     minOperatorCount?: number
     earningsPerSecond?: WeiAmount
