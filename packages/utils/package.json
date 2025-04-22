@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "v103.0.0-rc.4",
+  "version": "103.0.0-rc.4",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
