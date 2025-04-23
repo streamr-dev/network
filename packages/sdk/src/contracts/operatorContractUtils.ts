@@ -168,11 +168,10 @@ export const delegate = async (
 ): Promise<void> => {
     logger.debug('Delegate', { amount: amount.toString() })
     const tokenAddress = await getOperatorContract(operatorContractAddress).connect(delegator.provider).token()
-    // TODO can we remove the data argument?
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
-    await transferTokens(delegator, operatorContractAddress, amount, await delegator.getAddress(), tokenAddress)
+    await transferTokens(delegator, operatorContractAddress, amount, undefined, tokenAddress)
 }
 
 export const undelegate = async (
