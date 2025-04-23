@@ -1,6 +1,5 @@
 /* eslint-disable max-len */
-import { randomBytes } from 'crypto'
-import { binaryToHex, hexToBinary } from '../src/binaryUtils'
+import { hexToBinary } from '../src/binaryUtils'
 import { EVM_SECP256K1, ML_DSA_87 } from '../src/signingUtils'
 import { toUserId, toUserIdRaw } from '../src/UserID'
 

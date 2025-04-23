@@ -32,16 +32,12 @@ export class EthereumProviderIdentity extends Identity {
     }
 
     async getUserIdBytes(): Promise<UserIDRaw> {
-        if (!this.cachedUserIdBytes) {
-            this.cachedUserIdBytes = toUserIdRaw(await this.getUserIdString())
-        }
+        this.cachedUserIdBytes ??= toUserIdRaw(await this.getUserIdString())
         return this.cachedUserIdBytes
     }
 
     async getUserIdString(): Promise<UserID> {
-        if (!this.cachedUserIdString) {
-            this.cachedUserIdString = toUserId(await (await this.signer).getAddress())
-        }
+        this.cachedUserIdString ??= toUserId(await (await this.signer).getAddress())
         return this.cachedUserIdString
     }
 

@@ -1,4 +1,4 @@
-import { toEthereumAddress, toUserIdRaw, EVM_SECP256K1, ML_DSA_87, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, toUserIdRaw, EVM_SECP256K1, ML_DSA_87 } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { StreamMessage } from '../protocol/StreamMessage'

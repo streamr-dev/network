@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
 import { areEqualBinaries } from './binaryUtils'
 import { UserIDRaw } from './UserID'
-import { randomBytes } from '@noble/post-quantum/utils';
+import { randomBytes } from '@noble/post-quantum/utils'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
