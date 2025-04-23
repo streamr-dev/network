@@ -4,7 +4,7 @@
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
 export { Stream } from './Stream'
 export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
-export { Message, MessageMetadata, SignatureTypeString } from './Message'
+export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
@@ -46,7 +46,7 @@ export {
     DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
-export { validKeyTypeValues, KeyTypeConfig, DEFAULT_KEY_TYPE, identityFactoryByKeyType } from './identity/createIdentityFromConfig'
+export { validKeyTypeValues, KeyType, DEFAULT_KEY_TYPE, identityConfig } from './identity/identityConfig'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { StreamDefinition } from './types'

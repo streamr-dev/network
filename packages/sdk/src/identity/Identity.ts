@@ -12,14 +12,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 /**
  * Identity represents a digital identity, specified by cryptographic keys,
- * and capable of signing.
- * 
- * Quick guide for adding new Identity types:
- * - Add a new SignatureType to NetworkRpc.proto in network package
- * - Add the needed utility methods to signingUtils.ts
- * - Create the Identity implementation itself (extend KeyPairIdentity if relevant)
- * - Update createIdentityFromConfig.ts to make the new Identity configurable
- * - Update Message.ts to make it build
+ * and capable of signing. You can configure new Identities in identityConfig.ts.
  */
 export abstract class Identity {
     abstract getUserIdString(): Promise<UserID>

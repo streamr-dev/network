@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import { KeyPairIdentity } from '@streamr/sdk/dist/types/src/identity/KeyPairIdentity'
-import { identityFactoryByKeyType, validKeyTypeValues } from '@streamr/sdk'
+import { identityConfig, KeyType, validKeyTypeValues } from '@streamr/sdk'
 import { binaryToHex } from '@streamr/utils'
 import { createCommand, Options } from '../src/command'
 
@@ -12,7 +12,11 @@ createCommand()
         if (!options.keyType) {
             console.error(`Error: Please provide --key-type [one of: ${validKeyTypeValues.join(', ')}]`)
         } else {
-            const identity = identityFactoryByKeyType[options.keyType].generate() as KeyPairIdentity
+            const config = identityConfig[options.keyType]
+            if (!config) {
+                console.error(`Error: Invalid key type. Must be one of: ${validKeyTypeValues.join(', ')}.`)
+            }
+            const identity = config.generate() as KeyPairIdentity
             console.info(`Public key: ${await identity.getUserIdString()}`)
             console.info(`---`)
             console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}`)

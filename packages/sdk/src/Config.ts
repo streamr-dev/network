@@ -10,7 +10,7 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 import { Identity } from './identity/Identity'
-import { KeyTypeConfig } from './identity/createIdentityFromConfig'
+import { KeyType } from './identity/identityConfig'
 
 /**
  * For passing in an Ethereum provider (= wallet) for signing
@@ -24,7 +24,7 @@ export interface EthereumProviderIdentityConfig {
 export interface KeyPairIdentityConfig {
     publicKey?: string
     privateKey: string
-    keyType?: KeyTypeConfig
+    keyType?: KeyType
 }
 
 /**

@@ -1,4 +1,4 @@
-import { toEthereumAddress, toUserIdRaw, EVM_SECP256K1, ML_DSA_87 } from '@streamr/utils'
+import { toEthereumAddress, toUserIdRaw, EVM_SECP256K1, SignatureScheme } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { StreamMessage } from '../protocol/StreamMessage'
@@ -6,6 +6,12 @@ import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
+import { identityConfig } from '../identity/identityConfig'
+
+// Lookup structure SignatureType -> SignatureScheme
+const signatureSchemeBySignatureType: Record<number, SignatureScheme> = Object.fromEntries(
+    Object.values(identityConfig).map((config) => [config.signatureType, config.signatureScheme])
+)
 
 @scoped(Lifecycle.ContainerScoped)
 export class SignatureValidator {
@@ -33,34 +39,36 @@ export class SignatureValidator {
     }
 
     private async validate(streamMessage: StreamMessage): Promise<boolean> {
-        switch (streamMessage.signatureType) {
-            case SignatureType.EVM_SECP256K1:
-                return EVM_SECP256K1.verifySignature(
-                    toUserIdRaw(streamMessage.getPublisherId()),
-                    createSignaturePayload(streamMessage),
-                    streamMessage.signature
-                )
-            case SignatureType.ML_DSA_87:
-                return ML_DSA_87.verifySignature(
-                    toUserIdRaw(streamMessage.getPublisherId()),
-                    createSignaturePayload(streamMessage),
-                    streamMessage.signature
-                )
-            case SignatureType.ERC_1271:
-                return this.erc1271ContractFacade.isValidSignature(
-                    toEthereumAddress(streamMessage.getPublisherId()),
-                    createSignaturePayload(streamMessage),
-                    streamMessage.signature
-                )
-            case SignatureType.LEGACY_EVM_SECP256K1:
-                return EVM_SECP256K1.verifySignature(
-                    // publisherId is hex encoded address string
-                    toUserIdRaw(streamMessage.getPublisherId()),
-                    createLegacySignaturePayload(streamMessage),
-                    streamMessage.signature
-                )
-            default:
-                throw new Error(`Cannot validate message signature, unsupported signatureType: "${streamMessage.signatureType}"`)
+        const signatureScheme = signatureSchemeBySignatureType[streamMessage.signatureType]
+
+        // Common case
+        if (signatureScheme) {
+            return signatureScheme.verifySignature(
+                toUserIdRaw(streamMessage.getPublisherId()),
+                createSignaturePayload(streamMessage),
+                streamMessage.signature
+            )
         }
+
+        // Special handling: different payload computation
+        if (streamMessage.signatureType === SignatureType.LEGACY_EVM_SECP256K1) {
+            return EVM_SECP256K1.verifySignature(
+                // publisherId is hex encoded address string
+                toUserIdRaw(streamMessage.getPublisherId()),
+                createLegacySignaturePayload(streamMessage),
+                streamMessage.signature
+            )
+        }
+
+        // Special handling: check signature with ERC-1271 contract facade
+        if (streamMessage.signatureType === SignatureType.ERC_1271) {
+            return this.erc1271ContractFacade.isValidSignature(
+                toEthereumAddress(streamMessage.getPublisherId()),
+                createSignaturePayload(streamMessage),
+                streamMessage.signature
+            )
+        }
+
+        throw new Error(`Cannot validate message signature, unsupported signatureType: "${streamMessage.signatureType}"`)
     }
 }

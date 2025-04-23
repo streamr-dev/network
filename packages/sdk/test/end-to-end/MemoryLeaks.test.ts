@@ -21,7 +21,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, createTheGraphClient, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { createIdentityFromConfig } from '../../src/identity/createIdentityFromConfig'
+import { createIdentityFromConfig } from '../../src/identity/identityConfig'
 
 const Dependencies = {
     NetworkNodeFacade,
