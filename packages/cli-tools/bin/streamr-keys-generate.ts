@@ -10,11 +10,12 @@ createCommand()
     .option('--key-type [key-type]', `one of: [${validKeyTypeValues.join(', ')}]`)
     .action(async (options: Options) => {
         if (!options.keyType) {
-            console.error('Error: Please provide the --key-type')
+            console.error(`Error: Please provide --key-type [one of: ${validKeyTypeValues.join(', ')}]`)
         } else {
             const identity = identityFactoryByKeyType[options.keyType].generate() as KeyPairIdentity
-            console.info(`Public key: ${await identity.getUserIdString()}\n`)
-            console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}\n`)
+            console.info(`Public key: ${await identity.getUserIdString()}`)
+            console.info(`---`)
+            console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}`)
         }
     })
     .parse()
