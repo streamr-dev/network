@@ -162,6 +162,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
+            this.options.transport,
+            'bufferedAmountChanged',
+            (peerDescriptor, bufferedAmount) => this.onBufferedAmountChanged(peerDescriptor, bufferedAmount),
+            this.abortController.signal
+        )
+        addManagedEventListener(
             this.options.neighbors,
             'nodeAdded',
             (id, remote) => {
