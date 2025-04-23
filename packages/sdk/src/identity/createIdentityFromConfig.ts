@@ -9,6 +9,10 @@ export type KeyTypeConfig = typeof validKeyTypeValues[number]
 
 export const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm_secp256k1'
 
+/**
+ * This is where config keyTypes are connected to Identity implementations.
+ * See Identity.ts for overall instructions how to add new Identity types.
+ */
 export const identityFactoryByKeyType: Record<KeyTypeConfig, {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Identity
