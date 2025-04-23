@@ -244,24 +244,7 @@ const getTestProvider = (): Provider => {
 }
 
 const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
-    const ABI = [{
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'to',
-                type: 'address'
-            },
-            {
-                internalType: 'uint256',
-                name: 'amount',
-                type: 'uint256'
-            }
-        ],
-        name: 'mint',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    }]
+    const ABI = ['function mint(address to, uint256 amount)']
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as { mint: () => Promise<TransactionResponse> }
 }
 
