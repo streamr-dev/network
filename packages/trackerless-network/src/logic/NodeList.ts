@@ -40,7 +40,7 @@ export class NodeList extends EventEmitter<Events> {
     add(remote: ContentDeliveryRpcRemote): void {
         const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
-            remote.emitter.on('bufferedAmountChanged', () => {
+            remote.emitter.on('statisticsChanged', () => {
                 this.emit('nodeListUpdated', nodeId, remote)
             })
             const isExistingNode = this.nodes.has(nodeId)
@@ -56,7 +56,7 @@ export class NodeList extends EventEmitter<Events> {
     remove(nodeId: DhtAddress): void {
         if (this.nodes.has(nodeId)) {
             const remote = this.nodes.get(nodeId)!
-            remote.emitter.off('bufferedAmountChanged')
+            remote.emitter.off('statisticsChanged')
             this.nodes.delete(nodeId)
             this.emit('nodeRemoved', nodeId, remote)
             this.emit('nodeListUpdated', nodeId, remote)

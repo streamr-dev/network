@@ -1,4 +1,4 @@
-import { RpcRemote } from '@streamr/dht'
+import { ConnectionStatistics, RpcRemote } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
@@ -9,13 +9,16 @@ import { EventEmitter } from 'eventemitter3'
 const logger = new Logger(module)
 
 export interface ContentDeliveryRpcRemoteEvents {
-    bufferedAmountChanged: () => void
+    statisticsChanged: (statistics: ConnectionStatistics) => void
 }
 
 export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 
     private rtt?: number
-    private bufferedAmount = 0
+    private statistics: ConnectionStatistics = {
+        uploadRateBytesPerSecond: 0,
+        bufferedAmount: 0
+    }
     public readonly emitter: EventEmitter<ContentDeliveryRpcRemoteEvents> = new EventEmitter<ContentDeliveryRpcRemoteEvents>()
     
     async sendStreamMessage(msg: StreamMessage, doNotBufferWhileConnecting?: boolean): Promise<void> {
@@ -49,14 +52,14 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
         return this.rtt
     }
 
-    setBufferedAmount(bufferedAmount: number): void {
-        if (bufferedAmount != this.bufferedAmount) {
-            this.bufferedAmount = bufferedAmount
-            this.emitter.emit('bufferedAmountChanged')
+    setStatistics(statistics: ConnectionStatistics): void {
+        if (statistics != this.statistics) {
+            this.statistics = statistics
+            this.emitter.emit('statisticsChanged', statistics)
         }
     }
 
-    getBufferedAmount(): number {
-        return this.bufferedAmount
+    getStatistics(): ConnectionStatistics {
+        return this.statistics
     }
 }

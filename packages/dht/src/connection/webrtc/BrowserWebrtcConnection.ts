@@ -178,12 +178,19 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public send(data: Uint8Array): void {
         if (this.lastState === 'connected') {
-            if (this.dataChannel!.bufferedAmount !== this.currentBufferedAmount) {
-                this.currentBufferedAmount = this.dataChannel!.bufferedAmount
-                console.error('bufferedAmountChanged', this.currentBufferedAmount)
-                this.emit('bufferedAmountChanged', this.currentBufferedAmount)
-            }
+        
             this.dataChannel?.send(data as Buffer)
+            
+            let bufferedAmountRemainder = this.dataChannel!.bufferedAmount - data.length
+            bufferedAmountRemainder = Math.max(0, bufferedAmountRemainder)
+            if (bufferedAmountRemainder !== this.currentBufferedAmount) {
+                this.currentBufferedAmount = bufferedAmountRemainder
+                console.error('bufferedAmountChanged', this.currentBufferedAmount)
+                this.emit('statisticsChanged', {
+                    uploadRateBytesPerSecond: 0,
+                    bufferedAmount: this.currentBufferedAmount
+                })
+            }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }

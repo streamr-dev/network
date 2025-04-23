@@ -26,7 +26,7 @@ import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../identifiers'
 import { getOfferer } from '../helpers/offering'
 import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
-import { IConnection } from './IConnection'
+import { ConnectionStatistics, IConnection } from './IConnection'
 import { PendingConnection } from './PendingConnection'
 
 export interface ConnectionManagerOptions {
@@ -399,7 +399,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const managedConnection = new ManagedConnection(peerDescriptor, connection)
         managedConnection.on('managedData', this.onData)
         managedConnection.once('disconnected', (gracefulLeave: boolean) => this.onDisconnected(peerDescriptor, gracefulLeave))
-        managedConnection.on('bufferedAmountChanged', (bufferedAmount: number) => this.emit('bufferedAmountChanged', peerDescriptor, bufferedAmount))
+        managedConnection.on('statisticsChanged', (statistics: ConnectionStatistics) => this.emit('statisticsChanged', peerDescriptor, statistics))
         const nodeId = toNodeId(peerDescriptor)
         const endpoint = this.endpoints.get(nodeId)! as ConnectingEndpoint
         const outputBuffer = endpoint.buffer

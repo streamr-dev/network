@@ -32,6 +32,8 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { ConnectionStatistics } from '@streamr/dht'
+
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
@@ -163,8 +165,8 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         )
         addManagedEventListener(
             this.options.transport,
-            'bufferedAmountChanged',
-            (peerDescriptor, bufferedAmount) => this.onBufferedAmountChanged(peerDescriptor, bufferedAmount),
+            'statisticsChanged',
+            (peerDescriptor, statistics) => this.onStatisticsChanged(peerDescriptor, statistics),
             this.abortController.signal
         )
         addManagedEventListener(
@@ -338,9 +340,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         }
     }
 
-    private onBufferedAmountChanged(peerDescriptor: PeerDescriptor, bufferedAmount: number): void {
+    private onStatisticsChanged(peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics): void {
         if (this.options.neighbors.has(toNodeId(peerDescriptor))) {
-            this.options.neighbors.get(toNodeId(peerDescriptor))!.setBufferedAmount(bufferedAmount)
+            this.options.neighbors.get(toNodeId(peerDescriptor))!.setStatistics(statistics)
         }
     }
 
