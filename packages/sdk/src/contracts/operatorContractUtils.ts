@@ -167,15 +167,19 @@ export const delegate = async (
     amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Delegate', { amount: amount.toString() })
-    const operatorContract = getOperatorContract(operatorContractAddress).connect(delegator)
-    await (await operatorContract.delegate(amount)).wait()
+    const tokenAddress = await getOperatorContract(operatorContractAddress).connect(delegator.provider).token()
+    // TODO can we remove the data argument?
+    // onTokenTransfer: the tokens are delegated on behalf of the given data address
+    // eslint-disable-next-line max-len
+    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
+    await transferTokens(delegator, operatorContractAddress, amount, await delegator.getAddress(), tokenAddress)
 }
 
 export const undelegate = async (
     delegator: SignerWithProvider,
     operatorContract: OperatorContract,
     amount: WeiAmount
-): Promise<void> => {
+): Promise<void> => {    
     logger.debug('Undelegate', { amount: amount.toString() })
     await (await operatorContract.connect(delegator).undelegate(amount)).wait()
 }
@@ -200,21 +204,24 @@ export const unstake = async (
 export const sponsor = async (
     sponsorer: SignerWithProvider,
     sponsorshipContractAddress: string,
-    amount: WeiAmount,
+    amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Sponsor', { amount: amount.toString() })
-    const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer)
-    await (await sponsorshipContract.sponsor(amount)).wait()
+    const tokenAddress = await getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer.provider).token()
+    // eslint-disable-next-line max-len
+    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
+    await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, tokenAddress)
 }
 
 export const transferTokens = async (
     from: SignerWithProvider,
     to: string,
     amount: WeiAmount,
-    data?: string,
-    token?: DATATokenContract
+    data: string | undefined,
+    tokenAddress: string
 ): Promise<void> => {
-    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, amount, data ?? '0x'))
+    const token = new Contract(tokenAddress, DATATokenArtifact) as unknown as DATATokenContract
+    const tx = await token.connect(from).transferAndCall(to, amount, data ?? '0x')
     await tx.wait()
 }
 
