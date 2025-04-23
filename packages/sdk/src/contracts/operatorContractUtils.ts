@@ -179,6 +179,7 @@ export const undelegate = async (
     operatorContract: OperatorContract,
     amount: WeiAmount
 ): Promise<void> => {
+    logger.debug('Undelegate', { amount: amount.toString() })
     await (await operatorContract.connect(delegator).undelegate(amount)).wait()
 }
 
