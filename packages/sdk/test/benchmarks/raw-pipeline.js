@@ -4,7 +4,7 @@ const { randomBytes } = require('crypto')
 const bytes = require('bytes')
 
 // eslint-disable-next-line import/no-unresolved
-const StreamrClient = require('../../dist')
+const StreamrClient = require('../../dist/src')
 const { StreamMessage } = require('@streamr/protocol')
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
@@ -148,13 +148,7 @@ async function run() {
     }
 
     async function setup(clientOptions, streamOptions) {
-        const account = StreamrClient.generateEthereumAccount()
-        const [client, stream] = await setupClientAndStream({
-            auth: {
-                privateKey: account.privateKey,
-            },
-            ...clientOptions
-        }, streamOptions)
+        const [client, stream] = await setupClientAndStream(clientOptions, streamOptions)
 
         suite.on('complete', () => {
             client.destroy().catch(() => {})

@@ -52,13 +52,13 @@ The Streamr SDK is built for the browser and NodeJS environments.
 ### Full API reference
 For a full API reference visit https://docs.streamr.network/usage/sdk/api/.
 
-### Authentication
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are subscribing to public streams on the Network.
+### Identity
+In Streamr, cryptographic keys establish identity. Various types of key pairs and algorithms are supported, for example Ethereum private keys. Read more about [Identity](https://docs.streamr.network/usage/identity). Providing a key is not required if you are subscribing to public streams on the Network.
 
 ```js
 const streamr = new StreamrClient({
     auth: {
-        privateKey: 'your-private-key'
+        privateKey: 'ethereum-private-key'
     }
 })
 ```

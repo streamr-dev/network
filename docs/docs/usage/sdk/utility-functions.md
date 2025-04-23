@@ -5,18 +5,22 @@ sidebar_position: 2
 # Utility functions
 The Streamr SDK contains a handful of extra convenience functions to make developing on Streamr a little easier!
 
-## Authentication
-The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum account, returning an object with fields address and privateKey.
+## Generating keys
+
+The `*KeyPairIdentity` classes exposed from the SDK can be helpful in generating identity keys. For example to generate a new Ethereum private key/address pair:
 
 ```ts
-const { address, privateKey } = StreamrClient.generateEthereumAccount()
+import { EthereumKeyPairIdentity } from '@streamr/sdk'
+
+// Generate new identity
+const identity = EthereumKeyPairIdentity.generate()
+
+// User ID (in this case Ethereum address) and private key are available via the identity
+const address = await identity.getUserIdString()
+const privateKey = await identity.getPrivateKey()
 ```
 
-Retrieve the user id (e.g. Ethereum address) with the async call,
-
-```ts
-const address = await streamr.getUserId()
-```
+Read more about [Identity in Streamr](../../usage/identity.md).
 
 ## Search for streams
 You can search for streams by specifying a search term:
