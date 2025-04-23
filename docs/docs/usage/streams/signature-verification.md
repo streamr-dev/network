@@ -11,7 +11,7 @@ Authenticity and integrity of events published on a stream is guaranteed with di
 - Signing is instrumental to the protocol and cannot be turned off. 
 :::
 
-For more in depth analysis, see [Security - Data signing & verification](../../streamr-network/security/signing-and-verification.md).
+For more in depth analysis, see [Security - Identity and signatures](../../streamr-network/security/signing-and-verification.md).
 
 ## Smart contract pub/sub (ERC-1271)
 Beside the typical externally owned account signing and verification, the Streamr protocol also supports smart contract signature verification, i.e. ERC1271 support. This feature allows the use of smart contracts that follow the ERC1271 spec to become signatories on streams in the Streamr Network.

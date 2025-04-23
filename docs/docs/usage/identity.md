@@ -78,4 +78,4 @@ const streamr = new StreamrClient({
 
 ## Configuring other types of key pairs
 
-For publishing and subscribing to data, other types of key pairs and signature algorithms are supported, including quantum resistant ones. They can be configured by passing the `publicKey` and `privateKey` as hex encoded strings, and specifying a `keyType` selector. See [here](../streamr-network/security/signing-and-verification.md) for a list of supported key types and signature algorithms and how to use them.
+For publishing and subscribing to data, other types of key pairs and signature algorithms are supported, including quantum resistant ones. They can be configured by passing the `publicKey` and `privateKey` as hex encoded strings, and specifying a `keyType` selector. See [Identity and Signatures](../streamr-network/security/signing-and-verification.md) for a list of supported key types and signature algorithms and how to use them.
