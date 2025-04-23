@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import { KeyPairIdentity } from '@streamr/sdk/dist/types/src/identity/KeyPairIdentity'
-import { identityConfig, KeyType, validKeyTypeValues } from '@streamr/sdk'
+import { identityConfig, validKeyTypeValues } from '@streamr/sdk'
 import { binaryToHex } from '@streamr/utils'
 import { createCommand, Options } from '../src/command'
 
