@@ -207,17 +207,6 @@ export const sponsor = async (
     await (await sponsorshipContract.sponsor(amount)).wait()
 }
 
-export const transferTokens = async (
-    from: SignerWithProvider,
-    to: string,
-    amount: WeiAmount,
-    data?: string,
-    token?: DATATokenContract
-): Promise<void> => {
-    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, amount, data ?? '0x'))
-    await tx.wait()
-}
-
 export const getOperatorContract = (operatorAddress: string): OperatorContract => {
     return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
 }
