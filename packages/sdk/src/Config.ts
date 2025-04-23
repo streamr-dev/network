@@ -387,7 +387,8 @@ export interface StreamrClientConfig {
 
         /**
          * Default: false. If true, only data encrypted using quantum resistant algorithms will be accepted,
-         * and data using other algorithms as well as unencrypted data will be rejected.
+         * and data using other algorithms as well as unencrypted data will be rejected. Note that also public (unencrypted)
+         * data will be rejected in this case.
          */
         requireQuantumResistantEncryption?: boolean
     }
