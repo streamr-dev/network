@@ -12,7 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add support for quantum secure key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
+- Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
+- Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 
 #### Changed
@@ -30,6 +31,7 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 - **BREAKING CHANGE**: Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
+- **BREAKING CHANGE**: Remove `StreamrClient.generateEthereumAccount()` in favour of `EthereumKeyPairIdentity.generate()`
 
 #### Fixed
 
