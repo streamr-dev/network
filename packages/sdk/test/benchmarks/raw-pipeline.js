@@ -4,7 +4,7 @@ const { randomBytes } = require('crypto')
 const bytes = require('bytes')
 
 // eslint-disable-next-line import/no-unresolved
-const StreamrClient = require('../../dist/src')
+const StreamrClient = require('../../dist')
 const { StreamMessage } = require('@streamr/protocol')
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
