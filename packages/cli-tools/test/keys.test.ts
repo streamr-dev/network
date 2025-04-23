@@ -16,7 +16,6 @@ describe('keys', () => {
                 // prevents --env from being passed to the command
                 devEnvironment: false 
             })
-            console.log(outputLines)
             expect(outputLines.length).toBe(3)
             expect(outputLines[0]).toMatch(/0x[0-9a-f]{40}$/)
             expect(outputLines[2]).toMatch(/[0-9a-f]{64}$/)
