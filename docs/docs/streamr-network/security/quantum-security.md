@@ -46,3 +46,7 @@ const streamr = new StreamrClient({
     }
 })
 ```
+
+## Performance considerations
+
+Note that the quantum resistant algorithms require much more intensive computation than the traditional algorithms. In Streamr, each message is signed at the publisher and validated on each subscriber. In streams with very frequent messages, this may create a bottleneck. For rough ballpark numbers, on an Apple M2 laptop, computing an ML-DSA-87 signature takes roughly 12ms and verification takes 4ms.
