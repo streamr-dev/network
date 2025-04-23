@@ -168,9 +168,6 @@ export const delegate = async (
 ): Promise<void> => {
     logger.debug('Delegate', { amount: amount.toString() })
     const tokenAddress = await getOperatorContract(operatorContractAddress).connect(delegator.provider).token()
-    // onTokenTransfer: the tokens are delegated on behalf of the given data address
-    // eslint-disable-next-line max-len
-    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
     await transferTokens(delegator, operatorContractAddress, amount, tokenAddress)
 }
 
@@ -207,8 +204,6 @@ export const sponsor = async (
 ): Promise<void> => {
     logger.debug('Sponsor', { amount: amount.toString() })
     const tokenAddress = await getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer.provider).token()
-    // eslint-disable-next-line max-len
-    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
     await transferTokens(sponsorer, sponsorshipContractAddress, amount, tokenAddress)
 }
 
