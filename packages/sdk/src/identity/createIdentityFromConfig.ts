@@ -9,12 +9,10 @@ export type KeyTypeConfig = typeof validKeyTypeValues[number]
 
 export const DEFAULT_KEY_TYPE: KeyTypeConfig = 'evm_secp256k1'
 
-interface RequiredFactoryMethods {
+export const identityFactoryByKeyType: Record<KeyTypeConfig, {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Identity
-}
-
-export const identityFactoryByKeyType: Record<KeyTypeConfig, RequiredFactoryMethods> = {
+}> = {
     'evm_secp256k1': { 
         fromConfig: EthereumKeyPairIdentity.fromConfig, 
         generate: EthereumKeyPairIdentity.generate, 
