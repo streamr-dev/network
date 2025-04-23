@@ -164,14 +164,11 @@ export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wall
 export const delegate = async (
     delegator: SignerWithProvider,
     operatorContractAddress: string,
-    amount: WeiAmount,
-    token?: DATATokenContract
+    amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Delegate', { amount: amount.toString() })
-    // onTokenTransfer: the tokens are delegated on behalf of the given data address
-    // eslint-disable-next-line max-len
-    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
-    await transferTokens(delegator, operatorContractAddress, amount, await delegator.getAddress(), token)
+    const operatorContract = getOperatorContract(operatorContractAddress).connect(delegator)
+    await (await operatorContract.delegate(amount)).wait()
 }
 
 export const undelegate = async (
@@ -204,12 +201,10 @@ export const sponsor = async (
     sponsorer: SignerWithProvider,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    token?: DATATokenContract
 ): Promise<void> => {
     logger.debug('Sponsor', { amount: amount.toString() })
-    // eslint-disable-next-line max-len
-    // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
-    await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, token)
+    const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer)
+    await (await sponsorshipContract.sponsor(amount)).wait()
 }
 
 export const transferTokens = async (
@@ -225,4 +220,8 @@ export const transferTokens = async (
 
 export const getOperatorContract = (operatorAddress: string): OperatorContract => {
     return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
+}
+
+const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract => {
+    return new Contract(sponsorshipAddress, SponsorshipArtifact) as unknown as SponsorshipContract
 }
