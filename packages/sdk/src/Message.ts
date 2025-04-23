@@ -4,9 +4,18 @@ import { SignatureType } from '@streamr/trackerless-network'
 import { identityConfig, KeyType } from './identity/identityConfig'
 
 // Lookup structure for converting SignatureType to KeyType string
-const keyTypeBySignatureType: Record<number, KeyType> = Object.fromEntries(
-    Object.entries(identityConfig).map(([keyType, config]) => [config.signatureType, keyType as KeyType])
-)
+export type MessageSignatureType = KeyType | 'legacy_evm_secpk256k1' | 'erc_1271'
+const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
+    // Read key pair SignatureTypes from identityConfig
+    ...Object.fromEntries(
+        Object.entries(identityConfig).map(
+            ([keyType, config]) => [config.signatureType, keyType as KeyType]
+        )
+    ),
+    // These special ones need to be added manually
+    [SignatureType.LEGACY_EVM_SECP256K1]: 'legacy_evm_secpk256k1',
+    [SignatureType.ERC_1271]: 'erc_1271',
+}
 
 /**
  * Represents a message in the Streamr Network. This is an application-facing class, whereas StreamMessage is considered internal.
@@ -47,7 +56,7 @@ export interface Message {
     /**
      * Signature method used to sign message.
      */
-    signatureType: KeyType
+    signatureType: MessageSignatureType
 
     /**
      * Publisher of message.
@@ -70,8 +79,8 @@ export interface Message {
 
 export type MessageMetadata = Omit<Message, 'content'>
 
-function signatureTypeToString(signatureType: SignatureType): KeyType {
-    const result = keyTypeBySignatureType[signatureType]
+function signatureTypeToString(signatureType: SignatureType): MessageSignatureType {
+    const result = stringVersionsOfSignatureTypes[signatureType]
     if (!result) {
         throw new Error(`Unknown signature type: ${signatureType}`)
     }
