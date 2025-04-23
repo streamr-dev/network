@@ -171,7 +171,7 @@ export const delegate = async (
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
-    await transferTokens(delegator, operatorContractAddress, amount, undefined, tokenAddress)
+    await transferTokens(delegator, operatorContractAddress, amount, tokenAddress)
 }
 
 export const undelegate = async (
@@ -209,18 +209,17 @@ export const sponsor = async (
     const tokenAddress = await getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer.provider).token()
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
-    await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, tokenAddress)
+    await transferTokens(sponsorer, sponsorshipContractAddress, amount, tokenAddress)
 }
 
 export const transferTokens = async (
     from: SignerWithProvider,
     to: string,
     amount: WeiAmount,
-    data: string | undefined,
     tokenAddress: string
 ): Promise<void> => {
     const token = new Contract(tokenAddress, DATATokenArtifact) as unknown as DATATokenContract
-    const tx = await token.connect(from).transferAndCall(to, amount, data ?? '0x')
+    const tx = await token.connect(from).transferAndCall(to, amount, '0x')
     await tx.wait()
 }
 
