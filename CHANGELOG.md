@@ -14,6 +14,7 @@ Changes before Tatum release are not documented in this file.
 
 - Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 - Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
+- CLI tool allows generating key pairs with `streamr keys generate --key-type [...]`
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 
 #### Changed
@@ -23,6 +24,8 @@ Changes before Tatum release are not documented in this file.
   - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite)
 
   Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
+- **BREAKING CHANGE**: CLI tool command `streamr wallet whoami` is now `streamr keys whoami`
+- **BREAKING CHANGE**: The string values in `Message.signatureType` now correspond with the `KeyType` values. This means the previously output value `SECP256K1` is now `ECDSA_SECP256K1_EVM`.
 
 #### Deprecated
 
