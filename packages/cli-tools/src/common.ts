@@ -1,3 +1,5 @@
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+
 export enum OptionType {
     FLAG, // e.g. "--enable"
     ARGUMENT  // e.g. "--private-key 0x1234"
@@ -41,3 +43,19 @@ export const formEnumArgValueDescription = (allowedValues: string[], defaultValu
 export const wrapWithQuotes = (str: string): string => {
     return `"${str}"`
 }
+
+export function createFnParseEthereumAddressList(name: string): (s: string) => EthereumAddress[] {
+    return (value: string) => {
+        const items = value.split(',').map((item)=> item.trim())
+        const result: EthereumAddress[] = []
+        for (const item of items) {
+            try {
+                result.push(toEthereumAddress(item))
+            } catch {
+                console.error(`${name} has invalid Ethereum address: "${item}"`)
+                process.exit(1)
+            }
+        }
+        return result
+    }
+} 

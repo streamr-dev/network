@@ -10,6 +10,7 @@ program
     .command('visualize-topology', 'visualize network topology')
     .command('show-sdk-config', 'show config used by internal StreamrClient')
     .command('sponsorship-sponsor', 'sponsor a sponsorship')
+    .command('operator-create', 'create operator')
     .command('operator-delegate', 'delegate funds to an operator')
     .command('operator-undelegate', 'undelegate funds from an operator')
     .command('operator-stake', 'stake operator\'s funds to a sponsorship')
