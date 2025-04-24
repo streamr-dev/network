@@ -74,7 +74,7 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
 
-        for (let i = 1; i < 10; i++) {
+        for (let i = 1; i < 25; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 STREAM_PART_ID,

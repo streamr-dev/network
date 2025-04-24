@@ -78,7 +78,6 @@ describe('Full node network with WebSocket connections only', () => {
 
         entryPoint.getContentDeliveryManager().broadcast(msg1)
         await until(() => receivedMessageCount === NUM_OF_NODES)
-        await wait(2000)
         
         for (let i = 0; i < NUM_OF_NODES; i++) {
             const msg2 = createStreamMessage(
