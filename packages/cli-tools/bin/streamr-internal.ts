@@ -9,6 +9,7 @@ program
     .command('node-info', 'info about a node')
     .command('visualize-topology', 'visualize network topology')
     .command('show-sdk-config', 'show config used by internal StreamrClient')
+    .command('sponsorship-create', 'create sponsorship')
     .command('sponsorship-sponsor', 'sponsor a sponsorship')
     .command('operator-create', 'create operator')
     .command('operator-delegate', 'delegate funds to an operator')
