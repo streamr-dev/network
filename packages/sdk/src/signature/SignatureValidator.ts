@@ -9,7 +9,7 @@ import { SignatureType } from '@streamr/trackerless-network'
 import { identityConfig } from '../identity/identityConfig'
 
 // Lookup structure SignatureType -> SigningUtil
-const signatureSchemeBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
+const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
     Object.values(identityConfig).map((config) => [config.signatureType, config.signingUtil])
 )
 
@@ -39,18 +39,18 @@ export class SignatureValidator {
     }
 
     private async validate(streamMessage: StreamMessage): Promise<boolean> {
-        const signatureScheme = signatureSchemeBySignatureType[streamMessage.signatureType]
+        const signingUtil = signingUtilBySignatureType[streamMessage.signatureType]
 
         // Common case
-        if (signatureScheme) {
-            return signatureScheme.verifySignature(
+        if (signingUtil) {
+            return signingUtil.verifySignature(
                 toUserIdRaw(streamMessage.getPublisherId()),
                 createSignaturePayload(streamMessage),
                 streamMessage.signature
             )
         }
 
-        // Special handling: different payload computation
+        // Special handling: different payload computation, same SigningUtil
         if (streamMessage.signatureType === SignatureType.ECDSA_SECP256K1_LEGACY) {
             return ECDSA_SECP256K1_EVM.verifySignature(
                 // publisherId is hex encoded address string
