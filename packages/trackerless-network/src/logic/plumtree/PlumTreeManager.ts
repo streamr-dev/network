@@ -118,6 +118,10 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
+    isNeighborPaused(node: PeerDescriptor): boolean {
+        return this.localPausedNeighbors.has(toNodeId(node)) || this.remotePausedNeighbors.has(toNodeId(node))
+    }
+
     stop(): void {
         this.neighbors.off('nodeRemoved', this.onNeighborRemoved)
     }

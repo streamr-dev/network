@@ -1,20 +1,16 @@
-import { DhtAddress, toNodeId } from "@streamr/dht"
-import { PlumTreeRpcLocal } from "../../src/logic/plumtree/PlumTreeRpcLocal"
-import { NodeList } from "../../src/logic/NodeList"
-import { createMockPeerDescriptor } from "../utils/utils"
+import { DhtAddress, toNodeId } from '@streamr/dht'
+import { PlumTreeRpcLocal } from '../../src/logic/plumtree/PlumTreeRpcLocal'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('PlumTreeRpcLocal', () => {
 
     let rpcLocal: PlumTreeRpcLocal
 
-    let neighbors: NodeList
     let pausedNodes: Set<DhtAddress>
     let onMetadata: jest.Mock
     let sendBuffer: jest.Mock
 
     beforeEach(() => {
-        const localPeerDescriptor = createMockPeerDescriptor()
-        neighbors = new NodeList(toNodeId(localPeerDescriptor), 4)
         pausedNodes = new Set()
         onMetadata = jest.fn()
         sendBuffer = jest.fn()
