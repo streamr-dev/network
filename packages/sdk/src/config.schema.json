@@ -44,7 +44,7 @@
                 },
                 "keyType": {
                     "type": "string",
-                    "default": "evm_secp256k1"
+                    "default": "ECDSA_SECP256K1_EVM"
                 },
                 "ethereum": {
                     "type": "object"

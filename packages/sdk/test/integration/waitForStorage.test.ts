@@ -74,7 +74,7 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.EVM_SECP256K1))
+        }, SignatureType.ECDSA_SECP256K1_EVM))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
             timeout: 100,
@@ -92,7 +92,7 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.EVM_SECP256K1))
+        }, SignatureType.ECDSA_SECP256K1_EVM))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {
                 return true

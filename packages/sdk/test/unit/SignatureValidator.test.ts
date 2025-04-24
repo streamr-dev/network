@@ -40,7 +40,7 @@ describe('SignatureValidator', () => {
                 encryptionType: EncryptionType.NONE,
                 // eslint-disable-next-line max-len
                 signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
-                signatureType: SignatureType.EVM_SECP256K1
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM
             })
             await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
@@ -64,7 +64,7 @@ describe('SignatureValidator', () => {
                 // eslint-disable-next-line max-len
                 signature: hexToBinary('05a9a8f63f56cbb9f3cb716825c5b262182addcb8d2824047b375939d6e91f1904ac823357901f409e56a382b57a23fef03746652ff67d9e99b7d415b81d4cc91c'),
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
-                signatureType: SignatureType.EVM_SECP256K1
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM
             })
             await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
@@ -88,7 +88,7 @@ describe('SignatureValidator', () => {
      * Or simply put, whenever we have legacy signature, we have JSON content type.
      *
      */
-    describe('LEGACY_EVM_SECP256K1', () => {
+    describe('ECDSA_SECP256K1_LEGACY', () => {
 
         it('unencrypted message passes signature validation', async () => {
             const message = new StreamMessage({
@@ -108,7 +108,7 @@ describe('SignatureValidator', () => {
                 encryptionType: EncryptionType.NONE,
                 // eslint-disable-next-line max-len
                 signature: hexToBinary('0x738f682914f224522030fb6520f51cff14581904d981268d182936f0f42d832935e970f775f78ccbba053261916215b7742407aae4bdd49777a7bcf8954ee8401c'),
-                signatureType: SignatureType.LEGACY_EVM_SECP256K1
+                signatureType: SignatureType.ECDSA_SECP256K1_LEGACY
             })
             await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
@@ -132,7 +132,7 @@ describe('SignatureValidator', () => {
                 // eslint-disable-next-line max-len
                 signature: hexToBinary('0x522e1dca3f3cdc5d1e847280cc0d3d09ddb71bd905750ba69cb07861544421811869648cdd7884f422385ba81dad8ab63b02892d20faaabc295ebeb3e4d90bcf1c'),
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
-                signatureType: SignatureType.LEGACY_EVM_SECP256K1
+                signatureType: SignatureType.ECDSA_SECP256K1_LEGACY
             })
             await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })

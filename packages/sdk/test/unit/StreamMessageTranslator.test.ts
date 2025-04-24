@@ -39,7 +39,7 @@ const createStreamMessage = (
     }
     const msg = {
         messageId,
-        signatureType: SignatureType.EVM_SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
         body: {
             oneofKind: 'contentMessage' as const,
@@ -76,7 +76,7 @@ describe('StreamMessageTranslator', () => {
         contentType: ContentType.JSON,
         messageType: StreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.EVM_SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature,
     })
 

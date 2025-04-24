@@ -62,8 +62,8 @@ enum AsymmetricEncryptionType {
 }
 
 enum SignatureType {
-  LEGACY_EVM_SECP256K1 = 0;
-  EVM_SECP256K1 = 1;
+  ECDSA_SECP256K1_LEGACY = 0;
+  ECDSA_SECP256K1_EVM = 1;
   ERC_1271 = 2;
   ML_DSA_87 = 3;
 }

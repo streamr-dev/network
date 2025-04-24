@@ -22,7 +22,7 @@ describe('oldStreamMessageBinaryUtils', () => {
             contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
             groupKeyId: '0x1234567890123456789012345678901234567890',
-            signatureType: SignatureType.EVM_SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: new Uint8Array([7, 8, 9])
         })
 

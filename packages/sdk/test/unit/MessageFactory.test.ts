@@ -88,7 +88,7 @@ describe('MessageFactory', () => {
             groupKeyId: GROUP_KEY.id,
             newGroupKey: undefined,
             signature: expect.any(Uint8Array),
-            signatureType: SignatureType.EVM_SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             contentType: ContentType.JSON,
             content: expect.any(Uint8Array)
         })

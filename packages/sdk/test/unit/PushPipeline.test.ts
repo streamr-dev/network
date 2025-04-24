@@ -28,7 +28,7 @@ describe('PushPipeline', () => {
             content: utf8ToBinary(JSON.stringify(Msg())),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeEach(async () => {
@@ -94,7 +94,7 @@ describe('PushPipeline', () => {
             content: utf8ToBinary(JSON.stringify(testMessage)),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)

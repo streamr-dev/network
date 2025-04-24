@@ -33,7 +33,7 @@ describe(waitForAssignmentsToPropagate, () => {
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     async function createAssignmentMessagesFor(stream: {

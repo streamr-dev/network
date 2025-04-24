@@ -56,7 +56,7 @@ describe('messagePipeline', () => {
             contentType: opts.contentType ?? ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             ...opts
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeEach(async () => {

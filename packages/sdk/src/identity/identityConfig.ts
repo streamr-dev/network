@@ -1,4 +1,4 @@
-import { EVM_SECP256K1, ML_DSA_87, SignatureScheme } from '@streamr/utils'
+import { ECDSA_SECP256K1_EVM, ML_DSA_87, SigningUtil } from '@streamr/utils'
 import { KeyPairIdentityConfig, EthereumProviderIdentityConfig, StrictStreamrClientConfig, CustomIdentityConfig } from '../Config'
 import { EthereumKeyPairIdentity } from './EthereumKeyPairIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
@@ -11,33 +11,33 @@ import { SignatureType } from '@streamr/trackerless-network'
  * 
  * How to configure new Identity types:
  * 1. Add a new SignatureType entry to NetworkRpc.proto in network package
- * 2. Add the needed SignatureScheme to signingUtils.ts
+ * 2. Add the needed SigningUtil to signingUtils.ts
  * 3. Create the Identity implementation itself (eg. extend KeyPairIdentity)
  * 4. Wire everything together below
  */
-export const validKeyTypeValues = ['evm_secp256k1', 'ml-dsa-87'] as const
+export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ML_DSA_87'] as const
 export const identityConfig: Record<KeyType, {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Identity
-    signatureScheme: SignatureScheme
+    signingUtil: SigningUtil
     signatureType: SignatureType
 }> = {
-    'evm_secp256k1': { 
+    'ECDSA_SECP256K1_EVM': { 
         fromConfig: EthereumKeyPairIdentity.fromConfig, 
         generate: EthereumKeyPairIdentity.generate,
-        signatureScheme: EVM_SECP256K1,
-        signatureType: SignatureType.EVM_SECP256K1,
+        signingUtil: ECDSA_SECP256K1_EVM,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
     },
-    'ml-dsa-87': {
+    'ML_DSA_87': {
         fromConfig: MLDSAKeyPairIdentity.fromConfig,
         generate: MLDSAKeyPairIdentity.generate, 
-        signatureScheme: ML_DSA_87,
+        signingUtil: ML_DSA_87,
         signatureType: SignatureType.ML_DSA_87,
     }
 }
 
 export type KeyType = typeof validKeyTypeValues[number]
-export const DEFAULT_KEY_TYPE: KeyType = 'evm_secp256k1'
+export const DEFAULT_KEY_TYPE: KeyType = 'ECDSA_SECP256K1_EVM'
 
 // Static check that all valid key types have corresponding factory functions above
 validKeyTypeValues.forEach((keyType) => {

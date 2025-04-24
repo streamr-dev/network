@@ -59,7 +59,7 @@ describe('Subscriber', () => {
             content,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeAll(async () => {

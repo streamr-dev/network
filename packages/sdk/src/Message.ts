@@ -4,7 +4,7 @@ import { SignatureType } from '@streamr/trackerless-network'
 import { identityConfig, KeyType } from './identity/identityConfig'
 
 // Lookup structure for converting SignatureType to KeyType string
-export type MessageSignatureType = KeyType | 'legacy_evm_secpk256k1' | 'erc_1271'
+export type MessageSignatureType = KeyType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
 const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
     // Read key pair SignatureTypes from identityConfig
     ...Object.fromEntries(
@@ -13,8 +13,8 @@ const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
         )
     ),
     // These special ones need to be added manually
-    [SignatureType.LEGACY_EVM_SECP256K1]: 'legacy_evm_secpk256k1',
-    [SignatureType.ERC_1271]: 'erc_1271',
+    [SignatureType.ECDSA_SECP256K1_LEGACY]: 'ECDSA_SECP256K1_LEGACY',
+    [SignatureType.ERC_1271]: 'ERC_1271',
 }
 
 /**

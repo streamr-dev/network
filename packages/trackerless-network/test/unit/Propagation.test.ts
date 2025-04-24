@@ -24,7 +24,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
     return {
         messageId,
         signature: hexToBinary('0x1111'),
-        signatureType: SignatureType.EVM_SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         body: {
             oneofKind: 'contentMessage',
             contentMessage: {

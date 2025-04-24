@@ -87,7 +87,7 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.EVM_SECP256K1
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM
     })
 }
 

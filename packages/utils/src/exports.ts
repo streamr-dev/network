@@ -43,7 +43,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { EVM_SECP256K1, ML_DSA_87, SignatureScheme } from './signingUtils'
+import { ECDSA_SECP256K1_EVM, ML_DSA_87, SigningUtil } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
@@ -101,9 +101,9 @@ export {
     retry,
     LengthPrefixedFrameDecoder,
     toLengthPrefixedFrame,
-    EVM_SECP256K1,
+    ECDSA_SECP256K1_EVM,
     ML_DSA_87,
-    SignatureScheme,
+    SigningUtil,
     ipv4ToNumber,
     numberToIpv4,
     MapWithTtl,

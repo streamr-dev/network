@@ -43,7 +43,7 @@ export class EthereumProviderIdentity extends Identity {
 
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
-        return SignatureType.EVM_SECP256K1
+        return SignatureType.ECDSA_SECP256K1_EVM
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {

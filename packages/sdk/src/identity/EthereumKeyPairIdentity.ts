@@ -1,5 +1,5 @@
 import { SignerWithProvider } from './Identity'
-import { binaryToHex, EVM_SECP256K1, hexToBinary } from '@streamr/utils'
+import { binaryToHex, ECDSA_SECP256K1_EVM, hexToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
@@ -29,7 +29,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
-        return SignatureType.EVM_SECP256K1
+        return SignatureType.ECDSA_SECP256K1_EVM
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -44,7 +44,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
-        return EVM_SECP256K1.createSignature(payload, this.privateKey)
+        return ECDSA_SECP256K1_EVM.createSignature(payload, this.privateKey)
     }
 
     async getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {

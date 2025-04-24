@@ -12,19 +12,19 @@ The type of cryptographic keys configured on the publisher determine the signatu
 
 The Streamr SDK is configured with cryptographic keys which determine the user's identity in the network. The type of keys used also determines the signature algorithm used. The Streamr SDK supports the following key/identity/signature schemes:
 
-- ECDSA with the `secp256k1` curve - commonly referred to in Streamr context as an 'Ethereum' identity, defined by a private key and an 'address' derived from the related public key. This is the default and most commonly used setting.
-- ML-DSA for quantum resistant signatures (only ML-DSA-87).
+- ECDSA with the `secp256k1` curve - commonly referred to in Streamr context as an 'Ethereum' identity, defined by a private key and an 'address' derived from the related public key. This is the default and most commonly used identity type, and the only one capable of signing transactions on EVM blockchains.
+- ML-DSA for quantum resistant signatures. Learn more about [Quantum Security](quantum-security.md).
 
 The choice of keys and algorithms depends on the use case and whether the same identities are used outside of Streamr. The following table specifies the functionality available to each key type as well as the `keyType` and `Identity` class name required to use it:
 
-| keyType        | Identity implementation   | Pub/Sub | Stream management | Quantum resistance |
-|----------------|---------------------------|---------|-------------------|--------------------|
-| `evm_secp256k1`| `EthereumKeyPairIdentity` | ✅      | ✅                | ❌                 |
-| `ml-dsa-87`    | `MLDSAKeyPairIdentity`    | ✅      | ❌                | ✅                 |
+| Key Type               | Identity Implementation  | Pub/Sub | Stream Management | Quantum Resistance |
+|------------------------|--------------------------|---------|-------------------|--------------------|
+| ECDSA_SECP256K1_EVM    | EthereumKeyPairIdentity  | ✅      | ✅                | ❌                 |
+| ML_DSA_87              | MLDSAKeyPairIdentity     | ✅      | ❌                | ✅                 |
 
 The meaning of the columns above are as follows:
 
-- `keyType`: the value to be passed to the SDK, node, or CLI tool to specify the key type. The default value is `evm_secp256k1`. Examples:
+- `keyType`: the value to be passed to the SDK, node, or CLI tool to specify the key type. The default value is `ECDSA_SECP256K1_EVM`. Examples:
 
 ```
 // Passing to StreamrClient:

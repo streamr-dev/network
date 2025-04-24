@@ -130,7 +130,7 @@ describe('SubscriberKeyExchange', () => {
             streamPartId,
             [groupKey.id],
             toUserId(subscriberWallet.address),
-            SignatureType.EVM_SECP256K1
+            SignatureType.ECDSA_SECP256K1_EVM
         )
         const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
         await until(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
@@ -194,7 +194,7 @@ describe('SubscriberKeyExchange', () => {
             streamPartId,
             [groupKey.id],
             toUserId(subscriberWallet.address),
-            SignatureType.EVM_SECP256K1,
+            SignatureType.ECDSA_SECP256K1_EVM,
             AsymmetricEncryptionType.ML_KEM,
         )
         const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))

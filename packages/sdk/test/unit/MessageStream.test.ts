@@ -26,7 +26,7 @@ describe('MessageStream', () => {
             content: utf8ToBinary(JSON.stringify(Msg())),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeEach(async () => {

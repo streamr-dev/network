@@ -1,16 +1,16 @@
 /* eslint-disable max-len */
 import { hexToBinary } from '../src/binaryUtils'
-import { EVM_SECP256K1, ML_DSA_87 } from '../src/signingUtils'
+import { ECDSA_SECP256K1_EVM, ML_DSA_87 } from '../src/signingUtils'
 import { toUserId, toUserIdRaw } from '../src/UserID'
 
-describe('EVM_SECP256K1', () => {
+describe('ECDSA_SECP256K1_EVM', () => {
 
     const privateKey = hexToBinary('23bead9b499af21c4c16e4511b3b6b08c3e22e76e0591f5ab5ba8d4c3a5b1820')
 
     describe('createSignature', () => {
         it('produces correct signature', async () => {
             const payload = Buffer.from('data-to-sign')
-            const signature = EVM_SECP256K1.createSignature(payload, privateKey)
+            const signature = ECDSA_SECP256K1_EVM.createSignature(payload, privateKey)
             expect(signature).toStrictEqual(hexToBinary('787cd72924153c88350e808de68b68c88030cbc34d053a5c696a5893d5e6fec1687c1b6205ec99aeb3375a81bf5cb8857ae39c1b55a41b32ed6399ae8da456a61b'))
         })
     })
@@ -20,7 +20,7 @@ describe('EVM_SECP256K1', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = EVM_SECP256K1.recoverSignerUserId(signature, payload)
+            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).toEqual(userId)
         })
     
@@ -28,21 +28,21 @@ describe('EVM_SECP256K1', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('c97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = EVM_SECP256K1.recoverSignerUserId(signature, payload)
+            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).toEqual(userId)
         })
     
         it('throws if the address can not be recovered (invalid signature)', async () => {
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            expect(() => EVM_SECP256K1.recoverSignerUserId(signature, payload)).toThrow()
+            expect(() => ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)).toThrow()
         })
     
         it('returns a different address if the content is tampered', async () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = EVM_SECP256K1.recoverSignerUserId(signature, payload)
+            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).not.toEqual(userId)
         })
     })
@@ -52,7 +52,7 @@ describe('EVM_SECP256K1', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = EVM_SECP256K1.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(true)
         })
     
@@ -60,7 +60,7 @@ describe('EVM_SECP256K1', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = EVM_SECP256K1.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(false)
         })
     
@@ -68,7 +68,7 @@ describe('EVM_SECP256K1', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = EVM_SECP256K1.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(false)
         })
     })

@@ -28,7 +28,7 @@ const groupKeyRequestToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_REQUEST,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.EVM_SECP256K1)
+    }, SignatureType.ECDSA_SECP256K1_EVM)
 }
 
 const groupKeyResponseToStreamMessage = async (
@@ -45,7 +45,7 @@ const groupKeyResponseToStreamMessage = async (
         messageType: StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-    }, SignatureType.EVM_SECP256K1)
+    }, SignatureType.ECDSA_SECP256K1_EVM)
 }
 
 describe('Validator2', () => {
@@ -98,7 +98,7 @@ describe('Validator2', () => {
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
 
         msgWithNewGroupKey = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
@@ -107,7 +107,7 @@ describe('Validator2', () => {
             newGroupKey: { id: 'groupKeyId', data: hexToBinary('0x1111') },
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
         expect(msg.signature).not.toEqualBinary(msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
@@ -117,7 +117,7 @@ describe('Validator2', () => {
             prevMsgRef: new MessageRef(1000, 0),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.EVM_SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
         expect(msg.signature).not.toEqualBinary(msgWithPrevMsgRef.signature)
 
         groupKeyRequest = await groupKeyRequestToStreamMessage({

@@ -12,7 +12,7 @@ describe('keys', () => {
 
     describe('generate', () => {
         it('prints out an address and a private key', async () => {
-            const outputLines = await runCommand('keys generate --key-type evm_secp256k1', {
+            const outputLines = await runCommand('keys generate --key-type ECDSA_SECP256K1_EVM', {
                 // prevents --env from being passed to the command
                 devEnvironment: false 
             })

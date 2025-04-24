@@ -107,7 +107,7 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
+        await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.ECDSA_SECP256K1_EVM)
     })
 
     it('responds to a group key request using ERC-1271 identity', async () => {
@@ -145,7 +145,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
+            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.ECDSA_SECP256K1_EVM)
         })
 
         it('works when subscriber requests quantum security', async () => {
@@ -160,7 +160,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.EVM_SECP256K1)
+            await assertValidResponse(response, stream.id, key, toUserId(publisherWallet.address), SignatureType.ECDSA_SECP256K1_EVM)
         })
 
         it('fails when publisher requires it but subscriber does not', async () => {

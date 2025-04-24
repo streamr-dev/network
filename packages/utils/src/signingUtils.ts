@@ -14,7 +14,7 @@ export interface KeyPair {
     privateKey: Uint8Array
 }
 
-export interface SignatureScheme {
+export interface SigningUtil {
     createSignature: (payload: Uint8Array, privateKey: Uint8Array) => Uint8Array
     verifySignature: (publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array) => boolean
     [key: string]: any // Allow additional properties
@@ -23,7 +23,7 @@ export interface SignatureScheme {
 /**
  * EVM compatible signing scheme using keccak hash, magic bytes, and secp256k1 curve.
  */
-export const EVM_SECP256K1: SignatureScheme = {
+export const ECDSA_SECP256K1_EVM: SigningUtil = {
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
         keccak.reset()
         keccak.update(useEthereumMagic ? Buffer.concat([Buffer.from(SIGN_MAGIC + message.length), message]) : Buffer.from(message))
@@ -36,14 +36,14 @@ export const EVM_SECP256K1: SignatureScheme = {
         return secp256k1.ecdsaRecover(
             signatureBuffer.subarray(0, signatureBuffer.length - 1),
             recoveryId,
-            EVM_SECP256K1.keccakHash(payload),
+            ECDSA_SECP256K1_EVM.keccakHash(payload),
             false,
             Buffer.alloc,
         )
     },
 
     createSignature(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {
-        const msgHash = EVM_SECP256K1.keccakHash(payload)
+        const msgHash = ECDSA_SECP256K1_EVM.keccakHash(payload)
         const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
         const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
         result.writeInt8(27 + sigObj.recid, result.length - 1)
@@ -51,7 +51,7 @@ export const EVM_SECP256K1: SignatureScheme = {
     },
 
     recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw {
-        const publicKey = EVM_SECP256K1.recoverPublicKey(signature, payload)
+        const publicKey = ECDSA_SECP256K1_EVM.recoverPublicKey(signature, payload)
         const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
         keccak.reset()
         keccak.update(Buffer.from(pubKeyWithoutFirstByte))
@@ -61,7 +61,7 @@ export const EVM_SECP256K1: SignatureScheme = {
 
     verifySignature(expectedUserId: UserIDRaw, payload: Uint8Array, signature: Uint8Array): boolean {
         try {
-            const recoveredAddress = EVM_SECP256K1.recoverSignerUserId(signature, payload)
+            const recoveredAddress = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
             return areEqualBinaries(recoveredAddress, expectedUserId)
         } catch {
             return false
@@ -72,7 +72,7 @@ export const EVM_SECP256K1: SignatureScheme = {
 /**
  * Signing scheme using ML-DSA-87
  */
-export const ML_DSA_87: SignatureScheme = {
+export const ML_DSA_87: SigningUtil = {
     generateKeyPair(): KeyPair {
         const seed = randomBytes(32)
         const keys = ml_dsa87.keygen(seed)
