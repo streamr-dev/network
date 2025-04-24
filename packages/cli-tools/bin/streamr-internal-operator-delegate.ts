@@ -9,8 +9,7 @@ createClientCommand(async (client: StreamrClient, operatorAddress: string, dataT
     await _operatorContractUtils.delegate(
         await client.getSigner(),
         operatorAddress,
-        parseEther(dataTokenAmount),
-        _operatorContractUtils.getTestTokenContract()
+        parseEther(dataTokenAmount)
     )
 })
     .description('delegate funds to an operator')

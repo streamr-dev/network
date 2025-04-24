@@ -404,7 +404,7 @@ export class Operator {
 
     /**
      * Find the sum of earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
-     * SUBJECT TO the constraints, set in the OperatorServiceConfig:
+     * SUBJECT TO the constraints:
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
