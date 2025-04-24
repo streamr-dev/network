@@ -55,7 +55,7 @@ export interface Message {
     /**
      * Identifiers group key used to encrypt the message.
      */
-    groupKeyId: string | undefined
+    encryptionKeyId: string | undefined
 
     /** @internal */
     streamMessage: StreamMessage // TODO remove this field if possible
@@ -87,7 +87,7 @@ export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
         signatureType: signatureTypeToString(msg.signatureType),
         publisherId: msg.getPublisherId(),
         msgChainId: msg.getMsgChainId(),
-        groupKeyId: msg.groupKeyId,
+        encryptionKeyId: msg.groupKeyId,
         streamMessage: msg
         // TODO add other relevant fields (could update some test assertions to
         // use those keys instead of getting the fields via from streamMessage property)
