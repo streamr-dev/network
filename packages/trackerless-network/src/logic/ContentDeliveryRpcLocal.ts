@@ -40,9 +40,9 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
             }
         } else if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
             this.options.plumTreeManager.broadcast(message, previousNodeId)
-            this.options.plumTreeManager.resumeNeighbor(previousNode)
+            await this.options.plumTreeManager.resumeNeighbor(previousNode)
         } else {
-            this.options.plumTreeManager.pauseNeighbor(previousNode)
+            await this.options.plumTreeManager.pauseNeighbor(previousNode)
         }
         return Empty
     }
