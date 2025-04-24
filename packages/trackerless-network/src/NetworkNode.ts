@@ -7,6 +7,7 @@ import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from '.
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NodeInfo } from './types'
+import { StreamPartDeliveryOptions } from './logic/ContentDeliveryManager'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -35,12 +36,16 @@ export class NetworkNode {
         return this.stack.getContentDeliveryManager().inspect(node, streamPartId)
     }
 
-    async broadcast(msg: StreamMessage): Promise<void> {
-        await this.stack.broadcast(msg)
+    async broadcast(msg: StreamMessage, streamPartDeliveryOptions?: StreamPartDeliveryOptions): Promise<void> {
+        await this.stack.broadcast(msg, streamPartDeliveryOptions)
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
-        await this.stack.joinStreamPart(streamPartId, neighborRequirement)
+    async join(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        streamPartDeliveryOptions?: StreamPartDeliveryOptions
+    ): Promise<void> {
+        await this.stack.joinStreamPart(streamPartId, neighborRequirement, streamPartDeliveryOptions)
     }
 
     async setProxies(

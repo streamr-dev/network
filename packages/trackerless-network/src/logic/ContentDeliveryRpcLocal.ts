@@ -34,16 +34,15 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
         const previousNode = (context as DhtCallContext).incomingSourceDescriptor!
         const previousNodeId = toNodeId(previousNode)
         this.options.markForInspection(previousNodeId, message.messageId!)
-        if (!this.options.plumTreeManager) {
+        if (this.options.plumTreeManager === undefined) {
             if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
                 this.options.broadcast(message, previousNodeId)
             }
+        } else if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+            this.options.plumTreeManager.broadcast(message, previousNodeId)
+            this.options.plumTreeManager.resumeNeighbor(previousNode)
         } else {
-            if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
-                this.options.plumTreeManager!.broadcast(message, previousNodeId)
-            } else {
-                this.options.plumTreeManager!.pauseNeighbor(previousNode)
-            }
+            this.options.plumTreeManager.pauseNeighbor(previousNode)
         }
         return Empty
     }

@@ -115,7 +115,8 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.emit('entryPointLeaveDetected')
                 }
             },
-            markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.options.inspector.markMessage(remoteNodeId, messageId)
+            markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.options.inspector.markMessage(remoteNodeId, messageId),
+            plumTreeManager: this.options.plumTreeManager
         })
     }
 
@@ -193,6 +194,14 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.options.proxyConnectionRpcLocal,
                 'newConnection',
                 (id: DhtAddress) => this.options.propagation.onNeighborJoined(id),
+                this.abortController.signal
+            )
+        }
+        if (this.options.plumTreeManager) {
+            addManagedEventListener(
+                this.options.plumTreeManager,
+                'message',
+                (msg: StreamMessage) => this.emit('message', msg),
                 this.abortController.signal
             )
         }
@@ -351,6 +360,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         })
         this.options.rpcCommunicator.destroy()
         this.removeAllListeners()
+        this.options.plumTreeManager?.stop()
         this.options.nearbyNodeView.stop()
         this.options.neighbors.stop()
         this.options.randomNodeView.stop()

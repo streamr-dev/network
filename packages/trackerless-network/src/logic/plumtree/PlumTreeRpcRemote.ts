@@ -1,6 +1,6 @@
-import { DhtAddress, RpcRemote } from "@streamr/dht"
-import { MessageID } from "../../../generated/packages/trackerless-network/protos/NetworkRpc"
-import { PlumTreeRpcClient } from "../../../generated/packages/trackerless-network/protos/NetworkRpc.client"
+import { RpcRemote } from '@streamr/dht'
+import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 export class PlumTreeRpcRemote extends RpcRemote<PlumTreeRpcClient> {
 
@@ -11,14 +11,14 @@ export class PlumTreeRpcRemote extends RpcRemote<PlumTreeRpcClient> {
         await this.getClient().sendMetadata(msg, options)
     }
 
-    async pauseNeighbor(nodeId: DhtAddress): Promise<void> {
+    async pauseNeighbor(): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true
         })
         await this.getClient().pauseNeighbor({}, options)
     }
 
-    async resumeNeighbor(nodeId: DhtAddress): Promise<void> {
+    async resumeNeighbor(): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true
         })

@@ -1,10 +1,16 @@
-import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from "@streamr/dht";
-import { MessageID, StreamMessage } from "../../../generated/packages/trackerless-network/protos/NetworkRpc";
-import { NodeList } from "../NodeList";
-import { ContentDeliveryRpcRemote } from "../ContentDeliveryRpcRemote";
-import { PlumTreeRpcLocal } from "./PlumTreeRpcLocal";
-import { PlumTreeRpcRemote } from "./PlumTreeRpcRemote";
-import { PlumTreeRpcClient } from "../../../generated/packages/trackerless-network/protos/NetworkRpc.client";
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
+import { 
+    MessageID,
+    PauseNeighborRequest,
+    ResumeNeighborRequest,
+    StreamMessage
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NodeList } from '../NodeList'
+import { PlumTreeRpcLocal } from './PlumTreeRpcLocal'
+import { PlumTreeRpcRemote } from './PlumTreeRpcRemote'
+import { PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import EventEmitter from 'eventemitter3'
+import { Logger } from '@streamr/utils'
 
 interface Options {
     neighbors: NodeList
@@ -12,50 +18,86 @@ interface Options {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class PlumTreeManager {
+const logger = new Logger(module)
+
+interface Events {
+    message: (msg: StreamMessage, previousNode: DhtAddress) => void
+}
+
+export class PlumTreeManager extends EventEmitter<Events> {
     private neighbors: NodeList
-    private pausedNeighbors: Set<DhtAddress>
     private localPeerDescriptor: PeerDescriptor
+    private localPausedNeighbors: Set<DhtAddress>
+    private remotePausedNeighbors: Set<DhtAddress> = new Set()
     private rpcLocal: PlumTreeRpcLocal
     private lastMessages: StreamMessage[] = []
     private rpcCommunicator: ListeningRpcCommunicator
 
     constructor(options: Options) {
+        super()
         this.neighbors = options.neighbors
-        this.pausedNeighbors = new Set()
+        this.localPausedNeighbors = new Set()
         this.localPeerDescriptor = options.localPeerDescriptor
-        this.rpcLocal = new PlumTreeRpcLocal(this.pausedNeighbors, () => {})
-        this.rpcCommunicator = options.rpcCommunicator
+        this.rpcLocal = new PlumTreeRpcLocal(
+            this.localPausedNeighbors,
+            (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
+            () => this.sendBuffer()
+        )
         this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
+        this.rpcCommunicator = options.rpcCommunicator
+        this.rpcCommunicator.registerRpcNotification(MessageID, 'sendMetadata', (msg: MessageID, context) => this.rpcLocal.sendMetadata(msg, context))
+        this.rpcCommunicator.registerRpcNotification(
+            PauseNeighborRequest,
+            'pauseNeighbor',
+            (msg: PauseNeighborRequest, context) => this.rpcLocal.pauseNeighbor(msg, context))
+        this.rpcCommunicator.registerRpcNotification(
+            ResumeNeighborRequest,
+            'resumeNeighbor', (msg: ResumeNeighborRequest, context) => this.rpcLocal.resumeNeighbor(msg, context))
     }
 
     onNeighborRemoved(nodeId: DhtAddress): void {
-        this.pausedNeighbors.delete(nodeId)
+        this.localPausedNeighbors.delete(nodeId)
+        this.remotePausedNeighbors.delete(nodeId)
     }
 
     async pauseNeighbor(node: PeerDescriptor): Promise<void> {
+        logger.debug(`Pausing neighbor ${toNodeId(node)}`)
+        this.remotePausedNeighbors.add(toNodeId(node))
         const remote = this.createRemote(node)
-        await remote.pauseNeighbor(toNodeId(node))
+        await remote.pauseNeighbor()
     }
 
     async resumeNeighbor(node: PeerDescriptor): Promise<void> {
-        const remote = this.createRemote(node)
-        await remote.resumeNeighbor(toNodeId(node))
+        if (this.remotePausedNeighbors.has(toNodeId(node))) {
+            logger.debug(`Resuming neighbor ${toNodeId(node)}`)
+            this.remotePausedNeighbors.delete(toNodeId(node))
+            this.localPausedNeighbors.delete(toNodeId(node))
+            const remote = this.createRemote(node)
+            await remote.resumeNeighbor()
+        }
+    }
+
+    sendBuffer(): void {
+        for (const msg of this.lastMessages) {
+            this.broadcast(msg, toNodeId(this.localPeerDescriptor))
+        }
     }
 
     getNumberOfPausedNeighbors(): number {
-        return this.pausedNeighbors.size
+        return this.localPausedNeighbors.size
     }
 
-    onMetadata(msg: MessageID, previousNode: PeerDescriptor): void {
+    async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // Check that the message is found in the last 20 messages
         // If not resume the sending neighbor 
+        if (this.lastMessages.find((m) => m.messageId!.timestamp < msg.timestamp)) {
+            await this.resumeNeighbor(previousNode)
+        }
     }
 
     createRemote(neighbor: PeerDescriptor): PlumTreeRpcRemote {
-        return new PlumTreeRpcRemote(neighbor, this.localPeerDescriptor, this.rpcCommunicator, PlumTreeRpcClient)
+        return new PlumTreeRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, PlumTreeRpcClient)
     }
-
 
     broadcast(msg: StreamMessage, previousNode: DhtAddress): void {
         if (this.lastMessages.length < 20) {
@@ -64,13 +106,14 @@ export class PlumTreeManager {
             this.lastMessages.shift()
             this.lastMessages.push(msg)
         }
+        this.emit('message', msg, previousNode)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
         for (const neighbor of neighbors) {
-            if (this.pausedNeighbors.has(toNodeId(neighbor.getPeerDescriptor()))) {
+            if (this.localPausedNeighbors.has(toNodeId(neighbor.getPeerDescriptor()))) {
                 const remote = this.createRemote(neighbor.getPeerDescriptor())
-                remote.sendMetadata(msg.messageId!)
+                setImmediate(() => remote.sendMetadata(msg.messageId!))
             } else {
-                neighbor.sendStreamMessage(msg)
+                setImmediate(() => neighbor.sendStreamMessage(msg))
             }
         }
     }
