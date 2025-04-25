@@ -85,4 +85,57 @@ describe('Propagation', () => {
         }
 
     }, 3 * 60000)
+
+    it('Works after new nodes join', async () => {
+        await until(
+            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 30000 * 4
+        )
+        await until(() => {
+            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
+                return acc + curr.getNeighbors().length
+            }, 0) / contentDeliveryLayerNodes.length
+            return avg >= 4
+        }, 20000)
+
+        for (let i = 1; i < 25; i++) {
+            const msg = createStreamMessage(
+                JSON.stringify({ hello: 'WORLD' }),
+                STREAM_PART_ID,
+                randomUserId()
+            )
+            contentDeliveryLayerNodes[0].broadcast(msg)
+            await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
+        }
+
+        const numberOfNewNodes = 32
+
+        await Promise.all(range(numberOfNewNodes).map(async (_i) => {
+            const descriptor = createMockPeerDescriptor()
+            const [layer1, contentDeliveryLayerNode] = await createMockContentDeliveryLayerNodeAndDhtNode(
+                descriptor,
+                entryPointDescriptor,
+                STREAM_PART_ID,
+                simulator,
+                true
+            )
+            await layer1.start()
+            await contentDeliveryLayerNode.start()
+            await layer1.joinDht([entryPointDescriptor]).then(() => {
+                contentDeliveryLayerNode.on('message', () => { 
+                    totalReceived += 1
+                })
+                discoveryLayerNodes.push(layer1)
+                contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
+            })
+        }))
+        for (let i = 1; i < 25; i++) {
+            const msg = createStreamMessage(
+                JSON.stringify({ hello: 'WORLD' }),
+                STREAM_PART_ID,
+                randomUserId()
+            )
+            contentDeliveryLayerNodes[0].broadcast(msg)
+            await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)
+        }
+    })
 })
