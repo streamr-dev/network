@@ -67,7 +67,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         await remote.pauseNeighbor()
     }
 
-    async resumeNeighbor(node: PeerDescriptor, fromTimestamp = 0): Promise<void> {
+    async resumeNeighbor(node: PeerDescriptor, fromTimestamp: number): Promise<void> {
         if (this.remotePausedNeighbors.has(toNodeId(node))) {
             logger.debug(`Resuming neighbor ${toNodeId(node)}`)
             this.remotePausedNeighbors.delete(toNodeId(node))
@@ -75,6 +75,13 @@ export class PlumTreeManager extends EventEmitter<Events> {
             const remote = this.createRemote(node)
             await remote.resumeNeighbor(fromTimestamp)
         }
+    }
+
+    getLatestMessageTimestamp(): number {
+        if (this.lastMessages.length === 0) {
+            return 0
+        }
+        return this.lastMessages[this.lastMessages.length - 1]!.messageId!.timestamp
     }
 
     sendBuffer(fromTimestamp: number): void {
@@ -85,15 +92,11 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
-    getNumberOfPausedNeighbors(): number {
-        return this.localPausedNeighbors.size
-    }
-
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // Check that the message is found in the last 20 messages
         // If not resume the sending neighbor 
         if (this.lastMessages.find((m) => m.messageId!.timestamp < msg.timestamp)) {
-            await this.resumeNeighbor(previousNode, this.lastMessages[0]?.messageId!.timestamp)
+            await this.resumeNeighbor(previousNode, this.getLatestMessageTimestamp())
         }
     }
 
