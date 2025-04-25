@@ -8,9 +8,10 @@ import {
 import { NodeList } from '../NodeList'
 import { PlumTreeRpcLocal } from './PlumTreeRpcLocal'
 import { PlumTreeRpcRemote } from './PlumTreeRpcRemote'
-import { PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient, PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 
 interface Options {
     neighbors: NodeList
@@ -41,7 +42,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         this.rpcLocal = new PlumTreeRpcLocal(
             this.localPausedNeighbors,
             (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
-            (fromTimestamp: number) => this.sendBuffer(fromTimestamp)
+            (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => this.sendBuffer(fromTimestamp, remotePeerDescriptor)
         )
         this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
         this.rpcCommunicator = options.rpcCommunicator
@@ -84,10 +85,11 @@ export class PlumTreeManager extends EventEmitter<Events> {
         return this.lastMessages[this.lastMessages.length - 1].messageId!.timestamp
     }
 
-    sendBuffer(fromTimestamp: number): void {
+    sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): void {
+        const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
         for (const msg of this.lastMessages) {
             if (msg.messageId!.timestamp >= fromTimestamp) {
-                this.broadcast(msg, toNodeId(this.localPeerDescriptor))
+                remote!.sendStreamMessage(msg)
             }
         }
     }

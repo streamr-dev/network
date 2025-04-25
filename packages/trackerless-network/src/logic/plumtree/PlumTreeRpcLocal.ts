@@ -9,12 +9,12 @@ export class PlumTreeRpcLocal implements IPlumTreeRpc {
 
     private readonly pausedNodes: Set<DhtAddress>
     private readonly onMetadataCb: OnMetadataCb
-    private readonly sendBuffer: (fromTimestamp: number) => void
+    private readonly sendBuffer: (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => void
 
     constructor(
         pausedNodes: Set<DhtAddress>,
         onMetaDataCb: OnMetadataCb,
-        sendBuffer: (fromTimestamp: number) => void,
+        sendBuffer: (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => void,
     ) {
         this.pausedNodes = pausedNodes
         this.onMetadataCb = onMetaDataCb
@@ -34,9 +34,9 @@ export class PlumTreeRpcLocal implements IPlumTreeRpc {
     }
 
     async resumeNeighbor(request: ResumeNeighborRequest, context: ServerCallContext): Promise<Empty> {
-        const sender = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
-        this.pausedNodes.delete(sender)
-        this.sendBuffer(request.fromTimestamp)
+        const sender = (context as DhtCallContext).incomingSourceDescriptor!
+        this.pausedNodes.delete(toNodeId(sender))
+        this.sendBuffer(request.fromTimestamp, sender)
         return Empty
     }
 }
