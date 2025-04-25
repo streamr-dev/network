@@ -127,3 +127,4 @@ export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddr
 export { HexString } from './HexString'
 export { ChangeFieldType, MapKey } from './types'
 export { WeiAmount, multiplyWeiAmount } from './WeiAmount'
+export { getSubtle } from './crossPlatformCrypto'

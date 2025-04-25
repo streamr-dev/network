@@ -66,6 +66,7 @@ enum SignatureType {
   ECDSA_SECP256K1_EVM = 1;
   ERC_1271 = 2;
   ML_DSA_87 = 3;
+  ECDSA_SECP256R1 = 4;
 }
 
 message StreamMessage {
