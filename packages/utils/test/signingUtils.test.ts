@@ -10,20 +10,20 @@ describe('ECDSA_SECP256K1_EVM', () => {
 
     describe('generateKeyPair', () => {
         it('generates keys of correct length', async () => {
-            const keyPair = await ECDSA_SECP256K1_EVM.generateKeyPair()
+            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(20) // Ethereum address
             expect(keyPair.privateKey.length).toBe(32)
         })
 
         it('generates keys that pass verification', async () => {
             const payload = Buffer.from('data-to-sign')
-            const keyPair = await ECDSA_SECP256K1_EVM.generateKeyPair()
+            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
             const signature = await ECDSA_SECP256K1_EVM.createSignature(payload, keyPair.privateKey)
             expect(await ECDSA_SECP256K1_EVM.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
 
         it('generates keys that are deemed valid', async () => {
-            const keyPair = await ECDSA_SECP256K1_EVM.generateKeyPair()
+            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
             ECDSA_SECP256K1_EVM.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })
@@ -117,20 +117,20 @@ describe('ECDSA_SECP256R1', () => {
 
     describe('generateKeyPair', () => {
         it('generates keys of correct length', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(33) // compressed. uncompressed would be 65 bytes
             expect(keyPair.privateKey.length).toBe(32)
         })
 
         it('generates keys that pass verification', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
             const payload = Buffer.from('data-to-sign')
             const signature = await ECDSA_SECP256R1.createSignature(payload, keyPair.privateKey)
             expect(await ECDSA_SECP256R1.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
 
         it('generates keys that are deemed valid', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
             ECDSA_SECP256R1.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })
@@ -192,20 +192,20 @@ describe('ML_DSA_87', () => {
 
     describe('generateKeyPair', () => {
         it('generates a key pair', async () => {
-            const keyPair = await ML_DSA_87.generateKeyPair()
+            const keyPair = ML_DSA_87.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(2592)
             expect(keyPair.privateKey.length).toBe(4896)
         })
 
         it('generates keys that pass verification', async () => {
-            const keyPair = await ML_DSA_87.generateKeyPair()
+            const keyPair = ML_DSA_87.generateKeyPair()
             const payload = Buffer.from('data-to-sign')
             const signature = await ML_DSA_87.createSignature(payload, keyPair.privateKey)
             expect(await ML_DSA_87.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
     
         it('generates keys that are deemed valid', async () => {
-            const keyPair = await ML_DSA_87.generateKeyPair()
+            const keyPair = ML_DSA_87.generateKeyPair()
             ML_DSA_87.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })

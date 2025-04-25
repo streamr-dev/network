@@ -39,8 +39,8 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
         return new ECDSAKeyPairIdentity(hexToBinary(keyPairConfig.publicKey), hexToBinary(keyPairConfig.privateKey))
     }
 
-    static async generate(): Promise<ECDSAKeyPairIdentity> {
-        const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+    static generate(): ECDSAKeyPairIdentity {
+        const keyPair = ECDSA_SECP256R1.generateKeyPair()
         return new ECDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 

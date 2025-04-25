@@ -19,7 +19,7 @@ import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
 export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ECDSA_SECP256R1', 'ML_DSA_87'] as const
 export const identityConfig: Record<KeyType, {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
-    generate: () => Promise<Identity>
+    generate: () => Identity
     signingUtil: SigningUtil
     signatureType: SignatureType
 }> = {

@@ -5,9 +5,9 @@ describe('ECDSAKeyPairIdentity', () => {
 
     describe('fromConfig', () => {
         it('can be created without 0x prefix on public and private key', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
         
-            await ECDSAKeyPairIdentity.fromConfig({
+            ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey),
                     privateKey: binaryToHex(keyPair.privateKey),
@@ -15,9 +15,9 @@ describe('ECDSAKeyPairIdentity', () => {
             })
         })
         it('can be created with 0x prefix on public and private key', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
         
-            await ECDSAKeyPairIdentity.fromConfig({
+            ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey, true),
                     privateKey: binaryToHex(keyPair.privateKey, true),
@@ -25,14 +25,14 @@ describe('ECDSAKeyPairIdentity', () => {
             })
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
-            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = ECDSA_SECP256R1.generateKeyPair()
 
-            await ECDSAKeyPairIdentity.fromConfig({
+            expect(() => ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey).replace('b', 'd'),
                     privateKey: binaryToHex(keyPair.privateKey),
                 }
-            })
+            })).toThrow()
         })
     })
 
@@ -40,7 +40,7 @@ describe('ECDSAKeyPairIdentity', () => {
 
         it('creates correct signatures', async () => {
             const payload = Buffer.from('data-to-sign')
-            const identity = await ECDSAKeyPairIdentity.generate()
+            const identity = ECDSAKeyPairIdentity.generate()
             const signature = await identity.createMessageSignature(payload)
             expect(await ECDSA_SECP256R1.verifySignature(await identity.getUserIdBytes(), payload, signature)).toBe(true)
         })

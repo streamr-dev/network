@@ -29,8 +29,8 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
         return new MLDSAKeyPairIdentity(hexToBinary(keyPairConfig.publicKey), hexToBinary(keyPairConfig.privateKey))
     }
 
-    static async generate(): Promise<MLDSAKeyPairIdentity> {
-        const keyPair = await ML_DSA_87.generateKeyPair()
+    static generate(): MLDSAKeyPairIdentity {
+        const keyPair = ML_DSA_87.generateKeyPair()
         return new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 

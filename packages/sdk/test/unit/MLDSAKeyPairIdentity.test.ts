@@ -44,7 +44,7 @@ describe('MLDSAKeyPairIdentity', () => {
 
             const identity = new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
             const signature = await identity.createMessageSignature(payload)
-            expect(ML_DSA_87.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
+            expect(await ML_DSA_87.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
         })
     })
 })

@@ -53,7 +53,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         )
     }
 
-    static async generate(): Promise<EthereumKeyPairIdentity> {
+    static generate(): EthereumKeyPairIdentity {
         const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
         return new EthereumKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }

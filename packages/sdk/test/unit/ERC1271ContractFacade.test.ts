@@ -22,7 +22,7 @@ describe('ERC1271ContractFacade', () => {
     let signature: Uint8Array
 
     beforeAll(async () => {
-        signature = ECDSA_SECP256K1_EVM.createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
+        signature = await ECDSA_SECP256K1_EVM.createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
     })
 
     beforeEach(() => {
