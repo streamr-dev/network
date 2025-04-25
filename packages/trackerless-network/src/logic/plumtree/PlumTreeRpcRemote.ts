@@ -18,11 +18,11 @@ export class PlumTreeRpcRemote extends RpcRemote<PlumTreeRpcClient> {
         await this.getClient().pauseNeighbor({}, options)
     }
 
-    async resumeNeighbor(): Promise<void> {
+    async resumeNeighbor(fromTimestamp: number): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        await this.getClient().resumeNeighbor({}, options)
+        await this.getClient().resumeNeighbor({ fromTimestamp }, options)
     }
 
 }

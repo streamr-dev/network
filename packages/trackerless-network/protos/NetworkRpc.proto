@@ -202,4 +202,5 @@ message PauseNeighborRequest {
 }
 
 message ResumeNeighborRequest {
+  int64 fromTimestamp = 1;
 }

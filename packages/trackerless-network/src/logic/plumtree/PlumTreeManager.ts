@@ -41,7 +41,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         this.rpcLocal = new PlumTreeRpcLocal(
             this.localPausedNeighbors,
             (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
-            () => this.sendBuffer()
+            (fromTimestamp: number) => this.sendBuffer(fromTimestamp)
         )
         this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
         this.rpcCommunicator = options.rpcCommunicator
@@ -67,19 +67,21 @@ export class PlumTreeManager extends EventEmitter<Events> {
         await remote.pauseNeighbor()
     }
 
-    async resumeNeighbor(node: PeerDescriptor): Promise<void> {
+    async resumeNeighbor(node: PeerDescriptor, fromTimestamp = 0): Promise<void> {
         if (this.remotePausedNeighbors.has(toNodeId(node))) {
             logger.debug(`Resuming neighbor ${toNodeId(node)}`)
             this.remotePausedNeighbors.delete(toNodeId(node))
             this.localPausedNeighbors.delete(toNodeId(node))
             const remote = this.createRemote(node)
-            await remote.resumeNeighbor()
+            await remote.resumeNeighbor(fromTimestamp)
         }
     }
 
-    sendBuffer(): void {
+    sendBuffer(fromTimestamp: number): void {
         for (const msg of this.lastMessages) {
-            this.broadcast(msg, toNodeId(this.localPeerDescriptor))
+            if (msg.messageId!.timestamp >= fromTimestamp) {
+                this.broadcast(msg, toNodeId(this.localPeerDescriptor))
+            }
         }
     }
 
@@ -91,7 +93,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         // Check that the message is found in the last 20 messages
         // If not resume the sending neighbor 
         if (this.lastMessages.find((m) => m.messageId!.timestamp < msg.timestamp)) {
-            await this.resumeNeighbor(previousNode)
+            await this.resumeNeighbor(previousNode, this.lastMessages[0]?.messageId!.timestamp)
         }
     }
 
