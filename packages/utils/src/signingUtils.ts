@@ -2,10 +2,12 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
-import { areEqualBinaries } from './binaryUtils'
-import { UserIDRaw } from './UserID'
 import { randomBytes } from '@noble/post-quantum/utils'
+import { p256 } from '@noble/curves/p256'
+import { areEqualBinaries, binaryToHex, hexToBinary } from './binaryUtils'
+import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
+import { JsonWebKey, webcrypto } from 'crypto'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -21,13 +23,19 @@ export interface SigningUtil {
     generateKeyPair: () => Promise<KeyPair>
     createSignature: (payload: Uint8Array, privateKey: Uint8Array) => Promise<Uint8Array>
     verifySignature: (publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array) => Promise<boolean>
-    [key: string]: any // Allow additional properties
+    // Needs to be sync because often validated in constructors
+    assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
 }
 
 /**
  * EVM compatible ECDSA signing scheme using keccak hash, magic bytes, and secp256k1 curve.
  */
-export const ECDSA_SECP256K1_EVM: SigningUtil = {
+export const ECDSA_SECP256K1_EVM: SigningUtil & {
+    keccakHash(message: Uint8Array, useEthereumMagic?: boolean): Buffer
+    recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array
+    publicKeyToAddress(publicKey: Uint8Array): Uint8Array
+    recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw
+} = {
 
     async generateKeyPair(): Promise<KeyPair> {
         const privateKey = randomBytes(32)
@@ -66,6 +74,9 @@ export const ECDSA_SECP256K1_EVM: SigningUtil = {
     },
 
     publicKeyToAddress(publicKey: Uint8Array): Uint8Array {
+        if (publicKey.length !== 65) {
+            throw new Error(`Expected 65 bytes (an ECDSA uncompressed public key with header byte). Got length: ${publicKey.length}`)
+        }
         const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
         keccak.reset()
         keccak.update(Buffer.from(pubKeyWithoutFirstByte))
@@ -85,38 +96,56 @@ export const ECDSA_SECP256K1_EVM: SigningUtil = {
         } catch {
             return false
         }
+    },
+
+    assertValidKeyPair(address: UserIDRaw, privateKey: Uint8Array): void {
+        const computedPublicKey = secp256k1.publicKeyCreate(privateKey, false)
+        const computedAddress = ECDSA_SECP256K1_EVM.publicKeyToAddress(computedPublicKey)
+        if (!areEqualBinaries(address, computedAddress)) {
+            throw new Error(`Given private key is for a different address! Given: ${binaryToHex(address)}, Computed: ${binaryToHex(computedAddress)}`)
+        }
     }
 } as const
 
 /**
  * Signing scheme using ECDSA with secp256r1 curve and SHA-256, natively supported by browsers
  */
-export const ECDSA_SECP256R1: SigningUtil = {
+export const ECDSA_SECP256R1: SigningUtil & {
+    privateKeyToJwt(privateKey: Uint8Array): JsonWebKey
+} = {
     async generateKeyPair(): Promise<KeyPair> {
-        const keyPair = await subtleCrypto.generateKey(
-            {
-                name: 'ECDSA',
-                namedCurve: 'P-256'
-            },
-            true, // extractable
-            ['sign'] // key usages - cannot be empty
-        )
-
-        const publicKey = new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey))
-
-        // For some stupid reason, importing/exporting the private key as 'raw' is not possible
-        const privateKeyPkcs8 = await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)
+        const privateKey = randomBytes(32)
+        const publicKey = p256.getPublicKey(privateKey, false)
 
         return {
             publicKey,
-            privateKey: new Uint8Array(privateKeyPkcs8),
+            privateKey,
         }
     },
 
-    async createSignature(payload: Uint8Array, privateKeyPkcs8: Uint8Array): Promise<Uint8Array> {
+    privateKeyToJwt(privateKey: Uint8Array): JsonWebKey {
+        // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
+        const publicKey = p256.getPublicKey(privateKey, false)
+        const x = publicKey.subarray(1, 33)
+        const xEncoded = Buffer.from(x).toString('base64url')
+        const y = publicKey.subarray(33)
+        const yEncoded = Buffer.from(y).toString('base64url')
+
+        return {
+            key_ops: [ 'sign' ],
+            ext: true,
+            kty: 'EC',
+            x: xEncoded,
+            y: yEncoded,
+            crv: 'P-256',
+            d: Buffer.from(privateKey).toString('base64url')
+        }
+    },
+
+    async createSignature(payload: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array> {
         const key = await subtleCrypto.importKey(
-            'pkcs8',
-            privateKeyPkcs8,
+            'jwk',
+            ECDSA_SECP256R1.privateKeyToJwt(privateKey),
             {
                 name: 'ECDSA',
                 namedCurve: 'P-256'
@@ -160,6 +189,18 @@ export const ECDSA_SECP256R1: SigningUtil = {
         )
 
         return isValid
+    },
+
+    assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void {
+        if (privateKey.length !== 32) {
+            throw new Error(`Expected a raw private key of 32 bytes. Maybe your key is in some encapsulating format?`)
+        }
+        const computedPublicKey = p256.getPublicKey(privateKey, false)
+        if (binaryToHex(computedPublicKey) !== binaryToHex(publicKey)) {
+            throw new Error(
+                `Given private key is for a different public key! Given: ${binaryToHex(publicKey)}, Computed: ${binaryToHex(computedPublicKey)}`
+            )
+        }
     }
 } as const
 
@@ -182,5 +223,15 @@ export const ML_DSA_87: SigningUtil = {
 
     async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         return ml_dsa87.verify(publicKey, payload, signature)
+    },
+
+    assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void {
+        // Validity of key pair is tested by signing and validating something
+        const payload = Buffer.from('data-to-sign')
+        const signature = ml_dsa87.sign(privateKey, payload)
+        if (!ml_dsa87.verify(publicKey, payload, signature)) {
+            throw new Error(`The given ML-DSA public key and private key don't seem to match!`)
+        }
     }
+
 } as const

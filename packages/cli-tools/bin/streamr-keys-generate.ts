@@ -16,7 +16,7 @@ createCommand()
             if (!config) {
                 console.error(`Error: Invalid key type. Must be one of: ${validKeyTypeValues.join(', ')}.`)
             }
-            const identity = config.generate() as KeyPairIdentity
+            const identity = await config.generate() as KeyPairIdentity
             console.info(`Public key: ${await identity.getUserIdString()}`)
             console.info(`---`)
             console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}`)

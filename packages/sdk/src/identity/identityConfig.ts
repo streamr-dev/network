@@ -18,7 +18,7 @@ import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
  */
 export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ECDSA_SECP256R1', 'ML_DSA_87'] as const
 export const identityConfig: Record<KeyType, {
-    fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Promise<Identity>
+    fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Promise<Identity>
     signingUtil: SigningUtil
     signatureType: SignatureType
@@ -56,45 +56,29 @@ validKeyTypeValues.forEach((keyType) => {
 /**
  * Creates an Identity instance based on what's in the StreamrClient config
  */
-export function createIdentityFromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): { 
-    signatureType: SignatureType
-    identityPromise: Promise<Identity>
-} {
+export function createIdentityFromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Identity {
     // Key pair -based identities
     if ((config.auth as KeyPairIdentityConfig)?.privateKey !== undefined) {
         // Default key type is secp256k1 private key (="Ethereum private key")
         const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? DEFAULT_KEY_TYPE
 
         if (identityConfig[keyType]) {
-            return {
-                signatureType: identityConfig[keyType].signatureType,
-                identityPromise: identityConfig[keyType].fromConfig(config)
-            }
+            return identityConfig[keyType].fromConfig(config)
         } else {
             throw new Error(`Unsupported keyType given in config: ${keyType}`)
         }
     } 
     
     // If a custom identity implementation is given, simply use that
-    const identityImpl = (config.auth as CustomIdentityConfig)?.identity
-    if (identityImpl !== undefined) {
-        return {
-            signatureType: identityImpl.getSignatureType(),
-            identityPromise: Promise.resolve((config.auth as CustomIdentityConfig)?.identity)
-        }
+    if ((config.auth as CustomIdentityConfig)?.identity !== undefined) {
+        return (config.auth as CustomIdentityConfig)?.identity
     }
 
     // Ethereum provider
     if ((config.auth as EthereumProviderIdentityConfig)?.ethereum !== undefined) {
-        return {
-            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
-            identityPromise: EthereumProviderIdentity.fromConfig(config),
-        }
+        return EthereumProviderIdentity.fromConfig(config)
     }
 
     // If no identity is configured, generate a random EthereumKeyPairIdentity
-    return {
-        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
-        identityPromise: EthereumKeyPairIdentity.generate()
-    }
+    return EthereumKeyPairIdentity.generateSync()
 }

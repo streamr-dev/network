@@ -13,28 +13,10 @@ export abstract class KeyPairIdentity extends Identity {
         this.publicKey = publicKey
         this.privateKey = privateKey
         this.publicKeyString = toUserId(this.publicKey)
-
-        if (this.publicKey.length !== this.getExpectedPublicKeyLength()) {
-            throw new Error(`Unexpected publicKey length! Expected ${
-                this.getExpectedPublicKeyLength()
-            } bytes, got ${
-                this.publicKey.length
-            } bytes.`)
-        }
-
-        if (this.privateKey.length !== this.getExpectedPrivateKeyLength()) {
-            throw new Error(`Unexpected privateKey length! Expected ${
-                this.getExpectedPrivateKeyLength()
-            } bytes, got ${
-                this.privateKey.length
-            } bytes.`)
-        }
+        this.assertValidKeyPair()
     }
 
-    /**
-     * Should throw if the publicKey and privateKey don't match each other
-     */
-    abstract assertKeyPairIsValid(): Promise<void>
+    abstract assertValidKeyPair(): void
 
     async getUserIdBytes(): Promise<UserIDRaw> { 
         return this.publicKey
@@ -47,9 +29,6 @@ export abstract class KeyPairIdentity extends Identity {
     async getPrivateKey(): Promise<Uint8Array> {
         return this.privateKey
     }
-
-    abstract getExpectedPublicKeyLength(): number
-    abstract getExpectedPrivateKeyLength(): number
 
     // eslint-disable-next-line class-methods-use-this
     async getTransactionSigner(_rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {

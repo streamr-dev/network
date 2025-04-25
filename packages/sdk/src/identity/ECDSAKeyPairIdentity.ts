@@ -7,14 +7,9 @@ import { StrictStreamrClientConfig } from '../Config'
  * An identity that uses ECDSA on the SECP256R1 curve
  */
 export class ECDSAKeyPairIdentity extends KeyPairIdentity {
-    async assertKeyPairIsValid(): Promise<void> {
-        // Validity of key pair is tested by signing and validating something
-        const payload = Buffer.from('data-to-sign')
-        const signature = await ECDSA_SECP256R1.createSignature(payload, this.privateKey)
-        const isValid = await ECDSA_SECP256R1.verifySignature(this.publicKey, payload, signature)
-        if (!isValid) {
-            throw new Error(`The given publicKey and privateKey don't seem to match!`)
-        }
+
+    assertValidKeyPair(): void {
+        ECDSA_SECP256R1.assertValidKeyPair(this.publicKey, this.privateKey)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -36,7 +31,7 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
         return ECDSA_SECP256R1.createSignature(payload, this.privateKey)
     }
 
-    static async fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): Promise<ECDSAKeyPairIdentity> {
+    static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): ECDSAKeyPairIdentity {
         const keyPairConfig = KeyPairIdentity.getKeyPairFromConfig(config)
         if (!keyPairConfig.publicKey) {
             throw new Error(`ECDSA_SECP256R1 identity requires a publicKey to be given in the config!`)

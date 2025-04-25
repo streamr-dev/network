@@ -494,7 +494,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 logger.debug(`Using region ${region} from CDN when generating local PeerDescriptor`)
             }
             
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.options.nodeId)
+            this.localPeerDescriptor = await createPeerDescriptor(connectivityResponse, region, this.options.nodeId)
         }
         return this.localPeerDescriptor
     }

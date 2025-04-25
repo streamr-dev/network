@@ -5,6 +5,7 @@ import { toUserId, toUserIdRaw } from '../src/UserID'
 
 describe('ECDSA_SECP256K1_EVM', () => {
 
+    const address = hexToBinary('0xa5374e3c19f15e1847881979dd0c6c9ffe846bd5')
     const privateKey = hexToBinary('23bead9b499af21c4c16e4511b3b6b08c3e22e76e0591f5ab5ba8d4c3a5b1820')
 
     describe('generateKeyPair', () => {
@@ -19,6 +20,17 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const keyPair = await ECDSA_SECP256K1_EVM.generateKeyPair()
             const signature = await ECDSA_SECP256K1_EVM.createSignature(payload, keyPair.privateKey)
             expect(await ECDSA_SECP256K1_EVM.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
+        })
+
+        it('generates keys that are deemed valid', async () => {
+            const keyPair = await ECDSA_SECP256K1_EVM.generateKeyPair()
+            ECDSA_SECP256K1_EVM.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+        })
+    })
+
+    describe('assertValidKeyPair', () => {
+        it('passes on known valid pair', () => {
+            ECDSA_SECP256K1_EVM.assertValidKeyPair(address, privateKey)
         })
     })
 
@@ -94,30 +106,15 @@ describe('ECDSA_SECP256R1', () => {
 
     const payload = Buffer.from('data-to-sign')
 
-    /*
-    // Examples of keys in currently unsupported formats (compressed public key, raw private key)
-
-    // From https://kjur.github.io/jsrsasign/sample/sample-ecdsa.html
-    // Raw public key, 32 bytes
-    const publicKey1Compressed = hexToBinary('564f69bf972f938b1751dd0b67406d3beaa1742e64a0db105d050cbaa9dd6477')
-    // Raw private key
-    const privateKey1Raw = hexToBinary('04c3707e9d837a8a791f937e7a61f12b241f5e428abbb877eaeabdaa548c3780bcad0bc80d39314999a51a71059479498140a675a36dc912f0d1eae5516ab662a4')
-    // DER encoded?
-    const correctSignature1 = '304402205667f27b3fe360f05f9b3911c6e0337eab1010d48ce249f36c222740114e21f4022010224ac2b921e253aaeea74fb52f16aa0ff444cb6136de4add370c1396d3971a'
-    */
-
-    // Uncompressed public key, 65 bytes (1 header byte + 64 bytes)
-    const publicKey2Uncompressed = hexToBinary('04e2c79cd7a4208fde1cd6a6d67135fbfbca9a4d3a2393c93514e3107909229e408d9de757599d84292c1b2b932a1575e1f9f10e45f52d6471954204cd003a5723')
-    // pkcs8 private key
-    const privateKey2Pkcs8 = hexToBinary('308187020100301306072a8648ce3d020106082a8648ce3d030107046d306b02010104207ccd4cdacada1e933403c06ae33775a05a043b3881aac114b80bdb53668a8ac8a14403420004e2c79cd7a4208fde1cd6a6d67135fbfbca9a4d3a2393c93514e3107909229e408d9de757599d84292c1b2b932a1575e1f9f10e45f52d6471954204cd003a5723')
-    // What format? 64 bytes
-    const oneCorrectSignature2 = 'fdf93122d1745f78642dc006b0fe42b43c0e7ac1f2651dceb560f77b86e44213adfe07a5731bb4e2c547e4542a33f6ee103c9e84f6427e219036c4ded447c8a5'
+    const publicKey = hexToBinary('045ef65c29d56b963f3370a53a91b5da39d7e54680dd4d6ad2e00919ab0eba50124789dc8a376f86e8c78a2328d8ebbb126d2c231b73acc8d8378fca3f33e5ebf2')
+    const privateKey = hexToBinary('1fbe61f8b0eb5bfe2e8a37df84b3483a17aff8ad8e6a94f9add12824a9398cd6')
+    const oneCorrectSignature = 'dce7da4ef2b8fa6aa4cd001c70e5d6b901e2c2461ff8cd71d34983fdf73bad76d2d9238b3afc1bc7b977fa6e306ddc3a8e582c981ad5951380d0e6570d76d283'
 
     describe('generateKeyPair', () => {
         it('generates keys of correct length', async () => {
             const keyPair = await ECDSA_SECP256R1.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(65) // raw uncompressed
-            expect(keyPair.privateKey.length).toBe(138) // pkcs8 format
+            expect(keyPair.privateKey.length).toBe(32) // raw
         })
 
         it('generates keys that pass verification', async () => {
@@ -126,31 +123,42 @@ describe('ECDSA_SECP256R1', () => {
             const signature = await ECDSA_SECP256R1.createSignature(payload, keyPair.privateKey)
             expect(await ECDSA_SECP256R1.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
+
+        it('generates keys that are deemed valid', async () => {
+            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
+            ECDSA_SECP256R1.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+        })
+    })
+
+    describe('assertValidKeyPair', () => {
+        it('passes on known valid pair', () => {
+            ECDSA_SECP256R1.assertValidKeyPair(publicKey, privateKey)
+        })
     })
 
     describe('createSignature', () => {
         it('produces correct signature using private key in pkcs8 format', async () => {
             // Signatures on the r1 curve have randomness, so can't compare directly to oneCorrectSignature2
-            const signature = await ECDSA_SECP256R1.createSignature(payload, privateKey2Pkcs8)
-            expect(await ECDSA_SECP256R1.verifySignature(publicKey2Uncompressed, payload, signature)).toBeTrue()
+            const signature = await ECDSA_SECP256R1.createSignature(payload, privateKey)
+            expect(await ECDSA_SECP256R1.verifySignature(publicKey, payload, signature)).toBeTrue()
         })
     })
     
     describe('verifySignature', () => {
         it('returns true on valid signature', async () => {
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey2Uncompressed, payload, hexToBinary(oneCorrectSignature2))
+            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey, payload, hexToBinary(oneCorrectSignature))
             expect(isValid).toBe(true)
         })
     
         it('returns false on invalid signature', async () => {
-            const invalidSignature = oneCorrectSignature2.replace('a', 'b')
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey2Uncompressed, payload, hexToBinary(invalidSignature))
+            const invalidSignature = oneCorrectSignature.replace('a', 'b')
+            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey, payload, hexToBinary(invalidSignature))
             expect(isValid).toBe(false)
         })
     
         it('returns false if the message is tampered', async () => {
             const tamperedPayload = Buffer.from('foo')
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey2Uncompressed, tamperedPayload, hexToBinary(oneCorrectSignature2))
+            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey, tamperedPayload, hexToBinary(oneCorrectSignature))
             expect(isValid).toBe(false)
         })
     })
@@ -170,6 +178,24 @@ describe('ML_DSA_87', () => {
             const keyPair = await ML_DSA_87.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(2592)
             expect(keyPair.privateKey.length).toBe(4896)
+        })
+
+        it('generates keys that pass verification', async () => {
+            const keyPair = await ML_DSA_87.generateKeyPair()
+            const payload = Buffer.from('data-to-sign')
+            const signature = await ML_DSA_87.createSignature(payload, keyPair.privateKey)
+            expect(await ML_DSA_87.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
+        })
+    
+        it('generates keys that are deemed valid', async () => {
+            const keyPair = await ML_DSA_87.generateKeyPair()
+            ML_DSA_87.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+        })
+    })
+
+    describe('assertValidKeyPair', () => {
+        it('passes on known valid pair', () => {
+            ML_DSA_87.assertValidKeyPair(publicKey, privateKey)
         })
     })
 

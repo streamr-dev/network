@@ -63,7 +63,7 @@ export class EthereumProviderIdentity extends Identity {
         return this.signer
     }
 
-    static async fromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Promise<EthereumProviderIdentity> {
+    static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): EthereumProviderIdentity {
         const ethereum = (config.auth as EthereumProviderIdentityConfig)?.ethereum
         const provider = new BrowserProvider(ethereum)
         return new EthereumProviderIdentity(provider, config.contracts.ethereumNetwork.chainId)
