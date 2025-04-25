@@ -1,4 +1,4 @@
-import { Simulator } from '@streamr/dht'
+import { LatencyType, Simulator } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import range from 'lodash/range'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -16,7 +16,7 @@ describe('Propagation', () => {
     let simulator: Simulator
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         totalReceived = 0
         discoveryLayerNodes = []
         contentDeliveryLayerNodes = []
