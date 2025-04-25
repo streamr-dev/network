@@ -10,17 +10,15 @@ The type of cryptographic keys configured on the publisher determine the signatu
 
 ## Supported key types
 
-The Streamr SDK is configured with cryptographic keys which determine the user's identity in the network. The type of keys used also determines the signature algorithm used. The Streamr SDK supports the following key/identity/signature schemes:
-
-- ECDSA with the `secp256k1` curve - commonly referred to in Streamr context as an 'Ethereum' identity, defined by a private key and an 'address' derived from the related public key. This is the default and most commonly used identity type, and the only one capable of signing transactions on EVM blockchains.
-- ML-DSA for quantum resistant signatures. Learn more about [Quantum Security](quantum-security.md).
+The Streamr SDK is configured with cryptographic keys which determine the user's identity in the network. The type of keys used also determines the signature algorithm used. The key/identity/signature schemes supported by Streamr are detailed in this article.
 
 The choice of keys and algorithms depends on the use case and whether the same identities are used outside of Streamr. The following table specifies the functionality available to each key type as well as the `keyType` and `Identity` class name required to use it:
 
-| Key Type               | Identity Implementation  | Pub/Sub | Stream Management | Quantum Resistance |
-|------------------------|--------------------------|---------|-------------------|--------------------|
-| ECDSA_SECP256K1_EVM    | EthereumKeyPairIdentity  | ✅      | ✅                | ❌                 |
-| ML_DSA_87              | MLDSAKeyPairIdentity     | ✅      | ❌                | ✅                 |
+| Key Type                                    | Identity Implementation   | Pub/Sub | Stream Management | Quantum Resistance |
+|---------------------------------------------|---------------------------|---------|-------------------|--------------------|
+| [ECDSA_SECP256K1_EVM](#ecdsa_secp256k1_evm) | EthereumKeyPairIdentity  | ✅      | ✅                | ❌                 |
+| [ECDSA_SECP256R1](#ecdsa_secp256r1)         | ECDSAKeyPairIdentity     | ✅      | ❌                | ❌                 |
+| [ML_DSA_87](#ml_dsa_87)                     | MLDSAKeyPairIdentity     | ✅      | ❌                | ✅                 |
 
 The meaning of the columns above are as follows:
 
@@ -70,6 +68,56 @@ const streamr = new StreamrClient({
 - `Pub/Sub`: the keys can be used to publish and subscribe to data on the Streamr Network, and associated permissions can be assigned to the key.
 - `Stream management`: the keys can be used for smart contract interactions to create streams, set stream permissions, etc.
 - `Quantum resistance`: the identity and signatures from this key type are considered resistant to attacks by quantum computers. Read more about [Quantum security](quantum-security.md).
+
+### ECDSA_SECP256K1_EVM
+
+This identity type produces signatures using ECDSA, the `secp256k1` curve, and the Keccak hash function. With the choice of cryptographic functions matching those used in Ethereum and other EVM chains, Streamr identities of this type are exactly equivalent to Ethereum wallets, defined by a private key and an 'address'.
+
+Thanks to sharing the algorithm with Ethereum and other EVM chains, this is the only identity type capable of signing transactions and interacting with Streamr smart contracts via the SDK.
+
+Expected formats in configuration:
+
+```
+const streamr = new StreamrClient({
+  auth: {
+    publicKey: ...,  // Optional - Ethereum address with or without 0x prefix (20 bytes)
+    privateKey: ..., // Hex-encoded private key with or without 0x prefix (32 bytes)
+    keyType: 'ECDSA_SECP256K1_EVM', // Optional - this is the default
+  },
+})
+```
+
+### ECDSA_SECP256R1
+
+This identity type produces signatures using ECDSA, the `secp256r1` curve, and SHA-256.
+
+Expected formats in configuration:
+
+```
+const streamr = new StreamrClient({
+  auth: {
+    publicKey: ...,  // Hex-encoded public key in compressed (33 bytes) or uncompressed (65 bytes) format, with or without 0x prefix
+    privateKey: ..., // Hex-encoded private key with or without 0x prefix (32 bytes)
+    keyType: 'ECDSA_SECP256R1',
+  },
+})
+```
+
+### ML_DSA_87
+
+This identity type uses ML-DSA-87 to produce quantum resistant signatures. Together with ML-KEM for quantum resistant key exchange, it allows for fully quantum resistant messaging over Streamr. Learn more about [Quantum Security in Streamr](quantum-security.md).
+
+Expected formats in configuration:
+
+```
+const streamr = new StreamrClient({
+  auth: {
+    publicKey: ...,  // Hex-encoded public key, with or without 0x prefix (2592 bytes)
+    privateKey: ..., // Hex-encoded private key, with or without 0x prefix (4896 bytes)
+    keyType: 'ML_DSA_87',
+  },
+})
+```
 
 ## What exactly is signed? 
 
