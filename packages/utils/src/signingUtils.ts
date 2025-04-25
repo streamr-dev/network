@@ -115,7 +115,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
 } = {
     async generateKeyPair(): Promise<KeyPair> {
         const privateKey = randomBytes(32)
-        const publicKey = p256.getPublicKey(privateKey, false)
+        const publicKey = p256.getPublicKey(privateKey, true)
 
         return {
             publicKey,
@@ -195,7 +195,12 @@ export const ECDSA_SECP256R1: SigningUtil & {
         if (privateKey.length !== 32) {
             throw new Error(`Expected a raw private key of 32 bytes. Maybe your key is in some encapsulating format?`)
         }
-        const computedPublicKey = p256.getPublicKey(privateKey, false)
+        if (publicKey.length !== 33 && publicKey.length !== 65) {
+            throw new Error(`Expected a public key of either 33 bytes (compressed) or 65 bytes (uncompressed)!`)
+        }
+
+        const computedPublicKey = p256.getPublicKey(privateKey, publicKey.length === 33)
+        
         if (binaryToHex(computedPublicKey) !== binaryToHex(publicKey)) {
             throw new Error(
                 `Given private key is for a different public key! Given: ${binaryToHex(publicKey)}, Computed: ${binaryToHex(computedPublicKey)}`
