@@ -3,7 +3,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { PlumTreeManager } from '../../src/logic/plumtree/PlumTreeManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { StreamPartIDUtils, toStreamPartID, toUserId, toUserIdRaw } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { randomUserId } from '@streamr/test-utils'
 
 describe('PlumTreeManager', () => {

@@ -81,7 +81,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         if (this.lastMessages.length === 0) {
             return 0
         }
-        return this.lastMessages[this.lastMessages.length - 1]!.messageId!.timestamp
+        return this.lastMessages[this.lastMessages.length - 1].messageId!.timestamp
     }
 
     sendBuffer(fromTimestamp: number): void {
