@@ -43,7 +43,6 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { ECDSA_SECP256K1_EVM, ML_DSA_87, SigningUtil } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
@@ -101,9 +100,6 @@ export {
     retry,
     LengthPrefixedFrameDecoder,
     toLengthPrefixedFrame,
-    ECDSA_SECP256K1_EVM,
-    ML_DSA_87,
-    SigningUtil,
     ipv4ToNumber,
     numberToIpv4,
     MapWithTtl,
@@ -128,3 +124,4 @@ export { HexString } from './HexString'
 export { ChangeFieldType, MapKey } from './types'
 export { WeiAmount, multiplyWeiAmount } from './WeiAmount'
 export { getSubtle } from './crossPlatformCrypto'
+export { ECDSA_SECP256K1_EVM, ECDSA_SECP256R1, ML_DSA_87, SigningUtil } from './signingUtils'

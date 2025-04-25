@@ -29,14 +29,12 @@ export abstract class KeyPairIdentity extends Identity {
                 this.privateKey.length
             } bytes.`)
         }
-
-        this.assertKeyPairIsValid()
     }
 
     /**
      * Should throw if the publicKey and privateKey don't match each other
      */
-    abstract assertKeyPairIsValid(): void
+    abstract assertKeyPairIsValid(): Promise<void>
 
     async getUserIdBytes(): Promise<UserIDRaw> { 
         return this.publicKey

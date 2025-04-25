@@ -1,38 +1,38 @@
-import { binaryToHex, ML_DSA_87, UserIDRaw } from '@streamr/utils'
-import { MLDSAKeyPairIdentity } from '../../src/identity/MLDSAKeyPairIdentity'
+import { binaryToHex, ECDSA_SECP256R1 } from '@streamr/utils'
+import { ECDSAKeyPairIdentity } from '../../src/identity/ECDSAKeyPairIdentity'
 
-describe('MLDSAKeyPairIdentity', () => {
+describe('ECDSAKeyPairIdentity', () => {
 
     describe('fromConfig', () => {
         it('can be created without 0x prefix on public and private key', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
         
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            await ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey),
                     privateKey: binaryToHex(keyPair.privateKey),
                 }
-            })).not.toThrow()
+            })
         })
         it('can be created with 0x prefix on public and private key', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
         
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            await ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey, true),
                     privateKey: binaryToHex(keyPair.privateKey, true),
                 }
-            })).not.toThrow()
+            })
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = await ECDSA_SECP256R1.generateKeyPair()
 
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            await ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey).replace('b', 'd'),
                     privateKey: binaryToHex(keyPair.privateKey),
                 }
-            })).toThrow()
+            })
         })
     })
 
@@ -40,11 +40,9 @@ describe('MLDSAKeyPairIdentity', () => {
 
         it('creates correct signatures', async () => {
             const payload = Buffer.from('data-to-sign')
-            const keyPair = ML_DSA_87.generateKeyPair()
-
-            const identity = new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
+            const identity = await ECDSAKeyPairIdentity.generate()
             const signature = await identity.createMessageSignature(payload)
-            expect(ML_DSA_87.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
+            expect(await ECDSA_SECP256R1.verifySignature(await identity.getUserIdBytes(), payload, signature)).toBe(true)
         })
     })
 })

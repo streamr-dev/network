@@ -2,7 +2,7 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
-import { areEqualBinaries, hexToBinary } from './binaryUtils'
+import { areEqualBinaries } from './binaryUtils'
 import { UserIDRaw } from './UserID'
 import { randomBytes } from '@noble/post-quantum/utils'
 import { getSubtle } from './crossPlatformCrypto'

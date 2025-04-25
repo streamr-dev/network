@@ -9,8 +9,8 @@ const quantumResistantSignatureTypes = new Set<SignatureType>([SignatureType.ML_
 const quantumResistantAsymmetricEncryptionTypes = new Set<AsymmetricEncryptionType>([AsymmetricEncryptionType.ML_KEM])
 const quantumResistantEncryptionTypes = new Set<EncryptionType>([EncryptionType.AES])
 
-export function assertCompliantIdentity(identity: Identity, config: Pick<StreamrClientConfig, 'encryption'>): void {
-    const isQuantumSecure = isQuantumResistantIdentity(identity)
+export function assertCompliantIdentityConfig(signatureType: SignatureType, config: Pick<StreamrClientConfig, 'encryption'>): void {
+    const isQuantumSecure = isCompliantSignatureType(signatureType, config)
     const quantumSecurityIsRequired = config.encryption?.requireQuantumResistantSignatures
 
     if (quantumSecurityIsRequired && !isQuantumSecure) {

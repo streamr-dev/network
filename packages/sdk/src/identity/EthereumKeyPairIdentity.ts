@@ -23,7 +23,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    assertKeyPairIsValid(): void {
+    async assertKeyPairIsValid(): Promise<void> {
         // Ensured by constructor
     }
 
@@ -52,13 +52,13 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         return new Wallet(binaryToHex(this.privateKey), primaryProvider) as SignerWithProvider
     }
 
-    static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): EthereumKeyPairIdentity {
+    static async fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): Promise<EthereumKeyPairIdentity> {
         const privateKey = (config.auth as KeyPairIdentityConfig).privateKey
         const address = (config.auth as KeyPairIdentityConfig).publicKey
         return new EthereumKeyPairIdentity(privateKey, address)
     }
 
-    static generate(): EthereumKeyPairIdentity {
+    static async generate(): Promise<EthereumKeyPairIdentity> {
         const wallet = Wallet.createRandom()
         return new EthereumKeyPairIdentity(wallet.privateKey)
     }
