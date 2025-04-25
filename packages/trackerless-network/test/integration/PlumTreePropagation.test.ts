@@ -65,7 +65,7 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await until(
-            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 30000 * 4
+            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
         )
         await until(() => {
             const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
@@ -84,11 +84,11 @@ describe('Propagation', () => {
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
 
-    }, 3 * 60000)
+    }, 90000)
 
     it('Works after new nodes join', async () => {
         await until(
-            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 30000 * 4
+            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
         )
         await until(() => {
             const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
@@ -137,5 +137,5 @@ describe('Propagation', () => {
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)
         }
-    })
+    }, 90000)
 })
