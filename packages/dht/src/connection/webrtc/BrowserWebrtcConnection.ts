@@ -290,7 +290,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
             stats.forEach((report) => {
                 if (report.type === 'transport') {
-                    currentBytesSent = report.bytesSent || 0
+                    currentBytesSent = report.bytesSent ?? 0
                 }
             })
 
