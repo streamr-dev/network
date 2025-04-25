@@ -130,7 +130,7 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
-    const identity = new EthereumKeyPairIdentity(opts.publisher.privateKey)
+    const identity = EthereumKeyPairIdentity.fromPrivateKey(opts.publisher.privateKey)
     const factory = new MessageFactory({
         identity,
         config: CONFIG_TEST,
@@ -179,7 +179,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomIdentity = async (): Promise<Identity> => {
-    return new EthereumKeyPairIdentity(await createTestPrivateKey())
+    return EthereumKeyPairIdentity.fromPrivateKey(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {

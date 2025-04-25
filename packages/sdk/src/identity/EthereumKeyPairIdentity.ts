@@ -54,12 +54,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     }
 
     static async generate(): Promise<EthereumKeyPairIdentity> {
-        // Only sync generation available, wrap in promise
-        return EthereumKeyPairIdentity.generateSync()
-    }
-
-    static generateSync(): EthereumKeyPairIdentity {
-        const wallet = Wallet.createRandom()
-        return EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey, wallet.address)
+        const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
+        return new EthereumKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 }

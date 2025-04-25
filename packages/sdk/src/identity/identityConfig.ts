@@ -80,5 +80,5 @@ export function createIdentityFromConfig(config: Pick<StrictStreamrClientConfig,
     }
 
     // If no identity is configured, generate a random EthereumKeyPairIdentity
-    return EthereumKeyPairIdentity.generateSync()
+    return EthereumKeyPairIdentity.generate()
 }

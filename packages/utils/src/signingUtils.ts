@@ -4,10 +4,10 @@ import { Keccak } from 'sha3'
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
 import { randomBytes } from '@noble/post-quantum/utils'
 import { p256 } from '@noble/curves/p256'
-import { areEqualBinaries, binaryToHex, hexToBinary } from './binaryUtils'
+import { areEqualBinaries, binaryToHex } from './binaryUtils'
 import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
-import { JsonWebKey, webcrypto } from 'crypto'
+import { JsonWebKey } from 'crypto'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -20,7 +20,7 @@ export interface KeyPair {
 }
 
 export interface SigningUtil {
-    generateKeyPair: () => Promise<KeyPair>
+    generateKeyPair: () => KeyPair
     createSignature: (payload: Uint8Array, privateKey: Uint8Array) => Promise<Uint8Array>
     verifySignature: (publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array) => Promise<boolean>
     // Needs to be sync because often validated in constructors
@@ -37,7 +37,7 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
     recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw
 } = {
 
-    async generateKeyPair(): Promise<KeyPair> {
+    generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
         const publicKey = secp256k1.publicKeyCreate(privateKey, false)
         return { 
@@ -113,7 +113,7 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
 export const ECDSA_SECP256R1: SigningUtil & {
     privateKeyToJwt(privateKey: Uint8Array): JsonWebKey
 } = {
-    async generateKeyPair(): Promise<KeyPair> {
+    generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
         const publicKey = p256.getPublicKey(privateKey, true)
 
@@ -213,7 +213,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
  * Signing scheme using ML-DSA-87
  */
 export const ML_DSA_87: SigningUtil = {
-    async generateKeyPair(): Promise<KeyPair> {
+    generateKeyPair(): KeyPair {
         const seed = randomBytes(32)
         const keys = ml_dsa87.keygen(seed)
         return {
