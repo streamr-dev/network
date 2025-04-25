@@ -199,9 +199,7 @@ message NodeInfoResponse {
 }
 
 message PauseNeighborRequest {
-  dht.PeerDescriptor neighbor = 1;
 }
 
 message ResumeNeighborRequest {
-  dht.PeerDescriptor neighbor = 1;
 }
