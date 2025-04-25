@@ -20,17 +20,6 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         return SignatureType.ECDSA_SECP256K1_EVM
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    getExpectedPublicKeyLength(): number {
-        // Address, not actual public key
-        return 20
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getExpectedPrivateKeyLength(): number {
-        return 32
-    }
-
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
         return ECDSA_SECP256K1_EVM.createSignature(payload, this.privateKey)
     }

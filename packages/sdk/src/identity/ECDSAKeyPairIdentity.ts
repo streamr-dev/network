@@ -14,17 +14,7 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
 
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
-        return SignatureType.ML_DSA_87
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getExpectedPublicKeyLength(): number {
-        return 65 // format: uncompressed raw
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getExpectedPrivateKeyLength(): number {
-        return 138 // format: pkcs8
+        return SignatureType.ECDSA_SECP256R1
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
