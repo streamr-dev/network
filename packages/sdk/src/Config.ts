@@ -388,9 +388,9 @@ export interface StreamrClientConfig {
         requireQuantumResistantSignatures?: boolean
 
         /**
-         * Default: false. If true, only data encrypted using quantum resistant algorithms will be accepted,
-         * and data using other algorithms as well as unencrypted data will be rejected. Note that also public (unencrypted)
-         * data will be rejected in this case.
+         * Default: false. If true on subscribers, data encrypted with non-quantum-resistant methods will be rejected.
+         * If true on publishers, only data encrypted with quantum resistant methods can be published.
+         * Note that subscribers will still accept unencrypted (public) data despite this setting.
          */
         requireQuantumResistantEncryption?: boolean
     }

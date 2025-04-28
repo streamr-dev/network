@@ -100,6 +100,43 @@ describe('Quantum encryption policies', () => {
             nonQuantumClient.publish(stream.id, testMsg)
         })
 
+        it('prevents publishing public data', async () => {
+            // Public stream
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+            await expect(quantumPublisher.publish(stream.id, Msg())).toReject()
+        })
+
+        it('allows subscribing to public data, as long as signatures are compliant', async () => {
+            // Public stream
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+
+            // Publisher with relaxed encryption requirement
+            quantumPublisher = environment.createClient({
+                auth: {
+                    identity: publisherIdentity,
+                },
+                encryption: {
+                    requireQuantumResistantSignatures: true,
+                    requireQuantumResistantKeyExchange: true,
+                    requireQuantumResistantEncryption: false,
+                }
+            })
+
+            const sub = await quantumSubscriber.subscribe({
+                streamId: stream.id,
+            })
+            const testMsg = Msg()
+            await quantumPublisher.publish(stream.id, testMsg)
+            const received = []
+            for await (const msg of sub) {
+                received.push(msg.content)
+                if (received.length === 1) {
+                    break
+                }
+            }
+            expect(received).toEqual([testMsg])
+        })
+
     })
 
     describe('pubsub under default settings', () => {
@@ -163,6 +200,29 @@ describe('Quantum encryption policies', () => {
                 }
             }
             expect(received).toEqual([testMsg])
+        })
+
+        // Need to use done callback instead of async/await because we use the error listener
+        it('fails between non-quantum publisher and quantum subscriber if subscriber requires quantum signatures', (done) => {
+            // Subscriber requiring quantum signatures
+            quantumSubscriber = environment.createClient({
+                auth: {
+                    identity: subscriberIdentity,
+                },
+                encryption: {
+                    requireQuantumResistantSignatures: true,
+                }
+            })
+            quantumSubscriber.subscribe({
+                streamId: stream.id,
+            }).then((sub) => {
+                sub.on('error', (err: Error) => {
+                    expect(err.message).toContain('signature')
+                    done()
+                })
+            }).catch(done)
+
+            nonQuantumClient.publish(stream.id, Msg())
         })
 
     })

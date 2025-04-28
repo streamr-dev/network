@@ -53,12 +53,6 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
 
-        if (!isCompliantEncryptionType(msg.encryptionType, opts.config)) {
-            throw new Error(`A message in stream ${
-                msg.getStreamId()
-            } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`)
-        }
-
         if (!isCompliantSignatureType(msg.signatureType, opts.config)) {
             throw new Error(`A message in stream ${
                 msg.getStreamId()

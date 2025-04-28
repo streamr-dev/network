@@ -35,7 +35,7 @@ export function isCompliantEncryptionType(encryptionType: EncryptionType, config
 
 export function isCompliantSignatureType(signatureType: SignatureType, config: Pick<StreamrClientConfig, 'encryption'>): boolean {
     const isQuantumSecure = quantumResistantSignatureTypes.has(signatureType)
-    const quantumSecurityIsRequired = config.encryption?.requireQuantumResistantEncryption
+    const quantumSecurityIsRequired = config.encryption?.requireQuantumResistantSignatures
 
     return isQuantumSecure || !quantumSecurityIsRequired
 }
