@@ -6,7 +6,7 @@ import { p256 } from '@noble/curves/p256'
 import { areEqualBinaries, binaryToHex } from './binaryUtils'
 import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
-import { JsonWebKey } from 'crypto'
+import { webcrypto } from 'crypto'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -110,7 +110,8 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
  * Signing scheme using ECDSA with secp256r1 curve and SHA-256, natively supported by browsers
  */
 export const ECDSA_SECP256R1: SigningUtil & {
-    privateKeyToJwt(privateKey: Uint8Array): JsonWebKey
+    privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey
+    createSignature(payload: Uint8Array, privateKey: Uint8Array | webcrypto.JsonWebKey): Promise<Uint8Array>
 } = {
     generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
@@ -122,7 +123,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
         }
     },
 
-    privateKeyToJwt(privateKey: Uint8Array): JsonWebKey {
+    privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
         // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
         const publicKey = p256.getPublicKey(privateKey, false)
         const x = publicKey.subarray(1, 33)
@@ -141,10 +142,20 @@ export const ECDSA_SECP256R1: SigningUtil & {
         }
     },
 
-    async createSignature(payload: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array> {
+    /**
+     * Pass the privateKey in JsonWebKey format for a slight performance gain.
+     * You can convert raw keys to JWK using the privateKeyToJWK function.
+     */
+    async createSignature(payload: Uint8Array, privateKey: Uint8Array | webcrypto.JsonWebKey): Promise<Uint8Array> {
+        const jwk = privateKey instanceof Uint8Array ? ECDSA_SECP256R1.privateKeyToJWK(privateKey) : privateKey
+
+        /**
+         * Stupidly, importKey does not support the 'raw' format. This means we need to
+         * first compute the JWK from the raw key, and only then we can import and use it.
+         */
         const key = await subtleCrypto.importKey(
             'jwk',
-            ECDSA_SECP256R1.privateKeyToJwt(privateKey),
+            jwk,
             {
                 name: 'ECDSA',
                 namedCurve: 'P-256'

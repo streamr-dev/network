@@ -155,6 +155,11 @@ describe('ECDSA_SECP256R1', () => {
             const signature = await ECDSA_SECP256R1.createSignature(payload, privateKey2)
             expect(await ECDSA_SECP256R1.verifySignature(publicKey2, payload, signature)).toBeTrue()
         })
+        it('accepts private key in JWK format', async () => {
+            const jwk = ECDSA_SECP256R1.privateKeyToJWK(privateKey2)
+            const signature = await ECDSA_SECP256R1.createSignature(payload, jwk)
+            expect(await ECDSA_SECP256R1.verifySignature(publicKey2, payload, signature)).toBeTrue()
+        })
     })
     
     describe('verifySignature', () => {

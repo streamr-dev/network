@@ -8,6 +8,8 @@ import { StrictStreamrClientConfig } from '../Config'
  */
 export class ECDSAKeyPairIdentity extends KeyPairIdentity {
 
+    private cachedJWK: JsonWebKey | undefined
+
     assertValidKeyPair(): void {
         ECDSA_SECP256R1.assertValidKeyPair(this.publicKey, this.privateKey)
     }
@@ -18,7 +20,9 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
-        return ECDSA_SECP256R1.createSignature(payload, this.privateKey)
+        // Cache the privateKey in JWK format for a performance optimization
+        this.cachedJWK ??= ECDSA_SECP256R1.privateKeyToJWK(this.privateKey)
+        return ECDSA_SECP256R1.createSignature(payload, this.cachedJWK)
     }
 
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): ECDSAKeyPairIdentity {
