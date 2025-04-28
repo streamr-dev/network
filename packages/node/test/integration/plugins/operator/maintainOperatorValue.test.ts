@@ -10,7 +10,8 @@ const {
     deploySponsorshipContract,
     setupOperatorContract,
     sponsor,
-    stake
+    stake,
+    getOperatorContract
 } = _operatorContractUtils
 
 const logger = new Logger(module)
@@ -36,7 +37,7 @@ describe('maintainOperatorValue', () => {
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContractAddress, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercentage: 10
@@ -46,15 +47,16 @@ describe('maintainOperatorValue', () => {
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('25000'))
-        await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
-        await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
-        const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
+        await delegate(operatorWallet, operatorContractAddress, STAKE_AMOUNT)
+        await stake(operatorWallet, operatorContractAddress, await sponsorship.getAddress(), STAKE_AMOUNT)
+        const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(operatorContractAddress))
         const { maxAllowedEarnings } = await operator.getEarnings(1n, 20)
         const triggerWithdrawLimit = multiplyWeiAmount(maxAllowedEarnings, 1 - SAFETY_FRACTION)
         await until(async () => {
             const { sum } = await operator.getEarnings(1n, 20)
             return sum > triggerWithdrawLimit
         }, 10000, 1000)
+        const operatorContract = getOperatorContract(operatorContractAddress).connect(operatorWallet)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
 
         await maintainOperatorValue(

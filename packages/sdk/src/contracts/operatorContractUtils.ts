@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
+import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import range from 'lodash/range'
 import { SignerWithProvider } from '../Authentication'
@@ -36,7 +36,7 @@ export interface SetupOperatorContractOpts {
  */
 export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet & SignerWithProvider
-    operatorContract: OperatorContract
+    operatorContractAddress: EthereumAddress
     nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
@@ -58,7 +58,7 @@ export async function setupOperatorContract(
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
-    return { operatorWallet, operatorContract, nodeWallets }
+    return { operatorWallet, operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()), nodeWallets }
 }
 
 /**
@@ -173,28 +173,32 @@ export const delegate = async (
 
 export const undelegate = async (
     delegator: SignerWithProvider,
-    operatorContract: OperatorContract,
+    operatorContractAddress: string,
     amount: WeiAmount
 ): Promise<void> => {    
     logger.debug('Undelegate', { amount: amount.toString() })
-    await (await operatorContract.connect(delegator).undelegate(amount)).wait()
+    await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait()
 }
 
 export const stake = async (
-    operatorContract: OperatorContract,
+    staker: SignerWithProvider,
+    operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Stake', { amount: amount.toString() })
-    await (await operatorContract.stake(sponsorshipContractAddress, amount)).wait()
+    const contract = getOperatorContract(operatorContractAddress).connect(staker)
+    await (await contract.stake(sponsorshipContractAddress, amount)).wait()
 }
 
 export const unstake = async (
-    operatorContract: OperatorContract,
+    staker: SignerWithProvider,
+    operatorContractAddress: string,
     sponsorshipContractAddress: string
 ): Promise<void> => {
     logger.debug('Unstake')
-    await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
+    const contract = getOperatorContract(operatorContractAddress).connect(staker)
+    await (await contract.unstake(sponsorshipContractAddress)).wait()
 }
 
 export const sponsor = async (
