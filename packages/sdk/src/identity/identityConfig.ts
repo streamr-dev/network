@@ -13,6 +13,7 @@ import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
  * How to configure new Identity types:
  * 1. Add a new SignatureType entry to NetworkRpc.proto in network package
  * 2. Add the needed SigningUtil to signingUtils.ts and tests to signingUtils.test.ts
+ * 3. Add the new SigningUtil to exports.ts in the utils package
  * 3. Create the Identity implementation itself (eg. extend KeyPairIdentity) and tests for it
  * 4. Wire everything together below
  */
