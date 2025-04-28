@@ -12,7 +12,7 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
         const payload = Buffer.from('data-to-sign')
         const signature = ML_DSA_87.createSignature(payload, this.privateKey)
         if (!ML_DSA_87.verifySignature(this.publicKey, payload, signature)) {
-            throw new Error(`The given publicKey and privateKey don't seem to match!`)
+            throw new Error(`The given publicKey and privateKey don't match!`)
         }
     }
 

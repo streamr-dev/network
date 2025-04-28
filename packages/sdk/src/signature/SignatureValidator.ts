@@ -6,11 +6,11 @@ import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
-import { identityConfig } from '../identity/identityConfig'
+import { IdentityMapping } from '../identity/IdentityMapping'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
-    Object.values(identityConfig).map((config) => [config.signatureType, config.signingUtil])
+    Object.values(IdentityMapping).map((config) => [config.signatureType, config.signingUtil])
 )
 
 @scoped(Lifecycle.ContainerScoped)
