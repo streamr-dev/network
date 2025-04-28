@@ -18,7 +18,8 @@ import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
  * 4. Wire everything together below
  */
 export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ECDSA_SECP256R1', 'ML_DSA_87'] as const
-export const identityConfig: Record<KeyType, {
+/** @internal */
+export const IdentityMapping: Record<KeyType, {
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Identity
     signingUtil: SigningUtil
@@ -49,7 +50,7 @@ export const DEFAULT_KEY_TYPE: KeyType = 'ECDSA_SECP256K1_EVM'
 
 // Static check that all valid key types have corresponding factory functions above
 validKeyTypeValues.forEach((keyType) => {
-    if (!(keyType in identityConfig)) {
+    if (!(keyType in IdentityMapping)) {
         throw new Error(`Missing factory function for keyType: ${keyType}`)
     }
 })
@@ -63,8 +64,8 @@ export function createIdentityFromConfig(config: Pick<StrictStreamrClientConfig,
         // Default key type is secp256k1 private key (="Ethereum private key")
         const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? DEFAULT_KEY_TYPE
 
-        if (identityConfig[keyType]) {
-            return identityConfig[keyType].fromConfig(config)
+        if (IdentityMapping[keyType]) {
+            return IdentityMapping[keyType].fromConfig(config)
         } else {
             throw new Error(`Unsupported keyType given in config: ${keyType}`)
         }

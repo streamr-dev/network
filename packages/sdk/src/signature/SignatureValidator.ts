@@ -6,11 +6,11 @@ import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
-import { identityConfig } from '../identity/identityConfig'
+import { IdentityMapping } from '../identity/IdentityMapping'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
-    Object.values(identityConfig).map((config) => [config.signatureType, config.signingUtil])
+    Object.values(IdentityMapping).map((config) => [config.signatureType, config.signingUtil])
 )
 
 @scoped(Lifecycle.ContainerScoped)
@@ -53,7 +53,7 @@ export class SignatureValidator {
         // Special handling: different payload computation, same SigningUtil
         if (streamMessage.signatureType === SignatureType.ECDSA_SECP256K1_LEGACY) {
             return ECDSA_SECP256K1_EVM.verifySignature(
-                // publisherId is hex encoded address string
+                // publisherId is hex encoded Ethereum address string
                 toUserIdRaw(streamMessage.getPublisherId()),
                 createLegacySignaturePayload(streamMessage),
                 streamMessage.signature

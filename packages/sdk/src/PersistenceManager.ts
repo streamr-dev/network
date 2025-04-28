@@ -38,7 +38,7 @@ export class PersistenceManager {
     private async ensureInitialized() {
         this.persistence ??= await ServerPersistence.createInstance({
             loggerFactory: this.loggerFactory,
-            ownerId: await this.identity.getUserIdString(),
+            ownerId: await this.identity.getUserId(),
             namespaces: Object.values(NAMESPACES),
             migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
         })

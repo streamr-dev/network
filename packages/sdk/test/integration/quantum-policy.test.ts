@@ -6,7 +6,8 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { EthereumKeyPairIdentity, Identity, MLDSAKeyPairIdentity, Subscription } from '../../src'
+import { EthereumKeyPairIdentity, Identity, MLDSAKeyPairIdentity } from '../../src'
+import { collect } from '@streamr/utils'
 
 describe('Quantum encryption policies', () => {
 
@@ -24,7 +25,7 @@ describe('Quantum encryption policies', () => {
         publisherIdentity = MLDSAKeyPairIdentity.generate()
         subscriberIdentity = MLDSAKeyPairIdentity.generate()
 
-        // Client for setting up the stream
+        // This client uses an EthereumKeyPairIdentity so that it can create streams and set permissions
         nonQuantumClient = environment.createClient({
             auth: {
                 identity: EthereumKeyPairIdentity.generate(),
@@ -32,8 +33,8 @@ describe('Quantum encryption policies', () => {
         })
         // nonQuantumClient also has pub/sub permissions to stream because it created the stream
         stream = await createTestStream(nonQuantumClient, module)
-        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], userId: await publisherIdentity.getUserIdString() })
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: await subscriberIdentity.getUserIdString() })
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], userId: await publisherIdentity.getUserId() })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: await subscriberIdentity.getUserId() })
     })
 
     afterEach(async () => {
@@ -42,10 +43,8 @@ describe('Quantum encryption policies', () => {
 
     describe('pubsub under strict quantum settings', () => {
 
-        let sub: Subscription
-
         beforeEach(async () => {
-            // Clients for pub/sub (can't make transactions)
+            // Note that these clients can't create streams or set permissions due to non-Ethereum identity
             quantumPublisher = environment.createClient({
                 auth: {
                     identity: publisherIdentity,
@@ -66,10 +65,6 @@ describe('Quantum encryption policies', () => {
                     requireQuantumResistantEncryption: true,
                 }
             })
-
-            sub = await quantumSubscriber.subscribe({
-                streamId: stream.id,
-            })
         })
 
         it('works between quantum identities', async () => {
@@ -78,33 +73,71 @@ describe('Quantum encryption policies', () => {
             })
             const testMsg = Msg()
             await quantumPublisher.publish(stream.id, testMsg)
-            const received = []
-            for await (const msg of sub) {
-                received.push(msg.content)
-                if (received.length === 1) {
-                    break
-                }
-            }
-            expect(received).toEqual([testMsg])
+            const received = await collect(sub, 1)
+            expect(received.map((m) => m.content)).toEqual([testMsg])
         })
 
-        // Need to use done callback instead of async/await because we use the error listener
-        it('fails if requirements are violated', (done) => {
-            const testMsg = Msg()
-
-            sub.on('error', (err: Error) => {
-                expect(err.message).toContain('signature')
-                done()
+        it('fails if requireQuantumResistantSignatures is violated', async () => {
+            quantumSubscriber = environment.createClient({
+                auth: {
+                    identity: subscriberIdentity,
+                },
+                encryption: {
+                    requireQuantumResistantSignatures: true,
+                }
             })
 
-            nonQuantumClient.publish(stream.id, testMsg)
+            const sub = await quantumSubscriber.subscribe({
+                streamId: stream.id,
+            }, (_msg) => {
+                throw new Error('Message should not have been received, but it was!')
+            })
+
+            const errorPromise = new Promise<Error>((resolve) => {
+                sub.on('error', resolve)
+            })
+
+            nonQuantumClient.publish(stream.id, Msg())
+            const err = await errorPromise
+            expect(err).toEqualStreamrClientError({ code: 'SIGNATURE_VIOLATES_POLICY' })
+        })
+
+        it('prevents publishing public data', async () => {
+            // Public stream
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+            await expect(quantumPublisher.publish(stream.id, Msg())).toReject()
+        })
+
+        it('allows subscribing to public data, as long as signatures are compliant', async () => {
+            // Public stream
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+
+            // Publisher with relaxed encryption requirement
+            quantumPublisher = environment.createClient({
+                auth: {
+                    identity: publisherIdentity,
+                },
+                encryption: {
+                    requireQuantumResistantSignatures: true,
+                    requireQuantumResistantKeyExchange: true,
+                    requireQuantumResistantEncryption: false,
+                }
+            })
+
+            const sub = await quantumSubscriber.subscribe({
+                streamId: stream.id,
+            })
+            const testMsg = Msg()
+            await quantumPublisher.publish(stream.id, testMsg)
+            const received = await collect(sub, 1)
+            expect(received.map((m) => m.content)).toEqual([testMsg])
         })
 
     })
 
     describe('pubsub under default settings', () => {
         beforeEach(() => {
-            // Clients for pub/sub (can't make transactions)
+            // Note that these clients can't create streams or set permissions due to non-Ethereum identity
             quantumPublisher = environment.createClient({
                 auth: {
                     identity: publisherIdentity,
@@ -123,14 +156,8 @@ describe('Quantum encryption policies', () => {
             })
             const testMsg = Msg()
             await quantumPublisher.publish(stream.id, testMsg)
-            const received = []
-            for await (const msg of sub) {
-                received.push(msg.content)
-                if (received.length === 1) {
-                    break
-                }
-            }
-            expect(received).toEqual([testMsg])
+            const received = await collect(sub, 1)
+            expect(received.map((m) => m.content)).toEqual([testMsg])
         })
 
         it('works between quantum publisher and non-quantum subscriber', async () => {
@@ -139,14 +166,8 @@ describe('Quantum encryption policies', () => {
             })
             const testMsg = Msg()
             await quantumPublisher.publish(stream.id, testMsg)
-            const received = []
-            for await (const msg of sub) {
-                received.push(msg.content)
-                if (received.length === 1) {
-                    break
-                }
-            }
-            expect(received).toEqual([testMsg])
+            const received = await collect(sub, 1)
+            expect(received.map((m) => m.content)).toEqual([testMsg])
         })
 
         it('works between non-quantum publisher and quantum subscriber', async () => {
@@ -155,14 +176,8 @@ describe('Quantum encryption policies', () => {
             })
             const testMsg = Msg()
             await nonQuantumClient.publish(stream.id, testMsg)
-            const received = []
-            for await (const msg of sub) {
-                received.push(msg.content)
-                if (received.length === 1) {
-                    break
-                }
-            }
-            expect(received).toEqual([testMsg])
+            const received = await collect(sub, 1)
+            expect(received.map((m) => m.content)).toEqual([testMsg])
         })
 
     })

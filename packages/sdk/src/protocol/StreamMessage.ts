@@ -56,6 +56,9 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
     }
 }
 
+/**
+ * An internal class representing a message in a stream. Applications see instances of the Message class.
+ */
 export class StreamMessage implements StreamMessageOptions {
 
     readonly messageId: MessageID

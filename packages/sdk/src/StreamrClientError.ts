@@ -17,7 +17,9 @@ export type StreamrClientErrorCode =
     'DECRYPT_ERROR' |
     'STORAGE_NODE_ERROR' |
     'UNKNOWN_ERROR' |
-    'ASSERTION_FAILED'
+    'ASSERTION_FAILED' |
+    'SIGNATURE_VIOLATES_POLICY' |
+    'ENCRYPTION_VIOLATES_POLICY'
 
 export class StreamrClientError extends Error {
 

@@ -49,7 +49,7 @@ export class StreamIDBuilder {
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
         if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath)) {
-            address = toEthereumAddress(await this.identity.getUserIdString())
+            address = toEthereumAddress(await this.identity.getUserId())
         }
         return toStreamID(streamIdOrPath, address)
     }

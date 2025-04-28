@@ -16,7 +16,7 @@ import { EthereumKeyPairIdentity } from '@streamr/sdk'
 const identity = EthereumKeyPairIdentity.generate()
 
 // User ID (in this case Ethereum address) and private key are available via the identity
-const address = await identity.getUserIdString()
+const address = await identity.getUserId()
 const privateKey = await identity.getPrivateKey()
 ```
 

@@ -65,7 +65,7 @@ import { StreamrClient, EthereumKeyPairIdentity } from '@streamr/sdk'
 const identity = EthereumKeyPairIdentity.generate()
 
 // Log private key and associated identifier (in this case, Ethereum address) to console
-identity.getUserIdString().then(address => console.log(`Address: ${address}`))
+identity.getUserId().then(address => console.log(`Address: ${address}`))
 identity.getPrivateKey().then(key => console.log(`Private key: ${key}`))
 
 // You can also pass the identity implementation to StreamrClient

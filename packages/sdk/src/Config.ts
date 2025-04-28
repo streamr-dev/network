@@ -10,10 +10,12 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 import { Identity } from './identity/Identity'
-import { KeyType } from './identity/identityConfig'
+import { KeyType } from './identity/IdentityMapping'
 
 /**
- * For passing in an Ethereum provider (= wallet) for signing
+ * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193} 
+ * compatible provider will do. The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type 
+ * definition used here is from the `ethers` library.
  */
 export interface EthereumProviderIdentityConfig {
     ethereum: Eip1193Provider
@@ -386,9 +388,9 @@ export interface StreamrClientConfig {
         requireQuantumResistantSignatures?: boolean
 
         /**
-         * Default: false. If true, only data encrypted using quantum resistant algorithms will be accepted,
-         * and data using other algorithms as well as unencrypted data will be rejected. Note that also public (unencrypted)
-         * data will be rejected in this case.
+         * Default: false. If true on subscribers, data encrypted with non-quantum-resistant methods will be rejected.
+         * If true on publishers, only data encrypted with quantum resistant methods can be published.
+         * Note that subscribers will still accept unencrypted (public) data despite this setting.
          */
         requireQuantumResistantEncryption?: boolean
     }

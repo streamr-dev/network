@@ -151,7 +151,7 @@ export class MessageFactory {
             // calling also toEthereumAddress() as it has stricter input validation than toUserId()
             return toUserId(toEthereumAddress(metadata.erc1271Contract))
         } else {
-            return this.identity.getUserIdString()
+            return this.identity.getUserId()
         }
     }
 

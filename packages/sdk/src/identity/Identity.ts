@@ -12,11 +12,11 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 /**
  * Identity represents a digital identity, specified by cryptographic keys,
- * and capable of signing. You can configure new Identities in identityConfig.ts.
+ * and capable of signing. You can configure new Identities in IdentityMapping.ts.
  */
 export abstract class Identity {
-    abstract getUserIdString(): Promise<UserID>
-    abstract getUserIdBytes(): Promise<UserIDRaw>
+    abstract getUserId(): Promise<UserID>
+    abstract getUserIdRaw(): Promise<UserIDRaw>
     abstract getSignatureType(): SignatureType
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>
     abstract getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider>

@@ -8,7 +8,7 @@ import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
 import { webcrypto } from 'crypto'
 
-const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
+const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
 
 const subtleCrypto = getSubtle()
@@ -48,7 +48,10 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
 
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
         keccak.reset()
-        keccak.update(useEthereumMagic ? Buffer.concat([Buffer.from(SIGN_MAGIC + message.length), message]) : Buffer.from(message))
+        keccak.update(useEthereumMagic ? Buffer.concat([
+            Buffer.from(ECDSA_SECP256K1_EVM_SIGN_MAGIC + message.length), 
+            message
+        ]) : Buffer.from(message))
         return keccak.digest('binary')
     },
 
@@ -245,7 +248,7 @@ export const ML_DSA_87: SigningUtil = {
         const payload = Buffer.from('data-to-sign')
         const signature = ml_dsa87.sign(privateKey, payload)
         if (!ml_dsa87.verify(publicKey, payload, signature)) {
-            throw new Error(`The given ML-DSA public key and private key don't seem to match!`)
+            throw new Error(`The given ML-DSA public key and private key don't match!`)
         }
     }
 

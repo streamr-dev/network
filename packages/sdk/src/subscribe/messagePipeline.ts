@@ -19,6 +19,7 @@ import { OrderMessages } from './ordering/OrderMessages'
 import { StreamrClientError } from '../StreamrClientError'
 import { MessageID } from '../protocol/MessageID'
 import { isCompliantEncryptionType, isCompliantSignatureType } from '../utils/encryptionCompliance'
+import { EncryptionType } from '@streamr/trackerless-network'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
@@ -53,16 +54,18 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
 
-        if (!isCompliantEncryptionType(msg.encryptionType, opts.config)) {
-            throw new Error(`A message in stream ${
+        if (msg.encryptionType !== EncryptionType.NONE && !isCompliantEncryptionType(msg.encryptionType, opts.config)) {
+            throw new StreamrClientError(`A message in stream ${
                 msg.getStreamId()
-            } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`)
+            } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`,
+            'ENCRYPTION_VIOLATES_POLICY', msg)
         }
 
         if (!isCompliantSignatureType(msg.signatureType, opts.config)) {
-            throw new Error(`A message in stream ${
+            throw new StreamrClientError(`A message in stream ${
                 msg.getStreamId()
-            } was rejected because the signature type violates configured requirements (signatureType: ${msg.encryptionType})!`)
+            } was rejected because the signature type violates configured requirements (signatureType: ${msg.encryptionType})!`,
+            'SIGNATURE_VIOLATES_POLICY', msg)
         }
 
         let decrypted

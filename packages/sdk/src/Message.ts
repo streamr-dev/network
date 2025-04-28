@@ -1,14 +1,14 @@
 import { HexString, StreamID } from '@streamr/utils'
 import { StreamMessage } from './protocol/StreamMessage'
 import { SignatureType } from '@streamr/trackerless-network'
-import { identityConfig, KeyType } from './identity/identityConfig'
+import { IdentityMapping, KeyType } from './identity/IdentityMapping'
 
 // Lookup structure for converting SignatureType to KeyType string
 export type MessageSignatureType = KeyType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
 const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
-    // Read key pair SignatureTypes from identityConfig
+    // Read key pair SignatureTypes from IdentityMapping
     ...Object.fromEntries(
-        Object.entries(identityConfig).map(
+        Object.entries(IdentityMapping).map(
             ([keyType, config]) => [config.signatureType, keyType as KeyType]
         )
     ),
@@ -18,7 +18,7 @@ const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
 }
 
 /**
- * Represents a message in the Streamr Network. This is an application-facing class, whereas StreamMessage is considered internal.
+ * Represents a message in the Streamr Network.
  *
  * @category Important
  */

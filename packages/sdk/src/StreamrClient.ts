@@ -58,7 +58,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { createIdentityFromConfig } from './identity/identityConfig'
+import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
@@ -641,7 +641,7 @@ export class StreamrClient {
      * Gets the user id (i.e. Ethereum address or public key) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
-        return await this.identity.getUserIdString()
+        return await this.identity.getUserId()
     }
 
     /**

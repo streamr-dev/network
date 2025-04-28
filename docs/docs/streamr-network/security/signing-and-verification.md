@@ -46,7 +46,7 @@ const streamr = new StreamrClient({
 }
 
 // As a command-line option to the CLI tool:
-streamr keys generate --key-type ml-dsa-87
+streamr identity generate --key-type ML_DSA_87
 ```
 
 - `Identity`: the name of the class that wraps the key pair and provides a signing function. An instance of the `Identity` subclass can be passed to the `StreamrClient` constructor. The class can also be used to generate new key pairs. Examples:
