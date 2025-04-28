@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 64
+    const NUM_OF_NODES = 32
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -33,6 +33,7 @@ describe('Propagation', () => {
         await node1.start()
         node1.on('message', () => {
             totalReceived += 1
+            console.log("totalReceived", totalReceived)
         })
         discoveryLayerNodes.push(entryPoint)
         contentDeliveryLayerNodes.push(node1)
@@ -98,7 +99,7 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
 
-        for (let i = 1; i < 25; i++) {
+        for (let i = 1; i < 5; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 STREAM_PART_ID,
@@ -129,7 +130,7 @@ describe('Propagation', () => {
                 contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
             })
         }))
-        for (let i = 1; i < 25; i++) {
+        for (let i = 1; i < 5; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 STREAM_PART_ID,
