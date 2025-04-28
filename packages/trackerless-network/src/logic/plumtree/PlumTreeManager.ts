@@ -67,7 +67,6 @@ export class PlumTreeManager extends EventEmitter<Events> {
             this.remotePausedNeighbors.add(toNodeId(node))
             const remote = this.createRemote(node)
             await remote.pauseNeighbor()
-            console.log("paused neighbors", this.localPausedNeighbors, this.remotePausedNeighbors, this.neighbors.getAll().map((n) => toNodeId(n.getPeerDescriptor())))
         }
     }
 
@@ -90,7 +89,6 @@ export class PlumTreeManager extends EventEmitter<Events> {
     async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
         const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
-        console.log("sendBuffer", fromTimestamp, messages.length)
         await Promise.all(messages.map((msg) => remote!.sendStreamMessage(msg)))
     }
 

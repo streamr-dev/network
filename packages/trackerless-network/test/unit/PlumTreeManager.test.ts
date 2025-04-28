@@ -5,6 +5,8 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { randomUserId } from '@streamr/test-utils'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 
 describe('PlumTreeManager', () => {
 
@@ -26,9 +28,16 @@ describe('PlumTreeManager', () => {
 
     it('should be able to pause and resume neighbors', async () => {
         const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
         await manager.pauseNeighbor(neighbor)
         expect(manager.isNeighborPaused(neighbor)).toBe(true)
         await manager.resumeNeighbor(neighbor, 0)
+        expect(manager.isNeighborPaused(neighbor)).toBe(false)
+    })
+
+    it('should not pause neighbors that are not in the neighbors list', async () => {
+        const neighbor = createMockPeerDescriptor()
+        await manager.pauseNeighbor(neighbor)
         expect(manager.isNeighborPaused(neighbor)).toBe(false)
     })
 

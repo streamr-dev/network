@@ -80,7 +80,7 @@ export const createStreamMessage = (
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
         publisherId: toUserIdRaw(publisherId),
-        messageChainId: 'messageChain0',
+        messageChainId: `messageChain0-${publisherId}`,
     }
     const msg: StreamMessage = {
         messageId,
