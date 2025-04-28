@@ -56,7 +56,7 @@ describe('maintainOperatorValue', () => {
             const { sum } = await operator.getEarnings(1n, 20)
             return sum > triggerWithdrawLimit
         }, 10000, 1000)
-        const operatorContract = getOperatorContract(operatorContractAddress)
+        const operatorContract = getOperatorContract(operatorContractAddress).connect(operatorWallet)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
 
         await maintainOperatorValue(
