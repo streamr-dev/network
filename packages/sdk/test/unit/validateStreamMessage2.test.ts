@@ -53,8 +53,8 @@ describe('Validator2', () => {
     let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
-    let publisherAuthentication: Identity
-    let subscriberAuthentication: Identity
+    let publisherIdentity: Identity
+    let subscriberIdentity: Identity
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -72,13 +72,13 @@ describe('Validator2', () => {
     }
 
     beforeAll(async () => {
-        publisherAuthentication = await createRandomIdentity()
-        subscriberAuthentication = await createRandomIdentity()
+        publisherIdentity = await createRandomIdentity()
+        subscriberIdentity = await createRandomIdentity()
     })
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getUserId()
-        const subscriber = await subscriberAuthentication.getUserId()
+        const publisher = await publisherIdentity.getUserId()
+        const subscriber = await subscriberIdentity.getUserId()
         // Default stubs
         getStreamMetadata = async () => ({
             partitions: 10
@@ -90,7 +90,7 @@ describe('Validator2', () => {
             return userId === subscriber && streamId === 'streamId'
         }
 
-        const publisherSigner = new MessageSigner(publisherAuthentication)
+        const publisherSigner = new MessageSigner(publisherIdentity)
 
         msg = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
@@ -126,7 +126,7 @@ describe('Validator2', () => {
             publicKey: Buffer.from('rsaPublicKey', 'utf8'),
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
             encryptionType: AsymmetricEncryptionType.RSA,
-        }, new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
+        }, new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberIdentity)
 
         groupKeyResponse = await groupKeyResponseToStreamMessage({
             requestId: 'requestId',
@@ -136,7 +136,7 @@ describe('Validator2', () => {
                 { id: 'groupKeyId2', data: hexToBinary('0x2222') },
             ],
             encryptionType: AsymmetricEncryptionType.RSA,
-        }, new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
+        }, new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherIdentity)
     })
 
     describe('validate(unknown message type)', () => {
@@ -241,7 +241,7 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserId()
+            const publisher = await publisherIdentity.getUserId()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -251,7 +251,7 @@ describe('Validator2', () => {
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserId()
+            const subscriber = await subscriberIdentity.getUserId()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -298,7 +298,7 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserId()
+            const publisher = await publisherIdentity.getUserId()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -308,7 +308,7 @@ describe('Validator2', () => {
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserId()
+            const subscriber = await subscriberIdentity.getUserId()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'

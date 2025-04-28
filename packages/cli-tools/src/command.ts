@@ -38,7 +38,7 @@ export const createClientCommand = (
         .option('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(validKeyTypeValues, DEFAULT_KEY_TYPE)})`, 
             createFnParseEnum('key-type', validKeyTypeValues))
         .option('--public-key [public-key]', 'a public key - required by some key types')
-        .option('--config <file>', 'read connection and authentication settings from a config file')
+        .option('--config <file>', 'read connection and identity settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
             createFnParseEnum('env', ENVIRONMENT_IDS))
         .option('--quantum', 'require quantum resistant key exchange and signature algorithms to be used')

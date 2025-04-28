@@ -7,5 +7,5 @@ import { createClientCommand } from '../src/command'
 createClientCommand(async (client: StreamrClient) => {
     console.info(await client.getUserId())
 })
-    .description('displays your public key')
+    .description('displays your user id (public key)')
     .parseAsync()

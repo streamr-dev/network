@@ -4,9 +4,9 @@ import { Identity, SignerWithProvider } from './Identity'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 
 export abstract class KeyPairIdentity extends Identity {
-    publicKeyString: UserID
-    publicKey: UserIDRaw
-    privateKey: Uint8Array
+    readonly publicKeyString: UserID
+    readonly publicKey: UserIDRaw
+    readonly privateKey: Uint8Array
 
     constructor(publicKey: Uint8Array, privateKey: Uint8Array) {
         super()
