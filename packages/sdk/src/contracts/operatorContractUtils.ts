@@ -9,9 +9,8 @@ import {
     SponsorshipFactoryABI,
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
-import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
+import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
-import range from 'lodash/range'
 import { SignerWithProvider } from '../Authentication'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
@@ -19,49 +18,7 @@ import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
 
-/**
- * @deprecated
- * @hidden
- */
-export interface SetupOperatorContractOpts {
-    nodeCount?: number
-    operatorConfig?: {
-        operatorsCutPercentage?: number
-        metadata?: string
-    }
-    createTestWallet: (opts?: { gas?: boolean, tokens?: boolean }) => Promise<Wallet & SignerWithProvider>
-}
-
-/**
- * @deprecated
- * @hidden
- */
-export interface SetupOperatorContractReturnType {
-    operatorWallet: Wallet & SignerWithProvider
-    operatorContractAddress: EthereumAddress
-    nodeWallets: (Wallet & SignerWithProvider)[]
-}
-
 const logger = new Logger(module)
-
-export async function setupOperatorContract(
-    opts: SetupOperatorContractOpts
-): Promise<SetupOperatorContractReturnType> {
-    const operatorWallet = await opts.createTestWallet({ gas: true, tokens: true })
-    const operatorContract = await deployOperatorContract({
-        deployer: operatorWallet,
-        operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
-        metadata: opts?.operatorConfig?.metadata
-    })
-    const nodeWallets: (Wallet & SignerWithProvider)[] = []
-    if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
-        for (const _ of range(opts.nodeCount)) {
-            nodeWallets.push(await opts.createTestWallet({ gas: true, tokens: true }))
-        }
-        await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
-    }
-    return { operatorWallet, operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()), nodeWallets }
-}
 
 /**
  * @deprecated

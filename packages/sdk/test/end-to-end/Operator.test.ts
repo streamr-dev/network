@@ -6,7 +6,7 @@ import {
     OperatorFactory as OperatorFactoryContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, setupOperatorContract, SetupOperatorContractReturnType } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import sample from 'lodash/sample'
@@ -14,10 +14,9 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
     delegate,
+    deployOperatorContract,
     deploySponsorshipContract,
     getTestAdminWallet,
-    setupOperatorContract,
-    SetupOperatorContractReturnType,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
@@ -62,7 +61,7 @@ describe('Operator', () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1, createTestWallet })
+            setupOperatorContract({ nodeCount: 1, deployOperatorContract })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
@@ -136,7 +135,7 @@ describe('Operator', () => {
     it('flag', async () => {
         const flagger = deployedOperator
         const target = await setupOperatorContract({
-            createTestWallet
+            deployOperatorContract
         })
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))

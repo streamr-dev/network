@@ -1,9 +1,6 @@
 import { Operator, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
-import {
-    SetupOperatorContractOpts,
-    _operatorContractUtils,
-} from '@streamr/sdk'
-import { createTestWallet } from '@streamr/test-utils'
+import { _operatorContractUtils } from '@streamr/sdk'
+import { createTestWallet, setupOperatorContract, SetupOperatorContractOpts } from '@streamr/test-utils'
 import { Logger, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
@@ -13,7 +10,6 @@ const {
     delegate,
     deploySponsorshipContract,
     getProvider,
-    setupOperatorContract,
     sponsor,
     stake,
     getOperatorContract
@@ -42,7 +38,7 @@ describe('checkOperatorValueBreach', () => {
             operatorConfig: {
                 operatorsCutPercentage: 10
             },
-            createTestWallet
+            deployOperatorContract: _operatorContractUtils.deployOperatorContract
         }
     }, 60 * 1000)
 
