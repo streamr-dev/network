@@ -33,7 +33,6 @@ describe('Propagation', () => {
         await node1.start()
         node1.on('message', () => {
             totalReceived += 1
-            console.log("totalReceived", totalReceived)
         })
         discoveryLayerNodes.push(entryPoint)
         contentDeliveryLayerNodes.push(node1)

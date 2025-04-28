@@ -1,22 +1,23 @@
-import { DhtAddress, DhtCallContext, PeerDescriptor, toNodeId } from '@streamr/dht'
+import { DhtCallContext, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { MessageID, PauseNeighborRequest, ResumeNeighborRequest } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { IPlumTreeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
+import { PausedNeighbors } from './PausedNeighbors'
 
 type OnMetadataCb = (msg: MessageID, previousNode: PeerDescriptor) => Promise<void>
 type SendBufferCb = (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => Promise<void>
 export class PlumTreeRpcLocal implements IPlumTreeRpc {
 
     private readonly neighbors: NodeList
-    private readonly pausedNodes: Set<DhtAddress>
+    private readonly pausedNodes: PausedNeighbors
     private readonly onMetadataCb: OnMetadataCb
     private readonly sendBuffer: SendBufferCb
 
     constructor(
         neighbors: NodeList,
-        pausedNodes: Set<DhtAddress>,
+        pausedNodes: PausedNeighbors,
         onMetaDataCb: OnMetadataCb,
         sendBuffer: SendBufferCb,
     ) {
@@ -32,17 +33,17 @@ export class PlumTreeRpcLocal implements IPlumTreeRpc {
         return Empty
     }
 
-    async pauseNeighbor(_request: PauseNeighborRequest, context: ServerCallContext): Promise<Empty> {
+    async pauseNeighbor(request: PauseNeighborRequest, context: ServerCallContext): Promise<Empty> {
         const sender = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
         if (this.neighbors.has(sender)) {
-            this.pausedNodes.add(sender)
+            this.pausedNodes.add(sender, request.messageChainId)
         }
         return Empty
     }
 
     async resumeNeighbor(request: ResumeNeighborRequest, context: ServerCallContext): Promise<Empty> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        this.pausedNodes.delete(toNodeId(sender))
+        this.pausedNodes.delete(toNodeId(sender), request.messageChainId)
         await this.sendBuffer(request.fromTimestamp, sender)
         return Empty
     }

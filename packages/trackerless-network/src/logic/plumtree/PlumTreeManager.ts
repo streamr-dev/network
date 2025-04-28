@@ -12,6 +12,7 @@ import { ContentDeliveryRpcClient, PlumTreeRpcClient } from '../../../generated/
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
+import { PausedNeighbors } from './PausedNeighbors'
 
 interface Options {
     neighbors: NodeList
@@ -28,8 +29,8 @@ interface Events {
 export class PlumTreeManager extends EventEmitter<Events> {
     private neighbors: NodeList
     private localPeerDescriptor: PeerDescriptor
-    private localPausedNeighbors: Set<DhtAddress> = new Set()
-    private remotePausedNeighbors: Set<DhtAddress> = new Set()
+    private localPausedNeighbors: PausedNeighbors = new PausedNeighbors()
+    private remotePausedNeighbors: PausedNeighbors = new PausedNeighbors()
     private rpcLocal: PlumTreeRpcLocal
     private latestMessages: StreamMessage[] = []
     private rpcCommunicator: ListeningRpcCommunicator
@@ -57,25 +58,25 @@ export class PlumTreeManager extends EventEmitter<Events> {
     }
 
     onNeighborRemoved(nodeId: DhtAddress): void {
-        this.localPausedNeighbors.delete(nodeId)
-        this.remotePausedNeighbors.delete(nodeId)
+        this.localPausedNeighbors.deleteAll(nodeId)
+        this.remotePausedNeighbors.deleteAll(nodeId)
     }
 
-    async pauseNeighbor(node: PeerDescriptor): Promise<void> {
+    async pauseNeighbor(node: PeerDescriptor, msgChainId: string): Promise<void> {
         if (this.neighbors.has(toNodeId(node))) {
             logger.debug(`Pausing neighbor ${toNodeId(node)}`)
-            this.remotePausedNeighbors.add(toNodeId(node))
+            this.remotePausedNeighbors.add(toNodeId(node), msgChainId)
             const remote = this.createRemote(node)
-            await remote.pauseNeighbor()
+            await remote.pauseNeighbor(msgChainId)
         }
     }
 
-    async resumeNeighbor(node: PeerDescriptor, fromTimestamp: number): Promise<void> {
-        if (this.remotePausedNeighbors.has(toNodeId(node))) {
+    async resumeNeighbor(node: PeerDescriptor, msgChainId: string, fromTimestamp: number): Promise<void> {
+        if (this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)) {
             logger.debug(`Resuming neighbor ${toNodeId(node)}`)
-            this.remotePausedNeighbors.delete(toNodeId(node))
+            this.remotePausedNeighbors.delete(toNodeId(node), msgChainId)
             const remote = this.createRemote(node)
-            await remote.resumeNeighbor(fromTimestamp)
+            await remote.resumeNeighbor(fromTimestamp, msgChainId)
         }
     }
 
@@ -89,14 +90,14 @@ export class PlumTreeManager extends EventEmitter<Events> {
     async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
         const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
-        await Promise.all(messages.map((msg) => remote!.sendStreamMessage(msg)))
+        await Promise.all(messages.map((msg) => remote.sendStreamMessage(msg)))
     }
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // If the number of messages in the buffer is greater than 1, resume the sending neighbor
         // This is done to avoid oscillation of the neighbors during propagation
         if (this.latestMessages.filter((m) => m.messageId!.timestamp >= msg.timestamp).length > 1) {
-            await this.resumeNeighbor(previousNode, this.getLatestMessageTimestamp())
+            await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp())
         }
     }
 
@@ -114,7 +115,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         this.emit('message', msg, previousNode)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
         for (const neighbor of neighbors) {
-            if (this.localPausedNeighbors.has(toNodeId(neighbor.getPeerDescriptor()))) {
+            if (this.localPausedNeighbors.isPaused(toNodeId(neighbor.getPeerDescriptor()), msg.messageId!.messageChainId)) {
                 const remote = this.createRemote(neighbor.getPeerDescriptor())
                 setImmediate(() => remote.sendMetadata(msg.messageId!))
             } else {
@@ -123,8 +124,9 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
-    isNeighborPaused(node: PeerDescriptor): boolean {
-        return this.localPausedNeighbors.has(toNodeId(node)) || this.remotePausedNeighbors.has(toNodeId(node))
+    isNeighborPaused(node: PeerDescriptor, msgChainId: string): boolean {
+        return this.localPausedNeighbors.isPaused(toNodeId(node), msgChainId) 
+            || this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)
     }
 
     stop(): void {

@@ -199,8 +199,10 @@ message NodeInfoResponse {
 }
 
 message PauseNeighborRequest {
+  string messageChainId = 1;
 }
 
 message ResumeNeighborRequest {
-  int64 fromTimestamp = 1;
+  string messageChainId = 1;
+  int64 fromTimestamp = 2;
 }
