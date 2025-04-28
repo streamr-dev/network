@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { StreamRegistryABI } from '@streamr/network-contracts'
+import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Contract, JsonRpcProvider, Wallet } from 'ethers'

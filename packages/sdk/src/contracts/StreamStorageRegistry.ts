@@ -1,5 +1,4 @@
-import type { StreamStorageRegistry as StreamStorageRegistryContract } from '@streamr/network-contracts'
-import { StreamStorageRegistryABI } from '@streamr/network-contracts'
+import { StreamStorageRegistryABI, StreamStorageRegistry as StreamStorageRegistryContract } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Interface } from 'ethers'
 import min from 'lodash/min'

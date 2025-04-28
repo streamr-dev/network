@@ -1,5 +1,4 @@
-import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { StreamRegistryABI } from '@streamr/network-contracts'
+import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     GraphQLQuery,

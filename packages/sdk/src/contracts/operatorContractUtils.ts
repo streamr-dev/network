@@ -1,11 +1,14 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type {
+import {
+    OperatorABI,
     Operator as OperatorContract,
+    OperatorFactoryABI,
     OperatorFactory as OperatorFactoryContract,
+    SponsorshipABI,
     Sponsorship as SponsorshipContract,
+    SponsorshipFactoryABI,
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
-import { OperatorABI, OperatorFactoryABI, SponsorshipABI, SponsorshipFactoryABI } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import range from 'lodash/range'

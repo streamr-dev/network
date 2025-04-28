@@ -1,6 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Sponsorship } from '@streamr/network-contracts'
-import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
+import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'

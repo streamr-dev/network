@@ -1,10 +1,11 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { 
+import {
+    OperatorABI,
     Operator as OperatorContract,
+    OperatorFactoryABI,
     OperatorFactory as OperatorFactoryContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { OperatorABI, OperatorFactoryABI } from '@streamr/network-contracts'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'

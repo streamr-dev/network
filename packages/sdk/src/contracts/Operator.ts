@@ -1,5 +1,4 @@
-import type { Operator as OperatorContract, Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
-import { OperatorABI, SponsorshipABI } from '@streamr/network-contracts'
+import { OperatorABI, Operator as OperatorContract, SponsorshipABI, Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     Logger,

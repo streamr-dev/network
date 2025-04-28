@@ -1,5 +1,4 @@
-import type { NodeRegistry as NodeRegistryContract } from '@streamr/network-contracts'
-import { NodeRegistryABI } from '@streamr/network-contracts'
+import { NodeRegistryABI, NodeRegistry as NodeRegistryContract } from '@streamr/network-contracts'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
