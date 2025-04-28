@@ -10,10 +10,10 @@ import { z } from 'zod'
 import { Authentication } from '../Authentication'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
-import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
-import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
-import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
+import type { Operator as OperatorContract } from '@streamr/network-contracts'
+import { OperatorABI } from '@streamr/network-contracts'
+import type { Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
+import { SponsorshipABI } from '@streamr/network-contracts'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
@@ -163,7 +163,7 @@ export class Operator {
         this.rpcProviderSource = rpcProviderSource
         this.contractReadonly = contractFactory.createReadContract<OperatorContract>(
             toEthereumAddress(contractAddress),
-            OperatorArtifact,
+            OperatorABI,
             rpcProviderSource.getProvider(),
             'operator'
         )
@@ -181,7 +181,7 @@ export class Operator {
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
     ): void {
-        const contractInterface = new Interface(OperatorArtifact)
+        const contractInterface = new Interface(OperatorABI)
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
@@ -558,7 +558,7 @@ export class Operator {
     async getStreamId(sponsorshipAddress: EthereumAddress): Promise<StreamID> {
         const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
             toEthereumAddress(sponsorshipAddress),
-            SponsorshipArtifact,
+            SponsorshipABI,
             this.rpcProviderSource.getProvider(),
             'sponsorship'
         )
@@ -642,7 +642,7 @@ export class Operator {
             const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.contract = this.contractFactory.createWriteContract<OperatorContract>(
                 this.contractAddress,
-                OperatorArtifact,
+                OperatorABI,
                 signer,
                 'operator'
             )

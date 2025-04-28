@@ -92,6 +92,7 @@
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.5.2",
     "@streamr/dht": "103.0.0-rc.3",
+    "@streamr/network-contracts": "^9.0.0",
     "@streamr/proto-rpc": "103.0.0-rc.3",
     "@streamr/trackerless-network": "103.0.0-rc.3",
     "@streamr/utils": "103.0.0-rc.3",
