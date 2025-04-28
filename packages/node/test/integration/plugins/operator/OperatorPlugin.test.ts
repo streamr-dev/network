@@ -1,4 +1,3 @@
-import type { Operator } from '@streamr/network-contracts'
 import {
     ProxyDirection,
     SignerWithProvider,
@@ -28,7 +27,7 @@ describe('OperatorPlugin', () => {
 
     let broker: Broker
     let brokerWallet: Wallet
-    let operatorContract: Operator
+    let operatorContractAddress: EthereumAddress
     let operatorWallet: Wallet & SignerWithProvider
 
     beforeAll(async () => {
@@ -38,7 +37,7 @@ describe('OperatorPlugin', () => {
         }))
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet
-        operatorContract = deployment.operatorContract
+        operatorContractAddress = deployment.operatorContractAddress
     }, 30 * 1000)
 
     afterEach(async () => {
@@ -59,8 +58,8 @@ describe('OperatorPlugin', () => {
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
-        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
-        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
+        await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
+        await stake(operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
 
         const publisher = createClient()
         await stream.grantPermissions({
@@ -74,7 +73,7 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: await operatorContract.getAddress()
+                    operatorContractAddress: operatorContractAddress
                 }
             }
         })
@@ -98,7 +97,7 @@ describe('OperatorPlugin', () => {
                 privateKey: brokerWallet.privateKey,
                 extraPlugins: {
                     operator: {
-                        operatorContractAddress: await operatorContract.getAddress()
+                        operatorContractAddress
                     }
                 }
             })
@@ -117,10 +116,9 @@ describe('OperatorPlugin', () => {
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
-        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
-        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship.getAddress(), parseEther('10000'))
+        await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
+        await stake(operatorWallet, operatorContractAddress, await sponsorship.getAddress(), parseEther('10000'))
 
-        const operatorContractAddress = await operatorContract.getAddress()
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             extraPlugins: {

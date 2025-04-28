@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
+import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import range from 'lodash/range'
 import { SignerWithProvider } from '../Authentication'
@@ -36,7 +36,7 @@ export interface SetupOperatorContractOpts {
  */
 export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet & SignerWithProvider
-    operatorContract: OperatorContract
+    operatorContractAddress: EthereumAddress
     nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
@@ -58,7 +58,7 @@ export async function setupOperatorContract(
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
-    return { operatorWallet, operatorContract, nodeWallets }
+    return { operatorWallet, operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()), nodeWallets }
 }
 
 /**

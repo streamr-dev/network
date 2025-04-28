@@ -97,20 +97,19 @@ const createOperator = async (
         },
         createTestWallet
     })
-    await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_AMOUNT)
-    await stake(operator.operatorWallet, await operator.operatorContract.getAddress(), sponsorshipAddress, STAKE_AMOUNT)
+    await delegate(operator.operatorWallet, operator.operatorContractAddress, DELEGATE_AMOUNT)
+    await stake(operator.operatorWallet, operator.operatorContractAddress, sponsorshipAddress, STAKE_AMOUNT)
     const node = await createBroker(formConfig({
         privateKey: operator.nodeWallets[0].privateKey,
         extraPlugins: {
             operator: {
-                operatorContractAddress: await operator.operatorContract.getAddress(),
+                operatorContractAddress: operator.operatorContractAddress,
                 ...pluginConfig
             }
         }
     }))
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    logger.info(`Operator: ${(await operator.operatorContract.getAddress()).toLowerCase()} freerider=${isFreerider}`)
-    return { node, contractAddress: await operator.operatorContract.getAddress() }
+    logger.info(`Operator: ${operator.operatorContractAddress} freerider=${isFreerider}`)
+    return { node, contractAddress: operator.operatorContractAddress }
 }
 
 const createTheGraphClient = (): TheGraphClient => {

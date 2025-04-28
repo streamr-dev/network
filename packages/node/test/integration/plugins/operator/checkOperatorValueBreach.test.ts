@@ -15,7 +15,8 @@ const {
     getProvider,
     setupOperatorContract,
     sponsor,
-    stake
+    stake,
+    getOperatorContract
 } = _operatorContractUtils
 
 const logger = new Logger(module)
@@ -47,27 +48,28 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, createTestWallet })
-        const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
+        const { operatorContractAddress: watcherOperatorContractAddress, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, createTestWallet })
+        const { operatorWallet, operatorContractAddress } = await setupOperatorContract(deployConfig)
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
+        await delegate(operatorWallet, operatorContractAddress, parseEther('20000'))
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
-        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('200'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship2.getAddress(), parseEther('25000'))
-        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, operatorContractAddress, await sponsorship2.getAddress(), parseEther('10000'))
+        const operatorContract = getOperatorContract(operatorContractAddress)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
-        const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
+        const operator = client.getOperator(toEthereumAddress(watcherOperatorContractAddress))
 
         logger.debug('Waiting until above', { allowedDifference })
         await until(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorValueBreach(operator, client, async () => {
-            return [toEthereumAddress(await operatorContract.getAddress())]
+            return [toEthereumAddress(operatorContractAddress)]
         }, 1n, 20)
 
         const earnings = await getEarnings(operatorContract)
