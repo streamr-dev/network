@@ -48,7 +48,7 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContractAddress: watcherOperatorContractAddress, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig, createTestWallet })
+        const { operatorContractAddress: watcherOperatorContractAddress, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContractAddress } = await setupOperatorContract(deployConfig)
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         await delegate(operatorWallet, operatorContractAddress, parseEther('20000'))
