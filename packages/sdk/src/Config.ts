@@ -13,7 +13,9 @@ import { Identity } from './identity/Identity'
 import { KeyType } from './identity/identityConfig'
 
 /**
- * For passing in an Ethereum provider (= wallet) for signing
+ * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193} 
+ * compatible provider will do. The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type 
+ * definition used here is from the `ethers` library.
  */
 export interface EthereumProviderIdentityConfig {
     ethereum: Eip1193Provider
