@@ -181,20 +181,24 @@ export const undelegate = async (
 }
 
 export const stake = async (
-    operatorContract: OperatorContract,
+    staker: SignerWithProvider,
+    operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Stake', { amount: amount.toString() })
-    await (await operatorContract.stake(sponsorshipContractAddress, amount)).wait()
+    const contract = getOperatorContract(operatorContractAddress).connect(staker)
+    await (await contract.stake(sponsorshipContractAddress, amount)).wait()
 }
 
 export const unstake = async (
-    operatorContract: OperatorContract,
+    staker: SignerWithProvider,
+    operatorContractAddress: string,
     sponsorshipContractAddress: string
 ): Promise<void> => {
     logger.debug('Unstake')
-    await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
+    const contract = getOperatorContract(operatorContractAddress).connect(staker)
+    await (await contract.unstake(sponsorshipContractAddress)).wait()
 }
 
 export const sponsor = async (

@@ -126,7 +126,7 @@ describe('profit', () => {
         await sponsor(sponsorWallet, await sponsorshipContract.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), OPERATOR_DELEGATED_AMOUNT)
         await delegate(delegatorWallet, await operatorContract.getAddress(), EXTERNAL_DELEGATED_AMOUNT)
-        await stake(operatorContract, await sponsorshipContract.getAddress(), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorshipContract.getAddress(), TOTAL_DELEGATED)
  
         const broker = await startBroker({
             privateKey: operatorNodeWallet.privateKey,
@@ -152,7 +152,7 @@ describe('profit', () => {
         })
         await broker.stop()
 
-        await unstake(operatorContract, await sponsorshipContract.getAddress())
+        await unstake(operatorWallet, await operatorContract.getAddress(), await sponsorshipContract.getAddress())
         await undelegate(
             delegatorWallet,
             await operatorContract.getAddress(),

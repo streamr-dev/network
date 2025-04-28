@@ -79,8 +79,9 @@ describe('Operator', () => {
     }, 90 * 1000)
 
     it('getStakedOperators', async () => {
-        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), parseEther('20000'))
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        const operatorContractAddress = await deployedOperator.operatorContract.getAddress()
+        await delegate(deployedOperator.operatorWallet, operatorContractAddress, parseEther('20000'))
+        await stake(deployedOperator.operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
         const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
         const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
         expect(randomOperatorAddress).toBeDefined()
@@ -103,10 +104,10 @@ describe('Operator', () => {
     }, 30 * 1000)
 
     it('getSponsorships, getOperatorsInSponsorship', async () => {
-        const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+        const operatorContractAddress = await deployedOperator.operatorContract.getAddress()
         await delegate(deployedOperator.operatorWallet, operatorContractAddress, parseEther('20000'))
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
-        await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(deployedOperator.operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(deployedOperator.operatorWallet, operatorContractAddress, await sponsorship2.getAddress(), parseEther('10000'))
 
         const operator = await getOperator(undefined, deployedOperator)
 
@@ -143,8 +144,8 @@ describe('Operator', () => {
 
         await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), parseEther('20000'))
         await delegate(target.operatorWallet, await target.operatorContract.getAddress(), parseEther('30000'))
-        await stake(flagger.operatorContract, await sponsorship2.getAddress(), parseEther('15000'))
-        await stake(target.operatorContract, await sponsorship2.getAddress(), parseEther('25000'))
+        await stake(flagger.operatorWallet, await flagger.operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('15000'))
+        await stake(target.operatorWallet, await target.operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('25000'))
 
         const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
         await contractFacade.flag(

@@ -60,7 +60,7 @@ describe('OperatorPlugin', () => {
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
-        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
 
         const publisher = createClient()
         await stream.grantPermissions({
@@ -118,7 +118,7 @@ describe('OperatorPlugin', () => {
         const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('10000'))
-        await stake(operatorContract, await sponsorship.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship.getAddress(), parseEther('10000'))
 
         const operatorContractAddress = await operatorContract.getAddress()
         broker = await startBroker({

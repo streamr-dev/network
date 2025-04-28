@@ -47,7 +47,7 @@ describe('maintainOperatorValue', () => {
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('25000'))
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
-        await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
         const { maxAllowedEarnings } = await operator.getEarnings(1n, 20)
         const triggerWithdrawLimit = multiplyWeiAmount(maxAllowedEarnings, 1 - SAFETY_FRACTION)

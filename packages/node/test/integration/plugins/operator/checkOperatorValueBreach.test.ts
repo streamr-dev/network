@@ -53,10 +53,10 @@ describe('checkOperatorValueBreach', () => {
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('25000'))
-        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('200'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship2.getAddress(), parseEther('25000'))
-        await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('10000'))
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
