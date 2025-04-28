@@ -19,7 +19,7 @@ const streamr = new StreamrClient({
     auth: {
         publicKey: '...',  // hex encoded ml-kem-87 public key
         privateKey: '...', // hex encoded ml-kem-87 private key
-        keyType: 'ml-dsa-87'
+        keyType: 'ML_DSA_87'
     }
 })
 ```
@@ -29,7 +29,7 @@ const streamr = new StreamrClient({
 To generate ML-DSA keys, see `MLDSAKeyPair.generate()` or use CLI tool:
 
 ```
-streamr keys generate --key-type ml-dsa-87
+streamr identity generate --key-type ML_DSA_87
 ```
 
 ## Enforcing quantum security

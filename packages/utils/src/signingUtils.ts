@@ -6,7 +6,7 @@ import { areEqualBinaries } from './binaryUtils'
 import { UserIDRaw } from './UserID'
 import { randomBytes } from '@noble/post-quantum/utils'
 
-const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
+const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
 
 export interface KeyPair {
@@ -26,7 +26,10 @@ export interface SigningUtil {
 export const ECDSA_SECP256K1_EVM: SigningUtil = {
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
         keccak.reset()
-        keccak.update(useEthereumMagic ? Buffer.concat([Buffer.from(SIGN_MAGIC + message.length), message]) : Buffer.from(message))
+        keccak.update(useEthereumMagic ? Buffer.concat([
+            Buffer.from(ECDSA_SECP256K1_EVM_SIGN_MAGIC + message.length), 
+            message
+        ]) : Buffer.from(message))
         return keccak.digest('binary')
     },
 
