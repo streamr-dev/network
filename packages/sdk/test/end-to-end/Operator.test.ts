@@ -1,4 +1,10 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import type { 
+    Operator as OperatorContract,
+    OperatorFactory as OperatorFactoryContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
+import { OperatorABI, OperatorFactoryABI } from '@streamr/network-contracts'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
@@ -14,11 +20,6 @@ import {
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
-import type { Operator as OperatorContract } from '@streamr/network-contracts'
-import { OperatorABI } from '@streamr/network-contracts'
-import type { OperatorFactory as OperatorFactoryContract } from '@streamr/network-contracts'
-import { OperatorFactoryABI } from '@streamr/network-contracts'
-import type { Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({

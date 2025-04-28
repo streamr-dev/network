@@ -1,3 +1,5 @@
+import type { Operator as OperatorContract, Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
+import { OperatorABI, SponsorshipABI } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     Logger,
@@ -8,17 +10,13 @@ import {
 import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
 import { Authentication } from '../Authentication'
+import { NetworkPeerDescriptor } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
-import type { Operator as OperatorContract } from '@streamr/network-contracts'
-import { OperatorABI } from '@streamr/network-contracts'
-import type { Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
-import { SponsorshipABI } from '@streamr/network-contracts'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
-import { NetworkPeerDescriptor } from '../Config'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -574,7 +572,7 @@ export class Operator {
         const gasLimit = 1300000n
 
         // estimateGas throws if transaction would fail, so doing the gas estimation will avoid sending failing transactions
-        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData) as bigint
+        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData)
         if (gasEstimate > gasLimit) {
             throw new Error(`Gas estimate (${gasEstimate}) exceeds limit (${gasLimit})`)
         }

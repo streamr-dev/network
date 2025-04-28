@@ -1,18 +1,17 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import type {
+    Operator as OperatorContract,
+    OperatorFactory as OperatorFactoryContract,
+    Sponsorship as SponsorshipContract,
+    SponsorshipFactory as SponsorshipFactoryContract
+} from '@streamr/network-contracts'
+import { OperatorABI, OperatorFactoryABI, SponsorshipABI, SponsorshipFactoryABI } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import range from 'lodash/range'
 import { SignerWithProvider } from '../Authentication'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
-import type { Operator as OperatorContract } from '@streamr/network-contracts'
-import { OperatorABI } from '@streamr/network-contracts'
-import type { OperatorFactory as OperatorFactoryContract } from '@streamr/network-contracts'
-import { OperatorFactoryABI } from '@streamr/network-contracts'
-import type { Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
-import { SponsorshipABI } from '@streamr/network-contracts'
-import type { SponsorshipFactory as SponsorshipFactoryContract } from '@streamr/network-contracts'
-import { SponsorshipFactoryABI } from '@streamr/network-contracts'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')

@@ -1,3 +1,5 @@
+import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
+import { StreamRegistryABI } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     GraphQLQuery,
@@ -23,8 +25,6 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
-import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { StreamRegistryABI } from '@streamr/network-contracts'
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
@@ -42,7 +42,7 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { createCacheMap, Mapping } from '../utils/Mapping'
+import { Mapping, createCacheMap } from '../utils/Mapping'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'

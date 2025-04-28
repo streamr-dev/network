@@ -1,12 +1,12 @@
 import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
+import { StreamRegistryABI } from '@streamr/network-contracts'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Contract, JsonRpcProvider, Wallet } from 'ethers'
 import { createDecoratedContract } from '../../src/contracts/contract'
-import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { StreamRegistryABI } from '@streamr/network-contracts'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
