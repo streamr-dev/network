@@ -5,14 +5,14 @@ import { StreamrClient, _operatorContractUtils } from '@streamr/sdk'
 import { createClientCommand } from '../src/command'
 import { parseEther } from 'ethers'
 
-createClientCommand(async (client: StreamrClient, operatorAddress: string, sponsorshipAddress: string, dataTokenAmount: string) => {
+createClientCommand(async (client: StreamrClient, operatorContractAddress: string, sponsorshipAddress: string, dataTokenAmount: string) => {
     await _operatorContractUtils.stake(
         await client.getSigner(),
-        operatorAddress,
+        operatorContractAddress,
         sponsorshipAddress,
         parseEther(dataTokenAmount)
     )
 })
     .description('stake funds to a sponsorship')
-    .arguments('<operatorAddress> <sponsorshipAddress> <dataTokenAmount>')
+    .arguments('<operatorContractAddress> <sponsorshipAddress> <dataTokenAmount>')
     .parseAsync()
