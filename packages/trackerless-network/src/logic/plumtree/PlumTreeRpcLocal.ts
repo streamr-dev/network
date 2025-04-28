@@ -3,20 +3,24 @@ import { MessageID, PauseNeighborRequest, ResumeNeighborRequest } from '../../..
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { IPlumTreeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
+import { NodeList } from '../NodeList'
 
 type OnMetadataCb = (msg: MessageID, previousNode: PeerDescriptor) => Promise<void>
 type SendBufferCb = (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => Promise<void>
 export class PlumTreeRpcLocal implements IPlumTreeRpc {
 
+    private readonly neighbors: NodeList
     private readonly pausedNodes: Set<DhtAddress>
     private readonly onMetadataCb: OnMetadataCb
     private readonly sendBuffer: SendBufferCb
 
     constructor(
+        neighbors: NodeList,
         pausedNodes: Set<DhtAddress>,
         onMetaDataCb: OnMetadataCb,
         sendBuffer: SendBufferCb,
     ) {
+        this.neighbors = neighbors
         this.pausedNodes = pausedNodes
         this.onMetadataCb = onMetaDataCb
         this.sendBuffer = sendBuffer
@@ -30,7 +34,9 @@ export class PlumTreeRpcLocal implements IPlumTreeRpc {
 
     async pauseNeighbor(_request: PauseNeighborRequest, context: ServerCallContext): Promise<Empty> {
         const sender = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
-        this.pausedNodes.add(sender)
+        if (this.neighbors.has(sender)) {
+            this.pausedNodes.add(sender)
+        }
         return Empty
     }
 
