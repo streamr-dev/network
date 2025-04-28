@@ -31,7 +31,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
     private localPausedNeighbors: Set<DhtAddress>
     private remotePausedNeighbors: Set<DhtAddress> = new Set()
     private rpcLocal: PlumTreeRpcLocal
-    private lastMessages: StreamMessage[] = []
+    private latestMessages: StreamMessage[] = []
     private rpcCommunicator: ListeningRpcCommunicator
 
     constructor(options: Options) {
@@ -79,23 +79,23 @@ export class PlumTreeManager extends EventEmitter<Events> {
     }
 
     getLatestMessageTimestamp(): number {
-        if (this.lastMessages.length === 0) {
+        if (this.latestMessages.length === 0) {
             return 0
         }
-        return this.lastMessages[this.lastMessages.length - 1].messageId!.timestamp
+        return this.latestMessages[this.latestMessages.length - 1].messageId!.timestamp
     }
 
     async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
-        const messages = this.lastMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
+        const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
         console.log("sendBuffer", fromTimestamp, messages.length)
         await Promise.all(messages.map((msg) => remote!.sendStreamMessage(msg)))
     }
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
-        // Check that the message is found in the last 20 messages
-        // If not resume the sending neighbor 
-        if (this.lastMessages.find((m) => m.messageId!.timestamp < msg.timestamp)) {
+        // If the number of messages in the buffer is greater than 1, resume the sending neighbor
+        // This is done to avoid oscillation of the neighbors during propagation
+        if (this.latestMessages.filter((m) => m.messageId!.timestamp >= msg.timestamp).length > 2) {
             await this.resumeNeighbor(previousNode, this.getLatestMessageTimestamp())
         }
     }
@@ -105,11 +105,11 @@ export class PlumTreeManager extends EventEmitter<Events> {
     }
 
     broadcast(msg: StreamMessage, previousNode: DhtAddress): void {
-        if (this.lastMessages.length < 20) {
-            this.lastMessages.push(msg)
+        if (this.latestMessages.length < 20) {
+            this.latestMessages.push(msg)
         } else {
-            this.lastMessages.shift()
-            this.lastMessages.push(msg)
+            this.latestMessages.shift()
+            this.latestMessages.push(msg)
         }
         this.emit('message', msg, previousNode)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
