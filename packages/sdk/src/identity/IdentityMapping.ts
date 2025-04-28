@@ -16,8 +16,8 @@ import { SignatureType } from '@streamr/trackerless-network'
  * 4. Wire everything together below
  */
 export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ML_DSA_87'] as const
+/** @internal */
 export const IdentityMapping: Record<KeyType, {
-    /** @internal */
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     generate: () => Identity
     signingUtil: SigningUtil
