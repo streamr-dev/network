@@ -35,7 +35,8 @@ export const createClientCommand = (
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'a private key to establish your identity')
-        .option('--key-type [key-type]', `type of public/private key (one of: [${validKeyTypeValues.join(', ')}], default: ${DEFAULT_KEY_TYPE})`)
+        .option('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(validKeyTypeValues, DEFAULT_KEY_TYPE)})`, 
+            createFnParseEnum('key-type', validKeyTypeValues))
         .option('--public-key [public-key]', 'a public key - required by some key types')
         .option('--config <file>', 'read connection and authentication settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,

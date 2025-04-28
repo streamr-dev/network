@@ -18,7 +18,7 @@ const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
 }
 
 /**
- * Represents a message in the Streamr Network. This is an application-facing class, whereas StreamMessage is considered internal.
+ * Represents a message in the Streamr Network.
  *
  * @category Important
  */

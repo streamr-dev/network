@@ -89,7 +89,7 @@ If you don't want to exchange the keys via the network, you can pre-configure sy
 
 ```ts
 // Generates a new AES-256 key (32 random bytes)
-const key = new GroupKey('key-id', crypto.randomBytes(32))
+const key = new EncryptionKey('key-id', crypto.randomBytes(32))
 
 // Set the key on a publisher
 publisher.updateEncryptionKey({

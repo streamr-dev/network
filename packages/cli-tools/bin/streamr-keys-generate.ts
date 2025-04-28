@@ -4,22 +4,21 @@ import { KeyPairIdentity } from '@streamr/sdk/dist/types/src/identity/KeyPairIde
 import { identityConfig, validKeyTypeValues } from '@streamr/sdk'
 import { binaryToHex } from '@streamr/utils'
 import { createCommand, Options } from '../src/command'
+import { formEnumArgValueDescription, createFnParseEnum } from '../src/common'
 
 createCommand()
     .description('generate a public/private key pair based on the --key-type option')
-    .option('--key-type [key-type]', `one of: [${validKeyTypeValues.join(', ')}]`)
+    .requiredOption('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(validKeyTypeValues)})`, 
+        createFnParseEnum('key-type', validKeyTypeValues))
     .action(async (options: Options) => {
-        if (!options.keyType) {
-            console.error(`Error: Please provide --key-type [one of: ${validKeyTypeValues.join(', ')}]`)
-        } else {
-            const config = identityConfig[options.keyType]
-            if (!config) {
-                console.error(`Error: Invalid key type. Must be one of: ${validKeyTypeValues.join(', ')}.`)
-            }
-            const identity = config.generate() as KeyPairIdentity
-            console.info(`Public key: ${await identity.getUserIdString()}`)
-            console.info(`---`)
-            console.info(`Private key: ${binaryToHex(await identity.getPrivateKey())}`)
+        const config = identityConfig[options.keyType!] // required option
+        if (!config) {
+            console.error(`Error: Invalid key type. Must be one of: ${validKeyTypeValues.join(', ')}.`)
         }
+        const identity = config.generate() as KeyPairIdentity
+        console.info(JSON.stringify({ 
+            publicKey: await identity.getUserIdString(), 
+            privateKey: binaryToHex(await identity.getPrivateKey()),
+        }, null, 4))
     })
     .parse()

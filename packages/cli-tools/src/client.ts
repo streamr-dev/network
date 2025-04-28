@@ -8,12 +8,11 @@ export const getClientConfig = (commandOptions: Options, overridenOptions: Strea
     const environmentOptions: StreamrClientConfig = { environment: commandOptions.env }
 
     const keyPairConfig: KeyPairIdentityConfig | undefined = 
-        (commandOptions.privateKey) ? { privateKey: commandOptions.privateKey } : undefined
-
-    if (keyPairConfig) {
-        keyPairConfig.publicKey = commandOptions.publicKey
-        keyPairConfig.keyType = commandOptions.keyType
-    }
+        (commandOptions.privateKey) ? { 
+            privateKey: commandOptions.privateKey,
+            publicKey: commandOptions.publicKey,
+            keyType: commandOptions.keyType
+        } : undefined
 
     const encryptionOptions: StreamrClientConfig = 
         (commandOptions.quantum === true) ? { 
