@@ -58,7 +58,7 @@ export class GroupKeyManager {
     }
 
     async fetchLatestEncryptionKey(publisherId: UserID, streamId: StreamID): Promise<GroupKey | undefined> {
-        if (publisherId !== (await this.identity.getUserIdString())) {
+        if (publisherId !== (await this.identity.getUserId())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
         const keyId = await this.localGroupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
@@ -66,7 +66,7 @@ export class GroupKeyManager {
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: UserID, streamId: StreamID): Promise<GroupKey> {
-        if (publisherId !== (await this.identity.getUserIdString())) { // TODO: unit test?
+        if (publisherId !== (await this.identity.getUserId())) { // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {

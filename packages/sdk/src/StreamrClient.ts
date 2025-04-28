@@ -641,7 +641,7 @@ export class StreamrClient {
      * Gets the user id (i.e. Ethereum address or public key) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
-        return await this.identity.getUserIdString()
+        return await this.identity.getUserId()
     }
 
     /**

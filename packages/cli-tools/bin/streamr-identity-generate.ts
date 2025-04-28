@@ -17,7 +17,7 @@ createCommand()
         }
         const identity = config.generate() as KeyPairIdentity
         console.info(JSON.stringify({ 
-            publicKey: await identity.getUserIdString(), 
+            publicKey: await identity.getUserId(), 
             privateKey: binaryToHex(await identity.getPrivateKey()),
         }, null, 4))
     })

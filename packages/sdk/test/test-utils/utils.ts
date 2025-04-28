@@ -157,7 +157,7 @@ export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     const identity = {
-        getUserIdString: () => ownerId
+        getUserId: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(

@@ -77,8 +77,8 @@ describe('Validator2', () => {
     })
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getUserIdString()
-        const subscriber = await subscriberAuthentication.getUserIdString()
+        const publisher = await publisherAuthentication.getUserId()
+        const subscriber = await subscriberAuthentication.getUserId()
         // Default stubs
         getStreamMetadata = async () => ({
             partitions: 10
@@ -241,7 +241,7 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserIdString()
+            const publisher = await publisherAuthentication.getUserId()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -251,7 +251,7 @@ describe('Validator2', () => {
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserIdString()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await expect(getValidator().validate(groupKeyRequest)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -298,7 +298,7 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getUserIdString()
+            const publisher = await publisherAuthentication.getUserId()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'
@@ -308,7 +308,7 @@ describe('Validator2', () => {
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getUserIdString()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await expect(getValidator().validate(groupKeyResponse)).rejects.toThrowStreamrClientError({
                 code: 'MISSING_PERMISSION'

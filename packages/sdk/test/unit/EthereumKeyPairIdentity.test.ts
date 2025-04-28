@@ -15,7 +15,7 @@ describe('EthereumKeyPairIdentity', () => {
                     privateKey: PRIVATE_KEY,
                 }
             })
-            expect(await keyPair.getUserIdString()).toBe(wallet.address.toLowerCase())
+            expect(await keyPair.getUserId()).toBe(wallet.address.toLowerCase())
         })
         it('can be created with 0x prefix on private key', async () => {
             const keyPair = EthereumKeyPairIdentity.fromConfig({
@@ -23,7 +23,7 @@ describe('EthereumKeyPairIdentity', () => {
                     privateKey: `0x${PRIVATE_KEY}`
                 }
             })
-            expect(await keyPair.getUserIdString()).toBe(wallet.address.toLowerCase())
+            expect(await keyPair.getUserId()).toBe(wallet.address.toLowerCase())
         })
         it('accepts the address as the publicKey', async () => {
             const keyPair = EthereumKeyPairIdentity.fromConfig({
@@ -32,7 +32,7 @@ describe('EthereumKeyPairIdentity', () => {
                     privateKey: `0x${PRIVATE_KEY}`
                 }
             })
-            expect(await keyPair.getUserIdString()).toBe(wallet.address.toLowerCase())
+            expect(await keyPair.getUserId()).toBe(wallet.address.toLowerCase())
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
             expect(() => EthereumKeyPairIdentity.fromConfig({

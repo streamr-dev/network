@@ -15,7 +15,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
  * and capable of signing. You can configure new Identities in identityConfig.ts.
  */
 export abstract class Identity {
-    abstract getUserIdString(): Promise<UserID>
+    abstract getUserId(): Promise<UserID>
     abstract getUserIdBytes(): Promise<UserIDRaw>
     abstract getSignatureType(): SignatureType
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>

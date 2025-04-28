@@ -294,7 +294,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.identity.getUserIdString(),
+            await this.identity.getUserId(),
             connectionCount
         )
     }

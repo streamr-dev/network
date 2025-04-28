@@ -42,7 +42,7 @@ export abstract class KeyPairIdentity extends Identity {
         return this.publicKey
     }
 
-    async getUserIdString(): Promise<UserID> { 
+    async getUserId(): Promise<UserID> { 
         return this.publicKeyString
     }
 

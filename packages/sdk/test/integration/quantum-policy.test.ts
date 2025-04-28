@@ -32,8 +32,8 @@ describe('Quantum encryption policies', () => {
         })
         // nonQuantumClient also has pub/sub permissions to stream because it created the stream
         stream = await createTestStream(nonQuantumClient, module)
-        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], userId: await publisherIdentity.getUserIdString() })
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: await subscriberIdentity.getUserIdString() })
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], userId: await publisherIdentity.getUserId() })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: await subscriberIdentity.getUserId() })
     })
 
     afterEach(async () => {
