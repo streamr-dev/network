@@ -173,11 +173,11 @@ export const delegate = async (
 
 export const undelegate = async (
     delegator: SignerWithProvider,
-    operatorContract: OperatorContract,
+    operatorContractAddress: string,
     amount: WeiAmount
 ): Promise<void> => {    
     logger.debug('Undelegate', { amount: amount.toString() })
-    await (await operatorContract.connect(delegator).undelegate(amount)).wait()
+    await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait()
 }
 
 export const stake = async (

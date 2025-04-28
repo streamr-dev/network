@@ -155,12 +155,12 @@ describe('profit', () => {
         await unstake(operatorContract, await sponsorshipContract.getAddress())
         await undelegate(
             delegatorWallet,
-            operatorContract,
+            await operatorContract.getAddress(),
             EXTERNAL_DELEGATED_AMOUNT + DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS
         )
         await undelegate(
             operatorWallet,
-            operatorContract,
+            await operatorContract.getAddress(),
             OPERATOR_DELEGATED_AMOUNT + OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS + PROFIT_INACCURACY
         )
         const afterBalances = await getBalances()
