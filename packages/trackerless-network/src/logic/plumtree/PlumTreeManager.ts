@@ -85,13 +85,11 @@ export class PlumTreeManager extends EventEmitter<Events> {
         return this.lastMessages[this.lastMessages.length - 1].messageId!.timestamp
     }
 
-    sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): void {
+    async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
-        for (const msg of this.lastMessages) {
-            if (msg.messageId!.timestamp >= fromTimestamp) {
-                remote!.sendStreamMessage(msg)
-            }
-        }
+        const messages = this.lastMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
+        console.log("sendBuffer", fromTimestamp, messages.length)
+        await Promise.all(messages.map((msg) => remote!.sendStreamMessage(msg)))
     }
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {

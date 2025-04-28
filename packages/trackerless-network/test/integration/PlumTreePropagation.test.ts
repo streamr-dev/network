@@ -5,6 +5,7 @@ import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNo
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
+import crypto from 'crypto'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
@@ -12,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 128
+    const NUM_OF_NODES = 64
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -76,7 +77,7 @@ describe('Propagation', () => {
 
         for (let i = 1; i < 25; i++) {
             const msg = createStreamMessage(
-                JSON.stringify({ hello: 'WORLD' }),
+                JSON.stringify({ hello: crypto.randomBytes(30000).toString('hex') }),
                 STREAM_PART_ID,
                 randomUserId()
             )
