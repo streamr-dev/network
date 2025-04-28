@@ -7,7 +7,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { EthereumKeyPairIdentity, Identity, MLDSAKeyPairIdentity } from '../../src'
-import { StreamrClientError } from '../../src/StreamrClientError'
 import { collect } from '@streamr/utils'
 
 describe('Quantum encryption policies', () => {
