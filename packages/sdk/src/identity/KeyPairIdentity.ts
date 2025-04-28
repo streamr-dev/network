@@ -38,7 +38,7 @@ export abstract class KeyPairIdentity extends Identity {
      */
     abstract assertKeyPairIsValid(): void
 
-    async getUserIdBytes(): Promise<UserIDRaw> { 
+    async getUserIdRaw(): Promise<UserIDRaw> { 
         return this.publicKey
     }
 

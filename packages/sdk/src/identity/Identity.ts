@@ -16,7 +16,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
  */
 export abstract class Identity {
     abstract getUserId(): Promise<UserID>
-    abstract getUserIdBytes(): Promise<UserIDRaw>
+    abstract getUserIdRaw(): Promise<UserIDRaw>
     abstract getSignatureType(): SignatureType
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>
     abstract getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider>
