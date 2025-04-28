@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Sponsorship } from '@streamr/network-contracts'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
@@ -115,7 +115,7 @@ describe('profit', () => {
         delegatorWallet = await createTestWallet({ gas: true, tokens: true })
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
-            streamrConfigABI
+            StreamrConfigABI
         ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setProtocolFeeFraction(parseEther(String(PROTOCOL_FEE_PERCENTAGE / 100)))
         await streamrConfig.setMinimumDelegationSeconds(0)
