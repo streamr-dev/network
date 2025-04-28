@@ -760,6 +760,14 @@ export class StreamrClient {
     }
 
     /**
+     * @deprecated This in an internal method
+     * @hidden
+     */
+    getTheGraphClient(): TheGraphClient {
+        return this.theGraphClient
+    }
+
+    /**
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
      *
