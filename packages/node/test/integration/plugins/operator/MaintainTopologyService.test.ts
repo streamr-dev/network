@@ -15,7 +15,8 @@ const {
     delegate,
     deployOperatorContract,
     deploySponsorshipContract,
-    stake
+    stake,
+    unstake
 } = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
@@ -71,7 +72,7 @@ describe('MaintainTopologyService', () => {
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
-        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
         
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
@@ -104,7 +105,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), await stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('10000'))
         await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...await stream1.getStreamParts(),
@@ -112,7 +113,7 @@ describe('MaintainTopologyService', () => {
             ])
         }, 10000, 1000)
 
-        await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
+        await unstake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress())
         await until(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, await stream2.getStreamParts()) && doesNotContainAny(state, await stream1.getStreamParts())

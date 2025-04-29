@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
-import { _operatorContractUtils } from '@streamr/sdk'
+import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
@@ -41,9 +41,9 @@ const {
     deploySponsorshipContract,
     delegate,
     stake,
+    unstake,
     getTestTokenContract,
-    getTestAdminWallet,
-    getOperatorContract
+    getTestAdminWallet
 } = _operatorContractUtils
 
 interface Operator {
@@ -97,20 +97,19 @@ const createOperator = async (
         },
         createTestWallet
     })
-    await delegate(operator.operatorWallet, await operator.operatorContract.getAddress(), DELEGATE_AMOUNT)
-    await stake(operator.operatorContract, sponsorshipAddress, STAKE_AMOUNT)
+    await delegate(operator.operatorWallet, operator.operatorContractAddress, DELEGATE_AMOUNT)
+    await stake(operator.operatorWallet, operator.operatorContractAddress, sponsorshipAddress, STAKE_AMOUNT)
     const node = await createBroker(formConfig({
         privateKey: operator.nodeWallets[0].privateKey,
         extraPlugins: {
             operator: {
-                operatorContractAddress: await operator.operatorContract.getAddress(),
+                operatorContractAddress: operator.operatorContractAddress,
                 ...pluginConfig
             }
         }
     }))
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    logger.info(`Operator: ${(await operator.operatorContract.getAddress()).toLowerCase()} freerider=${isFreerider}`)
-    return { node, contractAddress: await operator.operatorContract.getAddress() }
+    logger.info(`Operator: ${operator.operatorContractAddress} freerider=${isFreerider}`)
+    return { node, contractAddress: operator.operatorContractAddress }
 }
 
 const createTheGraphClient = (): TheGraphClient => {
@@ -250,8 +249,7 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getProvider())) as any
-            await (await contract.unstake(PRE_BAKED_SPONSORSHIP)).wait()
+            unstake(new Wallet(operator.privateKey, getProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
         }
 
         startTimestamp = Date.now()

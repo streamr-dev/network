@@ -6,9 +6,9 @@ import { createClientCommand } from '../src/command'
 import { parseEther } from 'ethers'
 
 createClientCommand(async (client: StreamrClient, operatorContractAddress: string, sponsorshipAddress: string, dataTokenAmount: string) => {
-    const operatorContract = _operatorContractUtils.getOperatorContract(operatorContractAddress).connect(await client.getSigner())
     await _operatorContractUtils.stake(
-        operatorContract,
+        await client.getSigner(),
+        operatorContractAddress,
         sponsorshipAddress,
         parseEther(dataTokenAmount)
     )
