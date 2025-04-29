@@ -85,7 +85,7 @@ describe('proxy group key exchange', () => {
                     encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: hexToBinary('1234')
         }
 
@@ -117,7 +117,7 @@ describe('proxy group key exchange', () => {
                     encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: hexToBinary('1234')
         }
 

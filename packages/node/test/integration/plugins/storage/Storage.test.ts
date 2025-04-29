@@ -50,7 +50,7 @@ export function buildMsg({
         signature: Buffer.from(hexToBinary('0x1234')),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM
     })
 }
 
@@ -76,7 +76,7 @@ function buildEncryptedMsg({
         signature: Buffer.from(hexToBinary('0x1234')),
         groupKeyId: 'groupKeyId',
         contentType: ContentType.JSON,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM
     })
 }
 

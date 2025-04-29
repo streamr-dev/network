@@ -1,8 +1,8 @@
 import {
-    ContentType as NewContentType,
-    EncryptionType as NewEncryptionType,
-    SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage,
+    ContentType,
+    EncryptionType,
+    StreamMessage as ProtoStreamMessage,
+    SignatureType,
 } from '@streamr/trackerless-network'
 import {
     StreamPartID,
@@ -14,11 +14,8 @@ import {
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
-    ContentType as OldContentType,
-    EncryptionType as OldEncryptionType,
-    SignatureType as OldSignatureType,
-    StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType
+    StreamMessage,
+    StreamMessageType
 } from '../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
 import { randomUserId } from '@streamr/test-utils'
@@ -31,7 +28,7 @@ const createStreamMessage = (
     publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
-): NewStreamMessage => {
+): ProtoStreamMessage => {
     const messageId = {
         streamId: StreamPartIDUtils.getStreamID(streamPartId),
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -42,13 +39,13 @@ const createStreamMessage = (
     }
     const msg = {
         messageId,
-        signatureType: NewSignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
         body: {
             oneofKind: 'contentMessage' as const,
             contentMessage: {
-                encryptionType: NewEncryptionType.NONE,
-                contentType: NewContentType.JSON,
+                encryptionType: EncryptionType.NONE,
+                contentType: ContentType.JSON,
                 content: utf8ToBinary(content)
             }
         }
@@ -73,13 +70,13 @@ describe('StreamMessageTranslator', () => {
         publisherId,
         'test',
     )
-    const oldProtocolMsg = new OldStreamMessage({
+    const oldProtocolMsg = new StreamMessage({
         messageId,
         content: utf8ToBinary(JSON.stringify({ hello: 'WORLD' })),
-        contentType: OldContentType.JSON,
-        messageType: OldStreamMessageType.MESSAGE,
-        encryptionType: OldEncryptionType.NONE,
-        signatureType: OldSignatureType.SECP256K1,
+        contentType: ContentType.JSON,
+        messageType: StreamMessageType.MESSAGE,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature,
     })
 
@@ -105,7 +102,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.sequenceNumber).toEqual(0)
         expect(translated.getPublisherId()).toEqual(publisherId)
         expect(translated.prevMsgRef).toEqual(undefined)
-        expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
+        expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
         expect(translated.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)

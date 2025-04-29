@@ -8,10 +8,10 @@ import {
 } from '@streamr/utils'
 import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
-import { Authentication } from '../Authentication'
 import { NetworkPeerDescriptor } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
+import { Identity } from '../identity/Identity'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
@@ -140,7 +140,7 @@ export class Operator {
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly getEthersOverrides: () => Promise<Overrides>
     private readonly eventEmitter: ObservableEventEmitter<OperatorEvents> = new ObservableEventEmitter()
 
@@ -150,7 +150,7 @@ export class Operator {
         rpcProviderSource: RpcProviderSource,
         chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
-        authentication: Authentication,
+        identity: Identity,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         getEthersOverrides: () => Promise<Overrides>,
@@ -165,7 +165,7 @@ export class Operator {
             'operator'
         )
         this.theGraphClient = theGraphClient
-        this.authentication = authentication
+        this.identity = identity
         this.getEthersOverrides = getEthersOverrides
         this.initEventGateways(contractAddress, chainEventPoller, loggerFactory)
         destroySignal.onDestroy.listen(() => {
@@ -636,7 +636,7 @@ export class Operator {
 
     private async connectToContract(): Promise<void> {
         if (this.contract === undefined) {
-            const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            const signer = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.contract = this.contractFactory.createWriteContract<OperatorContract>(
                 this.contractAddress,
                 OperatorABI,

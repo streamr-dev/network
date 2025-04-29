@@ -104,7 +104,7 @@ const measureJoiningTime = async () => {
                 }
             },
             signature: hexToBinary('0x1234'),
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         }
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)

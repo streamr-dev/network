@@ -11,9 +11,9 @@ import {
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
-import { SignerWithProvider } from '../Authentication'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
+import { SignerWithProvider } from '../identity/Identity'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
