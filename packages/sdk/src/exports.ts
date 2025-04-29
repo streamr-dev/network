@@ -67,7 +67,7 @@ export type {
     StreamPartID,
     BrandedString,
     EthereumAddress,
-    KeyPairType,
+    KeyType,
     LogLevel,
     Metric,
     MetricsContext,

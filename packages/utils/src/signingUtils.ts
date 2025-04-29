@@ -15,7 +15,7 @@ export const SUPPORTED_KEY_PAIR_TYPES = [
     'ML_DSA_87'
 ] as const
 
-export type KeyPairType = typeof SUPPORTED_KEY_PAIR_TYPES[number]
+export type KeyType = typeof SUPPORTED_KEY_PAIR_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -34,7 +34,7 @@ export abstract class SigningUtil {
     // Needs to be sync because often validated in constructors
     abstract assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
 
-    static getInstance(type: KeyPairType): SigningUtil {
+    static getInstance(type: KeyType): SigningUtil {
         const util = keyPairTypeToInstance[type]
         if (!util) {
             throw new Error(`Unknown key pair type: ${type}`)
@@ -264,7 +264,7 @@ export class MlDsa87 extends SigningUtil {
 
 // Declared at the bottom of the file because the classes need to be
 // declared first. TS makes sure all KeyPairTypes are present.
-const keyPairTypeToInstance: Record<KeyPairType, SigningUtil> = {
+const keyPairTypeToInstance: Record<KeyType, SigningUtil> = {
     ECDSA_SECP256K1_EVM: new EcdsaSecp256k1Evm(),
     ECDSA_SECP256R1: new EcdsaSecp256r1(),
     ML_DSA_87: new MlDsa87()

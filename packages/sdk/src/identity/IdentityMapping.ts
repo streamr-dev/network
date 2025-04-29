@@ -1,4 +1,4 @@
-import { KeyPairType } from '@streamr/utils'
+import { KeyType } from '@streamr/utils'
 import { KeyPairIdentityConfig, EthereumProviderIdentityConfig, StrictStreamrClientConfig, CustomIdentityConfig } from '../Config'
 import { EthereumKeyPairIdentity } from './EthereumKeyPairIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
@@ -19,7 +19,7 @@ import { SUPPORTED_KEY_PAIR_TYPES } from '@streamr/utils/dist/src/signingUtils'
  * 4. Wire everything together below
  */
 export const IDENTITY_MAPPING: {
-    keyPairType: KeyPairType
+    keyPairType: KeyType
     // Used by createIdentityFromConfig
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
     // Used by SignatureValidator
@@ -42,7 +42,7 @@ export const IDENTITY_MAPPING: {
     },
 ] as const
 
-export const DEFAULT_KEY_TYPE: KeyPairType = 'ECDSA_SECP256K1_EVM'
+export const DEFAULT_KEY_TYPE: KeyType = 'ECDSA_SECP256K1_EVM'
 
 // Static check that all valid key types have corresponding factory functions above
 SUPPORTED_KEY_PAIR_TYPES.forEach((keyType) => {

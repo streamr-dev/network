@@ -1,5 +1,5 @@
 import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, DEFAULT_KEY_TYPE } from '@streamr/sdk'
-import { KeyPairType, SUPPORTED_KEY_PAIR_TYPES } from '@streamr/utils'
+import { KeyType, SUPPORTED_KEY_PAIR_TYPES } from '@streamr/utils'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
@@ -8,7 +8,7 @@ import { createFnParseEnum, formEnumArgValueDescription } from './common'
 export interface Options {
     publicKey?: string
     privateKey?: string
-    keyType?: KeyPairType
+    keyType?: KeyType
     config?: string
     env?: EnvironmentId
     quantum?: boolean

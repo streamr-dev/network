@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { HexString, LogLevel, merge, KeyPairType } from '@streamr/utils'
+import { HexString, LogLevel, merge, KeyType } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
@@ -25,7 +25,7 @@ export interface EthereumProviderIdentityConfig {
 export interface KeyPairIdentityConfig {
     publicKey?: string
     privateKey: string
-    keyType?: KeyPairType
+    keyType?: KeyType
 }
 
 /**
