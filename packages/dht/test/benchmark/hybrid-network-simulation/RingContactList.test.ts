@@ -18,7 +18,7 @@ function ipv4ToString(ip: number): string {
 }
 
 class MockNode {
-    private readonly peerDescriptor: PeerDescriptor
+    private readonly peerDescriptorPromise: Promise<PeerDescriptor>
 
     constructor(_region: number, ipAddress: string) {
 
@@ -29,12 +29,16 @@ class MockNode {
             protocolVersion: '0.0.0'
 
         }
-        this.peerDescriptor = createPeerDescriptor(connectivityResponse, getRandomRegion())
-        logger.info(ipv4ToString(this.peerDescriptor.ipAddress!))
+        this.peerDescriptorPromise = createPeerDescriptor(connectivityResponse, getRandomRegion())
+        this.peerDescriptorPromise.then((peerDescriptor) => {
+            logger.info(ipv4ToString(peerDescriptor.ipAddress!))
+        }).catch((err) => {
+            logger.error(`Creating peerDescriptor failed`, err)
+        })
     }
 
-    public getPeerDescriptor(): PeerDescriptor {
-        return this.peerDescriptor
+    public async getPeerDescriptor(): Promise<PeerDescriptor> {
+        return this.peerDescriptorPromise
     }
 }
 
