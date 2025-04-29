@@ -10,7 +10,7 @@ import { PlumTreeRpcLocal } from './PlumTreeRpcLocal'
 import { PlumTreeRpcRemote } from './PlumTreeRpcRemote'
 import { ContentDeliveryRpcClient, PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import EventEmitter from 'eventemitter3'
-import { Logger } from '@streamr/utils'
+import { Logger, Multimap } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { PausedNeighbors } from './PausedNeighbors'
 
@@ -27,15 +27,16 @@ interface Events {
 }
 
 export class PlumTreeManager extends EventEmitter<Events> {
-    private neighbors: NodeList
-    private localPeerDescriptor: PeerDescriptor
+    private readonly neighbors: NodeList
+    private readonly localPeerDescriptor: PeerDescriptor
     // These neighbors are paused by the local node
-    private localPausedNeighbors: PausedNeighbors = new PausedNeighbors()
+    private readonly localPausedNeighbors: PausedNeighbors = new PausedNeighbors()
     // These neighbors are paused by remote nodes, used to limit sending of pausing and resuming requests
-    private remotePausedNeighbors: PausedNeighbors = new PausedNeighbors()
-    private rpcLocal: PlumTreeRpcLocal
-    private latestMessages: Map<string, StreamMessage[]> = new Map()
-    private rpcCommunicator: ListeningRpcCommunicator
+    private readonly remotePausedNeighbors: PausedNeighbors = new PausedNeighbors()
+    private readonly rpcLocal: PlumTreeRpcLocal
+    private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
+    private readonly rpcCommunicator: ListeningRpcCommunicator
+    private readonly metadataTimestampsAheadOfRealData: Map<string, Set<number>> = new Map()
 
     constructor(options: Options) {
         super()
@@ -83,7 +84,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
     }
 
     getLatestMessageTimestamp(msgChainId: string): number {
-        if (!this.latestMessages.has(msgChainId)) {
+        if (!this.latestMessages.has(msgChainId) || this.latestMessages.get(msgChainId)!.length === 0) {
             return 0
         }
         return this.latestMessages.get(msgChainId)![this.latestMessages.get(msgChainId)!.length - 1].messageId!.timestamp
@@ -97,10 +98,20 @@ export class PlumTreeManager extends EventEmitter<Events> {
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // If we receive newer metadata than messages in the buffer, resume the sending neighbor
-        const latestMessages = this.latestMessages.get(msg.messageChainId) ?? []
-        if (latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length > 1) {
-            console.log("resuming neighbor", latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length, this.remotePausedNeighbors, this.localPausedNeighbors, this.neighbors.getAll().map((n) => toNodeId(n.getPeerDescriptor())))
-            await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp(msg.messageChainId))
+        const latestMessageTimestamp = this.getLatestMessageTimestamp(msg.messageChainId)
+        if (latestMessageTimestamp < msg.timestamp) {
+            if (!this.metadataTimestampsAheadOfRealData.has(msg.messageChainId)) {
+                this.metadataTimestampsAheadOfRealData.set(msg.messageChainId, new Set())
+            }
+            this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.add(msg.timestamp)
+            if (this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.size > 1) {
+                console.log("resuming neighbor", latestMessageTimestamp, msg.timestamp, this.remotePausedNeighbors, this.localPausedNeighbors, this.neighbors.getAll().map((n) => toNodeId(n.getPeerDescriptor())))
+                await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp(msg.messageChainId))
+                this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.forEach((timestamp) => {
+                    this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.delete(timestamp)
+                })
+            }
+            
         }
     }
 
@@ -118,6 +129,9 @@ export class PlumTreeManager extends EventEmitter<Events> {
         } else {
             this.latestMessages.get(messageChainId)!.shift()
             this.latestMessages.get(messageChainId)!.push(msg)
+        }
+        if (this.metadataTimestampsAheadOfRealData.has(msg.messageId!.messageChainId)) {
+            this.metadataTimestampsAheadOfRealData.get(msg.messageId!.messageChainId)!.delete(msg.messageId!.timestamp)
         }
         this.emit('message', msg, previousNode)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
