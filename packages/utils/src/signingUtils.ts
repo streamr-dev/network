@@ -9,13 +9,13 @@ import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
 import { webcrypto } from 'crypto'
 
-export const SUPPORTED_KEY_PAIR_TYPES = [
+export const KEY_TYPES = [
     'ECDSA_SECP256K1_EVM', 
     'ECDSA_SECP256R1', 
     'ML_DSA_87'
 ] as const
 
-export type KeyType = typeof SUPPORTED_KEY_PAIR_TYPES[number]
+export type KeyType = typeof KEY_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)

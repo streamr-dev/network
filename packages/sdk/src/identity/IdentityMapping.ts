@@ -6,7 +6,7 @@ import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
-import { SUPPORTED_KEY_PAIR_TYPES } from '@streamr/utils/dist/src/signingUtils'
+import { KEY_TYPES } from '@streamr/utils/dist/src/signingUtils'
 
 /**
  * This is where config keyTypes are connected to Identity implementations.
@@ -45,7 +45,7 @@ export const IDENTITY_MAPPING: {
 export const DEFAULT_KEY_TYPE: KeyType = 'ECDSA_SECP256K1_EVM'
 
 // Static check that all valid key types have corresponding factory functions above
-SUPPORTED_KEY_PAIR_TYPES.forEach((keyType) => {
+KEY_TYPES.forEach((keyType) => {
     if (!IDENTITY_MAPPING.find((id) => id.keyPairType === keyType)) {
         throw new Error(`keyType missing from IDENTITIES: ${keyType}`)
     }
