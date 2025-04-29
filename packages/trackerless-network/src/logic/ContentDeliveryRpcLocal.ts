@@ -41,11 +41,6 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
         } else if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
             // Message is not a duplicate, so we can broadcast it over the plumtree
             this.options.plumTreeManager.broadcast(message, previousNodeId)
-            await this.options.plumTreeManager.resumeNeighbor(
-                previousNode,
-                message.messageId!.messageChainId,
-                this.options.plumTreeManager.getLatestMessageTimestamp()
-            )
         } else {
             // Message is a duplicate, so we need to pause the neighbor
             await this.options.plumTreeManager.pauseNeighbor(previousNode, message.messageId!.messageChainId)
