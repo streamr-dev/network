@@ -1,5 +1,9 @@
 import 'reflect-metadata'
 
+import {
+    Operator as OperatorContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import {
     DEFAULT_PARTITION_COUNT,
@@ -31,6 +35,12 @@ import { Stream } from '../../src/Stream'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import {
+    deployOperatorContract,
+    DeployOperatorContractOpts,
+    deploySponsorshipContract,
+    DeploySponsorshipContractOpts
+} from '../../src/contracts/operatorContractUtils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -325,4 +335,12 @@ export const formEthereumFunctionSelector = (methodSignature: string): string =>
 
 export const parseEthereumFunctionSelectorFromCallData = (data: string): string => {
     return data.substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
+}
+
+export const deployTestOperatorContract = async (opts: Omit<DeployOperatorContractOpts, 'environmentId'>): Promise<OperatorContract> => {
+    return deployOperatorContract({ ...opts, 'environmentId': 'dev2' })
+}
+
+export const deployTestSponsorshipContract = async (opts: Omit<DeploySponsorshipContractOpts, 'environmentId'>): Promise<SponsorshipContract> => {
+    return deploySponsorshipContract({ ...opts, 'environmentId': 'dev2' })
 }

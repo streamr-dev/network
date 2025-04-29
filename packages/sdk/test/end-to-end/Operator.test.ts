@@ -6,7 +6,7 @@ import {
     OperatorFactory as OperatorFactoryContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { createTestPrivateKey, setupOperatorContract, SetupOperatorContractReturnType } from '@streamr/test-utils'
+import { createTestPrivateKey, setupTestOperatorContract, setupTestOperatorContractReturnType } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import sample from 'lodash/sample'
@@ -14,12 +14,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
     delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
     getTestAdminWallet,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
+import { deployTestOperatorContract, deployTestSponsorshipContract } from '../test-utils/utils'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -45,7 +44,7 @@ async function createStream(): Promise<string> {
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (wallet: Wallet | undefined, operator: setupTestOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     return client.getOperator(operator.operatorContractAddress)
 }
@@ -55,23 +54,23 @@ describe('Operator', () => {
     let streamId2: string
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
-    let deployedOperator: SetupOperatorContractReturnType
+    let deployedOperator: setupTestOperatorContractReturnType
 
     beforeAll(async () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1, deployOperatorContract })
+            setupTestOperatorContract({ nodeCount: 1, deployTestOperatorContract })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
         deployedOperator = concurrentTasks[2]
 
-        sponsorship1 = await deploySponsorshipContract({
+        sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
             deployer: deployedOperator.operatorWallet
         })
-        sponsorship2 = await deploySponsorshipContract({
+        sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })
@@ -134,8 +133,8 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract({
-            deployOperatorContract
+        const target = await setupTestOperatorContract({
+            deployTestOperatorContract
         })
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))

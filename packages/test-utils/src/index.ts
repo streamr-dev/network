@@ -298,13 +298,13 @@ export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: bool
 
 export type SignerWithProvider = AbstractSigner<Provider>
 
-export interface SetupOperatorContractOpts {
+export interface setupTestOperatorContractOpts {
     nodeCount?: number
     operatorConfig?: {
         operatorsCutPercentage?: number
         metadata?: string
     }
-    deployOperatorContract: (opts: {
+    deployTestOperatorContract: (opts: {
         deployer: SignerWithProvider
         operatorsCutPercentage?: number
         metadata?: string
@@ -312,17 +312,17 @@ export interface SetupOperatorContractOpts {
     }) => Promise<OperatorContract>
 }
 
-export interface SetupOperatorContractReturnType {
+export interface setupTestOperatorContractReturnType {
     operatorWallet: Wallet & SignerWithProvider
     operatorContractAddress: EthereumAddress
     nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
-export async function setupOperatorContract(
-    opts: SetupOperatorContractOpts
-): Promise<SetupOperatorContractReturnType> {
+export async function setupTestOperatorContract(
+    opts: setupTestOperatorContractOpts
+): Promise<setupTestOperatorContractReturnType> {
     const operatorWallet = await createTestWallet({ gas: true, tokens: true })
-    const operatorContract = await opts.deployOperatorContract({
+    const operatorContract = await opts.deployTestOperatorContract({
         deployer: operatorWallet,
         operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
         metadata: opts?.operatorConfig?.metadata

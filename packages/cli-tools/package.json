@@ -44,6 +44,7 @@
     "semver": "^7.7.1"
   },
   "devDependencies": {
+    "@streamr/network-contracts": "^9.0.0",
     "@streamr/test-utils": "103.0.0-rc.3",
     "@types/event-stream": "^4.0.5",
     "@types/lodash": "^4.17.16",

@@ -2,7 +2,7 @@ import { _operatorContractUtils } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { parseEther } from 'ethers'
-import { createTestClient, runCommand } from './utils'
+import { createTestClient, deployTestOperatorContract, deployTestSponsorshipContract, runCommand } from './utils'
 
 const DELEGATION_AMOUNT = '20000'
 const STAKE_AMOUNT = '10000'
@@ -14,13 +14,13 @@ describe('operator', () => {
     it('happy path', async () => {
         const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream('/test')
-        const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
+        const sponsorshipContract = await deployTestSponsorshipContract({ 
             streamId: stream.id,
             deployer: await createTestWallet({ gas: true })
         })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         const operator = await createTestWallet({ gas: true, tokens: true })
-        const operatorContract = await _operatorContractUtils.deployOperatorContract({
+        const operatorContract = await deployTestOperatorContract({
             deployer: operator
         })
         await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), parseEther(SELF_DELEGATION_AMOUNT))
