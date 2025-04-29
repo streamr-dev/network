@@ -134,22 +134,35 @@ export class EcdsaSecp256r1 extends SigningUtil {
         }
     }
 
+    private toBase64Url(base64: string): string {
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    }
+
     privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
         // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
         const publicKey = p256.getPublicKey(privateKey, false)
         const x = publicKey.subarray(1, 33)
-        const xBase64 = Buffer.from(x).toString('base64')
         const y = publicKey.subarray(33)
+
+        /**
+         * Warning, there are some platform-specific differences. Logging observations here:
+         * - buffer.toString('base64url') works on Mac but NOT in Linux/CI
+         * - importKey accepts base64 encoded variables on Mac but NOT in Linux/CI
+         * For this reason, they must be base64url encoded AND we need to use our own
+         * toBase64Url converter.
+         */
+        const xBase64 = Buffer.from(x).toString('base64')
         const yBase64 = Buffer.from(y).toString('base64')
+        const privateKeyBase64 = Buffer.from(privateKey).toString('base64')
 
         return {
             key_ops: [ 'sign' ],
             ext: true,
             kty: 'EC',
-            x: xBase64,
-            y: yBase64,
+            x: this.toBase64Url(xBase64),
+            y: this.toBase64Url(yBase64),
             crv: 'P-256',
-            d: Buffer.from(privateKey).toString('base64')
+            d: this.toBase64Url(privateKeyBase64)
         }
     }
 
