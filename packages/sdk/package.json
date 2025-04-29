@@ -78,7 +78,7 @@
     "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.99.6",
+    "webpack": "^5.99.7",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
@@ -87,10 +87,10 @@
   "dependencies": {
     "@babel/runtime": "^7.27.0",
     "@babel/runtime-corejs3": "^7.27.0",
-    "@noble/post-quantum": "^0.4.0",
+    "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/config": "^5.5.2",
+    "@streamr/config": "^5.5.3",
     "@streamr/dht": "103.0.0-rc.3",
     "@streamr/network-contracts": "^9.0.0",
     "@streamr/proto-rpc": "103.0.0-rc.3",
