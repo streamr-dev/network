@@ -12,9 +12,6 @@ createCommand()
         createFnParseEnum('key-type', validKeyTypeValues))
     .action(async (options: Options) => {
         const config = IdentityMapping[options.keyType!] // required option
-        if (!config) {
-            console.error(`Error: Invalid key type. Must be one of: ${validKeyTypeValues.join(', ')}.`)
-        }
         const identity = config.generate() as KeyPairIdentity
         console.info(JSON.stringify({ 
             publicKey: await identity.getUserId(), 
