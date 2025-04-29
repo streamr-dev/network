@@ -1,7 +1,9 @@
-import { hexToBinary, ML_DSA_87 } from '@streamr/utils'
+import { hexToBinary, SigningUtil } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { StrictStreamrClientConfig } from '../Config'
+
+const signingUtil = SigningUtil.getInstance('ML_DSA_87')
 
 /**
  * An identity that uses a quantum-resistant ML-DSA-87 key pair to sign messages.
@@ -9,7 +11,7 @@ import { StrictStreamrClientConfig } from '../Config'
 export class MLDSAKeyPairIdentity extends KeyPairIdentity {
 
     assertValidKeyPair(): void {
-        ML_DSA_87.assertValidKeyPair(this.publicKey, this.privateKey)
+        signingUtil.assertValidKeyPair(this.publicKey, this.privateKey)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -18,7 +20,7 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
-        return ML_DSA_87.createSignature(payload, this.privateKey)
+        return signingUtil.createSignature(payload, this.privateKey)
     }
 
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): MLDSAKeyPairIdentity {
@@ -30,7 +32,7 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
     }
 
     static generate(): MLDSAKeyPairIdentity {
-        const keyPair = ML_DSA_87.generateKeyPair()
+        const keyPair = signingUtil.generateKeyPair()
         return new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
@@ -7,6 +8,14 @@ import { areEqualBinaries, binaryToHex } from './binaryUtils'
 import { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
 import { webcrypto } from 'crypto'
+
+export const SUPPORTED_KEY_PAIR_TYPES = [
+    'ECDSA_SECP256K1_EVM', 
+    'ECDSA_SECP256R1', 
+    'ML_DSA_87'
+] as const
+
+export type KeyPairType = typeof SUPPORTED_KEY_PAIR_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -18,33 +27,35 @@ export interface KeyPair {
     privateKey: Uint8Array
 }
 
-export interface SigningUtil {
-    generateKeyPair: () => KeyPair
-    createSignature: (payload: Uint8Array, privateKey: Uint8Array) => Promise<Uint8Array>
-    verifySignature: (publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array) => Promise<boolean>
+export abstract class SigningUtil {
+    abstract generateKeyPair(): KeyPair
+    abstract createSignature(payload: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array>
+    abstract verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean>
     // Needs to be sync because often validated in constructors
-    assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
+    abstract assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
+
+    static getInstance(type: KeyPairType): SigningUtil {
+        const util = keyPairTypeToInstance[type]
+        if (!util) {
+            throw new Error(`Unknown key pair type: ${type}`)
+        }
+        return util
+    }
 }
 
 /**
  * EVM compatible ECDSA signing scheme using keccak hash, magic bytes, and secp256k1 curve.
  */
-export const ECDSA_SECP256K1_EVM: SigningUtil & {
-    keccakHash(message: Uint8Array, useEthereumMagic?: boolean): Buffer
-    recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array
-    publicKeyToAddress(publicKey: Uint8Array): Uint8Array
-    recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw
-} = {
-
+export class EcdsaSecp256k1Evm extends SigningUtil {
     generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
         const publicKey = secp256k1.publicKeyCreate(privateKey, false)
         return { 
             // Return address as 'publicKey'
-            publicKey: ECDSA_SECP256K1_EVM.publicKeyToAddress(publicKey),
+            publicKey: this.publicKeyToAddress(publicKey),
             privateKey, 
         }
-    },
+    }
 
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
         keccak.reset()
@@ -53,27 +64,27 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
             message
         ]) : Buffer.from(message))
         return keccak.digest('binary')
-    },
+    }
 
-    recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array {
+    private recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array {
         const signatureBuffer = Buffer.from(signature)
         const recoveryId = signatureBuffer.readUInt8(signatureBuffer.length - 1) - 27
         return secp256k1.ecdsaRecover(
             signatureBuffer.subarray(0, signatureBuffer.length - 1),
             recoveryId,
-            ECDSA_SECP256K1_EVM.keccakHash(payload),
+            this.keccakHash(payload),
             false,
             Buffer.alloc,
         )
-    },
+    }
 
     async createSignature(payload: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array> {
-        const msgHash = ECDSA_SECP256K1_EVM.keccakHash(payload)
+        const msgHash = this.keccakHash(payload)
         const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
         const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
         result.writeInt8(27 + sigObj.recid, result.length - 1)
         return result
-    },
+    }
 
     publicKeyToAddress(publicKey: Uint8Array): Uint8Array {
         if (publicKey.length !== 65) {
@@ -84,38 +95,35 @@ export const ECDSA_SECP256K1_EVM: SigningUtil & {
         keccak.update(Buffer.from(pubKeyWithoutFirstByte))
         const hashOfPubKey = keccak.digest('binary')
         return hashOfPubKey.subarray(12, hashOfPubKey.length)
-    },
+    }
 
     recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw {
-        const publicKey = ECDSA_SECP256K1_EVM.recoverPublicKey(signature, payload)
-        return ECDSA_SECP256K1_EVM.publicKeyToAddress(publicKey)
-    },
+        const publicKey = this.recoverPublicKey(signature, payload)
+        return this.publicKeyToAddress(publicKey)
+    }
 
     async verifySignature(expectedUserId: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         try {
-            const recoveredAddress = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
+            const recoveredAddress = this.recoverSignerUserId(signature, payload)
             return areEqualBinaries(recoveredAddress, expectedUserId)
         } catch {
             return false
         }
-    },
+    }
 
     assertValidKeyPair(address: UserIDRaw, privateKey: Uint8Array): void {
         const computedPublicKey = secp256k1.publicKeyCreate(privateKey, false)
-        const computedAddress = ECDSA_SECP256K1_EVM.publicKeyToAddress(computedPublicKey)
+        const computedAddress = this.publicKeyToAddress(computedPublicKey)
         if (!areEqualBinaries(address, computedAddress)) {
             throw new Error(`Given private key is for a different address! Given: ${binaryToHex(address)}, Computed: ${binaryToHex(computedAddress)}`)
         }
     }
-} as const
+}
 
 /**
  * Signing scheme using ECDSA with secp256r1 curve and SHA-256, natively supported by browsers
  */
-export const ECDSA_SECP256R1: SigningUtil & {
-    privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey
-    createSignature(payload: Uint8Array, privateKey: Uint8Array | webcrypto.JsonWebKey): Promise<Uint8Array>
-} = {
+export class EcdsaSecp256r1 extends SigningUtil {
     generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
         const publicKey = p256.getPublicKey(privateKey, true)
@@ -124,7 +132,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
             publicKey,
             privateKey,
         }
-    },
+    }
 
     privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
         // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
@@ -143,14 +151,14 @@ export const ECDSA_SECP256R1: SigningUtil & {
             crv: 'P-256',
             d: Buffer.from(privateKey).toString('base64url')
         }
-    },
+    }
 
     /**
      * Pass the privateKey in JsonWebKey format for a slight performance gain.
      * You can convert raw keys to JWK using the privateKeyToJWK function.
      */
     async createSignature(payload: Uint8Array, privateKey: Uint8Array | webcrypto.JsonWebKey): Promise<Uint8Array> {
-        const jwk = privateKey instanceof Uint8Array ? ECDSA_SECP256R1.privateKeyToJWK(privateKey) : privateKey
+        const jwk = privateKey instanceof Uint8Array ? this.privateKeyToJWK(privateKey) : privateKey
 
         /**
          * Stupidly, importKey does not support the 'raw' format. This means we need to
@@ -177,7 +185,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
         )
 
         return new Uint8Array(signature)
-    },
+    }
 
     async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         const key = await subtleCrypto.importKey(
@@ -202,7 +210,7 @@ export const ECDSA_SECP256R1: SigningUtil & {
         )
 
         return isValid
-    },
+    }
 
     assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void {
         if (privateKey.length !== 32) {
@@ -220,12 +228,12 @@ export const ECDSA_SECP256R1: SigningUtil & {
             )
         }
     }
-} as const
+}
 
 /**
  * Signing scheme using ML-DSA-87
  */
-export const ML_DSA_87: SigningUtil = {
+export class MlDsa87 extends SigningUtil {
     generateKeyPair(): KeyPair {
         const seed = randomBytes(32)
         const keys = ml_dsa87.keygen(seed)
@@ -233,15 +241,15 @@ export const ML_DSA_87: SigningUtil = {
             privateKey: keys.secretKey,
             publicKey: keys.publicKey,
         }
-    },
+    }
 
     async createSignature(payload: Uint8Array, privateKey: Uint8Array, seed?: Uint8Array): Promise<Uint8Array> {
         return ml_dsa87.sign(privateKey, payload, seed)
-    },
+    }
 
     async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         return ml_dsa87.verify(publicKey, payload, signature)
-    },
+    }
 
     assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void {
         // Validity of key pair is tested by signing and validating something
@@ -252,4 +260,12 @@ export const ML_DSA_87: SigningUtil = {
         }
     }
 
-} as const
+}
+
+// Declared at the bottom of the file because the classes need to be
+// declared first. TS makes sure all KeyPairTypes are present.
+const keyPairTypeToInstance: Record<KeyPairType, SigningUtil> = {
+    ECDSA_SECP256K1_EVM: new EcdsaSecp256k1Evm(),
+    ECDSA_SECP256R1: new EcdsaSecp256r1(),
+    ML_DSA_87: new MlDsa87()
+}

@@ -1,7 +1,9 @@
-import { hexToBinary, ECDSA_SECP256R1 } from '@streamr/utils'
+import { hexToBinary, EcdsaSecp256r1 } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { StrictStreamrClientConfig } from '../Config'
+
+const signingUtil = new EcdsaSecp256r1()
 
 /**
  * An identity that uses ECDSA on the SECP256R1 curve
@@ -11,7 +13,7 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
     private cachedJWK: JsonWebKey | undefined
 
     assertValidKeyPair(): void {
-        ECDSA_SECP256R1.assertValidKeyPair(this.publicKey, this.privateKey)
+        signingUtil.assertValidKeyPair(this.publicKey, this.privateKey)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -21,8 +23,8 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
         // Cache the privateKey in JWK format for a performance optimization
-        this.cachedJWK ??= ECDSA_SECP256R1.privateKeyToJWK(this.privateKey)
-        return ECDSA_SECP256R1.createSignature(payload, this.cachedJWK)
+        this.cachedJWK ??= signingUtil.privateKeyToJWK(this.privateKey)
+        return signingUtil.createSignature(payload, this.cachedJWK)
     }
 
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): ECDSAKeyPairIdentity {
@@ -34,7 +36,7 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
     }
 
     static generate(): ECDSAKeyPairIdentity {
-        const keyPair = ECDSA_SECP256R1.generateKeyPair()
+        const keyPair = signingUtil.generateKeyPair()
         return new ECDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 

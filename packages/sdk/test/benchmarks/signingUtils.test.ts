@@ -1,5 +1,5 @@
 import { createTestWallet } from '@streamr/test-utils'
-import { areEqualBinaries, binaryToHex, ECDSA_SECP256K1_EVM, hexToBinary, randomString, toEthereumAddress } from '@streamr/utils'
+import { areEqualBinaries, binaryToHex, hexToBinary, randomString, SigningUtil, toEthereumAddress } from '@streamr/utils'
 import { verifyMessage, Wallet } from 'ethers'
 
 /*
@@ -24,6 +24,9 @@ const ITERATIONS = 1000
 const PAYLOAD_SIZES = [100, 10000]
 
 describe('SigningUtil', () => {
+
+    const signingUtil = SigningUtil.getInstance('ECDSA_SECP256K1_EVM')
+
     describe.each(PAYLOAD_SIZES)('payload size: %s', (payloadSize: number) => {
 
         let wallet: Wallet
@@ -70,7 +73,7 @@ describe('SigningUtil', () => {
         it('sign', async () => {
             const privateKey = hexToBinary(wallet.privateKey)
             const elapsedTimeOur = await run(async () => {
-                return ECDSA_SECP256K1_EVM.createSignature(payload, privateKey)
+                return signingUtil.createSignature(payload, privateKey)
             }, binarySignature, 'Sign-our')
     
             const elapsedTimeEthers = await run(async () => {
@@ -85,7 +88,7 @@ describe('SigningUtil', () => {
     
         it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
-                return ECDSA_SECP256K1_EVM.verifySignature(hexToBinary(wallet.address), payload, binarySignature)
+                return signingUtil.verifySignature(hexToBinary(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {

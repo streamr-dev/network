@@ -1,4 +1,4 @@
-import { ECDSA_SECP256K1_EVM } from '@streamr/utils'
+import { EcdsaSecp256k1Evm } from '@streamr/utils'
 import crypto from 'crypto'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescriptorSignaturePayload'
@@ -9,6 +9,8 @@ import {
     PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
 
+const signingUtil = new EcdsaSecp256k1Evm()
+
 const calculateNodeIdRaw = async (ipAddress: number, privateKey: Uint8Array): Promise<DhtAddressRaw> => {
     // nodeId is calculated as 
     // concatenate(
@@ -17,8 +19,8 @@ const calculateNodeIdRaw = async (ipAddress: number, privateKey: Uint8Array): Pr
     // )
     const ipAsBuffer = Buffer.alloc(4)
     ipAsBuffer.writeUInt32BE(ipAddress)
-    const ipHash = ECDSA_SECP256K1_EVM.keccakHash(ipAsBuffer)
-    const signature = await ECDSA_SECP256K1_EVM.createSignature(ipAsBuffer, privateKey)
+    const ipHash = signingUtil.keccakHash(ipAsBuffer)
+    const signature = await signingUtil.createSignature(ipAsBuffer, privateKey)
     const nodeIdRaw = Buffer.concat([
         ipHash.subarray(ipHash.length - 13, ipHash.length),
         signature.subarray(signature.length - 7, signature.length)
@@ -50,6 +52,6 @@ export const createPeerDescriptor = async (connectivityResponse: ConnectivityRes
             tls: connectivityResponse.websocket.tls
         }
     }
-    ret.signature = await ECDSA_SECP256K1_EVM.createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
+    ret.signature = await signingUtil.createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
     return ret
 }

@@ -1,15 +1,15 @@
-import { HexString, StreamID } from '@streamr/utils'
+import { HexString, StreamID, KeyPairType } from '@streamr/utils'
 import { StreamMessage } from './protocol/StreamMessage'
 import { SignatureType } from '@streamr/trackerless-network'
-import { IdentityMapping, KeyType } from './identity/IdentityMapping'
+import { IDENTITY_MAPPING } from './identity/IdentityMapping'
 
-// Lookup structure for converting SignatureType to KeyType string
-export type MessageSignatureType = KeyType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
+// Lookup structure for converting SignatureType to KeyPairType string
+export type MessageSignatureType = KeyPairType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
 const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
     // Read key pair SignatureTypes from IdentityMapping
     ...Object.fromEntries(
-        Object.entries(IdentityMapping).map(
-            ([keyType, config]) => [config.signatureType, keyType as KeyType]
+        IDENTITY_MAPPING.map(
+            (idMapping) => [idMapping.signatureType, idMapping.keyPairType]
         )
     ),
     // These special ones need to be added manually

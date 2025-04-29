@@ -1,10 +1,12 @@
 import { SignerWithProvider } from './Identity'
-import { binaryToHex, ECDSA_SECP256K1_EVM, HexString, hexToBinary } from '@streamr/utils'
+import { binaryToHex, EcdsaSecp256k1Evm, HexString, hexToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 import { KeyPairIdentity } from './KeyPairIdentity'
+
+const signingUtil = new EcdsaSecp256k1Evm()
 
 /**
  * An Identity that derives an Ethereum address from a secp256k1 private key
@@ -13,7 +15,7 @@ import { KeyPairIdentity } from './KeyPairIdentity'
 export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
     assertValidKeyPair(): void {
-        ECDSA_SECP256K1_EVM.assertValidKeyPair(this.publicKey, this.privateKey)
+        signingUtil.assertValidKeyPair(this.publicKey, this.privateKey)
     }
     // eslint-disable-next-line class-methods-use-this
     getSignatureType(): SignatureType {
@@ -21,7 +23,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     }
 
     async createMessageSignature(payload: Uint8Array): Promise<Uint8Array> {
-        return ECDSA_SECP256K1_EVM.createSignature(payload, this.privateKey)
+        return signingUtil.createSignature(payload, this.privateKey)
     }
 
     async getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {
@@ -43,7 +45,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
     }
 
     static generate(): EthereumKeyPairIdentity {
-        const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
+        const keyPair = signingUtil.generateKeyPair()
         return new EthereumKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
     }
 }

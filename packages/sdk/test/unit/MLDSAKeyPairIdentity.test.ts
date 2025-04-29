@@ -1,11 +1,13 @@
-import { binaryToHex, ML_DSA_87, UserIDRaw } from '@streamr/utils'
+import { binaryToHex, MlDsa87, UserIDRaw } from '@streamr/utils'
 import { MLDSAKeyPairIdentity } from '../../src/identity/MLDSAKeyPairIdentity'
+
+const signingUtil = new MlDsa87()
 
 describe('MLDSAKeyPairIdentity', () => {
 
     describe('fromConfig', () => {
         it('can be created without 0x prefix on public and private key', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = signingUtil.generateKeyPair()
         
             expect(() => MLDSAKeyPairIdentity.fromConfig({
                 auth: {
@@ -15,7 +17,7 @@ describe('MLDSAKeyPairIdentity', () => {
             })).not.toThrow()
         })
         it('can be created with 0x prefix on public and private key', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = signingUtil.generateKeyPair()
         
             expect(() => MLDSAKeyPairIdentity.fromConfig({
                 auth: {
@@ -25,7 +27,7 @@ describe('MLDSAKeyPairIdentity', () => {
             })).not.toThrow()
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = signingUtil.generateKeyPair()
 
             expect(() => MLDSAKeyPairIdentity.fromConfig({
                 auth: {
@@ -40,11 +42,11 @@ describe('MLDSAKeyPairIdentity', () => {
 
         it('creates correct signatures', async () => {
             const payload = Buffer.from('data-to-sign')
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = signingUtil.generateKeyPair()
 
             const identity = new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
             const signature = await identity.createMessageSignature(payload)
-            expect(await ML_DSA_87.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
+            expect(await signingUtil.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
         })
     })
 })

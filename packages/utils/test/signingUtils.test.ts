@@ -1,43 +1,51 @@
 /* eslint-disable max-len */
 import { hexToBinary } from '../src/binaryUtils'
-import { ECDSA_SECP256K1_EVM, ECDSA_SECP256R1, ML_DSA_87 } from '../src/signingUtils'
+import { EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, SigningUtil } from '../src/signingUtils'
 import { toUserId, toUserIdRaw } from '../src/UserID'
 
-describe('ECDSA_SECP256K1_EVM', () => {
+describe('SigningUtil', () => {
+    describe('getInstance', () => {
+        it('returns instances of correct type', () => {
+            expect(SigningUtil.getInstance('ECDSA_SECP256K1_EVM')).toBeInstanceOf(EcdsaSecp256k1Evm)
+        })
+    })
+})
 
+describe('EcdsaSecp256k1Evm', () => {
+    const util = new EcdsaSecp256k1Evm()
     const address = hexToBinary('0xa5374e3c19f15e1847881979dd0c6c9ffe846bd5')
     const privateKey = hexToBinary('23bead9b499af21c4c16e4511b3b6b08c3e22e76e0591f5ab5ba8d4c3a5b1820')
 
     describe('generateKeyPair', () => {
         it('generates keys of correct length', async () => {
-            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
+            const keyPair = util.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(20) // Ethereum address
             expect(keyPair.privateKey.length).toBe(32)
         })
 
         it('generates keys that pass verification', async () => {
             const payload = Buffer.from('data-to-sign')
-            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
-            const signature = await ECDSA_SECP256K1_EVM.createSignature(payload, keyPair.privateKey)
-            expect(await ECDSA_SECP256K1_EVM.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
+            const keyPair = util.generateKeyPair()
+            const signature = await util.createSignature(payload, keyPair.privateKey)
+            expect(await util.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
 
         it('generates keys that are deemed valid', async () => {
-            const keyPair = ECDSA_SECP256K1_EVM.generateKeyPair()
-            ECDSA_SECP256K1_EVM.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+            const keyPair = util.generateKeyPair()
+            util.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })
 
     describe('assertValidKeyPair', () => {
         it('passes on known valid pair', () => {
-            ECDSA_SECP256K1_EVM.assertValidKeyPair(address, privateKey)
+            util.assertValidKeyPair(address, privateKey)
         })
     })
 
     describe('createSignature', () => {
         it('produces correct signature', async () => {
             const payload = Buffer.from('data-to-sign')
-            const signature = await ECDSA_SECP256K1_EVM.createSignature(payload, privateKey)
+            const signature = await util.createSignature(payload, privateKey)
             expect(signature).toStrictEqual(hexToBinary('787cd72924153c88350e808de68b68c88030cbc34d053a5c696a5893d5e6fec1687c1b6205ec99aeb3375a81bf5cb8857ae39c1b55a41b32ed6399ae8da456a61b'))
         })
     })
@@ -47,7 +55,7 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
+            const recoveredUserId = util.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).toEqual(userId)
         })
     
@@ -55,21 +63,21 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('c97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
+            const recoveredUserId = util.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).toEqual(userId)
         })
     
         it('throws if the address can not be recovered (invalid signature)', async () => {
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            expect(() => ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)).toThrow()
+            expect(() => util.recoverSignerUserId(signature, payload)).toThrow()
         })
     
         it('returns a different address if the content is tampered', async () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const recoveredUserId = ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload)
+            const recoveredUserId = util.recoverSignerUserId(signature, payload)
             expect(toUserId(recoveredUserId)).not.toEqual(userId)
         })
     })
@@ -79,7 +87,7 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = await ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = await util.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(true)
         })
     
@@ -87,7 +95,7 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = await ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = await util.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(false)
         })
     
@@ -95,14 +103,15 @@ describe('ECDSA_SECP256K1_EVM', () => {
             const userId = toUserId('0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c')
             const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
             const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-            const isValid = await ECDSA_SECP256K1_EVM.verifySignature(toUserIdRaw(userId), payload, signature)
+            const isValid = await util.verifySignature(toUserIdRaw(userId), payload, signature)
             expect(isValid).toBe(false)
         })
     })
     
 })
 
-describe('ECDSA_SECP256R1', () => {
+describe('EcdsaSecp256r1', () => {
+    const util = new EcdsaSecp256r1()
     const payload = Buffer.from('data-to-sign')
 
     // Uncompressed public key
@@ -117,78 +126,78 @@ describe('ECDSA_SECP256R1', () => {
 
     describe('generateKeyPair', () => {
         it('generates keys of correct length', async () => {
-            const keyPair = ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = util.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(33) // compressed. uncompressed would be 65 bytes
             expect(keyPair.privateKey.length).toBe(32)
         })
 
         it('generates keys that pass verification', async () => {
-            const keyPair = ECDSA_SECP256R1.generateKeyPair()
+            const keyPair = util.generateKeyPair()
             const payload = Buffer.from('data-to-sign')
-            const signature = await ECDSA_SECP256R1.createSignature(payload, keyPair.privateKey)
-            expect(await ECDSA_SECP256R1.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
+            const signature = await util.createSignature(payload, keyPair.privateKey)
+            expect(await util.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
 
         it('generates keys that are deemed valid', async () => {
-            const keyPair = ECDSA_SECP256R1.generateKeyPair()
-            ECDSA_SECP256R1.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+            const keyPair = util.generateKeyPair()
+            util.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })
 
     describe('assertValidKeyPair', () => {
         it('passes on known valid pair with compressed public key', () => {
-            ECDSA_SECP256R1.assertValidKeyPair(publicKey1, privateKey1)
+            util.assertValidKeyPair(publicKey1, privateKey1)
         })
         it('passes on known valid pair with uncompressed public key', () => {
-            ECDSA_SECP256R1.assertValidKeyPair(publicKey2, privateKey2)
+            util.assertValidKeyPair(publicKey2, privateKey2)
         })
     })
 
     describe('createSignature', () => {
         it('produces correct signature using private key 1', async () => {
             // Signatures on the r1 curve have randomness, so can't compare directly to the correct signature
-            const signature = await ECDSA_SECP256R1.createSignature(payload, privateKey1)
-            expect(await ECDSA_SECP256R1.verifySignature(publicKey1, payload, signature)).toBeTrue()
+            const signature = await util.createSignature(payload, privateKey1)
+            expect(await util.verifySignature(publicKey1, payload, signature)).toBeTrue()
         })
         it('produces correct signature using private key 2', async () => {
             // Signatures on the r1 curve have randomness, so can't compare directly to the correct signature
-            const signature = await ECDSA_SECP256R1.createSignature(payload, privateKey2)
-            expect(await ECDSA_SECP256R1.verifySignature(publicKey2, payload, signature)).toBeTrue()
+            const signature = await util.createSignature(payload, privateKey2)
+            expect(await util.verifySignature(publicKey2, payload, signature)).toBeTrue()
         })
         it('accepts private key in JWK format', async () => {
-            const jwk = ECDSA_SECP256R1.privateKeyToJWK(privateKey2)
-            const signature = await ECDSA_SECP256R1.createSignature(payload, jwk)
-            expect(await ECDSA_SECP256R1.verifySignature(publicKey2, payload, signature)).toBeTrue()
+            const jwk = util.privateKeyToJWK(privateKey2)
+            const signature = await util.createSignature(payload, jwk)
+            expect(await util.verifySignature(publicKey2, payload, signature)).toBeTrue()
         })
     })
     
     describe('verifySignature', () => {
         it('returns true on valid signature on uncompressed public key', async () => {
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey1, payload, hexToBinary(validSignature1))
+            const isValid = await util.verifySignature(publicKey1, payload, hexToBinary(validSignature1))
             expect(isValid).toBe(true)
         })
 
         it('returns true on valid signature on compressed public key', async () => {
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey2, payload, hexToBinary(validSignature2))
+            const isValid = await util.verifySignature(publicKey2, payload, hexToBinary(validSignature2))
             expect(isValid).toBe(true)
         })
     
         it('returns false on invalid signature', async () => {
             const invalidSignature = validSignature1.replace('a', 'b')
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey1, payload, hexToBinary(invalidSignature))
+            const isValid = await util.verifySignature(publicKey1, payload, hexToBinary(invalidSignature))
             expect(isValid).toBe(false)
         })
     
         it('returns false if the message is tampered', async () => {
             const tamperedPayload = Buffer.from('foo')
-            const isValid = await ECDSA_SECP256R1.verifySignature(publicKey1, tamperedPayload, hexToBinary(validSignature1))
+            const isValid = await util.verifySignature(publicKey1, tamperedPayload, hexToBinary(validSignature1))
             expect(isValid).toBe(false)
         })
     })  
 })
 
-describe('ML_DSA_87', () => {
-
+describe('MlDsa87', () => {
+    const util = new MlDsa87()
     const publicKey = hexToBinary('723006976e8a31bd0351b6ea0c0206386375043f7f92af234fa876317818d3b7d1fe04b113c3d6aaa015801b29d3aff62ca340361db5ac5b6dcad8fe5d3f92c9c0e196cf1d0a7c4c68a378958668a889b92a4b4bda0075cdf2d3f16ccb814cb1804e86d7adf6cb110cf0932834e1082b262effa050a94378cd7786ad90d6310642db1fa7a9abee4d8f43c4374d08c7cc947d7f7996b7daca72ba89cfc8852b5d9d94154aff9c46ba686aa52c46830f7136078e574454b589a4aa5780b80b37446cec9736ec9962ed94f13e7ba3cbb59b991e9f34b3563b1a7c1a866e8ce2ef2ab7b30ae4577d326fc20c753c4b9a6142fc854e99133f51bde5f0f4702793882a33d546adb93dd0f6c2d7df17dc016dfd4019bf42dcedf84df4a2b28be54d691f0481bca05765b95109637a3c556e9fefa30a4a32eb2bb05dcd8d1eb8767a43528b3588d0814380b64b54d1e7f0fbe237f3cfb5ddac283b1c28adf156374fded79d898318949037ca0c279382aee933be5594c2e12c49ea3c26125f24e785597be36b8533f7f354e14d0f9652f48e1a98fa34f855cdcc573132a7588e1ce254c4fbf1f6eb7f5906090067958b2007af2f6c02355f5bd01817cfefa1bb55a5baf6c7ee23d1358e6b4be19f6b6d823ef434394a7fa576ae308c68e1cd877dbd853cad51614a2a5cbd9758ec45935abcbd7fb5e504dc75fce3851bc0ceda12107658e6a6faf676799def4c407361def434de10f9bd0282414d76fa403834680e031c01df15d7bb7dbf5fa1dfb978f02187e7d5d3be0e2bd5d1210755cdf4badfe12080542e4ec17afad5a7554e53b40d73ae37e2bc5065e91ea62a093e46a6008919b6cdb866636219e5ff6baf0e274bcc5cfb81d88bd8b426fb0e6a3c20f301a9add5762d1c0a762a66147645682960bb234acd0b354c68076f1e7e4f513bf05411d6a9fd3859f4ca8c77fe216ae57db2b5c903ee78ab83fb9ab894af220388ced64c275804e0def19f05d879ce060a014a3a423ce2e8ec03c75bb09d22ceb5cf7f7e9b6fbc25bfb641e5c4aef0fe60ba79bce5a5ff581df6b22fee2e4c1d8e8560e5550a9c54b2173609d7a2b6eb548bf6735631195d824e2c3eab59072eb92a9ac33486d708031be06a4eb6369259bedf9e89f63c3f25480d718004cf5f7bab4dc112dc9d627a1b7c9d4761834ee451fba39733f2000b8e75a137735fd0cbbc0ced3df67041de339cbafc3fe0b5f8ae1b1bd1495885a91c609be5e0884c42b7163f66aff20ca6979ff1b234c3a2ea5cf4848dbf248b06834824a75d83050a4ba5a723d9a8ab1822296cc2bf93794e0eec64cff97bf7ae927ac7b6b14bbb29b0815ba708b07d7e29d4ab2c54d2bb3644f86832789a6d80ae95781c5943577d3645306ad096cbb757afce683bccb8b5295e446f3f2ce081be6a1f2b55f4925354f6bc86e664a2fb863ec72611ff29b873d5adeafbf61f3226614e0ecbe58b1d3fb6166b57c2d40b65bbfdffa1cc2666fffd4eaa1e55906c128119d6d977f1dadeff01571efd6ddbf374cc01d54ac9d8c293817782b9039af0864d0265f8e040e16c3592d535ab123ecc9738cf7a795290c603d3949ca7acfa94794854cf585c3b181814ac0f9db57efc7b6c4bcf5302ede36f7343f4adadfd451af2cecc5a3b487c327373cac2d816806c15a19253aea99fd31187212880a842e7c5f8cfa23e1ea26028ceb3e19cf1a149fa8d568d141a3aa346b30b5e2c68d1615a0bd3a9e93e42ba01a0dc0852a6cb72d926ef64e875b2c3f7e9ee761b73855dec78784a2d7be3c75a7d44ad66012e9bfc3b92938da735aed843498a1f2b62778df974f62adc0edcc1c03dcb9cfcca18fd31b2ec892e38e3d96933cfe7a80ebf8444fc6a9949ef2bac776626843bf2d1032c9404703c0824c99bc88bb97b87af20f28473f2cbb9aab0ee614c289d26d9f1fb559bbfbfb4288b831ce8fe39b89ac5541f0fe9d7c36a8b79a171aea05d880df1c9f69775185652607679a220a40f91149b2ea61d26706fde20561cd2e8c971c957271709b930a29a334f48d826f093580eae4a4458546f92fec2002ac6cf65876bd88153e55f9f5f624669a71fd78a8c513737c73b6bd6bb29053d60b045e0ef9d9c997734d5cfd81b0983ed65fcc1c8730b44f06468b849480935d2c3dc4e09fd01dd788eaba18d0ada1a28985d16e18c456e74d0cfe8dd3b038d7117847fe108d99653620224263fc2a3ef64640ad06ef746dbd9f842da1fc532ef67e2d2e076c2a9af321142b05a3d05093249454ddae3b6cbbef1e513c14aae3ea2a838414948664e87b5255a7a585e24cfcf371653ea7afc7ff82ee7c79879afb398ba516fa25643ba392dbd03264d57ee06a57a142680d7ac260fd08c025a9ad97aea333243ee65b3d8349001b95fe395d8179f05a0c653f2c2c99bd60e0346140aedaed734a07f2aa15121874be1ad124dc893ef3c303f24769630019d082ab2d8554f5f9a98f0d2a67995785dfe3c914fd2a3c03dadb39fdd93f01880786aebdbd8ffde1eafa7c35713cb8e0b7b6a4ce0f60437db69e712753f4d5972f472e67009df5f5e6bee659b8eb573a4028481757fe5562da4bf0f2cf13b1406c9b855a3770da56f1a25aaf53847fac00a85fd4c1b75a3ac74a492f6cbbb8d5ff203a17eecebd9a1841935751e82d7e5a2f937c32c6fb76887f8db8d038e65f0529daa65648132c8ee14f4bfb26adc51fadf87b2ae5803dc751590a9f1099dbf4496e3c363479e8a57d72bb44bdc213e4d2c9fb3a47299acfd2f364bacef70e93a784bac901e7a8019f50cfd43a7dc0e2d3cdd14a24dcbcd9caf1cdd1ee6dc67759994ebb6b00c2b4f2b235e7889e94107b5e8c26ce20a5cbeec3c9b540d4e987ca4d97c210efe95a83fba540e1fe3b318e5d7eeb7d1378de456fac6ce5e8509cd2b8dd4b4e42de40a48d157eb6408cb02fd7f154a324faf563ac949a68067d8879fc0bde39b0264c91a685ed49a23bd63630807f04c7d89c45735e8811ae5121c5a24fec1a8172552652a53b81807a6dc5587a2b0c473a6f051f947d21e2982a6cfc47e88e48e8ee60ce0c063a78b8a43bccd3bae9a8c0facdf8e04ef221b727abe687b0a26cf809b6ecb21e0cbb8f9824534a46e5c4544d862d659a1aa12bf9f78cc5cabd233cd84af4f080cb16174dab30d7f63f6367dd1662400c58d4a51104825f4dce47dcaf82758c9ed11932d2d5dd0efbffaae04a0e54b2ba5c3f89d443d5fc430f903b77506067090cf16cac27a689be04fa8052c67453fc447f69082723f54988e07b75ce16e0b32427bac39c8ab54b2b1cecf9f4a55da4a3eb91914120307c0dd3d2ef84299c397c6b09e2cd2d75bb92c76b05033b42979da4b462d045b6508bd9eae50d6a5c96f24313130aae63f0a561a0164ac5d121a9bd941bbe6ad8d1c9e58287a0434d332a3fa28c1351553562453e7b194a9f8688547c1688fe30ba7538e7d48d00d586baf1560a37bc39357167eb582c11312bf29b598b65fa48642af2ec3f8cd4805e9c7d9324eb176d319a7b559094777a0f1359e17d410241650b69e13113c5418f8074e17de6b8c0c342797f7a23073d37a3d7188760dd269e4aef9d2c10d5b0f85b97c0e5e4519f730848bcf9c2e8c')
     const privateKey = hexToBinary('723006976e8a31bd0351b6ea0c0206386375043f7f92af234fa876317818d3b7945ad7223aa3a95592cccbd04b3d592269d7966df8c25a940edc06f13c7029b0f72b5125b82112d185ba9e416997ed2276fbdd0ad0e77e1e5da3f2f0d5cd9dd08e217962fb5b8e14fbf0f55c2ffa3db9b7e86bb0ff54de5f9ae8f651e7a25f04c2826c043422483264c0b8308c364c1c178ac822521b104a24244043024ea0b20c24c68d53a4611302711b33320ba20523034a890822210150c1a02592b03094a608913208cc286c1b94208c040d81a8651909241cb648ca20315404469c42728922910904258aa6215088291b901163808c04335223922dd1384562086ea3846053420602374c01064991c648931200da162c4bb27194b2446226018832411bb164a0189103c16d11019113800c92a26cd93225408289d2424adb2209234471a1b82c54262643062ea2320820c48c4c4062e0168dc1280ada884c09337204b2312035041ca304181365a200851ca1241a84802009900126111bb68d83006a59a6015a382910148489048108b86140886914306191988412030d1b8085d0028e5ac22048061063b80199466002382d43968d0085499c20501137621c926d0402260a9331a400318330698394256000081cb2641895801a078e09362a51842c82162911c34110940191946400b20c12474599268581a86581104001926ce1303003888c029911c4160c8924729228419cb444caa6815248414a227104b52982240c2498850ba641249900843026e040811c194518b120894400e0a02d02248284026a01b86094b671a248226184101bc48922270a532829020990e0002223024e09164e08a50998a46cc214405ba0802405524cc8680a492649186a18308d0c1472238671dc328220000ad4b644e246268c2040e4244622295010c9200a904402a600c8a801c00482244591cb4005ca3428198850dc861102247094c6841801045896505a24729144609c882063c465043506a19011cc4600a3c811c9328859486ec3420d14960c08894953b0692428060c25848cb64d62848521c580e44052e3c0855a386e5bc24099000c142344cbc84c9c022101068e03938119408dc3066583c8611431609c8830c1206804336e1ca72c1023649142921b8964a3a010dc042563a84053c84d48482ea08890e112080329606080050cc62c20c16c9842310b106d0483844a80002044520237501c91890835701c0010a4244ecaa07093440293284d9a1220002041112780d4404052466622a950088728e0900909b764db220484966904840d8aa025e0c48153b42d5c0841a0484a19b32d220806e116054a340d22110a1b3864c80826591220d2424a03a089a0b44d21364e52240912b280d84282921422043608ca22640ac341900031540222129989d8a4494c48609c800c11a929934292d2345003906d803432223140d2366e60b62464184249942558b4509828899b20305aa48842b2850310680ab011c0b0851ca44c1115401a07641121808cb88492c01198300c54b2290c276d49c62002c010cb3068091684c1c28ca2b209c3222ecc40801a453060166c9194111ab484130389229630ca322d4b9490d2466d639644d0c8719818061c01121b0322533409dc4871900692d022504b4686023926db226c82a08013a56d1029462293418920400b0802e3324010921001182e21410d00c290c4348991288218306e08292848b845d3965103942189a84008290ec0b63011b86402158823090c139080c0940c14186d5402646496891a057263368c4b485102200ed3122812223092386a20c78498104200096610872c190866e1142c483240a2304c4b3601d3903024340a02a94c039609101222d9980c09348914a3880c85318830100141110c397019c1310ca85182882193022d4a342d53c881639048d4384c52a62dc8363260c048c2c860e4b651e1168a2331880330041ba7104ca09053464019b82480b86188424d01a844c3b8058c3671e2c44994185024b91150384cdaa089d03430d4248d813486e2443051044da29030424872cba22419470904b610113891a3264583c4615c101098c24424348a19c664c08611014262828484829669c0b68d8138616494285902269ba241201289d424528ca82000008c04c94d8412514300624c14511a42245ab64d591842cb34610913c5984aea91a55d1e54b25202023c8c4d81e6dfac0ca1855543ea38b090bcc675e3533cc55d5af7a2edb2c3d506c0ae0eee7285f318ef23ce3f4628d91dd92ddf9c40119712031ca61c8326d8f70774048c60215ad7276db2cd72726b071d58199af839d6fa931557fbf455c79070e9dd4d0b0d3a0beb2e05ef50b4b4bc343e542f2eb326a7a020af3fff742fcd4aa9633d15163ae5ea26d82df12ce5ef36eea7d5819bd11848a460561ec19f5c5bf89b78fcbc6b233c2e00703f0a0fcdd6ccb9db6b6b807de128107b7a601429e0904fa12118a42f0cfdc7ba27017f49de4024550151dfa20eb8775d1a176bdff46ee76a884bca4e92eb363c7cde0f02442ebf74bd765621241777f9e8bea97803cdf61a50d141ac3a4266759cb88b0b1bc297b1a8b6ea0141dfd2f361072f2824f733348f03587cb5849d40e3dc70b6e02520a674996e6e2a2f33e30c8ec5593e005b227a19c215f02667891a2dd49366fd17d0fd9038ae6fb41b6bf9e627b984fd285a7ffb292e6ab1fda4c3a205c264af1c6e48bb3f362cdb7ff0c7586d38adb7e2b356a1c8b7930032961149f912e5844cd2ff72323da11b8b8a009773e57d0d73bdab13c1998190960ae120978c4d05fb6ffd9392990d4d75bbe738af81ab943e8eef3c6bce8557f34f1127c8999c758c07449efcb40bf87c428398ddcace38f016199cc3b96a797f2b37a7b2f5c80b60c39ccab6e869e3439bf98a86c151412d83fe7aab9fb3bb817b4c4b7e7c9066fbb16b5abe78c8cce39bcd3d3ca2340d83e5166ec5057754d5dadb5f683754a93b7936fd297311316f52cb494203c980d84d998f8946228bff79b6363db9cd07f8b45da21eec80d3f7a8bbe71932d5561ed41c6f881c351a3cf826c35ee66e61fad416eb25e226f1e6b7597ef6dcc8f0d35b5888ea88601394bd679cf2adc097d60f8790aeab5ace5af660078c7146f2c66c3985a3c5dd2575de64dc7e9ef37ff7eccf9f3654a5ed13da2caef208d3898a016ecef964ee75c0dae4d389ed24adbf97423ad8652a57a11332091a23c37f54177db980e63eeeec213cb70e9671335494d9663a95f5975cd4e0760cae1035c82826febd6b71f6f7ef05b842493a2fcff5a943bf6df47dd679c281da4a19bf5651d94823f1d0c1836e4c7c9c3581733b68e8fa6023b1854665f9d7e09c36c28bee10b2a71aa04ba51acd3a8d401992443fb58f8bc429593a0335b295af2de26fab249ab3d36cefdfe1469f335198153d2fe364581498c0d04c314edeecbc475e00133381eb94010a60a4e71a7281d8081909b365ed6e5332fd56b5ec67ed3520581477f030002a4ed1f5cd8fe7648e3168aa34ad556c64f37162eef2af50cd6cc22eff1600738edcec1dde6c34775bb6ae7cac26893b6676f6199adf26dd1478409dbe888b1bec7cbdd239c4068676c55f844f026eba8f57fd4fbab1e94a6211fe9de52ca804f1109f0ae1f7782234e9898c9fcd451abff6248e0a4651bfa15f3f848a1d02513ddb3bc1a851d27df84a878dfefe01f3df9813ac73a76681d6657ab66e8bc0931546a91a15c790404d87f24007f68b856671f29cbbd5ec827e80928fd8ac8a77cf8592918b668a578ad14464300ae23cb10745b3e69ec2cec81e3ddad458eef8d0c1e0dc26719634e62d97aaa1fe14a3898c8dc4785ed83748ef67c0b24d0117ffd0a345af7e9c5c759c9c936d9494e8a674bf5c82064978fddf7d18718f1b993f2b734163f0cb04f7a34bef77e2834bbb2b051e3eabc307fcb041d0a9cb90006fa2c0e03f7fb231dfc701467cd9ff50169268451e49111f723b5b082c942e0a3146852a3f961e875e5a3f81f3f8d245efada99f36913a2e5a3ef5640df8a7af266df73a31f4895d0f32e8d24405752ad0e817c0a3999229aadcea27a3ed19ddc340a14ee7e743f476533964f3bb0ed5d80eab7d9057720aedca490431d21170db13b1eedb28a633b8b2bb8d59683ca119fd8196053ce40256f047e6c31ca6d0cdcf5b7f9f615897ae2ef5ddff6bfba478987d1311f8a9a9488411ca2f8698b62a81d68e62294a52536e87fdd7eb551804b6c0e0b4472e124f4d5fc484f558d87c736bfe2430524b2f65b7bd60c7bdac36942a06841ff062aafcfe857b16d86954fc00045bcc0ad10b2d8bd825cc848d3870b7e61a961750b851887480984c98852793b2d0435fd9339089a92dc8304bcdc0c88294e3ddf1223897d0b8871cd407648519d09e651ad63170c90d364f1f04e04bb6693fb831a95e486d9662f0376a861f9ae2208863f8df523af42d0b5c0e1ca58bcfd40cae235acd8582c82172694a2813dd2ed8e949cc42f2bd549b59256b65d1ddb224a5358e4267d7411ffbcf7d6ec2bb536dd8a6cf68ad8ca82a6dceadfcb1896bef5aa28bb4b16096dcf0cf3b219fd80ce6c811a692781f51589b2ef5a5c6de6f24cc5abb84f32f01982adfd6910d75a2b9d1e51ef467f13023290e546ea955bc4989c0f90fbcc83f36dc71be5b2491f0c4bc686b2fc6b197bf812768328d9167baf258f8ebec3a716ae9fe220ca25e53a943e5ed0a1b717d392824c4cf3ffe0afb740c9e56deab32f620b9aa4fba840a0c51143ad1e6310c22a694e7f28a97dae9d1de5b372e9f5521fefc14ad384b1e44843e4d744454094a8f06c74793def4105d7c5635ad3605aa2a5ce15e4a65f35b836ed533479d192a4f49711d644811d509634c861dfa688be4e38ac1f119715dc3239c1eedeec5c09bb8a592261df55f7b3f34dd43147e87aefaffa076d6209e2fc20f5ea1c82c1635a083ec79fe50e85d40b721688dbf5ae8cdb771e696afa4a1c79bdc15e5490146f214ebe05c6665220ba3c0b749ad8b1f91820a93ff1297cb38cdf76c5116f991fb2e85de915fc4b65f2cc0c33e7381c2c8baba67e8d0f302b9a70438df6ecebceec07fc2b61c9235dba66e28db4c9c46d825f87e53428a27404d36ea8a8cc51536437961618c9abc68a1c4343babfcf45ee52e4e05b157c0f9c9f17fccb6ab4aff374cd775de629fb64e64f867c665df704ec63a38dfc7e4eb5aa881d21e597a27a21adecf238f6a7b1abe3b218ab4235228c4dab57092ef16fd78bd81a3144b0f95d56b51110c54f2227551dd298dbd92433323b960e749c21cfe1602901292496b5d5b173b8f583fd92bd3239e85233d7814ff2ed49d74728a6b39ebbc4c89a6c67cceea0f6b6e079a09b88dd0ddf0f6c157f5e641712c1a36afa9a555d112e3c1b96e0483e923d55a1207d5352f353ca5214c3f3d4ab8c29c4027785e85f2cd982770d267c5a68987c73e0fdec43c6d8439df6b2586f67d87dc13932ec9960022ce014db181008498da72b3ecbd0f3e96b45452bd99ed59ed3ad3572826ec1d76489f7cc910f5f01b0b1240ac86f68e47adfb6c81a86e68416b271e667bc0df0bc86e185f94f3582a4dc7e1467d108f4a729a889b3baa85ecbdf3aff069ccd32b9cd440e632b809ffe68f5aca88da3b4458b590a7ba330c91f63521e183b818a53dacbbac046d8e40d029275f7f40ab7f4f079b3073521fd1b74d089a78bcc48c4737ac84332ff3a8dd1183f820b2a26ec142eaa4acc0e4c5903e799b4181d16d30c397d1eebec1381a51b842012e31cee1306017e74e7eebd08de9b89a13fba75aba9d7f714cad869644436128c1ba3273ba65983d421f353217547994225f2fba8b82deace0abff0274752bb754f10abbb394e1a162bb8ed85c8cd40c4cc4b352a56c19e6dd3bd5cf83d4fbd7243e0c70331b0698ef61ef42b81d8b619eb4be5670b8f2bb2115cea37603de651ebb7caa4df71d87fdf8aa97a9dcb457497598c103882cd8437eb029d9aaeda0d1b12d397500ac878bb50e9baff8fbc6b303138e4787d5a8a8494c5c00093f61a9495e8f530e8d51d432457cd280baf43dcc5dc4666ba6d5b3b166d6a46c6ecaab2c5530ddd82b1345cb29d6e4f47e9d36b115d6bde7290424709113f5e6b8060018f47ffbc5603b1678466cdc7a3fb6ef7ef63c786d6b2c1acaf26ad0743fe62b37a8300351cbb2c3453c53ecc7d7f35d5b0b116a8c2b9a87517331b8ccbf3db115892dee7caecf5668abb8f5cf0392c60fbb6905d2fec0434f34350998dbb91c87fccbccbe1266cfdfee209ff7614d7a7cc88e4a6fab66187a9b6c6ccf6f57556c9d8de25776dec4066531f78c75b910b2b00fd3f02685653c8c535eae793747aea89d92c9e27bf07fdde6ba6fd466f297bfaa260aa43702afb38999605d8f0aaeee547a7e8de2c25990a7662122c0b5684256d0ddbbc89b4782bab1b3487aa42e442b6da451b826758d08e327209c8b93391e5b1b22b73dca7aec0c755caf35b27dafb39716189175528fc024f01346aabc20edcd6347aa5db341566be35c068a6c107c80ea60dce0705b62576211a1223b1db9ec4ba3c8ab6ba7624d463681872d100a63fdb611705f7578744c4022899920528fd9425e8bb540dd4878b7cbebd39f22f1f064d839eca8cae4c7310cfa630e1977ebf395b127b70563365a1abd164be462b8fe239755e2a05e221e17d281bc3bbf2e63c17de9ea7a1dd759414674aaa40dbb842bf12c7d267bedb04d2198463c958b584fc732b4a745d8424cc1606e452541039f09b47ec5dc5ba5cfb284b252f8f33fc2cf797e9bc6f589cea132522d8d35b9f4')
 
@@ -197,53 +206,53 @@ describe('ML_DSA_87', () => {
 
     describe('generateKeyPair', () => {
         it('generates a key pair', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = util.generateKeyPair()
             expect(keyPair.publicKey.length).toBe(2592)
             expect(keyPair.privateKey.length).toBe(4896)
         })
 
         it('generates keys that pass verification', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
+            const keyPair = util.generateKeyPair()
             const payload = Buffer.from('data-to-sign')
-            const signature = await ML_DSA_87.createSignature(payload, keyPair.privateKey)
-            expect(await ML_DSA_87.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
+            const signature = await util.createSignature(payload, keyPair.privateKey)
+            expect(await util.verifySignature(keyPair.publicKey, payload, signature)).toBeTrue()
         })
     
         it('generates keys that are deemed valid', async () => {
-            const keyPair = ML_DSA_87.generateKeyPair()
-            ML_DSA_87.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
+            const keyPair = util.generateKeyPair()
+            util.assertValidKeyPair(keyPair.publicKey, keyPair.privateKey)
         })
     })
 
     describe('assertValidKeyPair', () => {
         it('passes on known valid pair', () => {
-            ML_DSA_87.assertValidKeyPair(publicKey, privateKey)
+            util.assertValidKeyPair(publicKey, privateKey)
         })
     })
 
     describe('createSignature', () => {
         it('produces correct signature', async () => {
-            const signature = await ML_DSA_87.createSignature(payload, privateKey)
+            const signature = await util.createSignature(payload, privateKey)
             // Signatures are non-deterministic, so can't compare signature to oneCorrectSignature
-            expect(await ML_DSA_87.verifySignature(publicKey, payload, signature)).toBe(true)
+            expect(await util.verifySignature(publicKey, payload, signature)).toBe(true)
         })
     })
     
     describe('verifySignature', () => {
         it('returns true on valid signature', async () => {
-            const isValid = await ML_DSA_87.verifySignature(publicKey, payload, oneCorrectSignature)
+            const isValid = await util.verifySignature(publicKey, payload, oneCorrectSignature)
             expect(isValid).toBe(true)
         })
     
         it('returns false on invalid signature', async () => {
             const invalidSignature = Buffer.concat([oneCorrectSignature.subarray(0, oneCorrectSignature.length - 1), Buffer.from([0])])
-            const isValid = await ML_DSA_87.verifySignature(publicKey, payload, invalidSignature)
+            const isValid = await util.verifySignature(publicKey, payload, invalidSignature)
             expect(isValid).toBe(false)
         })
     
         it('returns false if the message is tampered', async () => {
             const tamperedPayload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
-            const isValid = await ML_DSA_87.verifySignature(publicKey, tamperedPayload, oneCorrectSignature)
+            const isValid = await util.verifySignature(publicKey, tamperedPayload, oneCorrectSignature)
             expect(isValid).toBe(false)
         })
     })

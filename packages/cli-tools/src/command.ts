@@ -1,5 +1,5 @@
-import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, 
-    KeyType, validKeyTypeValues, DEFAULT_KEY_TYPE } from '@streamr/sdk'
+import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, DEFAULT_KEY_TYPE } from '@streamr/sdk'
+import { KeyPairType, SUPPORTED_KEY_PAIR_TYPES } from '@streamr/utils'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
@@ -8,7 +8,7 @@ import { createFnParseEnum, formEnumArgValueDescription } from './common'
 export interface Options {
     publicKey?: string
     privateKey?: string
-    keyType?: KeyType
+    keyType?: KeyPairType
     config?: string
     env?: EnvironmentId
     quantum?: boolean
@@ -35,8 +35,8 @@ export const createClientCommand = (
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'a private key to establish your identity')
-        .option('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(validKeyTypeValues, DEFAULT_KEY_TYPE)})`, 
-            createFnParseEnum('key-type', validKeyTypeValues))
+        .option('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(SUPPORTED_KEY_PAIR_TYPES, DEFAULT_KEY_TYPE)})`, 
+            createFnParseEnum('key-type', SUPPORTED_KEY_PAIR_TYPES))
         .option('--public-key [public-key]', 'a public key - required by some key types')
         .option('--config <file>', 'read connection and identity settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
