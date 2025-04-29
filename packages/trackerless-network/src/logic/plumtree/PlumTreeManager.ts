@@ -89,14 +89,14 @@ export class PlumTreeManager extends EventEmitter<Events> {
 
     async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
-        const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp >= fromTimestamp)
+        const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp > fromTimestamp)
         await Promise.all(messages.map((msg) => remote.sendStreamMessage(msg)))
     }
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // If the number of messages in the buffer is greater than 1, resume the sending neighbor
         // This is done to avoid oscillation of the neighbors during propagation
-        if (this.latestMessages.filter((m) => m.messageId!.timestamp >= msg.timestamp).length > 1) {
+        if (this.latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length > 0) {
             await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp())
         }
     }
