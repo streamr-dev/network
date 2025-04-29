@@ -1,5 +1,5 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, setupOperatorContract } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
@@ -8,7 +8,6 @@ import { createClient, createTestStream } from '../../../utils'
 const {
     delegate,
     deploySponsorshipContract,
-    setupOperatorContract,
     sponsor,
     stake,
     getOperatorContract
@@ -42,7 +41,7 @@ describe('maintainOperatorValue', () => {
             operatorConfig: {
                 operatorsCutPercentage: 10
             },
-            createTestWallet
+            deployOperatorContract: _operatorContractUtils.deployOperatorContract
         })
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })

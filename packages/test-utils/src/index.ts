@@ -1,12 +1,14 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry, binaryToHex } from '@streamr/utils'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { Operator as OperatorContract } from '@streamr/network-contracts'
+import { binaryToHex, EthereumAddress, Logger, retry, toEthereumAddress, toUserId, until, UserID, waitForEvent } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express from 'express'
 import random from 'lodash/random'
+import range from 'lodash/range'
 import { AddressInfo } from 'net'
 import { Readable } from 'stream'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export type Event = string
 
@@ -292,4 +294,45 @@ export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: bool
     } else {
         return fastPrivateKey()
     }
+}
+
+export type SignerWithProvider = AbstractSigner<Provider>
+
+export interface SetupOperatorContractOpts {
+    nodeCount?: number
+    operatorConfig?: {
+        operatorsCutPercentage?: number
+        metadata?: string
+    }
+    deployOperatorContract: (opts: {
+        deployer: SignerWithProvider
+        operatorsCutPercentage?: number
+        metadata?: string
+        operatorTokenName?: string
+    }) => Promise<OperatorContract>
+}
+
+export interface SetupOperatorContractReturnType {
+    operatorWallet: Wallet & SignerWithProvider
+    operatorContractAddress: EthereumAddress
+    nodeWallets: (Wallet & SignerWithProvider)[]
+}
+
+export async function setupOperatorContract(
+    opts: SetupOperatorContractOpts
+): Promise<SetupOperatorContractReturnType> {
+    const operatorWallet = await createTestWallet({ gas: true, tokens: true })
+    const operatorContract = await opts.deployOperatorContract({
+        deployer: operatorWallet,
+        operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
+        metadata: opts?.operatorConfig?.metadata
+    })
+    const nodeWallets: (Wallet & SignerWithProvider)[] = []
+    if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
+        for (const _ of range(opts.nodeCount)) {
+            nodeWallets.push(await createTestWallet({ gas: true, tokens: true }))
+        }
+        await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
+    }
+    return { operatorWallet, operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()), nodeWallets }
 }

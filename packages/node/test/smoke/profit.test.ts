@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, setupOperatorContract } from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
@@ -32,7 +32,6 @@ import { createClient, createTestStream, startBroker } from '../utils'
  */
 
 const {
-    setupOperatorContract,
     getProvider,
     deploySponsorshipContract,
     sponsor,
@@ -103,7 +102,7 @@ describe('profit', () => {
             operatorConfig: {
                 operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             },
-            createTestWallet
+            deployOperatorContract: _operatorContractUtils.deployOperatorContract
         }))
         sponsorshipContract = await deploySponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
