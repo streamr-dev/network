@@ -138,18 +138,18 @@ export class EcdsaSecp256r1 extends SigningUtil {
         // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
         const publicKey = p256.getPublicKey(privateKey, false)
         const x = publicKey.subarray(1, 33)
-        const xEncoded = Buffer.from(x).toString('base64url')
+        const xBase64 = Buffer.from(x).toString('base64')
         const y = publicKey.subarray(33)
-        const yEncoded = Buffer.from(y).toString('base64url')
+        const yBase64 = Buffer.from(y).toString('base64')
 
         return {
             key_ops: [ 'sign' ],
             ext: true,
             kty: 'EC',
-            x: xEncoded,
-            y: yEncoded,
+            x: xBase64,
+            y: yBase64,
             crv: 'P-256',
-            d: Buffer.from(privateKey).toString('base64url')
+            d: Buffer.from(privateKey).toString('base64')
         }
     }
 
