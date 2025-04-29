@@ -3,6 +3,10 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { Identity, SignerWithProvider } from './Identity'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 
+/**
+ * KeyPairIdentity is an Identity that is defined by a public key and a private key.
+ * It uses the public key as the UserID.
+ */
 export abstract class KeyPairIdentity extends Identity {
     protected readonly publicKeyString: UserID
     protected readonly publicKey: UserIDRaw
