@@ -51,13 +51,14 @@ describe('PlumTreeManager', () => {
 
     it('gets latest message timestamp', () => {
         const neighbor = createMockPeerDescriptor()
-        const msg1 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 123)
-        const msg2 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 456)
-        const msg3 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 789)
+        const publisher = randomUserId()
+        const msg1 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), publisher, 123)
+        const msg2 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), publisher, 456)
+        const msg3 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), publisher, 789)
         manager.broadcast(msg1, toNodeId(neighbor))
         manager.broadcast(msg2, toNodeId(neighbor))
         manager.broadcast(msg3, toNodeId(neighbor))
-        expect(manager.getLatestMessageTimestamp()).toBe(msg3.messageId!.timestamp)
+        expect(manager.getLatestMessageTimestamp(msg1.messageId!.messageChainId)).toBe(msg3.messageId!.timestamp)
     })
 
 })
