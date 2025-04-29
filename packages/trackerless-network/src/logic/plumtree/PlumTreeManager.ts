@@ -10,7 +10,7 @@ import { PlumTreeRpcLocal } from './PlumTreeRpcLocal'
 import { PlumTreeRpcRemote } from './PlumTreeRpcRemote'
 import { ContentDeliveryRpcClient, PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import EventEmitter from 'eventemitter3'
-import { Logger, Multimap } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { PausedNeighbors } from './PausedNeighbors'
 
@@ -46,7 +46,8 @@ export class PlumTreeManager extends EventEmitter<Events> {
             this.neighbors,
             this.localPausedNeighbors,
             (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
-            (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => this.sendBuffer(fromTimestamp, msgChainId, remotePeerDescriptor)
+            (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => 
+                this.sendBuffer(fromTimestamp, msgChainId, remotePeerDescriptor)
         )
         this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
         this.rpcCommunicator = options.rpcCommunicator
@@ -105,7 +106,6 @@ export class PlumTreeManager extends EventEmitter<Events> {
             }
             this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.add(msg.timestamp)
             if (this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.size > 1) {
-                console.log("resuming neighbor", latestMessageTimestamp, msg.timestamp, this.remotePausedNeighbors, this.localPausedNeighbors, this.neighbors.getAll().map((n) => toNodeId(n.getPeerDescriptor())))
                 await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp(msg.messageChainId))
                 this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.forEach((timestamp) => {
                     this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.delete(timestamp)
