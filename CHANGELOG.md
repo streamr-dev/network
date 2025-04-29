@@ -50,6 +50,16 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
+
+## [102.1.1] - 2025-04-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Update internal list of JSON RPC urls for Polygon
+
+
 ## [102.1.0] - 2025-02-19
 
 ### @streamr/node
@@ -380,7 +390,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.1...HEAD
+[102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
 [102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
 [102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
