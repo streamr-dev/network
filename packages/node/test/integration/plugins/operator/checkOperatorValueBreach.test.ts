@@ -1,6 +1,6 @@
 import { Operator, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestWallet, setupOperatorContract, SetupOperatorContractOpts } from '@streamr/test-utils'
+import { createTestWallet, setupTestOperatorContract, setupTestOperatorContractOpts } from '@streamr/test-utils'
 import { Logger, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
@@ -27,7 +27,7 @@ const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
 describe('checkOperatorValueBreach', () => {
 
     let streamId: string
-    let deployConfig: SetupOperatorContractOpts
+    let deployConfig: setupTestOperatorContractOpts
 
     beforeAll(async () => {
         const client = createClient(STREAM_CREATION_KEY)
@@ -43,8 +43,8 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorContractAddress: watcherOperatorContractAddress, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
-        const { operatorWallet, operatorContractAddress } = await setupOperatorContract(deployConfig)
+        const { operatorContractAddress: watcherOperatorContractAddress, nodeWallets: watcherWallets } = await setupTestOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorWallet, operatorContractAddress } = await setupTestOperatorContract(deployConfig)
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         await delegate(operatorWallet, operatorContractAddress, parseEther('20000'))
         const sponsorship1 = await deployTestSponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })

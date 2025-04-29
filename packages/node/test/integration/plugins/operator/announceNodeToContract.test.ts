@@ -1,5 +1,5 @@
 import { Operator } from '@streamr/sdk'
-import { setupOperatorContract } from '@streamr/test-utils'
+import { setupTestOperatorContract } from '@streamr/test-utils'
 import { until } from '@streamr/utils'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 import { createClient, deployTestOperatorContract } from '../../../utils'
@@ -11,7 +11,7 @@ describe('announceNodeToContract', () => {
     let operator: Operator
 
     beforeEach(async () => {
-        const { operatorContractAddress, nodeWallets } = await setupOperatorContract({
+        const { operatorContractAddress, nodeWallets } = await setupTestOperatorContract({
             nodeCount: 1,
             deployTestOperatorContract
         })

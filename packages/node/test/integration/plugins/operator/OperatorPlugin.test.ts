@@ -4,7 +4,7 @@ import {
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, setupOperatorContract } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamPartID, until } from '@streamr/utils'
 import { Wallet, parseEther } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
@@ -29,7 +29,7 @@ describe('OperatorPlugin', () => {
     let operatorWallet: Wallet & SignerWithProvider
 
     beforeAll(async () => {
-        const deployment = (await setupOperatorContract({
+        const deployment = (await setupTestOperatorContract({
             nodeCount: 1,
             deployTestOperatorContract
         }))

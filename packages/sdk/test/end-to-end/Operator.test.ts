@@ -6,7 +6,7 @@ import {
     OperatorFactory as OperatorFactoryContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { createTestPrivateKey, setupOperatorContract, SetupOperatorContractReturnType } from '@streamr/test-utils'
+import { createTestPrivateKey, setupTestOperatorContract, setupTestOperatorContractReturnType } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import sample from 'lodash/sample'
@@ -44,7 +44,7 @@ async function createStream(): Promise<string> {
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (wallet: Wallet | undefined, operator: setupTestOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     return client.getOperator(operator.operatorContractAddress)
 }
@@ -54,13 +54,13 @@ describe('Operator', () => {
     let streamId2: string
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
-    let deployedOperator: SetupOperatorContractReturnType
+    let deployedOperator: setupTestOperatorContractReturnType
 
     beforeAll(async () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1, deployTestOperatorContract })
+            setupTestOperatorContract({ nodeCount: 1, deployTestOperatorContract })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
@@ -133,7 +133,7 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract({
+        const target = await setupTestOperatorContract({
             deployTestOperatorContract
         })
 

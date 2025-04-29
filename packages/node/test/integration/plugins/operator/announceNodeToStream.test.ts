@@ -1,4 +1,4 @@
-import { setupOperatorContract } from '@streamr/test-utils'
+import { setupTestOperatorContract } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
@@ -10,7 +10,7 @@ const TIMEOUT = 40 * 1000
 describe('announceNodeToStream', () => {
 
     it('publishes to stream', async () => {
-        const { operatorContractAddress, nodeWallets } = await setupOperatorContract({
+        const { operatorContractAddress, nodeWallets } = await setupTestOperatorContract({
             nodeCount: 1,
             deployTestOperatorContract
         })

@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, setupOperatorContract } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
@@ -88,7 +88,7 @@ const createStream = async (): Promise<StreamID> => {
 const createOperator = async (
     pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: string, isFreerider: boolean
 ): Promise<Operator> => {
-    const operator = await setupOperatorContract({
+    const operator = await setupTestOperatorContract({
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
