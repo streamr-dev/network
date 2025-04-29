@@ -7,7 +7,7 @@ import { NodeList } from '../NodeList'
 import { PausedNeighbors } from './PausedNeighbors'
 
 type OnMetadataCb = (msg: MessageID, previousNode: PeerDescriptor) => Promise<void>
-type SendBufferCb = (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => Promise<void>
+type SendBufferCb = (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => Promise<void>
 export class PlumTreeRpcLocal implements IPlumTreeRpc {
 
     private readonly neighbors: NodeList
@@ -44,7 +44,7 @@ export class PlumTreeRpcLocal implements IPlumTreeRpc {
     async resumeNeighbor(request: ResumeNeighborRequest, context: ServerCallContext): Promise<Empty> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         this.pausedNodes.delete(toNodeId(sender), request.messageChainId)
-        await this.sendBuffer(request.fromTimestamp, sender)
+        await this.sendBuffer(request.fromTimestamp, request.messageChainId, sender)
         return Empty
     }
 }

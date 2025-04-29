@@ -75,11 +75,12 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
 
+        const publisher = randomUserId()
         for (let i = 1; i < 25; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: crypto.randomBytes(30000).toString('hex') }),
                 STREAM_PART_ID,
-                randomUserId()
+                publisher
             )
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
@@ -98,11 +99,12 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
 
+        const publisher = randomUserId()
         for (let i = 1; i < 5; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 STREAM_PART_ID,
-                randomUserId()
+                publisher
             )
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
@@ -133,7 +135,7 @@ describe('Propagation', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 STREAM_PART_ID,
-                randomUserId()
+                publisher
             )
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)

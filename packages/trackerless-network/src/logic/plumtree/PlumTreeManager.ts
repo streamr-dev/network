@@ -34,7 +34,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
     // These neighbors are paused by remote nodes, used to limit sending of pausing and resuming requests
     private remotePausedNeighbors: PausedNeighbors = new PausedNeighbors()
     private rpcLocal: PlumTreeRpcLocal
-    private latestMessages: StreamMessage[] = []
+    private latestMessages: Map<string, StreamMessage[]> = new Map()
     private rpcCommunicator: ListeningRpcCommunicator
 
     constructor(options: Options) {
@@ -45,7 +45,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
             this.neighbors,
             this.localPausedNeighbors,
             (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
-            (fromTimestamp: number, remotePeerDescriptor: PeerDescriptor) => this.sendBuffer(fromTimestamp, remotePeerDescriptor)
+            (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => this.sendBuffer(fromTimestamp, msgChainId, remotePeerDescriptor)
         )
         this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
         this.rpcCommunicator = options.rpcCommunicator
@@ -82,24 +82,25 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
-    getLatestMessageTimestamp(): number {
-        if (this.latestMessages.length === 0) {
+    getLatestMessageTimestamp(msgChainId: string): number {
+        if (!this.latestMessages.has(msgChainId)) {
             return 0
         }
-        return this.latestMessages[this.latestMessages.length - 1].messageId!.timestamp
+        return this.latestMessages.get(msgChainId)![this.latestMessages.get(msgChainId)!.length - 1].messageId!.timestamp
     }
 
-    async sendBuffer(fromTimestamp: number, neighbor: PeerDescriptor): Promise<void> {
+    async sendBuffer(fromTimestamp: number, msgChainId: string, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
-        const messages = this.latestMessages.filter((msg) => msg.messageId!.timestamp > fromTimestamp)
+        const messages = this.latestMessages.get(msgChainId)?.filter((msg) => msg.messageId!.timestamp > fromTimestamp) ?? []
         await Promise.all(messages.map((msg) => remote.sendStreamMessage(msg)))
     }
 
     async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
-        // If the number of messages in the buffer is greater than 1, resume the sending neighbor
-        // This is done to avoid oscillation of the neighbors during propagation
-        if (this.latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length > 0) {
-            await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp())
+        // If we receive newer metadata than messages in the buffer, resume the sending neighbor
+        const latestMessages = this.latestMessages.get(msg.messageChainId) ?? []
+        if (latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length > 1) {
+            console.log("resuming neighbor", latestMessages.filter((m) => m.messageId!.timestamp < msg.timestamp).length, this.remotePausedNeighbors, this.localPausedNeighbors, this.neighbors.getAll().map((n) => toNodeId(n.getPeerDescriptor())))
+            await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp(msg.messageChainId))
         }
     }
 
@@ -108,11 +109,15 @@ export class PlumTreeManager extends EventEmitter<Events> {
     }
 
     broadcast(msg: StreamMessage, previousNode: DhtAddress): void {
-        if (this.latestMessages.length < 20) {
-            this.latestMessages.push(msg)
+        const messageChainId = msg.messageId!.messageChainId
+        if (!this.latestMessages.has(messageChainId)) {
+            this.latestMessages.set(messageChainId, [])
+        }
+        if (this.latestMessages.get(messageChainId)!.length < 20) {
+            this.latestMessages.get(messageChainId)!.push(msg)
         } else {
-            this.latestMessages.shift()
-            this.latestMessages.push(msg)
+            this.latestMessages.get(messageChainId)!.shift()
+            this.latestMessages.get(messageChainId)!.push(msg)
         }
         this.emit('message', msg, previousNode)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
