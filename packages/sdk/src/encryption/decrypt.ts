@@ -1,8 +1,9 @@
+import { EncryptionType } from '@streamr/trackerless-network'
 import { DestroySignal } from '../DestroySignal'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
+import { StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 
 // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise

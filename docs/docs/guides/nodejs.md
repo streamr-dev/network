@@ -30,11 +30,10 @@ Having trouble installing the SDK? Maybe our [troubleshooting](../usage/sdk/how-
 ### Initialize the SDK
 ```ts
 // Import Streamr
-const Streamr = require("@streamr/sdk")
 const { StreamrClient } = require('@streamr/sdk')
 
 // Initialize the client with an Ethereum account
-const streamr = new Streamr({
+const streamr = new StreamrClient({
     auth: {
         privateKey: "ethereum-private-key",
     },
@@ -42,11 +41,9 @@ const streamr = new Streamr({
 ```
 
 :::tip Key Point:
-Ethereum accounts are used for authentication on Streamr.
+User identity on Streamr is established via cryptographic keys. An Ethereum account, defined by a private key, is one type of supported identity on Streamr. The private key can be generated with any Ethereum wallet or with tools included in the SDK. 
 
-You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
-
-**Learn more about [authentication](../usage/authenticate)**
+**Learn more about [Identity](../usage/identity.md) on Streamr.**
 :::
 
 ## Create the stream
@@ -89,7 +86,7 @@ await stream.grantPermissions({
 ```
 
 :::tip Key Point:
-**Learn more about setting stream permissions in [authenticate](../usage/authenticate).**
+**Learn more about [Identity](../usage/identity.md) or [Stream Permissions](../usage/streams/permissions.md).**
 :::
 
 ## Publish data to the stream
@@ -109,9 +106,9 @@ await stream.publish(msg)
 ```
 
 :::caution Important:
-You must give `PUBLISH` permission to the address you have authenticated `StreamrClient` with **before** publishing data to the stream.
+You must give `PUBLISH` permission to the identity you have authenticated `StreamrClient` with **before** publishing data to the stream.
 
-**Learn more about setting stream permissions in [authentication](../usage/authenticate).**
+**Learn more about [Identity](../usage/identity.md) or [Stream Permissions](../usage/streams/permissions.md).**
 :::
 
 ## Subscribe to the stream

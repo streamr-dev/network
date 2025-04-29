@@ -3,10 +3,7 @@ const StreamrClient = require('@streamr/sdk')
 
 console.info('const StreamrClient = require(\'@streamr/sdk\'):', { StreamrClient })
 
-const auth = StreamrClient.generateEthereumAccount()
-const client = new StreamrClient({
-    auth,
-})
+const client = new StreamrClient()
 
 client.connect().then(async () => {
     console.info('success')

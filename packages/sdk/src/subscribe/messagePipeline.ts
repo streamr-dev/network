@@ -18,6 +18,8 @@ import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
 import { StreamrClientError } from '../StreamrClientError'
 import { MessageID } from '../protocol/MessageID'
+import { isCompliantEncryptionType, isCompliantSignatureType } from '../utils/encryptionCompliance'
+import { EncryptionType } from '@streamr/trackerless-network'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
@@ -27,7 +29,7 @@ export interface MessagePipelineOptions {
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+    config: Pick<StrictStreamrClientConfig, 'encryption' | 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }
@@ -51,6 +53,21 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
+
+        if (msg.encryptionType !== EncryptionType.NONE && !isCompliantEncryptionType(msg.encryptionType, opts.config)) {
+            throw new StreamrClientError(`A message in stream ${
+                msg.getStreamId()
+            } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`,
+            'ENCRYPTION_POLICY_VIOLATION', msg)
+        }
+
+        if (!isCompliantSignatureType(msg.signatureType, opts.config)) {
+            throw new StreamrClientError(`A message in stream ${
+                msg.getStreamId()
+            } was rejected because the signature type violates configured requirements (signatureType: ${msg.encryptionType})!`,
+            'SIGNATURE_POLICY_VIOLATION', msg)
+        }
+
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
