@@ -58,14 +58,14 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
             throw new StreamrClientError(`A message in stream ${
                 msg.getStreamId()
             } was rejected because the encryption type violates configured requirements (encryptionType: ${msg.encryptionType})!`,
-            'ENCRYPTION_VIOLATES_POLICY', msg)
+            'ENCRYPTION_POLICY_VIOLATION', msg)
         }
 
         if (!isCompliantSignatureType(msg.signatureType, opts.config)) {
             throw new StreamrClientError(`A message in stream ${
                 msg.getStreamId()
             } was rejected because the signature type violates configured requirements (signatureType: ${msg.encryptionType})!`,
-            'SIGNATURE_VIOLATES_POLICY', msg)
+            'SIGNATURE_POLICY_VIOLATION', msg)
         }
 
         let decrypted

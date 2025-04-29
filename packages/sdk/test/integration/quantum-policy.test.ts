@@ -99,7 +99,7 @@ describe('Quantum encryption policies', () => {
 
             nonQuantumClient.publish(stream.id, Msg())
             const err = await errorPromise
-            expect(err).toEqualStreamrClientError({ code: 'SIGNATURE_VIOLATES_POLICY' })
+            expect(err).toEqualStreamrClientError({ code: 'SIGNATURE_POLICY_VIOLATION' })
         })
 
         it('prevents publishing public data', async () => {

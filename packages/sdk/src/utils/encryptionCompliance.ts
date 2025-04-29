@@ -4,6 +4,7 @@ import { Identity } from '../identity/Identity'
 import { RSAKeyPair } from '../encryption/RSAKeyPair'
 import { MLKEMKeyPair } from '../encryption/MLKEMKeyPair'
 import { KeyExchangeKeyPair } from '../encryption/KeyExchangeKeyPair'
+import { StreamrClientError } from '../StreamrClientError'
 
 const quantumResistantSignatureTypes = new Set<SignatureType>([SignatureType.ML_DSA_87])
 const quantumResistantAsymmetricEncryptionTypes = new Set<AsymmetricEncryptionType>([AsymmetricEncryptionType.ML_KEM])
@@ -14,7 +15,10 @@ export function assertCompliantIdentity(identity: Identity, config: Pick<Streamr
     const quantumResistanceIsRequired = config.encryption?.requireQuantumResistantSignatures
 
     if (quantumResistanceIsRequired && !isQuantumResistant) {
-        throw new Error(`Quantum resistant signatures are required, but the configured key type doesn't enable quantum resistance!`)
+        throw new StreamrClientError(
+            `Quantum resistant signatures are required, but the configured key type doesn't enable quantum resistance!`,
+            'SIGNATURE_POLICY_VIOLATION'
+        )
     }
 }
 
@@ -40,7 +44,7 @@ export function isCompliantSignatureType(signatureType: SignatureType, config: P
     return isQuantumResistant || !quantumResistanceIsRequired
 }
 
-export function isQuantumResistantIdentity(identity: Identity): boolean {
+function isQuantumResistantIdentity(identity: Identity): boolean {
     return quantumResistantSignatureTypes.has(identity.getSignatureType())
 }
 
