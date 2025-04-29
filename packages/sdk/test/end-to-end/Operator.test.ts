@@ -1,4 +1,11 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import {
+    OperatorABI,
+    Operator as OperatorContract,
+    OperatorFactoryABI,
+    OperatorFactory as OperatorFactoryContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
@@ -14,11 +21,6 @@ import {
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
-import type { Operator as OperatorContract } from '../../src/ethereumArtifacts/Operator'
-import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
-import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
-import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -87,7 +89,7 @@ describe('Operator', () => {
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            OperatorFactoryArtifact,
+            OperatorFactoryABI,
             getTestAdminWallet()
         ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
@@ -95,7 +97,7 @@ describe('Operator', () => {
         // check that there is a stake
         const operatorContract = new Contract(
             randomOperatorAddress!,
-            OperatorArtifact,
+            OperatorABI,
             deployedOperator.operatorWallet
         ) as unknown as OperatorContract
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
@@ -202,7 +204,7 @@ describe('Operator', () => {
         async function updateMetadata(metadata: string): Promise<void> {
             const operator = new Contract(
                 deployedOperator.operatorContractAddress,
-                OperatorArtifact,
+                OperatorABI,
                 deployedOperator.operatorWallet
             ) as unknown as OperatorContract
             await (await operator.updateMetadata(metadata)).wait()

@@ -1,12 +1,11 @@
 import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Contract, JsonRpcProvider, Wallet } from 'ethers'
 import { createDecoratedContract } from '../../src/contracts/contract'
-import type { StreamRegistryV5 as StreamRegistryContract } from '../../src/ethereumArtifacts/StreamRegistryV5'
-import StreamRegistryArtifact from '../../src/ethereumArtifacts/StreamRegistryV5Abi.json'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
@@ -17,7 +16,7 @@ describe('decorated contract', () => {
 
     it('read', async () => {
         const contract = createDecoratedContract<StreamRegistryContract>(
-            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryArtifact, getProvider()),
+            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryABI, getProvider()),
             'StreamRegisty',
             mockLoggerFactory(),
             1
@@ -31,7 +30,7 @@ describe('decorated contract', () => {
     it('write', async () => {
         const wallet = new Wallet(await createTestPrivateKey({ gas: true }), getProvider())
         const contract = createDecoratedContract<StreamRegistryContract>(
-            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryArtifact, wallet),
+            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryABI, wallet),
             'StreamRegisty',
             mockLoggerFactory(),
             1

@@ -1,18 +1,20 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import {
+    OperatorABI,
+    Operator as OperatorContract,
+    OperatorFactoryABI,
+    OperatorFactory as OperatorFactoryContract,
+    SponsorshipABI,
+    Sponsorship as SponsorshipContract,
+    SponsorshipFactoryABI,
+    SponsorshipFactory as SponsorshipFactoryContract
+} from '@streamr/network-contracts'
 import { EthereumAddress, Logger, multiplyWeiAmount, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
 import range from 'lodash/range'
 import { SignerWithProvider } from '../identity/Identity'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
-import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
-import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
-import type { OperatorFactory as OperatorFactoryContract } from '../ethereumArtifacts/OperatorFactory'
-import OperatorFactoryArtifact from '../ethereumArtifacts/OperatorFactoryAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
-import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
-import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
-import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
@@ -78,7 +80,7 @@ export interface DeployOperatorContractOpts {
  */
 export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
-    const abi = OperatorFactoryArtifact
+    const abi = OperatorFactoryABI
     const operatorFactory = new Contract(TEST_CHAIN_CONFIG.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(await opts.deployer.getAddress())
     if (contractAddress !== ZeroAddress) {
@@ -100,7 +102,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     )).wait()
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
     const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
-    const newOperator = new Contract(newOperatorAddress, OperatorArtifact, opts.deployer) as unknown as OperatorContract
+    const newOperator = new Contract(newOperatorAddress, OperatorABI, opts.deployer) as unknown as OperatorContract
     logger.debug('Deployed OperatorContract', { address: newOperatorAddress })
     return newOperator
 }
@@ -121,7 +123,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     logger.debug('Deploying SponsorshipContract')
     const sponsorshipFactory = new Contract(
         TEST_CHAIN_CONFIG.contracts.SponsorshipFactory,
-        SponsorshipFactoryArtifact,
+        SponsorshipFactoryABI,
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
@@ -141,7 +143,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
     const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
     const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
-    const newSponsorship = new Contract(newSponsorshipAddress, SponsorshipArtifact, opts.deployer) as unknown as SponsorshipContract
+    const newSponsorship = new Contract(newSponsorshipAddress, SponsorshipABI, opts.deployer) as unknown as SponsorshipContract
     logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
     return newSponsorship
 }
@@ -223,9 +225,9 @@ export const transferTokens = async (
 }
 
 export const getOperatorContract = (operatorAddress: string): OperatorContract => {
-    return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
+    return new Contract(operatorAddress, OperatorABI) as unknown as OperatorContract
 }
 
 const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract => {
-    return new Contract(sponsorshipAddress, SponsorshipArtifact) as unknown as SponsorshipContract
+    return new Contract(sponsorshipAddress, SponsorshipABI) as unknown as SponsorshipContract
 }

@@ -21,7 +21,7 @@ describe('sponsorship-sponsor', () => {
             privateKey: sponsorer.privateKey
         })
 
-        const remainingWei = await sponsorshipContract.connect(sponsorer, _operatorContractUtils.getProvider()).remainingWei()
+        const remainingWei = await sponsorshipContract.connect(sponsorer).remainingWei()
         expect(remainingWei).toEqual(parseEther(SPONSOR_AMOUNT))
         await client.destroy()
     })

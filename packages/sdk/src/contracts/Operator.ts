@@ -1,3 +1,4 @@
+import { OperatorABI, Operator as OperatorContract, SponsorshipABI, Sponsorship as SponsorshipContract } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     Logger,
@@ -7,18 +8,14 @@ import {
 } from '@streamr/utils'
 import { Interface, Overrides } from 'ethers'
 import { z } from 'zod'
-import { Identity } from '../identity/Identity'
+import { NetworkPeerDescriptor } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
-import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
-import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
-import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
+import { Identity } from '../identity/Identity'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
-import { NetworkPeerDescriptor } from '../Config'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -163,7 +160,7 @@ export class Operator {
         this.rpcProviderSource = rpcProviderSource
         this.contractReadonly = contractFactory.createReadContract<OperatorContract>(
             toEthereumAddress(contractAddress),
-            OperatorArtifact,
+            OperatorABI,
             rpcProviderSource.getProvider(),
             'operator'
         )
@@ -181,7 +178,7 @@ export class Operator {
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
     ): void {
-        const contractInterface = new Interface(OperatorArtifact)
+        const contractInterface = new Interface(OperatorABI)
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
@@ -558,7 +555,7 @@ export class Operator {
     async getStreamId(sponsorshipAddress: EthereumAddress): Promise<StreamID> {
         const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
             toEthereumAddress(sponsorshipAddress),
-            SponsorshipArtifact,
+            SponsorshipABI,
             this.rpcProviderSource.getProvider(),
             'sponsorship'
         )
@@ -574,7 +571,7 @@ export class Operator {
         const gasLimit = 1300000n
 
         // estimateGas throws if transaction would fail, so doing the gas estimation will avoid sending failing transactions
-        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData) as bigint
+        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData)
         if (gasEstimate > gasLimit) {
             throw new Error(`Gas estimate (${gasEstimate}) exceeds limit (${gasLimit})`)
         }
@@ -642,7 +639,7 @@ export class Operator {
             const signer = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.contract = this.contractFactory.createWriteContract<OperatorContract>(
                 this.contractAddress,
-                OperatorArtifact,
+                OperatorABI,
                 signer,
                 'operator'
             )

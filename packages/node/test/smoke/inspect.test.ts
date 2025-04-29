@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
@@ -207,7 +207,7 @@ describe('inspect', () => {
         logger.info('Update Streamr config')
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
-            streamrConfigABI
+            StreamrConfigABI
         ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setFlagReviewerCount(REVIEWER_COUNT)
         await streamrConfig.setReviewPeriodSeconds(REVIEW_PERIOD)

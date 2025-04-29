@@ -1,4 +1,4 @@
-import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Operator, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import {
     SetupOperatorContractOpts,
     _operatorContractUtils,
@@ -61,7 +61,7 @@ describe('checkOperatorValueBreach', () => {
         const operatorContract = getOperatorContract(operatorContractAddress).connect(operatorWallet)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, StreamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
         const operator = client.getOperator(toEthereumAddress(watcherOperatorContractAddress))
