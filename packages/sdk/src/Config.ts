@@ -9,21 +9,34 @@ import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
+import { Identity } from './identity/Identity'
+import { KeyType } from './identity/IdentityMapping'
 
-export interface ProviderAuthConfig {
-    /**
-     * The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type is from the `ethers` library.
-     */
+/**
+ * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193} 
+ * compatible provider will do. The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type 
+ * definition used here is from the `ethers` library.
+ */
+export interface EthereumProviderIdentityConfig {
     ethereum: Eip1193Provider
 }
-
-export interface PrivateKeyAuthConfig {
+/**
+ * For configuring identities based on a cryptographic key / key pair
+ */
+export interface KeyPairIdentityConfig {
+    publicKey?: string
     privateKey: string
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: HexString
+    keyType?: KeyType
 }
+
+/**
+ * For passing in an Identity implementation
+ */
+export interface CustomIdentityConfig {
+    identity: Identity
+}
+
+export type IdentityConfig = KeyPairIdentityConfig | EthereumProviderIdentityConfig | CustomIdentityConfig
 
 export interface ControlLayerConfig {
 
@@ -251,10 +264,10 @@ export interface StreamrClientConfig {
     logLevel?: LogLevel
 
     /**
-    * The Ethereum identity to be used by the client. Either a private key
-    * or a window.ethereum object.
+    * The cryptographic identity to be used by the client. The chosen identity
+    * also determines the type of signatures on published messages.
     */
-    auth?: PrivateKeyAuthConfig | ProviderAuthConfig
+    auth?: IdentityConfig
 
     /**
      * Due to the distributed nature of the network, messages may occasionally
@@ -357,13 +370,29 @@ export interface StreamrClientConfig {
         rsaKeyLength?: number
 
         /**
-         * If true, ML-KEM-1024 will be used for key exchange instead of RSA.
-         * If true on subscribers, they will send key requests specifying an ML-KEM public key instead of an RSA one.
-         * If true on publishers, they will *only* respond to key requests specifying an ML-KEM public key.
-         * If false or undefined on publishers, they will respond to key requests with either RSA or ML-KEM
-         * depending on what the subscriber requests.
+         * Default: false. 
+         * 
+         * The default behavior on subscribers is to request key exchange using ML-KEM if a quantum secure
+         * identity key pair is configured, otherwise RSA.
+         * 
+         * The default behavior on publishers is to do key exchange using whichever method requested by subscribers.
+         * 
+         * If set to true, subscribers will always request using ML-KEM, and publishers will reject key requests that use RSA.
          */
         requireQuantumResistantKeyExchange?: boolean
+
+        /**
+         * Default: false. If true, configuring a non-quantum-resistant identity key pair will produce an error,
+         * and subscribed messages will only be accepted if they are signed using a quantum resistant algorithm.
+         */
+        requireQuantumResistantSignatures?: boolean
+
+        /**
+         * Default: false. If true on subscribers, data encrypted with non-quantum-resistant methods will be rejected.
+         * If true on publishers, only data encrypted with quantum resistant methods can be published.
+         * Note that subscribers will still accept unencrypted (public) data despite this setting.
+         */
+        requireQuantumResistantEncryption?: boolean
     }
 
     contracts?: {
@@ -492,8 +521,8 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
 }
 
 export const redactConfig = (config: StrictStreamrClientConfig): void => {
-    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
-        (config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
+    if ((config.auth as KeyPairIdentityConfig)?.privateKey !== undefined) {
+        (config.auth as KeyPairIdentityConfig).privateKey = '(redacted)'
     }
 }
 

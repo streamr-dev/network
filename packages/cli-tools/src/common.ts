@@ -26,7 +26,7 @@ export function createFnParseInt(name: string): (s: string) => number {
     }
 }
 
-export function createFnParseEnum(name: string, allowedValues: string[]): (s: string) => string {
+export function createFnParseEnum(name: string, allowedValues: readonly string[]): (s: string) => string {
     return (value: string) => {
         if (!allowedValues.includes(value)) {
             console.error(`${name} must be one of: ${allowedValues.map((s) => wrapWithQuotes(s)).join(', ')}`)
@@ -36,8 +36,8 @@ export function createFnParseEnum(name: string, allowedValues: string[]): (s: st
     }
 }
 
-export const formEnumArgValueDescription = (allowedValues: string[], defaultValue: string): string => {
-    return `one of: ${allowedValues.map(wrapWithQuotes).join(', ')}, default: ${wrapWithQuotes(defaultValue)}`
+export const formEnumArgValueDescription = (allowedValues: readonly string[], defaultValue?: string): string => {
+    return `one of: ${allowedValues.map(wrapWithQuotes).join(', ')}${defaultValue ? `, default: ${wrapWithQuotes(defaultValue)}` : ''}`
 }
 
 export const wrapWithQuotes = (str: string): string => {

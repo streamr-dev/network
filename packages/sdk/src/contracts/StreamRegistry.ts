@@ -17,7 +17,7 @@ import {
 import { ContractTransactionResponse, Interface } from 'ethers'
 import intersection from 'lodash/intersection'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -123,7 +123,7 @@ export class StreamRegistry {
     private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly logger: Logger
     private readonly metadataCache: Mapping<StreamID, StreamMetadata>
     private readonly publisherCache: Mapping<[StreamID, UserID], boolean>
@@ -138,7 +138,7 @@ export class StreamRegistry {
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -147,7 +147,7 @@ export class StreamRegistry {
         this.theGraphClient = theGraphClient
         this.streamIdBuilder = streamIdBuilder
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.streamRegistryContractReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
             toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
@@ -202,7 +202,7 @@ export class StreamRegistry {
 
     private async connectToContract(): Promise<void> {
         if (this.streamRegistryContract === undefined) {
-            const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            const chainSigner = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
                 StreamRegistryArtifact,
@@ -250,7 +250,7 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = toEthereumAddress(await this.authentication.getUserId())
+        const userAddress = toEthereumAddress(await this.identity.getUserId())
         if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }

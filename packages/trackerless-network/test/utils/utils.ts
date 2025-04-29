@@ -82,7 +82,7 @@ export const createStreamMessage = (
     }
     const msg: StreamMessage = {
         messageId,
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
         body: {
             oneofKind: 'contentMessage',

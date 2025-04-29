@@ -1,6 +1,6 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamrClientError } from '../StreamrClientError'
@@ -25,18 +25,18 @@ export class StorageNodeRegistry {
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly identity: Identity
 
     constructor(
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
     ) {
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
@@ -47,7 +47,7 @@ export class StorageNodeRegistry {
 
     private async connectToContract() {
         if (this.nodeRegistryContract === undefined) {
-            const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            const chainSigner = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,

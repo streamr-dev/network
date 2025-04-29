@@ -34,15 +34,22 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "publicKey": {
+                    "type": "string",
+                    "format": "hex-string"
+                },
                 "privateKey": {
                     "type": "string",
-                    "format": "ethereum-private-key"
+                    "format": "hex-string"
                 },
-                "address": {
+                "keyType": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "default": "ECDSA_SECP256K1_EVM"
                 },
                 "ethereum": {
+                    "type": "object"
+                },
+                "identity": {
                     "type": "object"
                 }
             }
@@ -352,6 +359,14 @@
                     "default": 4096
                 },
                 "requireQuantumResistantKeyExchange": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "requireQuantumResistantSignatures": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "requireQuantumResistantEncryption": {
                     "type": "boolean",
                     "default": false
                 }

@@ -67,7 +67,7 @@ async function storeMockMessages({
             signature: hexToBinary('0x1234'),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM
         })
         storePromises.push(storage.store(msg))
     }

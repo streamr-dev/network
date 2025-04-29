@@ -6,10 +6,11 @@ import shuffle from 'lodash/shuffle'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
+import { createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { Authentication } from '../../src/Authentication'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { Identity } from '../../src/identity/Identity'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const RACE_TIMEOUT_IN_MS = 20
 
@@ -23,16 +24,16 @@ describe(waitForAssignmentsToPropagate, () => {
     let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
-    let authentication: Authentication
+    let identity: Identity
 
     async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-        return new MessageSigner(authentication).createSignedMessage({
-            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
+        return new MessageSigner(identity).createSignedMessage({
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await identity.getUserId(), 'msgChain'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     async function createAssignmentMessagesFor(stream: {
@@ -47,7 +48,7 @@ describe(waitForAssignmentsToPropagate, () => {
     }
 
     beforeAll(async () => {
-        authentication = await createRandomAuthentication()
+        identity = await createRandomIdentity()
     })
 
     beforeEach(() => {
