@@ -29,9 +29,9 @@ interface Events {
 export class PlumTreeManager extends EventEmitter<Events> {
     private readonly neighbors: NodeList
     private readonly localPeerDescriptor: PeerDescriptor
-    // These neighbors are paused by the local node
+    // We have paused sending real data to these neighbrs and only send metadata
     private readonly localPausedNeighbors: PausedNeighbors = new PausedNeighbors()
-    // These neighbors are paused by remote nodes, used to limit sending of pausing and resuming requests
+    // We have asked these nodes to pause sending real data to us, used to limit sending of pausing and resuming requests
     private readonly remotePausedNeighbors: PausedNeighbors = new PausedNeighbors()
     private readonly rpcLocal: PlumTreeRpcLocal
     private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
