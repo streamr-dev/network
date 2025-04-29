@@ -34,7 +34,12 @@ import { Stream } from '../../src/Stream'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
-import { deployOperatorContract, DeployOperatorContractOpts, deploySponsorshipContract, DeploySponsorshipContractOpts } from '../../src/contracts/operatorContractUtils'
+import {
+    deployOperatorContract,
+    DeployOperatorContractOpts,
+    deploySponsorshipContract,
+    DeploySponsorshipContractOpts
+} from '../../src/contracts/operatorContractUtils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'

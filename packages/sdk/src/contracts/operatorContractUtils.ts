@@ -39,8 +39,10 @@ export interface DeployOperatorContractOpts {
  */
 export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
-    const abi = OperatorFactoryABI
-    const operatorFactory = new Contract(CHAIN_CONFIG[opts.environmentId].contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
+    const operatorFactory = new Contract(
+        CHAIN_CONFIG[opts.environmentId].contracts.OperatorFactory,
+        OperatorFactoryABI, opts.deployer
+    ) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(await opts.deployer.getAddress())
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
