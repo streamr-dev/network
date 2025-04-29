@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { StreamPartIDUtils, toUserId } from '@streamr/utils'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { StreamDefinition } from '../../src/types'
 
@@ -15,8 +15,8 @@ describe('StreamIDBuilder', () => {
     beforeEach(() => {
         getUserId = jest.fn()
         streamIdBuilder = new StreamIDBuilder({
-            getUserId
-        } as unknown as Authentication)
+            getUserId: getUserId,
+        } as unknown as Identity)
     })
 
     describe('toStreamID', () => {

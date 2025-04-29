@@ -18,7 +18,8 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { MOCK_CONTENT } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomUserId()
@@ -59,7 +60,7 @@ const createMessage = (timestamp: number) => {
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM
     })
 }
 

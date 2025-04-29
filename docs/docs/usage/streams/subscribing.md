@@ -25,9 +25,7 @@ const { StreamrClient } = require('@streamr/sdk')
 // the subscribe permission on this stream to subscribe
 const streamr = new Streamr({
   auth: {
-    // If this stream is publicly subscribable you can skip this part
-    // or use a throwaway accounts with:
-    // privateKey: StreamrClient.generateEthereumAccount().privateKey,
+    // If the stream is public, you can leave this out
     privateKey: 'ethereum-private-key',
   },
 });

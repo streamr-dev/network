@@ -15,7 +15,7 @@ import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
-import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
+import { Identity, IdentityInjectionToken, SignerWithProvider } from './identity/Identity'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -43,7 +43,7 @@ import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchSt
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
-import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
+import { getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
@@ -58,6 +58,8 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { createIdentityFromConfig } from './identity/IdentityMapping'
+import { assertCompliantIdentity } from './utils/encryptionCompliance'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -87,8 +89,6 @@ const logger = new Logger(module)
  * @category Important
  */
 export class StreamrClient {
-    static readonly generateEthereumAccount = _generateEthereumAccount
-
     public readonly id: string
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
@@ -105,7 +105,7 @@ export class StreamrClient {
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
@@ -116,16 +116,17 @@ export class StreamrClient {
         parentContainer = rootContainer
     ) {
         const strictConfig = createStrictConfig(config)
-        const authentication = createAuthentication(strictConfig)
+        const identity = createIdentityFromConfig(strictConfig)
+        assertCompliantIdentity(identity, strictConfig)
         redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
-        container.register(AuthenticationInjectionToken, { useValue: authentication })
+        container.register(IdentityInjectionToken, { useValue: identity })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         const theGraphClient = createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig)
         container.register(TheGraphClient, { useValue: theGraphClient })
         this.id = strictConfig.id
         this.config = strictConfig
-        this.authentication = authentication
+        this.identity = identity
         this.theGraphClient = theGraphClient
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -519,7 +520,7 @@ export class StreamrClient {
     }
 
     /**
-     * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
+     * Checks whether a given userId has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -527,7 +528,7 @@ export class StreamrClient {
     }
 
     /**
-     * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
+     * Checks whether a given userId has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -626,21 +627,21 @@ export class StreamrClient {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Authentication
+    // Identity
     // --------------------------------------------------------------------------------------------
 
     /**
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getTransactionSigner(this.rpcProviderSource)
+        return this.identity.getTransactionSigner(this.rpcProviderSource)
     }
 
     /**
-     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address or public key) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
-        return await this.authentication.getUserId()
+        return await this.identity.getUserId()
     }
 
     /**
@@ -788,7 +789,7 @@ export class StreamrClient {
             this.rpcProviderSource,
             this.chainEventPoller,
             this.theGraphClient,
-            this.authentication,
+            this.identity,
             this.destroySignal,
             this.loggerFactory,
             () => this.getEthersOverrides()

@@ -3,7 +3,8 @@ import { toStreamID } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 describe('oldStreamMessageBinaryUtils', () => {
     it('convertStreamMessageToBytes and convertBytesToStreamMessage', () => {
@@ -21,7 +22,7 @@ describe('oldStreamMessageBinaryUtils', () => {
             contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
             groupKeyId: '0x1234567890123456789012345678901234567890',
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: new Uint8Array([7, 8, 9])
         })
 

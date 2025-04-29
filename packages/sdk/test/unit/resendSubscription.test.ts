@@ -12,7 +12,7 @@ import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscription'
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
+import { createGroupKeyQueue, createRandomIdentity, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -51,16 +51,17 @@ describe('resend subscription', () => {
 
     beforeEach(async () => {
         outputMessages = new Queue<Message>
-        const authentication = await createRandomAuthentication()
+        const identity = await createRandomIdentity()
         messageFactory = new MessageFactory({
-            authentication,
+            identity: identity,
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamRegistry: createStreamRegistry({
                 isPublicStream: true
             }),
-            groupKeyQueue: await createGroupKeyQueue(authentication),
+            groupKeyQueue: await createGroupKeyQueue(identity),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication)
+            messageSigner: new MessageSigner(identity),
+            config: {},
         })
     })
 
