@@ -14,12 +14,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
     delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
     getTestAdminWallet,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
+import { deployTestOperatorContract, deployTestSponsorshipContract } from '../test-utils/utils'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -61,17 +60,17 @@ describe('Operator', () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1, deployOperatorContract })
+            setupOperatorContract({ nodeCount: 1, deployTestOperatorContract })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
         deployedOperator = concurrentTasks[2]
 
-        sponsorship1 = await deploySponsorshipContract({
+        sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
             deployer: deployedOperator.operatorWallet
         })
-        sponsorship2 = await deploySponsorshipContract({
+        sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })
@@ -135,7 +134,7 @@ describe('Operator', () => {
     it('flag', async () => {
         const flagger = deployedOperator
         const target = await setupOperatorContract({
-            deployOperatorContract
+            deployTestOperatorContract
         })
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))

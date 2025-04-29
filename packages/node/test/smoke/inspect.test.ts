@@ -5,7 +5,7 @@ import { createTestPrivateKey, createTestWallet, setupOperatorContract } from '@
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
-import { createClient, createTestStream, formConfig } from '../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, formConfig } from '../utils'
 import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugin'
 
 /*
@@ -37,7 +37,6 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
 
 const {
     getProvider,
-    deploySponsorshipContract,
     delegate,
     stake,
     unstake,
@@ -94,7 +93,7 @@ const createOperator = async (
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
         },
-        deployOperatorContract: _operatorContractUtils.deployOperatorContract
+        deployTestOperatorContract
     })
     await delegate(operator.operatorWallet, operator.operatorContractAddress, DELEGATE_AMOUNT)
     await stake(operator.operatorWallet, operator.operatorContractAddress, sponsorshipAddress, STAKE_AMOUNT)
@@ -218,7 +217,7 @@ describe('inspect', () => {
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {

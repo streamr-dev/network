@@ -1,10 +1,9 @@
-import { _operatorContractUtils } from '@streamr/sdk'
 import { setupOperatorContract } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { createClient } from '../../../utils'
+import { createClient, deployTestOperatorContract } from '../../../utils'
 
 const TIMEOUT = 40 * 1000
 
@@ -13,7 +12,7 @@ describe('announceNodeToStream', () => {
     it('publishes to stream', async () => {
         const { operatorContractAddress, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
-            deployOperatorContract: _operatorContractUtils.deployOperatorContract
+            deployTestOperatorContract
         })
         const nodeWallet = nodeWallets[0]
         const client = createClient(nodeWallet.privateKey)

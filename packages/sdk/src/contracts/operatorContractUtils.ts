@@ -14,6 +14,7 @@ import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, Zero
 import { SignerWithProvider } from '../Authentication'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
+import { EnvironmentId } from '../Config'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
@@ -29,6 +30,7 @@ export interface DeployOperatorContractOpts {
     operatorsCutPercentage?: number
     metadata?: string
     operatorTokenName?: string
+    environmentId: EnvironmentId
 }
 
 /**
@@ -38,7 +40,7 @@ export interface DeployOperatorContractOpts {
 export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
     const abi = OperatorFactoryABI
-    const operatorFactory = new Contract(TEST_CHAIN_CONFIG.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
+    const operatorFactory = new Contract(CHAIN_CONFIG[opts.environmentId].contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(await opts.deployer.getAddress())
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
@@ -48,9 +50,9 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultExchangeRatePolicy,
-            TEST_CHAIN_CONFIG.contracts.OperatorDefaultUndelegationPolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultDelegationPolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultExchangeRatePolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             0,
@@ -74,12 +76,13 @@ export interface DeploySponsorshipContractOpts {
     metadata?: string
     minOperatorCount?: number
     earningsPerSecond?: WeiAmount
+    environmentId: EnvironmentId
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
     const sponsorshipFactory = new Contract(
-        TEST_CHAIN_CONFIG.contracts.SponsorshipFactory,
+        CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipFactory,
         SponsorshipFactoryABI,
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
@@ -88,9 +91,9 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         opts.streamId,
         opts.metadata ?? '{}',
         [
-            TEST_CHAIN_CONFIG.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            TEST_CHAIN_CONFIG.contracts.SponsorshipDefaultLeavePolicy,
-            TEST_CHAIN_CONFIG.contracts.SponsorshipVoteKickPolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipStakeWeightedAllocationPolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
+            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
         ], [
             opts.earningsPerSecond ?? parseEther('1'),
             '0',

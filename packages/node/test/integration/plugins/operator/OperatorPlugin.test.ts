@@ -11,11 +11,10 @@ import cloneDeep from 'lodash/cloneDeep'
 import set from 'lodash/set'
 import { Broker, createBroker } from '../../../../src/broker'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, formConfig, startBroker } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
     sponsor,
     stake
 } = _operatorContractUtils
@@ -32,7 +31,7 @@ describe('OperatorPlugin', () => {
     beforeAll(async () => {
         const deployment = (await setupOperatorContract({
             nodeCount: 1,
-            deployOperatorContract: _operatorContractUtils.deployOperatorContract
+            deployTestOperatorContract
         }))
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet
@@ -55,7 +54,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(subscriber, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
         await stake(operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
@@ -113,7 +112,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(client, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
         await stake(operatorWallet, operatorContractAddress, await sponsorship.getAddress(), parseEther('10000'))

@@ -9,12 +9,10 @@ import { MaintainTopologyService } from '../../../../src/plugins/operator/Mainta
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract } from '../../../utils'
 
 const {
     delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
     stake,
     unstake
 } = _operatorContractUtils
@@ -68,9 +66,9 @@ describe('MaintainTopologyService', () => {
     it('happy path', async () => {
         const operatorWallet = await createTestWallet({ gas: true, tokens: true })
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
-        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
+        const sponsorship1 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
+        const sponsorship2 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
+        const operatorContract = await deployTestOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
         await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
         

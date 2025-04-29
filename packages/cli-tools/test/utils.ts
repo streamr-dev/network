@@ -1,4 +1,8 @@
-import { Stream, StreamrClient } from '@streamr/sdk'
+import {
+    Operator as OperatorContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
+import { _operatorContractUtils, DeployOperatorContractOpts, DeploySponsorshipContractOpts, Stream, StreamrClient } from '@streamr/sdk'
 import { collect, until } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
@@ -83,4 +87,12 @@ export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: Strea
         }
         return false
     }, 15 * 1000, 600)
+}
+
+export const deployTestOperatorContract = async (opts: Omit<DeployOperatorContractOpts, 'environmentId'>): Promise<OperatorContract> => {
+    return _operatorContractUtils.deployOperatorContract({ ...opts, 'environmentId': 'dev2' })
+}
+
+export const deployTestSponsorshipContract = async (opts: Omit<DeploySponsorshipContractOpts, 'environmentId'>): Promise<SponsorshipContract> => {
+    return _operatorContractUtils.deploySponsorshipContract({ ...opts, 'environmentId': 'dev2' })
 }

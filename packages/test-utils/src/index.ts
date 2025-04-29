@@ -304,7 +304,7 @@ export interface SetupOperatorContractOpts {
         operatorsCutPercentage?: number
         metadata?: string
     }
-    deployOperatorContract: (opts: {
+    deployTestOperatorContract: (opts: {
         deployer: SignerWithProvider
         operatorsCutPercentage?: number
         metadata?: string
@@ -322,7 +322,7 @@ export async function setupOperatorContract(
     opts: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await createTestWallet({ gas: true, tokens: true })
-    const operatorContract = await opts.deployOperatorContract({
+    const operatorContract = await opts.deployTestOperatorContract({
         deployer: operatorWallet,
         operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
         metadata: opts?.operatorConfig?.metadata
