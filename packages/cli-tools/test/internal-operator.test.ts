@@ -25,29 +25,29 @@ describe('operator', () => {
         })
         await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), parseEther(SELF_DELEGATION_AMOUNT))
         const delegator = await createTestWallet({ gas: true, tokens: true })
-        const operatorAddress: string = await operatorContract.getAddress()
+        const operatorContractAddress: string = await operatorContract.getAddress()
 
         // delegate
-        await runCommand(`internal operator-delegate ${operatorAddress} ${DELEGATION_AMOUNT}`, {
+        await runCommand(`internal operator-delegate ${operatorContractAddress} ${DELEGATION_AMOUNT}`, {
             privateKey: delegator.privateKey
         })
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(parseEther(DELEGATION_AMOUNT))
 
         // stake
-        await runCommand(`internal operator-stake ${operatorAddress} ${sponsorshipAddress} ${STAKE_AMOUNT}`, {
+        await runCommand(`internal operator-stake ${operatorContractAddress} ${sponsorshipAddress} ${STAKE_AMOUNT}`, {
             privateKey: operator.privateKey
         })
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT))
 
         // unstake
-        await runCommand(`internal operator-unstake ${operatorAddress} ${sponsorshipAddress}`, {
+        await runCommand(`internal operator-unstake ${operatorContractAddress} ${sponsorshipAddress}`, {
             privateKey: operator.privateKey
         })
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(0n)
 
         // undelegate
         await wait(MINIMUM_DELEGATION_SECONDS)
-        await runCommand(`internal operator-undelegate ${operatorAddress} ${DELEGATION_AMOUNT}`, {
+        await runCommand(`internal operator-undelegate ${operatorContractAddress} ${DELEGATION_AMOUNT}`, {
             privateKey: delegator.privateKey
         })
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(0n)

@@ -26,6 +26,7 @@ import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { isCompliantAsymmetricEncryptionType } from '../utils/encryptionCompliance'
+import { StreamrClientError } from '../StreamrClientError'
 
 /*
  * Sends group key responses
@@ -94,7 +95,11 @@ export class PublisherKeyExchange {
                 const recipientUserId = toUserId(recipientId)
 
                 if (!isCompliantAsymmetricEncryptionType(keyEncryptionType, this.config)) {
-                    throw new Error(`EncryptionType in key request (${keyEncryptionType}) is not compliant with encryption settings!`)
+                    throw new StreamrClientError(
+                        `EncryptionType in key request (${keyEncryptionType}) is not compliant with encryption settings!`,
+                        'ENCRYPTION_POLICY_VIOLATION',
+                        request
+                    )
                 }
 
                 const responseType = await this.getResponseType(recipientUserId)

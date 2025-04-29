@@ -101,7 +101,10 @@ export class MessageFactory {
 
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         if (!isCompliantEncryptionType(encryptionType, this.config)) {
-            throw new Error(`Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`)
+            throw new StreamrClientError(
+                `Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`,
+                'ENCRYPTION_POLICY_VIOLATION'
+            )
         }
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
