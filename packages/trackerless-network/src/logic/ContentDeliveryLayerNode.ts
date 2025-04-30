@@ -373,10 +373,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
-        // Plumtree manager is configured it emits message events, so we don't need to emit them here
-        if (!this.options.plumTreeManager) {
-            this.emit('message', msg)
-        }
+        this.emit('message', msg)
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
         this.messagesPropagated += 1
