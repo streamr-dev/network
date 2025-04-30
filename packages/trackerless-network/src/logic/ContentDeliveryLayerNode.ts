@@ -170,7 +170,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
-            this.options.neighbors,
+            this.options.neighbors as any,
             'nodeAdded',
             (id, remote) => {
                 this.options.propagation.onNeighborJoined(id)
@@ -183,7 +183,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
-            this.options.neighbors,
+            this.options.neighbors as any,
             'nodeRemoved',
             (_id, remote) => {
                 this.options.connectionLocker.weakUnlockConnection(
@@ -196,7 +196,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         addManagedEventListener(
             this.options.neighbors,
             'nodeListUpdated',
-            (_id, _remote) => this.emit('neighborListUpdated', this.options.neighbors.getAll()),
+            () => this.emit('neighborListUpdated', this.options.neighbors.getAll()),
             this.abortController.signal
         )
         if (this.options.proxyConnectionRpcLocal !== undefined) {
