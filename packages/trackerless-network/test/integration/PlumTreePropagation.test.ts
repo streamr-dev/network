@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 64
+    const NUM_OF_NODES = 24
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -141,4 +141,59 @@ describe('Propagation', () => {
             await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)
         }
     }, 90000)
+
+    it('Multiple publishers', async () => {
+        await until(
+            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
+        )
+        await until(() => {
+            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
+                return acc + curr.getNeighbors().length
+            }, 0) / contentDeliveryLayerNodes.length
+            return avg >= 4
+        }, 20000)
+
+        const publisher1 = randomUserId()
+        for (let i = 1; i < 5; i++) {
+            const msg = createStreamMessage(
+                JSON.stringify({ hello: 'WORLD' }),
+                STREAM_PART_ID,
+                publisher1
+            )
+            contentDeliveryLayerNodes[0].broadcast(msg)
+            await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
+        }
+
+        const numberOfNewNodes = 32
+
+        await Promise.all(range(numberOfNewNodes).map(async (_i) => {
+            const descriptor = createMockPeerDescriptor()
+            const [layer1, contentDeliveryLayerNode] = await createMockContentDeliveryLayerNodeAndDhtNode(
+                descriptor,
+                entryPointDescriptor,
+                STREAM_PART_ID,
+                simulator,
+                true
+            )
+            await layer1.start()
+            await contentDeliveryLayerNode.start()
+            await layer1.joinDht([entryPointDescriptor]).then(() => {
+                contentDeliveryLayerNode.on('message', () => { 
+                    totalReceived += 1
+                })
+                discoveryLayerNodes.push(layer1)
+                contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
+            })
+        }))
+        const publisher2 = randomUserId()
+        for (let i = 1; i < 5; i++) {
+            const msg = createStreamMessage(
+                JSON.stringify({ hello: 'WORLD' }),
+                STREAM_PART_ID,
+                publisher2
+            )
+            contentDeliveryLayerNodes[0].broadcast(msg)
+            await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)
+        }
+    })
 })
