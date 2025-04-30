@@ -10,7 +10,7 @@ import {
 import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
 import pull from 'lodash/pull'
 import { version as applicationVersion } from '../package.json'
-import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
+import { ContentDeliveryManager, ContentDeliveryManagerOptions, StreamPartDeliveryOptions } from './logic/ContentDeliveryManager'
 import { ControlLayerNode } from './logic/ControlLayerNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
@@ -75,12 +75,16 @@ export class NetworkStack {
         instances.push(this)
     }
 
-    async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+    async joinStreamPart(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        streamPartDeliveryOptions?: StreamPartDeliveryOptions
+    ): Promise<void> {
         if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
         await this.ensureConnectedToControlLayer()
-        this.getContentDeliveryManager().joinStreamPart(streamPartId)
+        this.getContentDeliveryManager().joinStreamPart(streamPartId, streamPartDeliveryOptions)
         if (neighborRequirement !== undefined) {
             await until(() => {
                 return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
@@ -88,7 +92,7 @@ export class NetworkStack {
         }
     }
 
-    async broadcast(msg: StreamMessage): Promise<void> {
+    async broadcast(msg: StreamMessage, streamPartDeliveryOptions?: StreamPartDeliveryOptions): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (
             this.getContentDeliveryManager().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
@@ -100,7 +104,7 @@ export class NetworkStack {
         if (!this.contentDeliveryManager!.isProxiedStreamPart(streamPartId)) {
             await this.ensureConnectedToControlLayer()
         }
-        this.getContentDeliveryManager().broadcast(msg)
+        this.getContentDeliveryManager().broadcast(msg, streamPartDeliveryOptions)
     }
 
     async start(doJoin = true): Promise<void> {
