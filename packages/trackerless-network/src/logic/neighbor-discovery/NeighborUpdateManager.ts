@@ -50,15 +50,15 @@ export class NeighborUpdateManager {
         const neighborDescriptors = this.options.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
         const startTime = Date.now()
         await Promise.allSettled(this.options.neighbors.getAll().map(async (neighbor) => {
-            await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
+            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
             const nodeId = toNodeId(neighbor.getPeerDescriptor())
             this.options.neighbors.get(nodeId)!.setRtt(Date.now() - startTime)
-            /*
+
             if (res.removeMe) {
                 this.options.neighbors.remove(nodeId)
                 this.options.neighborFinder.start([nodeId])
             }
-            */
+
         }))
     }
 
