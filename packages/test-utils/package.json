@@ -1,6 +1,6 @@
 {
   "name": "@streamr/test-utils",
-  "version": "103.0.0-rc.3",
+  "version": "103.0.0-rc.11",
   "description": "A collection of shared test utilities",
   "repository": {
     "type": "git",
@@ -27,7 +27,7 @@
   "dependencies": {
     "@streamr/config": "^5.5.3",
     "@streamr/network-contracts": "^9.1.0",
-    "@streamr/utils": "103.0.0-rc.3",
+    "@streamr/utils": "103.0.0-rc.11",
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
     "express": "^5.1.0",
