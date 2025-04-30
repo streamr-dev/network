@@ -47,6 +47,11 @@ describe('PlumTreeManager', () => {
         await manager.pauseNeighbor(neighbor, 'test')
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(false)
+        await manager.pauseNeighbor(neighbor, 'test2')
+        expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(true)
+        await manager.resumeNeighbor(neighbor, 'test2', 0)
+        expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(false)
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
     })
 
     it('gets latest message timestamp', () => {
