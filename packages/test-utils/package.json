@@ -26,7 +26,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@streamr/config": "^5.5.3",
-    "@streamr/network-contracts": "^9.0.0",
+    "@streamr/network-contracts": "^9.1.0",
     "@streamr/utils": "103.0.0-rc.3",
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
