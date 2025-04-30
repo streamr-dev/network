@@ -3,7 +3,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { PlumTreeManager } from '../../src/logic/plumtree/PlumTreeManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { StreamPartIDUtils } from '@streamr/utils'
+import { StreamPartIDUtils, wait } from '@streamr/utils'
 import { randomUserId } from '@streamr/test-utils'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -64,6 +64,21 @@ describe('PlumTreeManager', () => {
         manager.broadcast(msg2, toNodeId(neighbor))
         manager.broadcast(msg3, toNodeId(neighbor))
         expect(manager.getLatestMessageTimestamp(msg1.messageId!.messageChainId)).toBe(msg3.messageId!.timestamp)
+    })
+
+    it('broadcasts', async () => {
+        const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        const msg = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 123)
+        await manager.pauseNeighbor(neighbor, msg.messageId!.messageChainId)
+        expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
+        manager.on('message', (msg, previousNode) => {
+            expect(msg.messageId!.messageChainId).toBe(msg.messageId!.messageChainId)
+            expect(previousNode).toBe(toNodeId(neighbor))
+        })
+        manager.broadcast(msg, toNodeId(neighbor))
+        expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
+        await wait(1000)
     })
 
 })
