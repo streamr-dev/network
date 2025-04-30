@@ -66,15 +66,14 @@ describe('PlumTreeManager', () => {
         expect(manager.getLatestMessageTimestamp(msg1.messageId!.messageChainId)).toBe(msg3.messageId!.timestamp)
     })
 
-    it('broadcasts', async () => {
+    it('broadcast emits message event', async () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
         const msg = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 123)
         await manager.pauseNeighbor(neighbor, msg.messageId!.messageChainId)
         expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
-        manager.on('message', (msg, previousNode) => {
+        manager.on('message', (msg) => {
             expect(msg.messageId!.messageChainId).toBe(msg.messageId!.messageChainId)
-            expect(previousNode).toBe(toNodeId(neighbor))
         })
         manager.broadcast(msg, toNodeId(neighbor))
         expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)

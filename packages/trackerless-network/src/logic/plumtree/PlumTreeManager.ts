@@ -23,7 +23,7 @@ interface Options {
 const logger = new Logger(module)
 
 interface Events {
-    message: (msg: StreamMessage, previousNode: DhtAddress) => void
+    message: (msg: StreamMessage) => void
 }
 
 export class PlumTreeManager extends EventEmitter<Events> {
@@ -132,7 +132,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         if (this.metadataTimestampsAheadOfRealData.has(msg.messageId!.messageChainId)) {
             this.metadataTimestampsAheadOfRealData.get(msg.messageId!.messageChainId)!.delete(msg.messageId!.timestamp)
         }
-        this.emit('message', msg, previousNode)
+        this.emit('message', msg)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
         for (const neighbor of neighbors) {
             if (this.localPausedNeighbors.isPaused(toNodeId(neighbor.getPeerDescriptor()), msg.messageId!.messageChainId)) {
