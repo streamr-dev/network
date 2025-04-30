@@ -19,6 +19,11 @@ const getTestAdminWallet = (provider: Provider): Wallet => {
 }
 
 createClientCommand(async (client: StreamrClient, targetAddress: string, dataTokenAmount: string, gasAmount?: string) => {
+    if (client.getConfig().environment !== 'dev2') {
+        // adminPrivateKey is only available for "dev2" in the CHAIN_CONFIG
+        console.error('only "dev2" environment is supported')
+        process.exit(1)
+    }
     if (targetAddress === SELF_TARGET_ADDRESS_ID) {
         targetAddress = await client.getUserId()
     }
