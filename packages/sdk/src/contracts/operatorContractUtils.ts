@@ -10,7 +10,7 @@ import {
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
-import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
+import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, ZeroAddress } from 'ethers'
 import { EnvironmentId } from '../Config'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
@@ -115,10 +115,6 @@ export function getProvider(): Provider {
         batchStallTime: 0,       // Don't batch requests, send them immediately
         cacheTimeout: -1         // Do not employ result caching
     })
-}
-
-export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
-    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
 export const delegate = async (

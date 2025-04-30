@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, getTestTokenContract, setupTestOperatorContract } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, getTestAdminWallet, getTestTokenContract, setupTestOperatorContract } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
 import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
@@ -40,7 +40,6 @@ const {
     delegate,
     stake,
     unstake,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 interface Operator {

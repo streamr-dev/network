@@ -249,8 +249,8 @@ export const getTestTokenContract = (): DATATokenContract => {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenABI) as unknown as DATATokenContract
 }
 
-const getTestAdminWallet = (provider: Provider): Wallet => {
-    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
+export const getTestAdminWallet = (provider?: Provider): Wallet => {
+    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getTestProvider())
 }
 
 const fastPrivateKey = (): string => {

@@ -6,7 +6,7 @@ import {
     OperatorFactory as OperatorFactoryContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { createTestPrivateKey, setupTestOperatorContract, setupTestOperatorContractReturnType } from '@streamr/test-utils'
+import { createTestPrivateKey, getTestAdminWallet, setupTestOperatorContract, setupTestOperatorContractReturnType } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import sample from 'lodash/sample'
@@ -14,7 +14,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
     delegate,
-    getTestAdminWallet,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
