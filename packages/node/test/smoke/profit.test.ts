@@ -1,7 +1,14 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
+import {
+    createTestPrivateKey,
+    createTestWallet,
+    getTestAdminWallet,
+    getTestProvider,
+    getTestTokenContract,
+    setupTestOperatorContract
+} from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, startBroker } from '../utils'
@@ -32,14 +39,11 @@ import { createClient, createTestStream, deployTestOperatorContract, deployTestS
  */
 
 const {
-    getProvider,
     sponsor,
     delegate,
     undelegate,
     stake,
     unstake,
-    getTestTokenContract,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 const SPONSOR_AMOUNT = parseEther('6000')
@@ -77,7 +81,7 @@ describe('profit', () => {
         admin: WeiAmount
         operatorContract: WeiAmount
     }> => {
-        const dataToken = getTestTokenContract().connect(getProvider())
+        const dataToken = getTestTokenContract().connect(getTestProvider())
         const adminWallet = getTestAdminWallet()
         return {
             operator: await dataToken.balanceOf(operatorWallet.address),

@@ -10,13 +10,12 @@ import {
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
-import { Contract, EventLog, JsonRpcProvider, parseEther, Provider, Wallet, ZeroAddress } from 'ethers'
+import { Contract, EventLog, parseEther, ZeroAddress } from 'ethers'
 import { EnvironmentId } from '../Config'
 import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
 import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 import { SignerWithProvider } from '../identity/Identity'
 
-const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 const FRACTION_MAX = parseEther('1')
 
 const logger = new Logger(module)
@@ -108,21 +107,6 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     const newSponsorship = new Contract(newSponsorshipAddress, SponsorshipABI, opts.deployer) as unknown as SponsorshipContract
     logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
     return newSponsorship
-}
-
-export function getProvider(): Provider {
-    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
-        batchStallTime: 0,       // Don't batch requests, send them immediately
-        cacheTimeout: -1         // Do not employ result caching
-    })
-}
-
-export function getTestTokenContract(): DATATokenContract {
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenArtifact) as unknown as DATATokenContract
-}
-
-export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
-    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
 export const delegate = async (

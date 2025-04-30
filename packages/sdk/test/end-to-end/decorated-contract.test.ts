@@ -2,21 +2,19 @@ import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { createTestPrivateKey } from '@streamr/test-utils'
+import { createTestPrivateKey, getTestProvider } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
-import { Contract, JsonRpcProvider, Wallet } from 'ethers'
+import { Contract, Wallet } from 'ethers'
 import { createDecoratedContract } from '../../src/contracts/contract'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
-const getProvider = () => new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
-
 describe('decorated contract', () => {
 
     it('read', async () => {
         const contract = createDecoratedContract<StreamRegistryContract>(
-            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryABI, getProvider()),
+            new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryABI, getTestProvider()),
             'StreamRegisty',
             mockLoggerFactory(),
             1
@@ -28,7 +26,7 @@ describe('decorated contract', () => {
     })
 
     it('write', async () => {
-        const wallet = new Wallet(await createTestPrivateKey({ gas: true }), getProvider())
+        const wallet = new Wallet(await createTestPrivateKey({ gas: true }), getTestProvider())
         const contract = createDecoratedContract<StreamRegistryContract>(
             new Contract(toEthereumAddress(TEST_CHAIN_CONFIG.contracts.StreamRegistry), StreamRegistryABI, wallet),
             'StreamRegisty',

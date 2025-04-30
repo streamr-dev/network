@@ -1,9 +1,16 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
+import {
+    createTestPrivateKey,
+    createTestWallet,
+    getTestAdminWallet,
+    getTestProvider,
+    getTestTokenContract,
+    setupTestOperatorContract
+} from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
-import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
+import { Contract, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
 import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, formConfig } from '../utils'
 import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugin'
@@ -36,12 +43,9 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
  */
 
 const {
-    getProvider,
     delegate,
     stake,
     unstake,
-    getTestTokenContract,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 interface Operator {
@@ -121,7 +125,7 @@ const createTheGraphClient = (): TheGraphClient => {
 const configureBlockchain = async (): Promise<void> => {
     const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
-    const provider = getProvider() as JsonRpcProvider
+    const provider = getTestProvider()
     await provider.send('evm_setAutomine', [true])
     await createStream()  // just some transaction
     await provider.send('evm_setAutomine', [false])
@@ -247,7 +251,7 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            unstake(new Wallet(operator.privateKey, getProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
+            unstake(new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
         }
 
         startTimestamp = Date.now()
@@ -266,7 +270,7 @@ describe('inspect', () => {
             await operator.node.stop()
         }
         // revert to dev-chain default mining interval
-        await (getProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
+        await getTestProvider().send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
     })
 
     /*
@@ -306,7 +310,7 @@ describe('inspect', () => {
         }
 
         // assert slashing and rewards
-        const token = getTestTokenContract().connect(getProvider())
+        const token = getTestTokenContract().connect(getTestProvider())
         expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(
             DELEGATE_AMOUNT - multiplyWeiAmount(STAKE_AMOUNT, SLASHING_PERCENTAGE / 100)
         )
