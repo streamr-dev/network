@@ -1,6 +1,6 @@
 import { Operator, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestWallet, setupTestOperatorContract, setupTestOperatorContractOpts } from '@streamr/test-utils'
+import { createTestWallet, getTestProvider, setupTestOperatorContract, setupTestOperatorContractOpts } from '@streamr/test-utils'
 import { Logger, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
@@ -8,7 +8,6 @@ import { createClient, createTestStream, deployTestOperatorContract, deployTestS
 
 const {
     delegate,
-    getProvider,
     sponsor,
     stake,
     getOperatorContract
@@ -56,7 +55,7 @@ describe('checkOperatorValueBreach', () => {
         const operatorContract = getOperatorContract(operatorContractAddress).connect(operatorWallet)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, StreamrConfigABI, getProvider()) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, StreamrConfigABI, getTestProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
         const operator = client.getOperator(toEthereumAddress(watcherOperatorContractAddress))

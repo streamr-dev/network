@@ -238,7 +238,7 @@ export { customMatchers }
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
-const getTestProvider = (): Provider => {
+export const getTestProvider = (): Provider => {
     return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
         batchStallTime: 0,       // Don't batch requests, send them immediately
         cacheTimeout: -1         // Do not employ result caching

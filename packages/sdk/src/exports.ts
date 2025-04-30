@@ -104,7 +104,6 @@ import {
     sponsor,
     stake,
     unstake,
-    getProvider,
     DeploySponsorshipContractOpts,
     getOperatorContract
 } from './contracts/operatorContractUtils'
@@ -121,7 +120,6 @@ const _operatorContractUtils = {
     sponsor,
     stake,
     unstake,
-    getProvider,
     deployOperatorContract,
     getOperatorContract
 }
