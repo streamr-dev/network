@@ -78,7 +78,7 @@ describe('PlumTreeManager', () => {
         })
         manager.broadcast(msg, toNodeId(neighbor))
         expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
-        await wait(1000)
+        await wait(100)
     })
 
 })
