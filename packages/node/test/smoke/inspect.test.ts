@@ -118,7 +118,7 @@ const createTheGraphClient = (): TheGraphClient => {
 const configureBlockchain = async (): Promise<void> => {
     const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
-    const provider = getTestProvider() as JsonRpcProvider
+    const provider = getTestProvider()
     await provider.send('evm_setAutomine', [true])
     await createStream()  // just some transaction
     await provider.send('evm_setAutomine', [false])
@@ -263,7 +263,7 @@ describe('inspect', () => {
             await operator.node.stop()
         }
         // revert to dev-chain default mining interval
-        await (getTestProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
+        await getTestProvider().send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
     })
 
     /*
