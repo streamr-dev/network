@@ -61,11 +61,6 @@ export class PlumTreeManager extends EventEmitter<Events> {
             'resumeNeighbor', (msg: ResumeNeighborRequest, context) => this.rpcLocal.resumeNeighbor(msg, context))
     }
 
-    onNeighborRemoved(nodeId: DhtAddress): void {
-        this.localPausedNeighbors.deleteAll(nodeId)
-        this.remotePausedNeighbors.deleteAll(nodeId)
-    }
-
     async pauseNeighbor(node: PeerDescriptor, msgChainId: string): Promise<void> {
         if (this.neighbors.has(toNodeId(node))) {
             logger.debug(`Pausing neighbor ${toNodeId(node)}`)
@@ -84,6 +79,11 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
+    private onNeighborRemoved(nodeId: DhtAddress): void {
+        this.localPausedNeighbors.deleteAll(nodeId)
+        this.remotePausedNeighbors.deleteAll(nodeId)
+    }
+
     getLatestMessageTimestamp(msgChainId: string): number {
         if (!this.latestMessages.has(msgChainId) || this.latestMessages.get(msgChainId)!.length === 0) {
             return 0
@@ -91,13 +91,13 @@ export class PlumTreeManager extends EventEmitter<Events> {
         return this.latestMessages.get(msgChainId)![this.latestMessages.get(msgChainId)!.length - 1].messageId!.timestamp
     }
 
-    async sendBuffer(fromTimestamp: number, msgChainId: string, neighbor: PeerDescriptor): Promise<void> {
+    private async sendBuffer(fromTimestamp: number, msgChainId: string, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
         const messages = this.latestMessages.get(msgChainId)?.filter((msg) => msg.messageId!.timestamp > fromTimestamp) ?? []
         await Promise.all(messages.map((msg) => remote.sendStreamMessage(msg)))
     }
 
-    async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
+    private async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
         // If we receive newer metadata than messages in the buffer, resume the sending neighbor
         const latestMessageTimestamp = this.getLatestMessageTimestamp(msg.messageChainId)
         if (latestMessageTimestamp < msg.timestamp) {
@@ -111,11 +111,10 @@ export class PlumTreeManager extends EventEmitter<Events> {
                     this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.delete(timestamp)
                 })
             }
-            
         }
     }
 
-    createRemote(neighbor: PeerDescriptor): PlumTreeRpcRemote {
+    private createRemote(neighbor: PeerDescriptor): PlumTreeRpcRemote {
         return new PlumTreeRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, PlumTreeRpcClient)
     }
 

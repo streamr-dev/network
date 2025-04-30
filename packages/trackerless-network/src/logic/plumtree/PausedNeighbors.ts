@@ -28,7 +28,6 @@ export class PausedNeighbors {
                 this.pausedNeighbors.delete(msgChainId)
             }
         })
-
     }
 
     isPaused(node: DhtAddress, msgChainId: string): boolean {
