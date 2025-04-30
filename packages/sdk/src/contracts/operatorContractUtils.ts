@@ -1,5 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import {
+    DATAv2ABI as DATATokenABI,
+    DATAv2 as DATATokenContract,
     OperatorABI,
     Operator as OperatorContract,
     OperatorFactoryABI,
@@ -12,8 +14,6 @@ import {
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import { Contract, EventLog, parseEther, ZeroAddress } from 'ethers'
 import { EnvironmentId } from '../Config'
-import type { DATAv2 as DATATokenContract } from '../ethereumArtifacts/DATAv2'
-import DATATokenArtifact from '../ethereumArtifacts/DATAv2Abi.json'
 import { SignerWithProvider } from '../identity/Identity'
 
 const FRACTION_MAX = parseEther('1')
@@ -165,7 +165,7 @@ export const transferTokens = async (
     amount: WeiAmount,
     tokenAddress: string
 ): Promise<void> => {
-    const token = new Contract(tokenAddress, DATATokenArtifact) as unknown as DATATokenContract
+    const token = new Contract(tokenAddress, DATATokenABI) as unknown as DATATokenContract
     const tx = await token.connect(from).transferAndCall(to, amount, '0x')
     await tx.wait()
 }
