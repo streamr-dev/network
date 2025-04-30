@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, getTestTokenContract, setupTestOperatorContract } from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, startBroker } from '../utils'
@@ -38,7 +38,6 @@ const {
     undelegate,
     stake,
     unstake,
-    getTestTokenContract,
     getTestAdminWallet
 } = _operatorContractUtils
 

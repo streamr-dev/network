@@ -106,7 +106,6 @@ import {
     unstake,
     getProvider,
     DeploySponsorshipContractOpts,
-    getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
 } from './contracts/operatorContractUtils'
@@ -125,7 +124,6 @@ const _operatorContractUtils = {
     unstake,
     getProvider,
     deployOperatorContract,
-    getTestTokenContract,
     getTestAdminWallet,
     getOperatorContract
 }

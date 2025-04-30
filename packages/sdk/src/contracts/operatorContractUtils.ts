@@ -117,10 +117,6 @@ export function getProvider(): Provider {
     })
 }
 
-export function getTestTokenContract(): DATATokenContract {
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenArtifact) as unknown as DATATokenContract
-}
-
 export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
