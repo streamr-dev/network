@@ -49,7 +49,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
             (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => 
                 this.sendBuffer(fromTimestamp, msgChainId, remotePeerDescriptor)
         )
-        this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
+        this.neighbors.on('nodeRemoved', (nodeId: DhtAddress) => this.onNeighborRemoved(nodeId))
         this.rpcCommunicator = options.rpcCommunicator
         this.rpcCommunicator.registerRpcNotification(MessageID, 'sendMetadata', (msg: MessageID, context) => this.rpcLocal.sendMetadata(msg, context))
         this.rpcCommunicator.registerRpcNotification(
