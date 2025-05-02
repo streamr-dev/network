@@ -5,7 +5,7 @@ export interface TransportEvents {
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
     message: (message: Message) => void
     connected: (peerDescriptor: PeerDescriptor) => void
-    statisticsChanged: (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics) => void
+    statisticsUpdated: (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics) => void
 }
 
 export interface SendOptions {

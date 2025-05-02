@@ -74,6 +74,10 @@ export class NetworkNode {
         this.stack.getContentDeliveryManager().off('newMessage', listener)
     }
 
+    removeNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: ContentDeliveryRpcRemote[]) => void): void {
+        this.stack.getContentDeliveryManager().off('neighborListUpdated', listener)
+    }
+
     async leave(streamPartId: StreamPartID): Promise<void> {
         if (this.stopped) {
             return

@@ -5,6 +5,7 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor,
     toNodeId,
+    ConnectionStatistics
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -32,7 +33,6 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
-import { ConnectionStatistics } from '@streamr/dht'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -165,8 +165,8 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         )
         addManagedEventListener(
             this.options.transport,
-            'statisticsChanged',
-            (peerDescriptor, statistics) => this.onStatisticsChanged(peerDescriptor, statistics),
+            'statisticsUpdated',
+            (peerDescriptor, statistics) => this.onStatisticsUpdated(peerDescriptor, statistics),
             this.abortController.signal
         )
         addManagedEventListener(
@@ -340,7 +340,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         }
     }
 
-    private onStatisticsChanged(peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics): void {
+    private onStatisticsUpdated(peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics): void {
         if (this.options.neighbors.has(toNodeId(peerDescriptor))) {
             this.options.neighbors.get(toNodeId(peerDescriptor))!.setStatistics(statistics)
         }

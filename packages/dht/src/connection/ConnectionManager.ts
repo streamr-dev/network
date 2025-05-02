@@ -399,7 +399,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const managedConnection = new ManagedConnection(peerDescriptor, connection)
         managedConnection.on('managedData', this.onData)
         managedConnection.once('disconnected', (gracefulLeave: boolean) => this.onDisconnected(peerDescriptor, gracefulLeave))
-        managedConnection.on('statisticsChanged', (statistics: ConnectionStatistics) => this.emit('statisticsChanged', peerDescriptor, statistics))
+        managedConnection.on('statisticsUpdated', (statistics: ConnectionStatistics) => this.emit('statisticsUpdated', peerDescriptor, statistics))
         const nodeId = toNodeId(peerDescriptor)
         const endpoint = this.endpoints.get(nodeId)! as ConnectingEndpoint
         const outputBuffer = endpoint.buffer

@@ -2,11 +2,10 @@
 
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
-import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionEvents, ConnectionType, ConnectionStatistics } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { EARLY_TIMEOUT, IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
-import { ConnectionStatistics } from '../IConnection'
 
 enum DisconnectedRtcPeerConnectionStateEnum {
     DISCONNECTED = 'disconnected',
@@ -44,7 +43,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
     private lastBytesSent = 0
     private lastStatsCollectionTime = 0
-    private statsIntervalId?: NodeJS.Timeout
+    private statsInterval?: NodeJS.Timeout
     private readonly statsUpdateInterval = 200 // ms, adjust as needed for X times per second
 
     constructor(params: Params) {
@@ -154,9 +153,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             clearTimeout(this.earlyTimeout)
             
             // Clear the stats collection interval
-            if (this.statsIntervalId) {
-                clearInterval(this.statsIntervalId)
-                this.statsIntervalId = undefined
+            if (this.statsInterval) {
+                clearInterval(this.statsInterval)
+                this.statsInterval = undefined
             }
 
             this.stopListening()
@@ -202,7 +201,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                 this.currentBufferedAmount = bufferedAmountRemainder
                 // Update bufferedAmount in statistics but keep the upload rate the same
                 this.statistics.bufferedAmount = this.currentBufferedAmount
-                this.emit('statisticsChanged', this.statistics)
+                this.emit('statisticsUpdated', this.statistics)
             }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
@@ -258,15 +257,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     private startStatsCollection(): void {
         // Clear any existing interval
-        if (this.statsIntervalId) {
-            clearInterval(this.statsIntervalId)
+        if (this.statsInterval) {
+            clearInterval(this.statsInterval)
         }
         
         // Initialize the last collection time
         this.lastStatsCollectionTime = Date.now()
         
         // Start collecting stats periodically
-        this.statsIntervalId = setInterval(() => {
+        this.statsInterval = setInterval(() => {
             this.collectAndEmitStats()
         }, this.statsUpdateInterval)
     }
@@ -307,7 +306,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                 bufferedAmount: this.currentBufferedAmount
             }
             
-            this.emit('statisticsChanged', this.statistics)
+            this.emit('statisticsUpdated', this.statistics)
             
         } catch (err) {
             logger.warn('Failed to collect WebRTC stats', { err })
@@ -320,9 +319,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             || this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.FAILED
         ) {
             // Clear stats interval when connection is closed
-            if (this.statsIntervalId) {
-                clearInterval(this.statsIntervalId)
-                this.statsIntervalId = undefined
+            if (this.statsInterval) {
+                clearInterval(this.statsInterval)
+                this.statsInterval = undefined
             }
             this.doClose(false)
         }
