@@ -9,8 +9,7 @@ createClientCommand(async (client: StreamrClient, sponsorshipAddress: string, da
     await _operatorContractUtils.sponsor(
         await client.getSigner(),
         sponsorshipAddress,
-        parseEther(dataTokenAmount),
-        _operatorContractUtils.getTestTokenContract()
+        parseEther(dataTokenAmount)
     )
 })
     .description('sponsor a stream')

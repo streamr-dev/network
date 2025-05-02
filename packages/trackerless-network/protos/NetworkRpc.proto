@@ -32,6 +32,12 @@ service NodeInfoRpc {
   rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
+service PlumTreeRpc {
+  rpc pauseNeighbor (PauseNeighborRequest) returns (google.protobuf.Empty);
+  rpc resumeNeighbor (ResumeNeighborRequest) returns (google.protobuf.Empty);
+  rpc sendMetadata (MessageID) returns (google.protobuf.Empty);
+}
+
 message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
@@ -62,9 +68,10 @@ enum AsymmetricEncryptionType {
 }
 
 enum SignatureType {
-  LEGACY_SECP256K1 = 0;
-  SECP256K1 = 1;
+  ECDSA_SECP256K1_LEGACY = 0;
+  ECDSA_SECP256K1_EVM = 1;
   ERC_1271 = 2;
+  ML_DSA_87 = 3;
 }
 
 message StreamMessage {
@@ -190,4 +197,13 @@ message NodeInfoResponse {
   repeated StreamPartitionInfo streamPartitions = 2;
   ControlLayerInfo controlLayer = 3;
   string applicationVersion = 4;
+}
+
+message PauseNeighborRequest {
+  string messageChainId = 1;
+}
+
+message ResumeNeighborRequest {
+  string messageChainId = 1;
+  int64 fromTimestamp = 2;
 }

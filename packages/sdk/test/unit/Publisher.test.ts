@@ -5,12 +5,13 @@ import { Publisher } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
+import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 describe('Publisher', () => {
     it('error message', async () => {
-        const authentication = await createRandomAuthentication()
-        const streamIdBuilder = new StreamIDBuilder(authentication)
+        const identity = await createRandomIdentity()
+        const streamIdBuilder = new StreamIDBuilder(identity)
         const streamRegistry = {
             isStreamPublisher: async () => false,
             invalidatePermissionCaches: () => {}
@@ -18,11 +19,12 @@ describe('Publisher', () => {
         const publisher = new Publisher(
             undefined as any,
             streamRegistry as any,
-            await createGroupKeyManager(undefined, authentication),
+            await createGroupKeyManager(undefined, identity),
             streamIdBuilder,
-            authentication,
+            identity,
             mock<SignatureValidator>(),
-            mock<MessageSigner>()
+            mock<MessageSigner>(),
+            mock<StrictStreamrClientConfig>(),
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {
@@ -30,7 +32,7 @@ describe('Publisher', () => {
         }).rejects.toThrowStreamrClientError({
             code: 'MISSING_PERMISSION',
             // eslint-disable-next-line max-len
-            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await authentication.getUserId()}`
+            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await identity.getUserId()}`
         })
     })
 })

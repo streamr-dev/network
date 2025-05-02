@@ -8,7 +8,8 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { MOCK_CONTENT } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -86,7 +87,7 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM
     })
 }
 

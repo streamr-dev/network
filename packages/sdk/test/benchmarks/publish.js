@@ -49,26 +49,9 @@ const BATCH_SIZES = [
 const log = (...args) => process.stderr.write(format(...args) + '\n')
 
 async function run() {
-    const account1 = StreamrClient.generateEthereumAccount()
-    const [client1, stream1] = await setupClientAndStream({
-        auth: {
-            privateKey: account1.privateKey,
-        }
-    })
-
-    const account2 = StreamrClient.generateEthereumAccount()
-    const [client2, stream2] = await setupClientAndStream({
-        auth: {
-            privateKey: account2.privateKey,
-        }
-    })
-
-    const account3 = StreamrClient.generateEthereumAccount()
-    const [client3, stream3] = await setupClientAndStream({
-        auth: {
-            privateKey: account3.privateKey,
-        }
-    }, {
+    const [client1, stream1] = await setupClientAndStream({})
+    const [client2, stream2] = await setupClientAndStream({})
+    const [client3, stream3] = await setupClientAndStream({}, {
         requiresEncryption: true,
     })
 

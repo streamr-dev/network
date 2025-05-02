@@ -33,6 +33,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { PlumTreeManager } from './plumtree/PlumTreeManager'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -64,6 +65,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
+    plumTreeManager?: PlumTreeManager
 }
 
 export const DEFAULT_NODE_VIEW_SIZE = 20
@@ -114,7 +116,8 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.emit('entryPointLeaveDetected')
                 }
             },
-            markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.options.inspector.markMessage(remoteNodeId, messageId)
+            markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.options.inspector.markMessage(remoteNodeId, messageId),
+            plumTreeManager: this.options.plumTreeManager
         })
     }
 
@@ -204,6 +207,14 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.options.proxyConnectionRpcLocal,
                 'newConnection',
                 (id: DhtAddress) => this.options.propagation.onNeighborJoined(id),
+                this.abortController.signal
+            )
+        }
+        if (this.options.plumTreeManager) {
+            addManagedEventListener(
+                this.options.plumTreeManager,
+                'message',
+                (msg: StreamMessage) => this.emit('message', msg),
                 this.abortController.signal
             )
         }
@@ -368,6 +379,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         })
         this.options.rpcCommunicator.destroy()
         this.removeAllListeners()
+        this.options.plumTreeManager?.stop()
         this.options.nearbyNodeView.stop()
         this.options.neighbors.stop()
         this.options.randomNodeView.stop()

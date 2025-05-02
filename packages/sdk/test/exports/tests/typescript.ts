@@ -6,10 +6,7 @@ console.info('import DefaultExport, * as NamedExports from \'@streamr/sdk\':', {
 
 const StreamrClient = DefaultExport
 
-const auth = StreamrClient.generateEthereumAccount()
-const client = new StreamrClient({
-    auth,
-})
+const client = new StreamrClient()
 
  console.assert(!!NamedExports.Subscription, 'NamedExports should have Subscription')
 

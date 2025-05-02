@@ -4,7 +4,6 @@ import { createTestWallet } from '@streamr/test-utils'
 import { Defer, StreamID, collect, toUserId, until, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -15,7 +14,9 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -58,7 +59,7 @@ describe('Subscriber', () => {
             content,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeAll(async () => {
@@ -69,8 +70,8 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        const publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
-        messageSigner = new MessageSigner(publisherAuthentication)
+        const publisherIdentity = new EthereumKeyPairIdentity(publisherWallet.privateKey)
+        messageSigner = new MessageSigner(publisherIdentity)
     })
 
     afterAll(async () => {

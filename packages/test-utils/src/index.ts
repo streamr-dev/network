@@ -1,12 +1,14 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent, Logger, retry, binaryToHex } from '@streamr/utils'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { DATAv2ABI as DATATokenABI, DATAv2 as DATATokenContract, Operator as OperatorContract } from '@streamr/network-contracts'
+import { binaryToHex, EthereumAddress, Logger, retry, toEthereumAddress, toUserId, until, UserID, waitForEvent } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
-import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, TransactionResponse, Wallet } from 'ethers'
+import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express from 'express'
 import random from 'lodash/random'
+import range from 'lodash/range'
 import { AddressInfo } from 'net'
 import { Readable } from 'stream'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export type Event = string
 
@@ -236,37 +238,19 @@ export { customMatchers }
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
-const getTestProvider = (): Provider => {
+export const getTestProvider = (): JsonRpcProvider => {
     return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
         batchStallTime: 0,       // Don't batch requests, send them immediately
         cacheTimeout: -1         // Do not employ result caching
     })
 }
 
-const getTestTokenContract = (adminWallet: Wallet): { mint: (targetAddress: string, amountWei: bigint) => Promise<TransactionResponse> } => {
-    const ABI = [{
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'to',
-                type: 'address'
-            },
-            {
-                internalType: 'uint256',
-                name: 'amount',
-                type: 'uint256'
-            }
-        ],
-        name: 'mint',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    }]
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, ABI).connect(adminWallet) as unknown as { mint: () => Promise<TransactionResponse> }
+export const getTestTokenContract = (): DATATokenContract => {
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, DATATokenABI) as unknown as DATATokenContract
 }
 
-const getTestAdminWallet = (provider: Provider): Wallet => {
-    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider)
+export const getTestAdminWallet = (provider?: Provider): Wallet => {
+    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getTestProvider())
 }
 
 const fastPrivateKey = (): string => {
@@ -278,7 +262,7 @@ export const createTestWallet = async (opts?: { gas?: boolean, tokens?: boolean 
     const newWallet = new Wallet(fastPrivateKey())
     if (opts?.gas || opts?.tokens) {
         const adminWallet = getTestAdminWallet(provider)
-        const token = getTestTokenContract(adminWallet)
+        const token = getTestTokenContract().connect(adminWallet)
         await retry(
             async () => {
                 if (opts?.gas) {
@@ -309,4 +293,45 @@ export const createTestPrivateKey = async (opts?: { gas?: boolean, tokens?: bool
     } else {
         return fastPrivateKey()
     }
+}
+
+export type SignerWithProvider = AbstractSigner<Provider>
+
+export interface setupTestOperatorContractOpts {
+    nodeCount?: number
+    operatorConfig?: {
+        operatorsCutPercentage?: number
+        metadata?: string
+    }
+    deployTestOperatorContract: (opts: {
+        deployer: SignerWithProvider
+        operatorsCutPercentage?: number
+        metadata?: string
+        operatorTokenName?: string
+    }) => Promise<OperatorContract>
+}
+
+export interface setupTestOperatorContractReturnType {
+    operatorWallet: Wallet & SignerWithProvider
+    operatorContractAddress: EthereumAddress
+    nodeWallets: (Wallet & SignerWithProvider)[]
+}
+
+export async function setupTestOperatorContract(
+    opts: setupTestOperatorContractOpts
+): Promise<setupTestOperatorContractReturnType> {
+    const operatorWallet = await createTestWallet({ gas: true, tokens: true })
+    const operatorContract = await opts.deployTestOperatorContract({
+        deployer: operatorWallet,
+        operatorsCutPercentage: opts?.operatorConfig?.operatorsCutPercentage,
+        metadata: opts?.operatorConfig?.metadata
+    })
+    const nodeWallets: (Wallet & SignerWithProvider)[] = []
+    if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
+        for (const _ of range(opts.nodeCount)) {
+            nodeWallets.push(await createTestWallet({ gas: true, tokens: true }))
+        }
+        await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
+    }
+    return { operatorWallet, operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()), nodeWallets }
 }
