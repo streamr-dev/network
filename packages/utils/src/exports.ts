@@ -46,6 +46,7 @@ import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefi
 import { ECDSA_SECP256K1_EVM, ML_DSA_87, SigningUtil } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
+import { EventEmitterType } from './EventEmitterType'
 
 export {
     BrandedString,
@@ -107,6 +108,7 @@ export {
     ipv4ToNumber,
     numberToIpv4,
     MapWithTtl,
+    EventEmitterType,
     Cache
 }
 
