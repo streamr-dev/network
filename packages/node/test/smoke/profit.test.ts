@@ -1,11 +1,17 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Sponsorship } from '@streamr/network-contracts'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import {
+    createTestPrivateKey,
+    createTestWallet,
+    getTestAdminWallet,
+    getTestProvider,
+    getTestTokenContract,
+    setupTestOperatorContract
+} from '@streamr/test-utils'
 import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
-import { createClient, createTestStream, startBroker } from '../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, startBroker } from '../utils'
 
 /*
  * The test needs these dependencies:
@@ -33,16 +39,11 @@ import { createClient, createTestStream, startBroker } from '../utils'
  */
 
 const {
-    setupOperatorContract,
-    getProvider,
-    deploySponsorshipContract,
     sponsor,
     delegate,
     undelegate,
     stake,
     unstake,
-    getTestTokenContract,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 const SPONSOR_AMOUNT = parseEther('6000')
@@ -80,7 +81,7 @@ describe('profit', () => {
         admin: WeiAmount
         operatorContract: WeiAmount
     }> => {
-        const dataToken = getTestTokenContract().connect(getProvider())
+        const dataToken = getTestTokenContract().connect(getTestProvider())
         const adminWallet = getTestAdminWallet()
         return {
             operator: await dataToken.balanceOf(operatorWallet.address),
@@ -99,14 +100,14 @@ describe('profit', () => {
             operatorWallet,
             operatorContractAddress,
             nodeWallets: [operatorNodeWallet]
-        } = await setupOperatorContract({
+        } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             },
-            createTestWallet
+            deployTestOperatorContract
         }))
-        sponsorshipContract = await deploySponsorshipContract({
+        sponsorshipContract = await deployTestSponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas
@@ -115,7 +116,7 @@ describe('profit', () => {
         delegatorWallet = await createTestWallet({ gas: true, tokens: true })
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
-            streamrConfigABI
+            StreamrConfigABI
         ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setProtocolFeeFraction(parseEther(String(PROTOCOL_FEE_PERCENTAGE / 100)))
         await streamrConfig.setMinimumDelegationSeconds(0)

@@ -449,7 +449,7 @@ export interface StreamrClientConfig {
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'environment' | 'auth' | 'metrics'> & {
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
@@ -478,6 +478,7 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
     let config = merge({
+        environment: environmentId,
         network: {
             controlLayer: {
                 entryPoints: defaults.entryPoints

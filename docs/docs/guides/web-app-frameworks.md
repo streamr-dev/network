@@ -10,7 +10,7 @@ In this quickstart guide, you'll be using Streamr in a **ReactJS** web applicati
 -   NPM v8 or greater
 -   NodeJS 18.x or greater (Ideally v20+)
 -   A basic understanding of ReactJS or NextJS
--   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+-   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Setup & installation
 

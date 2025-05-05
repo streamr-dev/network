@@ -101,18 +101,12 @@ import {
     delegate,
     undelegate,
     deploySponsorshipContract,
-    setupOperatorContract,
-    SetupOperatorContractOpts,
-    SetupOperatorContractReturnType,
     deployOperatorContract,
     DeployOperatorContractOpts,
     sponsor,
     stake,
     unstake,
-    getProvider,
     DeploySponsorshipContractOpts,
-    getTestTokenContract,
-    getTestAdminWallet,
     getOperatorContract
 } from './contracts/operatorContractUtils'
 
@@ -125,18 +119,14 @@ const _operatorContractUtils = {
     delegate,
     undelegate,
     deploySponsorshipContract,
-    setupOperatorContract,
     sponsor,
     stake,
     unstake,
-    getProvider,
     deployOperatorContract,
-    getTestTokenContract,
-    getTestAdminWallet,
     getOperatorContract
 }
 export { _operatorContractUtils }
-export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
+export type { DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

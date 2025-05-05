@@ -1,3 +1,4 @@
+import { StreamStorageRegistryABI, StreamStorageRegistry as StreamStorageRegistryContract } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Interface } from 'ethers'
 import min from 'lodash/min'
@@ -7,8 +8,6 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
-import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistryV2'
-import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -68,7 +67,7 @@ export class StreamStorageRegistry {
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-            StreamStorageRegistryArtifact,
+            StreamStorageRegistryABI,
             rpcProviderSource.getProvider(),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
@@ -92,7 +91,7 @@ export class StreamStorageRegistry {
             blockNumber
         })
         const contractAddress = toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress)
-        const contractInterface = new Interface(StreamStorageRegistryArtifact)
+        const contractInterface = new Interface(StreamStorageRegistryABI)
         initContractEventGateway({
             sourceDefinition: {
                 contractInterfaceFragment: contractInterface.getEvent('Added')!,
@@ -122,7 +121,7 @@ export class StreamStorageRegistry {
             const chainSigner = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-                StreamStorageRegistryArtifact,
+                StreamStorageRegistryABI,
                 chainSigner,
                 'streamStorageRegistry'
             )

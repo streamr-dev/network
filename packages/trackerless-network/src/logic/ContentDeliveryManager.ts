@@ -70,6 +70,10 @@ export interface ContentDeliveryManagerOptions {
     doNotBufferWhileConnecting?: boolean
 }
 
+export interface StreamPartDeliveryOptions {
+    plumTreeOptimisation?: boolean
+}
+
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
     return toDhtAddress(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
@@ -123,10 +127,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         this.connectionLocker = undefined
     }
 
-    broadcast(msg: StreamMessage): void {
+    broadcast(msg: StreamMessage, streamPartDeliveryOptions?: StreamPartDeliveryOptions): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         logger.debug(`Broadcasting to stream part ${streamPartId}`)
-        this.joinStreamPart(streamPartId)
+        this.joinStreamPart(streamPartId, streamPartDeliveryOptions)
         this.streamParts.get(streamPartId)!.broadcast(msg)
         if (msg.body.oneofKind === 'contentMessage') {
             this.metrics.broadcastMessagesPerSecond.record(1)
@@ -142,7 +146,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
     }
 
-    joinStreamPart(streamPartId: StreamPartID): void {
+    joinStreamPart(streamPartId: StreamPartID, streamPartDeliveryOptions?: StreamPartDeliveryOptions): void {
         let streamPart = this.streamParts.get(streamPartId)
         if (streamPart !== undefined) {
             return
@@ -163,7 +167,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
             discoveryLayerNode, 
-            () => peerDescriptorStoreManager.isLocalNodeStored()
+            () => peerDescriptorStoreManager.isLocalNodeStored(),
+            streamPartDeliveryOptions
         )
         const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorStoreManager)
         streamPart = {
@@ -262,7 +267,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     private createContentDeliveryLayerNode(
         streamPartId: StreamPartID,
         discoveryLayerNode: DiscoveryLayerNode,
-        isLocalNodeEntryPoint: () => boolean
+        isLocalNodeEntryPoint: () => boolean,
+        streamPartDeliveryOptions?: StreamPartDeliveryOptions
     ) {
         return createContentDeliveryLayerNode({
             streamPartId,
@@ -277,7 +283,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
-            doNotBufferWhileConnecting: this.options.doNotBufferWhileConnecting
+            doNotBufferWhileConnecting: this.options.doNotBufferWhileConnecting,
+            plumTreeOptimisation: streamPartDeliveryOptions?.plumTreeOptimisation
         })
     }
 

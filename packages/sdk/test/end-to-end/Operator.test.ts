@@ -1,5 +1,12 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import {
+    OperatorABI,
+    Operator as OperatorContract,
+    OperatorFactoryABI,
+    OperatorFactory as OperatorFactoryContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
+import { createTestPrivateKey, getTestAdminWallet, setupTestOperatorContract, setupTestOperatorContractReturnType } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import sample from 'lodash/sample'
@@ -7,18 +14,10 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
     delegate,
-    deploySponsorshipContract,
-    getTestAdminWallet,
-    setupOperatorContract,
-    SetupOperatorContractReturnType,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
-import type { Operator as OperatorContract } from '../../src/ethereumArtifacts/Operator'
-import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
-import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
-import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
+import { deployTestOperatorContract, deployTestSponsorshipContract } from '../test-utils/utils'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -44,7 +43,7 @@ async function createStream(): Promise<string> {
     return streamId
 }
 
-const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+const getOperator = async (wallet: Wallet | undefined, operator: setupTestOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     return client.getOperator(operator.operatorContractAddress)
 }
@@ -54,23 +53,23 @@ describe('Operator', () => {
     let streamId2: string
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
-    let deployedOperator: SetupOperatorContractReturnType
+    let deployedOperator: setupTestOperatorContractReturnType
 
     beforeAll(async () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1, createTestWallet })
+            setupTestOperatorContract({ nodeCount: 1, deployTestOperatorContract })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
         deployedOperator = concurrentTasks[2]
 
-        sponsorship1 = await deploySponsorshipContract({
+        sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
             deployer: deployedOperator.operatorWallet
         })
-        sponsorship2 = await deploySponsorshipContract({
+        sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
             deployer: deployedOperator.operatorWallet
         })
@@ -87,7 +86,7 @@ describe('Operator', () => {
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            OperatorFactoryArtifact,
+            OperatorFactoryABI,
             getTestAdminWallet()
         ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
@@ -95,7 +94,7 @@ describe('Operator', () => {
         // check that there is a stake
         const operatorContract = new Contract(
             randomOperatorAddress!,
-            OperatorArtifact,
+            OperatorABI,
             deployedOperator.operatorWallet
         ) as unknown as OperatorContract
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
@@ -133,8 +132,8 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract({
-            createTestWallet
+        const target = await setupTestOperatorContract({
+            deployTestOperatorContract
         })
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), parseEther('50000'))
@@ -202,7 +201,7 @@ describe('Operator', () => {
         async function updateMetadata(metadata: string): Promise<void> {
             const operator = new Contract(
                 deployedOperator.operatorContractAddress,
-                OperatorArtifact,
+                OperatorABI,
                 deployedOperator.operatorWallet
             ) as unknown as OperatorContract
             await (await operator.updateMetadata(metadata)).wait()

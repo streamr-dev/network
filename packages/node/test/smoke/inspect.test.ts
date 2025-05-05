@@ -1,11 +1,18 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import {
+    createTestPrivateKey,
+    createTestWallet,
+    getTestAdminWallet,
+    getTestProvider,
+    getTestTokenContract,
+    setupTestOperatorContract
+} from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
-import { Contract, JsonRpcProvider, parseEther, Wallet } from 'ethers'
+import { Contract, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
-import { createClient, createTestStream, formConfig } from '../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, formConfig } from '../utils'
 import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugin'
 
 /*
@@ -36,14 +43,9 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
  */
 
 const {
-    setupOperatorContract,
-    getProvider,
-    deploySponsorshipContract,
     delegate,
     stake,
     unstake,
-    getTestTokenContract,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 interface Operator {
@@ -90,12 +92,12 @@ const createStream = async (): Promise<StreamID> => {
 const createOperator = async (
     pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: string, isFreerider: boolean
 ): Promise<Operator> => {
-    const operator = await setupOperatorContract({
+    const operator = await setupTestOperatorContract({
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })
         },
-        createTestWallet
+        deployTestOperatorContract
     })
     await delegate(operator.operatorWallet, operator.operatorContractAddress, DELEGATE_AMOUNT)
     await stake(operator.operatorWallet, operator.operatorContractAddress, sponsorshipAddress, STAKE_AMOUNT)
@@ -123,7 +125,7 @@ const createTheGraphClient = (): TheGraphClient => {
 const configureBlockchain = async (): Promise<void> => {
     const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
-    const provider = getProvider() as JsonRpcProvider
+    const provider = getTestProvider()
     await provider.send('evm_setAutomine', [true])
     await createStream()  // just some transaction
     await provider.send('evm_setAutomine', [false])
@@ -207,7 +209,7 @@ describe('inspect', () => {
         logger.info('Update Streamr config')
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
-            streamrConfigABI
+            StreamrConfigABI
         ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setFlagReviewerCount(REVIEWER_COUNT)
         await streamrConfig.setReviewPeriodSeconds(REVIEW_PERIOD)
@@ -219,7 +221,7 @@ describe('inspect', () => {
         logger.info('Setup sponsorship')
         const streamId = await createStream()
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {
@@ -249,7 +251,7 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            unstake(new Wallet(operator.privateKey, getProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
+            unstake(new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
         }
 
         startTimestamp = Date.now()
@@ -268,7 +270,7 @@ describe('inspect', () => {
             await operator.node.stop()
         }
         // revert to dev-chain default mining interval
-        await (getProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
+        await getTestProvider().send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
     })
 
     /*
@@ -308,7 +310,7 @@ describe('inspect', () => {
         }
 
         // assert slashing and rewards
-        const token = getTestTokenContract().connect(getProvider())
+        const token = getTestTokenContract().connect(getTestProvider())
         expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(
             DELEGATE_AMOUNT - multiplyWeiAmount(STAKE_AMOUNT, SLASHING_PERCENTAGE / 100)
         )

@@ -1,14 +1,12 @@
 import { _operatorContractUtils } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
+import { createTestPrivateKey, createTestWallet, setupTestOperatorContract } from '@streamr/test-utils'
 import { Logger, multiplyWeiAmount, toEthereumAddress, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract } from '../../../utils'
 
 const {
     delegate,
-    deploySponsorshipContract,
-    setupOperatorContract,
     sponsor,
     stake,
     getOperatorContract
@@ -37,15 +35,15 @@ describe('maintainOperatorValue', () => {
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContractAddress, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContractAddress, nodeWallets } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercentage: 10
             },
-            createTestWallet
+            deployTestOperatorContract
         })
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+        const sponsorship = await deployTestSponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('25000'))
         await delegate(operatorWallet, operatorContractAddress, STAKE_AMOUNT)
         await stake(operatorWallet, operatorContractAddress, await sponsorship.getAddress(), STAKE_AMOUNT)
