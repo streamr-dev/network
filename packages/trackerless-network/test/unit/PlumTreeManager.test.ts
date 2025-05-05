@@ -80,4 +80,13 @@ describe('PlumTreeManager', () => {
         await wait(100)
     })
 
+    it('removes paused node if neighbor is removed', async () => {
+        const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        await manager.pauseNeighbor(neighbor, 'test')
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
+        neighbors.remove(toNodeId(neighbor))
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(false)
+    })
+
 })
