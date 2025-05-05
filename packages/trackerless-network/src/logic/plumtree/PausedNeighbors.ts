@@ -37,4 +37,10 @@ export class PausedNeighbors {
         return this.pausedNeighbors.get(msgChainId)!.has(node)
     }
     
+    forEach(fn: (neighbors: Set<DhtAddress>, msgChainId: string) => void): void {
+        this.pausedNeighbors.forEach((neighbors, msgChainId) => {
+            fn(neighbors, msgChainId)
+        })
+    }   
+    
 }

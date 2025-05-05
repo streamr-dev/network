@@ -82,6 +82,19 @@ export class PlumTreeManager extends EventEmitter<Events> {
     private onNeighborRemoved(nodeId: DhtAddress): void {
         this.localPausedNeighbors.deleteAll(nodeId)
         this.remotePausedNeighbors.deleteAll(nodeId)
+        if (this.neighbors.size() > 0) {
+            this.remotePausedNeighbors.forEach((pausedNeighbors, msgChainId) => {
+                if (pausedNeighbors.size >= this.neighbors.size()) {
+                    logger.warn('All neighbors are paused, resuming first neighbor')
+                    const neighborToResume = this.neighbors.getFirst([])!.getPeerDescriptor()
+                    setImmediate(() => this.resumeNeighbor(
+                        neighborToResume,
+                        msgChainId,
+                        this.getLatestMessageTimestamp(msgChainId)
+                    ))
+                }
+            })
+        }
     }
 
     getLatestMessageTimestamp(msgChainId: string): number {
