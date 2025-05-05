@@ -1,12 +1,11 @@
-import { KeyType } from '@streamr/utils'
+import { KeyType, KEY_TYPES } from '@streamr/utils'
+import { SignatureType } from '@streamr/trackerless-network'
 import { KeyPairIdentityConfig, EthereumProviderIdentityConfig, StrictStreamrClientConfig, CustomIdentityConfig } from '../Config'
 import { EthereumKeyPairIdentity } from './EthereumKeyPairIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
-import { SignatureType } from '@streamr/trackerless-network'
 import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
-import { KEY_TYPES } from '@streamr/utils/dist/src/signingUtils'
 
 /**
  * This is where config keyTypes are connected to Identity implementations.
