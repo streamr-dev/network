@@ -26,7 +26,7 @@ Sponsorships are the source of incentivization. These are visible on [The Hub](h
 ### The Amoy test environment
 The [Streamr Hub](https://streamr.network/hub) is the place to test out your Operator before creating it on Polygon with real tokens, just select "Polygon Amoy testnet" from the top-right dropdown.
 
-You'll need Amoy `MATIC` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
+You'll need Amoy `POL` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Community resources
 - Tutorial videos. Follow at your own risk. Note that version numbers and exact instructions may change over time.

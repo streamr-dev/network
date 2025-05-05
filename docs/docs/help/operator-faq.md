@@ -140,14 +140,14 @@ Yes.
 #### Can we share private key for 25 nodes? In this case will the Operator recognize 1 node or 25 nodes?
 Node addresses do not equal nodes. In other words, yes, you can share private keys among all your nodes.
 
-#### Is there any benefit to having two or more node addresses added to the Operator and managing MATIC balance on multiple wallets instead of having a single node address for all nodes in my fleet?
+#### Is there any benefit to having two or more node addresses added to the Operator and managing POL balance on multiple wallets instead of having a single node address for all nodes in my fleet?
 It is perhaps easier to debug if something goes wrong but there's no other benefits to having multiple addresses for each of your fleet nodes.
 
 #### As an Operator, can I generate the node signing key in memory?
 No. The node signing key must be known and persist so that it can be paired with the Operator Contract.
 
 #### Which address do I need to fund?
-You need to fund your node address(es) with a small amount of `MATIC` tokens.
+You need to fund your node address(es) with a small amount of `POL` tokens.
 
 ### Troubleshooting common issues
 #### Issue:
@@ -245,7 +245,7 @@ The delegators will then simply leave and delegate to someone else, as they are 
 No, you will need to periodically check and claim your uncollected earnings from the Operator(s) that you have staked/delegated on.
 
 #### How does the auto collect earnings work?
-Nodes work on a collection trigger which is based on how much value there is to collect. The limit to decide whether the earnings are collected upon checking is configurable, and this is defined relative to the limit. The default is halfway to the limit, meaning that uncollected earnings are collected when they equal at least 2.5% of Operator stake. If nodes are running and have enough `MATIC` to pay for gas, then the 5% uncollected limit should not be exceeded.
+Nodes work on a collection trigger which is based on how much value there is to collect. The limit to decide whether the earnings are collected upon checking is configurable, and this is defined relative to the limit. The default is halfway to the limit, meaning that uncollected earnings are collected when they equal at least 2.5% of Operator stake. If nodes are running and have enough `POL` to pay for gas, then the 5% uncollected limit should not be exceeded.
 
 These check runs every hour by default. 
 
