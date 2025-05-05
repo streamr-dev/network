@@ -31,7 +31,7 @@ Create new partions if your messages extend approx. 100 msg/sec per partition.
 By default, streams only have 1 partition when they are created. The partition count can be set to any number between 1 and 100. An example of creating a partitioned stream:
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
   id: `/foo/bar`,
   partitions: 10,
