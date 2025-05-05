@@ -7,6 +7,7 @@ import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from '.
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NodeInfo } from './types'
+import { ContentDeliveryRpcRemote } from './logic/ContentDeliveryRpcRemote'
 import { StreamPartDeliveryOptions } from './logic/ContentDeliveryManager'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
@@ -66,12 +67,20 @@ export class NetworkNode {
         this.stack.getContentDeliveryManager().on('newMessage', listener)
     }
 
+    addNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: ContentDeliveryRpcRemote[]) => void): void {
+        this.stack.getContentDeliveryManager().on('neighborListUpdated', listener)
+    }
+
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
         this.stack.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
     removeMessageListener(listener: (msg: StreamMessage) => void): void {
         this.stack.getContentDeliveryManager().off('newMessage', listener)
+    }
+
+    removeNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: ContentDeliveryRpcRemote[]) => void): void {
+        this.stack.getContentDeliveryManager().off('neighborListUpdated', listener)
     }
 
     async leave(streamPartId: StreamPartID): Promise<void> {

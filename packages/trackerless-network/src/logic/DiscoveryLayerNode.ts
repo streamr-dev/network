@@ -1,5 +1,4 @@
 import { DhtAddress, PeerDescriptor, RingContacts } from '@streamr/dht'
-
 export interface DiscoveryLayerNodeEvents {
     manualRejoinRequired: () => void
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -17,6 +16,7 @@ export interface DiscoveryLayerNode {
     off<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: () => void): void
     once<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     once<T extends keyof DiscoveryLayerNodeEvents>(eventName: T, listener: () => void): void
+    
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getRandomContacts: (maxCount?: number) => PeerDescriptor[]

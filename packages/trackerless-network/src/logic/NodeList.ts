@@ -6,6 +6,7 @@ import { EventEmitter } from 'eventemitter3'
 export interface Events {
     nodeAdded: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
     nodeRemoved: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
+    nodeListUpdated: () => void
 }
 
 const getValuesOfIncludedKeys = (
@@ -38,11 +39,15 @@ export class NodeList extends EventEmitter<Events> {
     add(remote: ContentDeliveryRpcRemote): void {
         const nodeId = toNodeId(remote.getPeerDescriptor())
         if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
+            remote.emitter.on('statisticsChanged', () => {
+                this.emit('nodeListUpdated')
+            })
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
             
             if (!isExistingNode) {
                 this.emit('nodeAdded', nodeId, remote)
+                this.emit('nodeListUpdated')
             }
         }
     }
@@ -50,8 +55,10 @@ export class NodeList extends EventEmitter<Events> {
     remove(nodeId: DhtAddress): void {
         if (this.nodes.has(nodeId)) {
             const remote = this.nodes.get(nodeId)!
+            remote.emitter.off('statisticsChanged')
             this.nodes.delete(nodeId)
             this.emit('nodeRemoved', nodeId, remote)
+            this.emit('nodeListUpdated')
         }   
     }
 

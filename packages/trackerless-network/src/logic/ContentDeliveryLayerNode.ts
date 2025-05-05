@@ -5,6 +5,7 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor,
     toNodeId,
+    ConnectionStatistics
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -37,9 +38,9 @@ import { PlumTreeManager } from './plumtree/PlumTreeManager'
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
+    neighborListUpdated: (neighbors: ContentDeliveryRpcRemote[]) => void
     entryPointLeaveDetected: () => void
 }
-
 export interface StrictContentDeliveryLayerNodeOptions {
     streamPartId: StreamPartID
     discoveryLayerNode: DiscoveryLayerNode
@@ -166,7 +167,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
-            this.options.neighbors,
+            this.options.transport,
+            'statisticsUpdated',
+            (peerDescriptor, statistics) => this.onStatisticsUpdated(peerDescriptor, statistics),
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.options.neighbors as any,
             'nodeAdded',
             (id, remote) => {
                 this.options.propagation.onNeighborJoined(id)
@@ -179,7 +186,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
-            this.options.neighbors,
+            this.options.neighbors as any,
             'nodeRemoved',
             (_id, remote) => {
                 this.options.connectionLocker.weakUnlockConnection(
@@ -187,6 +194,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.options.streamPartId
                 )
             },
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.options.neighbors,
+            'nodeListUpdated',
+            () => this.emit('neighborListUpdated', this.options.neighbors.getAll()),
             this.abortController.signal
         )
         if (this.options.proxyConnectionRpcLocal !== undefined) {
@@ -335,6 +348,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
             this.options.temporaryConnectionRpcLocal.removeNode(nodeId)
+        }
+    }
+
+    private onStatisticsUpdated(peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics): void {
+        if (this.options.neighbors.has(toNodeId(peerDescriptor))) {
+            this.options.neighbors.get(toNodeId(peerDescriptor))!.setStatistics(statistics)
         }
     }
 
