@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import { binaryToHex, KEY_TYPES, SigningUtil, toUserId } from '@streamr/utils'
+import { binaryToHex, KEY_TYPES, SigningUtil } from '@streamr/utils'
 import { createCommand, Options } from '../src/command'
 import { formEnumArgValueDescription, createFnParseEnum } from '../src/common'
 
@@ -12,7 +12,7 @@ createCommand()
         const signingUtil = SigningUtil.getInstance(options.keyType!) // required option
         const keyPair = signingUtil.generateKeyPair()
         console.info(JSON.stringify({
-            publicKey: toUserId(keyPair.publicKey),
+            publicKey: binaryToHex(keyPair.publicKey, true),
             privateKey: binaryToHex(keyPair.privateKey),
         }, null, 4))
     })

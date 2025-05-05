@@ -39,7 +39,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
 
     static fromPrivateKey(privateKey: HexString, address?: HexString): EthereumKeyPairIdentity {
         return new EthereumKeyPairIdentity(
-            hexToBinary(address ?? new Wallet(privateKey).address.toLowerCase()), 
+            hexToBinary(address ?? new Wallet(privateKey).address), 
             hexToBinary(privateKey)
         )
     }

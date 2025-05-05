@@ -29,10 +29,9 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
 
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): ECDSAKeyPairIdentity {
         const keyPairConfig = KeyPairIdentity.getKeyPairFromConfig(config)
-        if (!keyPairConfig.publicKey) {
-            throw new Error(`ECDSA_SECP256R1 identity requires a publicKey to be given in the config!`)
-        }
-        return new ECDSAKeyPairIdentity(hexToBinary(keyPairConfig.publicKey), hexToBinary(keyPairConfig.privateKey))
+        const privateKey = hexToBinary(keyPairConfig.privateKey)
+        const publicKey = keyPairConfig.publicKey ? hexToBinary(keyPairConfig.publicKey) : signingUtil.getPublicKeyFromPrivateKey(privateKey)
+        return new ECDSAKeyPairIdentity(publicKey, privateKey)
     }
 
     static generate(): ECDSAKeyPairIdentity {

@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { hexToBinary } from '../src/binaryUtils'
-import { EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, SigningUtil } from '../src/signingUtils'
+import { EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, SigningUtil } from '../src/SigningUtil'
 import { toUserId, toUserIdRaw } from '../src/UserID'
 
 describe('SigningUtil', () => {

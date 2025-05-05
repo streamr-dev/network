@@ -35,7 +35,7 @@ export abstract class SigningUtil {
     abstract assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
 
     static getInstance(type: KeyType): SigningUtil {
-        const util = keyPairTypeToInstance[type]
+        const util = keyTypeToInstance[type]
         if (!util) {
             throw new Error(`Unknown key pair type: ${type}`)
         }
@@ -126,7 +126,7 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
 export class EcdsaSecp256r1 extends SigningUtil {
     generateKeyPair(): KeyPair {
         const privateKey = randomBytes(32)
-        const publicKey = p256.getPublicKey(privateKey, true)
+        const publicKey = this.getPublicKeyFromPrivateKey(privateKey)
 
         return {
             publicKey,
@@ -138,9 +138,13 @@ export class EcdsaSecp256r1 extends SigningUtil {
         return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
     }
 
+    getPublicKeyFromPrivateKey(privateKey: Uint8Array, compressed: boolean = true): Uint8Array {
+        return p256.getPublicKey(privateKey, compressed)
+    }
+
     privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
-        // publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
-        const publicKey = p256.getPublicKey(privateKey, false)
+        const publicKey = this.getPublicKeyFromPrivateKey(privateKey, false)
+        // uncompressed publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
         const x = publicKey.subarray(1, 33)
         const y = publicKey.subarray(33)
 
@@ -233,9 +237,9 @@ export class EcdsaSecp256r1 extends SigningUtil {
             throw new Error(`Expected a public key of either 33 bytes (compressed) or 65 bytes (uncompressed)!`)
         }
 
-        const computedPublicKey = p256.getPublicKey(privateKey, publicKey.length === 33)
+        const computedPublicKey = this.getPublicKeyFromPrivateKey(privateKey, publicKey.length === 33)
         
-        if (binaryToHex(computedPublicKey) !== binaryToHex(publicKey)) {
+        if (!areEqualBinaries(computedPublicKey, publicKey)) {
             throw new Error(
                 `Given private key is for a different public key! Given: ${binaryToHex(publicKey)}, Computed: ${binaryToHex(computedPublicKey)}`
             )
@@ -277,7 +281,7 @@ export class MlDsa87 extends SigningUtil {
 
 // Declared at the bottom of the file because the classes need to be
 // declared first. TS makes sure all KeyPairTypes are present.
-const keyPairTypeToInstance: Record<KeyType, SigningUtil> = {
+const keyTypeToInstance: Record<KeyType, SigningUtil> = {
     ECDSA_SECP256K1_EVM: new EcdsaSecp256k1Evm(),
     ECDSA_SECP256R1: new EcdsaSecp256r1(),
     ML_DSA_87: new MlDsa87()

@@ -9,7 +9,7 @@ const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
     // Read key pair SignatureTypes from IdentityMapping
     ...Object.fromEntries(
         IDENTITY_MAPPING.map(
-            (idMapping) => [idMapping.signatureType, idMapping.keyPairType]
+            (idMapping) => [idMapping.signatureType, idMapping.keyType]
         )
     ),
     // These special ones need to be added manually

@@ -10,7 +10,7 @@ import { IDENTITY_MAPPING } from '../identity/IdentityMapping'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
-    IDENTITY_MAPPING.map((idMapping) => [idMapping.signatureType, SigningUtil.getInstance(idMapping.keyPairType)])
+    IDENTITY_MAPPING.map((idMapping) => [idMapping.signatureType, SigningUtil.getInstance(idMapping.keyType)])
 )
 
 const evmSigner = SigningUtil.getInstance('ECDSA_SECP256K1_EVM')
