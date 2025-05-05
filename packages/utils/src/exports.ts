@@ -48,19 +48,19 @@ import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
 export {
-    BrandedString,
-    ENSName,
-    EthereumAddress,
+    type BrandedString,
+    type ENSName,
+    type EthereumAddress,
     Defer,
     Logger,
-    LogLevel,
+    type LogLevel,
     Multimap,
     AbortError,
     TimeoutError,
     pTransaction,
     asAbortable,
     composeAbortSignals,
-    ComposedAbortSignal,
+    type ComposedAbortSignal,
     isENSName,
     keyToArrayIndex,
     randomString,
@@ -80,8 +80,8 @@ export {
     runAndWaitForEvents3,
     raceEvents3,
     runAndRaceEvents3,
-    RunAndRaceEventsReturnType,
-    Events,
+    type RunAndRaceEventsReturnType,
+    type Events,
     ObservableEventEmitter,
     initEventGateway,
     addManagedEventListener,
@@ -89,7 +89,7 @@ export {
     collect,
     Gate,
     TheGraphClient,
-    GraphQLQuery,
+    type GraphQLQuery,
     Heap,
     executeSafePromise,
     binaryToHex,
@@ -103,7 +103,7 @@ export {
     toLengthPrefixedFrame,
     ECDSA_SECP256K1_EVM,
     ML_DSA_87,
-    SigningUtil,
+    type SigningUtil,
     ipv4ToNumber,
     numberToIpv4,
     MapWithTtl,
@@ -115,15 +115,15 @@ export {
     LevelMetric,
     Metric,
     MetricsContext,
-    MetricsDefinition,
-    MetricsReport,
+    type MetricsDefinition,
+    type MetricsReport,
     RateMetric
 }
 
-export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
+export { type StreamID, toStreamID, StreamIDUtils } from './StreamID'
 export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
-export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
-export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
-export { HexString } from './HexString'
-export { ChangeFieldType, MapKey } from './types'
-export { WeiAmount, multiplyWeiAmount } from './WeiAmount'
+export { type StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
+export { type UserID, type UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
+export type { HexString } from './HexString'
+export type { ChangeFieldType, MapKey } from './types'
+export { type WeiAmount, multiplyWeiAmount } from './WeiAmount'
