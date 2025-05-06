@@ -34,7 +34,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.797.0",
+    "@aws-sdk/client-route-53": "^3.799.0",
     "@streamr/autocertifier-client": "103.0.0-rc.12",
     "@streamr/dht": "103.0.0-rc.12",
     "@streamr/proto-rpc": "103.0.0-rc.12",
