@@ -27,6 +27,7 @@ export class ECDSAKeyPairIdentity extends KeyPairIdentity {
         return signingUtil.createSignature(payload, this.cachedJWK)
     }
 
+    /** @internal */
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): ECDSAKeyPairIdentity {
         const keyPairConfig = KeyPairIdentity.getKeyPairFromConfig(config)
         const privateKey = hexToBinary(keyPairConfig.privateKey)

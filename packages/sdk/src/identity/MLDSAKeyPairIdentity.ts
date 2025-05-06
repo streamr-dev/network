@@ -23,6 +23,7 @@ export class MLDSAKeyPairIdentity extends KeyPairIdentity {
         return signingUtil.createSignature(payload, this.privateKey)
     }
 
+    /** @internal */
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): MLDSAKeyPairIdentity {
         const keyPairConfig = KeyPairIdentity.getKeyPairFromConfig(config)
         if (!keyPairConfig.publicKey) {

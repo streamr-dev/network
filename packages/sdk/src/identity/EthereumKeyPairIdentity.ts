@@ -31,6 +31,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         return new Wallet(binaryToHex(this.privateKey), primaryProvider) as SignerWithProvider
     }
 
+    /** @internal */
     static fromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): EthereumKeyPairIdentity {
         const privateKey = (config.auth as KeyPairIdentityConfig).privateKey
         const address = (config.auth as KeyPairIdentityConfig).publicKey
