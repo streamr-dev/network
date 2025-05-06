@@ -3,7 +3,6 @@ import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStrea
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import random from 'lodash/random'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -13,7 +12,9 @@ import { PublishMetadata } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { EncryptionType, SignatureType, ContentType } from '@streamr/trackerless-network'
 
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
@@ -44,20 +45,21 @@ describe('MessageFactory', () => {
         groupKeyQueue?: GroupKeyQueue
         erc1271ContractFacade?: ERC1271ContractFacade
     }) => {
-        const authentication = createPrivateKeyAuthentication(wallet.privateKey)
+        const identity = new EthereumKeyPairIdentity(wallet.privateKey)
         return new MessageFactory(
             merge<MessageFactoryOptions>(
                 {
                     streamId: getStreamId(),
-                    authentication,
+                    identity,
                     streamRegistry: createStreamRegistry({
                         partitionCount: PARTITION_COUNT,
                         isPublicStream: false,
                         isStreamPublisher: true
                     }),
-                    groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+                    groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
                     signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
-                    messageSigner: new MessageSigner(authentication)
+                    messageSigner: new MessageSigner(identity),
+                    config: {},
                 },
                 opts
             )
@@ -86,7 +88,7 @@ describe('MessageFactory', () => {
             groupKeyId: GROUP_KEY.id,
             newGroupKey: undefined,
             signature: expect.any(Uint8Array),
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             contentType: ContentType.JSON,
             content: expect.any(Uint8Array)
         })
@@ -179,7 +181,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(wallet.privateKey), GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(new EthereumKeyPairIdentity(wallet.privateKey), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)

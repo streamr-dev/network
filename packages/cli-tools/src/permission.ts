@@ -48,7 +48,7 @@ export const runModifyPermissionsCommand = (
         .addArgument(new Argument('<streamId>'))
         .addArgument(new Argument('<user>'))
         .addArgument(new Argument('<permissions...>').choices(Array.from(PERMISSIONS.keys())))
-        .description(`${modification} permission` +
-            `\n\nNote: use keyword "public" as user to ${modification} a public permission`)
+        .description(`${modification} permission: use keyword "public" as the <user> to ${modification} a public permission. ` +
+            `Valid <permissions...> are: [${Array.from(PERMISSIONS.keys()).join(', ')}]`)
         .parseAsync(process.argv)
 }

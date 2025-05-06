@@ -148,13 +148,7 @@ async function run() {
     }
 
     async function setup(clientOptions, streamOptions) {
-        const account = StreamrClient.generateEthereumAccount()
-        const [client, stream] = await setupClientAndStream({
-            auth: {
-                privateKey: account.privateKey,
-            },
-            ...clientOptions
-        }, streamOptions)
+        const [client, stream] = await setupClientAndStream(clientOptions, streamOptions)
 
         suite.on('complete', () => {
             client.destroy().catch(() => {})

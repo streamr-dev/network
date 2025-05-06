@@ -130,7 +130,7 @@ describe('ERC-1271: subscribe', () => {
         })
         await publisher.publish(streamId, PAYLOAD)
         await until(() => messages.length > 0, TIMEOUT)
-        expect(metadatas[0].signatureType).toEqual('SECP256K1')
+        expect(metadatas[0].signatureType).toEqual('ECDSA_SECP256K1_EVM')
         expect(metadatas[0].encryptionKeyId).toBeString()
         expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
     }, TIMEOUT)

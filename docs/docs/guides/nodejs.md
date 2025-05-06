@@ -8,10 +8,10 @@ This is a quickstart guide on creating your first stream using the Streamr TypeS
 **Prerequisites:**
 -   NPM v8 or greater
 -   NodeJS 18.13.x or greater (version 20 and later ideally)
--   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+-   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 :::tip Key Point:
-If you'd like to test out Streamr without needing `MATIC` to pay for stream creation and access control transactions then you can configure any Streamr app or node to be on Polygon Amoy. 
+If you'd like to test out Streamr without needing `POL` to pay for stream creation and access control transactions then you can configure any Streamr app or node to be on Polygon Amoy. 
 
 Note that streams that are registered on one chain, cannot see or interact with streams on another chain (including the stream mentioned in this guide). 
 
@@ -30,11 +30,10 @@ Having trouble installing the SDK? Maybe our [troubleshooting](../usage/sdk/how-
 ### Initialize the SDK
 ```ts
 // Import Streamr
-const Streamr = require("@streamr/sdk")
 const { StreamrClient } = require('@streamr/sdk')
 
 // Initialize the client with an Ethereum account
-const streamr = new Streamr({
+const streamr = new StreamrClient({
     auth: {
         privateKey: "ethereum-private-key",
     },
@@ -42,18 +41,16 @@ const streamr = new Streamr({
 ```
 
 :::tip Key Point:
-Ethereum accounts are used for authentication on Streamr.
+User identity on Streamr is established via cryptographic keys. An Ethereum account, defined by a private key, is one type of supported identity on Streamr. The private key can be generated with any Ethereum wallet or with tools included in the SDK. 
 
-You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
-
-**Learn more about [authentication](../usage/authenticate)**
+**Learn more about [Identity](../usage/identity.md) on Streamr.**
 :::
 
 ## Create the stream
 A stream is simply a **sequence of data points in time**, i.e. an append only log. This is semantically equivalent to **topics** in traditional pub/sub networks.
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
     id: "/foo/bar",
 })
@@ -81,7 +78,7 @@ const stream = await streamr.getOrCreateStream({
 By default, the creator of the stream has full read, write and manage permissions over the stream, but if you'd like different addresses or public access controls to read and write (publish and subscribe) to your stream, then you'll need to add these permissions.
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
     userId: "0x12345...",
     permissions: [StreamPermission.PUBLISH],
@@ -89,7 +86,7 @@ await stream.grantPermissions({
 ```
 
 :::tip Key Point:
-**Learn more about setting stream permissions in [authenticate](../usage/authenticate).**
+**Learn more about [Identity](../usage/identity.md) or [Stream Permissions](../usage/streams/permissions.md).**
 :::
 
 ## Publish data to the stream
@@ -109,9 +106,9 @@ await stream.publish(msg)
 ```
 
 :::caution Important:
-You must give `PUBLISH` permission to the address you have authenticated `StreamrClient` with **before** publishing data to the stream.
+You must give `PUBLISH` permission to the identity you have authenticated `StreamrClient` with **before** publishing data to the stream.
 
-**Learn more about setting stream permissions in [authentication](../usage/authenticate).**
+**Learn more about [Identity](../usage/identity.md) or [Stream Permissions](../usage/streams/permissions.md).**
 :::
 
 ## Subscribe to the stream

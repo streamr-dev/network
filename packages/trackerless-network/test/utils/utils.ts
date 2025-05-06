@@ -40,7 +40,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
-    simulator: Simulator
+    simulator: Simulator,
+    plumTreeOptimisation?: boolean
 ): Promise<[ DiscoveryLayerNode, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
@@ -60,7 +61,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         connectionLocker: mockCm,
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
-        isLocalNodeEntryPoint: () => false
+        isLocalNodeEntryPoint: () => false,
+        plumTreeOptimisation
     })
     return [discoveryLayerNode, contentDeliveryLayerNode]
 }
@@ -78,11 +80,11 @@ export const createStreamMessage = (
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
         publisherId: toUserIdRaw(publisherId),
-        messageChainId: 'messageChain0',
+        messageChainId: `messageChain0-${publisherId}`,
     }
     const msg: StreamMessage = {
         messageId,
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
         body: {
             oneofKind: 'contentMessage',

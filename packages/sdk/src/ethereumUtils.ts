@@ -2,17 +2,9 @@
  * Config and utilities for interating with identity & Ethereum chain.
  */
 import type { Overrides } from 'ethers'
-import { FeeData, Wallet } from 'ethers'
+import { FeeData } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
 import { RpcProviderSource } from './RpcProviderSource'
-
-export const generateEthereumAccount = (): { address: string, privateKey: string } => {
-    const wallet = Wallet.createRandom()
-    return {
-        address: wallet.address,
-        privateKey: wallet.privateKey,
-    }
-}
 
 /**
  * Apply the gasPriceStrategy to the estimated gas price, if given

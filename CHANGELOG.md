@@ -12,7 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add support for quantum secure key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
+- Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
+- Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 
 #### Changed
@@ -21,6 +22,7 @@ Changes before Tatum release are not documented in this file.
   - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field
   - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite)
   - Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
+- **BREAKING CHANGE**: The string values in `Message.signatureType` now correspond with the `KeyType` values. This means the previously output value `SECP256K1` is now `ECDSA_SECP256K1_EVM`.
 - Renamed `groupKeyId` field `encryptionKeyId` in `Message` interface (https://github.com/streamr-dev/network/pull/3084)
 
 #### Deprecated
@@ -30,6 +32,7 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 - **BREAKING CHANGE**: Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
+- **BREAKING CHANGE**: Remove `StreamrClient.generateEthereumAccount()` in favour of `EthereumKeyPairIdentity.generate()`
 
 #### Fixed
 
@@ -55,7 +58,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- CLI tool allows generating key pairs with `streamr identity generate --key-type [...]` (https://github.com/streamr-dev/network/pull/3074)
+
 #### Changed
+
+- **BREAKING CHANGE**: CLI tool command `streamr wallet whoami` is now `streamr identity whoami` (https://github.com/streamr-dev/network/pull/3074)
 
 #### Deprecated
 
@@ -64,6 +71,16 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [102.1.1] - 2025-04-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Update internal list of JSON RPC urls for Polygon
+
 
 ## [102.1.0] - 2025-02-19
 
@@ -396,7 +413,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.1...HEAD
+[102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
 [102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
 [102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2

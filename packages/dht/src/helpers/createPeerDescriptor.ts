@@ -1,7 +1,4 @@
-import {
-    createSignature,
-    hash
-} from '@streamr/utils'
+import { ECDSA_SECP256K1_EVM } from '@streamr/utils'
 import crypto from 'crypto'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescriptorSignaturePayload'
@@ -20,8 +17,8 @@ const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddre
     // )
     const ipAsBuffer = Buffer.alloc(4)
     ipAsBuffer.writeUInt32BE(ipAddress)
-    const ipHash = hash(ipAsBuffer)
-    const signature = createSignature(ipAsBuffer, privateKey)
+    const ipHash = ECDSA_SECP256K1_EVM.keccakHash(ipAsBuffer)
+    const signature = ECDSA_SECP256K1_EVM.createSignature(ipAsBuffer, privateKey)
     const nodeIdRaw = Buffer.concat([
         ipHash.subarray(ipHash.length - 13, ipHash.length),
         signature.subarray(signature.length - 7, signature.length)
@@ -52,6 +49,6 @@ export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse,
             tls: connectivityResponse.websocket.tls
         }
     }
-    ret.signature = createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
+    ret.signature = ECDSA_SECP256K1_EVM.createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
     return ret
 }

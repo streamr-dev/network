@@ -9,13 +9,12 @@ import { MaintainTopologyService } from '../../../../src/plugins/operator/Mainta
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract } from '../../../utils'
 
 const {
     delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
-    stake
+    stake,
+    unstake
 } = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
@@ -67,11 +66,11 @@ describe('MaintainTopologyService', () => {
     it('happy path', async () => {
         const operatorWallet = await createTestWallet({ gas: true, tokens: true })
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
-        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
+        const sponsorship1 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
+        const sponsorship2 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
+        const operatorContract = await deployTestOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
-        await stake(operatorContract, await sponsorship1.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
         
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
@@ -104,7 +103,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), await stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('10000'))
         await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...await stream1.getStreamParts(),
@@ -112,7 +111,7 @@ describe('MaintainTopologyService', () => {
             ])
         }, 10000, 1000)
 
-        await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
+        await unstake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress())
         await until(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, await stream2.getStreamParts()) && doesNotContainAny(state, await stream1.getStreamParts())

@@ -9,6 +9,6 @@ program
     .command('stream', 'stream subcommands')
     .command('storage-node', 'storage node subcommands')
     .command('mock-data', 'mock data subcommands')
-    .command('wallet', 'wallet subcommands')
+    .command('identity', 'subcommands for keys and wallets')
     .command('internal', 'subcommands for internal use')
     .parse()

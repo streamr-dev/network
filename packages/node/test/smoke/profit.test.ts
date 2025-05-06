@@ -1,11 +1,17 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Operator, Sponsorship } from '@streamr/network-contracts'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Sponsorship, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
-import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
-import { multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
+import {
+    createTestPrivateKey,
+    createTestWallet,
+    getTestAdminWallet,
+    getTestProvider,
+    getTestTokenContract,
+    setupTestOperatorContract
+} from '@streamr/test-utils'
+import { EthereumAddress, multiplyWeiAmount, until, WeiAmount } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
-import { createClient, createTestStream, startBroker } from '../utils'
+import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, startBroker } from '../utils'
 
 /*
  * The test needs these dependencies:
@@ -33,16 +39,11 @@ import { createClient, createTestStream, startBroker } from '../utils'
  */
 
 const {
-    setupOperatorContract,
-    getProvider,
-    deploySponsorshipContract,
     sponsor,
     delegate,
     undelegate,
     stake,
     unstake,
-    getTestTokenContract,
-    getTestAdminWallet
 } = _operatorContractUtils
 
 const SPONSOR_AMOUNT = parseEther('6000')
@@ -70,7 +71,7 @@ describe('profit', () => {
     let delegatorWallet: Wallet & SignerWithProvider
     let sponsorWallet: Wallet & SignerWithProvider
     let operatorNodeWallet: Wallet & SignerWithProvider
-    let operatorContract: Operator
+    let operatorContractAddress: EthereumAddress
     let sponsorshipContract: Sponsorship
 
     const getBalances = async (): Promise<{
@@ -80,14 +81,14 @@ describe('profit', () => {
         admin: WeiAmount
         operatorContract: WeiAmount
     }> => {
-        const dataToken = getTestTokenContract().connect(getProvider())
+        const dataToken = getTestTokenContract().connect(getTestProvider())
         const adminWallet = getTestAdminWallet()
         return {
             operator: await dataToken.balanceOf(operatorWallet.address),
             delegator: await dataToken.balanceOf(delegatorWallet.address),
             sponsor: await dataToken.balanceOf(sponsorWallet.address),
             admin: await dataToken.balanceOf(adminWallet.address),
-            operatorContract: await dataToken.balanceOf(await operatorContract.getAddress()),
+            operatorContract: await dataToken.balanceOf(operatorContractAddress),
         }
     }
 
@@ -97,16 +98,16 @@ describe('profit', () => {
         await client.destroy()
         ;({
             operatorWallet,
-            operatorContract,
+            operatorContractAddress,
             nodeWallets: [operatorNodeWallet]
-        } = await setupOperatorContract({
+        } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercentage: OPERATORS_CUT_PERCENTAGE
             },
-            createTestWallet
+            deployTestOperatorContract
         }))
-        sponsorshipContract = await deploySponsorshipContract({
+        sponsorshipContract = await deployTestSponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet // could be any wallet with gas
@@ -115,7 +116,7 @@ describe('profit', () => {
         delegatorWallet = await createTestWallet({ gas: true, tokens: true })
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
-            streamrConfigABI
+            StreamrConfigABI
         ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setProtocolFeeFraction(parseEther(String(PROTOCOL_FEE_PERCENTAGE / 100)))
         await streamrConfig.setMinimumDelegationSeconds(0)
@@ -124,15 +125,15 @@ describe('profit', () => {
     it('happy path', async () => {
         const beforeBalances = await getBalances()
         await sponsor(sponsorWallet, await sponsorshipContract.getAddress(), SPONSOR_AMOUNT)
-        await delegate(operatorWallet, await operatorContract.getAddress(), OPERATOR_DELEGATED_AMOUNT)
-        await delegate(delegatorWallet, await operatorContract.getAddress(), EXTERNAL_DELEGATED_AMOUNT)
-        await stake(operatorContract, await sponsorshipContract.getAddress(), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
+        await delegate(operatorWallet, operatorContractAddress, OPERATOR_DELEGATED_AMOUNT)
+        await delegate(delegatorWallet, operatorContractAddress, EXTERNAL_DELEGATED_AMOUNT)
+        await stake(operatorWallet, operatorContractAddress, await sponsorshipContract.getAddress(), TOTAL_DELEGATED)
  
         const broker = await startBroker({
             privateKey: operatorNodeWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: await operatorContract.getAddress(),
+                    operatorContractAddress: operatorContractAddress,
                     maintainOperatorValue: {
                         intervalInMs: 500,
                         withdrawLimitSafetyFraction: 1
@@ -152,15 +153,15 @@ describe('profit', () => {
         })
         await broker.stop()
 
-        await unstake(operatorContract, await sponsorshipContract.getAddress())
+        await unstake(operatorWallet, operatorContractAddress, await sponsorshipContract.getAddress())
         await undelegate(
             delegatorWallet,
-            operatorContract,
+            operatorContractAddress,
             EXTERNAL_DELEGATED_AMOUNT + DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS
         )
         await undelegate(
             operatorWallet,
-            operatorContract,
+            operatorContractAddress,
             OPERATOR_DELEGATED_AMOUNT + OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS + PROFIT_INACCURACY
         )
         const afterBalances = await getBalances()

@@ -22,6 +22,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
+import { PlumTreeManager } from './plumtree/PlumTreeManager'
 
 type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNodeOptions,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
@@ -34,6 +35,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         neighborUpdateInterval?: number
         maxPropagationBufferSize?: number
         doNotBufferWhileConnecting?: boolean
+        plumTreeOptimisation?: boolean
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
@@ -64,6 +66,11 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         localPeerDescriptor: options.localPeerDescriptor,
         streamPartId: options.streamPartId,
+        rpcCommunicator
+    }) : undefined
+    const plumTreeManager = options.plumTreeOptimisation ? new PlumTreeManager({
+        neighbors,
+        localPeerDescriptor: options.localPeerDescriptor,
         rpcCommunicator
     }) : undefined
     const propagation = options.propagation ?? new Propagation({
@@ -137,7 +144,8 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
         nodeViewSize: maxContactCount,
         proxyConnectionRpcLocal,
         inspector,
-        temporaryConnectionRpcLocal
+        temporaryConnectionRpcLocal,
+        plumTreeManager
     }
 }
 

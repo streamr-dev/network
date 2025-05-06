@@ -61,8 +61,18 @@ const config: Config = {
         mergeReadme: false,
         readme: "none"
       },
-
-    ]
+    ],
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        createRedirects(existingPath) {
+          if (existingPath === '/usage/identity') {
+            return ['/usage/authenticate'];
+          }
+          return [];
+        },
+      },
+    ],
   ],
 
   presets: [
@@ -126,7 +136,7 @@ const config: Config = {
             },
             {
               label: "Usage",
-              to: "usage/authenticate",
+              to: "usage/identity",
             },
             {
               label: "Streamr Network",

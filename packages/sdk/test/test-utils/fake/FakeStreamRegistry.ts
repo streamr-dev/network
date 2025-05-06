@@ -1,7 +1,7 @@
 import { Methods } from '@streamr/test-utils'
 import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
+import { Identity, IdentityInjectionToken } from '../../../src/identity/Identity'
 import { Stream } from '../../../src/Stream'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamMetadata } from '../../../src/StreamMetadata'
@@ -22,23 +22,23 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     
     constructor(
         chain: FakeChain,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication
+        @inject(IdentityInjectionToken) identity: Identity
     ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
-        this.authentication = authentication
+        this.identity = identity
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser = await this.authentication.getUserId()
+        const authenticatedUser = await this.identity.getUserId()
         const permissions = new Multimap<UserID, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {

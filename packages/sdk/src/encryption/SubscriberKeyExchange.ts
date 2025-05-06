@@ -1,12 +1,12 @@
 import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { MessageID } from '../protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -16,11 +16,10 @@ import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { RSAKeyPair } from './RSAKeyPair'
 import { EncryptionUtil } from './EncryptionUtil'
-import { MLKEMKeyPair } from './MLKEMKeyPair'
-import { AsymmetricEncryptionType, GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
+import { createCompliantExchangeKeys } from '../utils/encryptionCompliance'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -39,7 +38,7 @@ export class SubscriberKeyExchange {
     private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
     private readonly subscriber: Subscriber
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => Promise<void>
@@ -52,7 +51,7 @@ export class SubscriberKeyExchange {
         store: LocalGroupKeyStore,
         subscriber: Subscriber,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
@@ -61,14 +60,10 @@ export class SubscriberKeyExchange {
         this.messageSigner = messageSigner
         this.store = store
         this.subscriber = subscriber
-        this.authentication = authentication
+        this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            if (config.encryption.requireQuantumResistantKeyExchange) {
-                this.keyPair = MLKEMKeyPair.create()
-            } else {
-                this.keyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
-            }
+            this.keyPair = await createCompliantExchangeKeys(identity, config)
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
@@ -115,14 +110,14 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
+                erc1271contract === undefined ? await this.identity.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: GroupKeyRequest.toBinary(request),
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
-        }, erc1271contract === undefined ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
+        }, erc1271contract === undefined ? this.identity.getSignatureType() : SignatureType.ERC_1271)
 
         return { message, request }
     }
@@ -150,9 +145,9 @@ export class SubscriberKeyExchange {
 
     private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.authentication.getUserId()
+            const myId = await this.identity.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
+            return (recipientId === myId) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }
         return false
     }
