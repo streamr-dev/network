@@ -67,9 +67,9 @@ describe('ERC-1271: publish', () => {
             await until(() => messages.length > 0, TIMEOUT)
             expect(metadatas[0].signatureType).toEqual('ERC_1271')
             if (publicOrPrivate === 'public') {
-                expect(metadatas[0].groupKeyId).toEqual(undefined)
+                expect(metadatas[0].encryptionKeyId).toEqual(undefined)
             } else {
-                expect(metadatas[0].groupKeyId).toBeString()
+                expect(metadatas[0].encryptionKeyId).toBeString()
             }
             expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
         }, TIMEOUT)
@@ -131,7 +131,7 @@ describe('ERC-1271: subscribe', () => {
         await publisher.publish(streamId, PAYLOAD)
         await until(() => messages.length > 0, TIMEOUT)
         expect(metadatas[0].signatureType).toEqual('ECDSA_SECP256K1_EVM')
-        expect(metadatas[0].groupKeyId).toBeString()
+        expect(metadatas[0].encryptionKeyId).toBeString()
         expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
     }, TIMEOUT)
 })
@@ -192,7 +192,7 @@ describe('ERC-1271: publish and subscribe', () => {
         await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271PublisherContractAddress })
         await until(() => messages.length > 0, TIMEOUT)
         expect(metadatas[0].signatureType).toEqual('ERC_1271')
-        expect(metadatas[0].groupKeyId).toBeString()
+        expect(metadatas[0].encryptionKeyId).toBeString()
         expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
     }, TIMEOUT)
 })
