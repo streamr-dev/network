@@ -22,9 +22,9 @@ Changes before Tatum release are not documented in this file.
 - **BREAKING CHANGE**: Browser exports improved, but polyfills now required
   - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field
   - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite)
-
-  Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
+  - Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
 - **BREAKING CHANGE**: The string values in `Message.signatureType` now correspond with the `KeyType` values. This means the previously output value `SECP256K1` is now `ECDSA_SECP256K1_EVM`.
+- **BREAKING CHANGE**: Rename `groupKeyId` field `encryptionKeyId` in `Message` interface (https://github.com/streamr-dev/network/pull/3084)
 
 #### Deprecated
 
