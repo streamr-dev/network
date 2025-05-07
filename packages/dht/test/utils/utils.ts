@@ -75,7 +75,7 @@ export const createMockConnectionDhtNode = async (
     simulator: Simulator,
     nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: undefined,
-    maxConnections = 80,
+    maxConnections?: undefined,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
@@ -91,7 +91,7 @@ export const createMockConnectionDhtNode = async (
         connectionsView: mockConnectionManager,
         connectionLocker: mockConnectionManager,
         numberOfNodesPerKBucket,
-        maxConnections: maxConnections,
+        maxConnections,
         dhtJoinTimeout,
         rpcRequestTimeout: 5000
     }

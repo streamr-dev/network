@@ -9,7 +9,6 @@ import { DataEntry, PeerDescriptor } from '../../generated/packages/dht/protos/D
 
 const DATA = createMockDataEntry()
 const NUM_NODES = 100
-const MAX_CONNECTIONS = 80
 const ENTRY_POINT_INDEX = 0
 
 const getDataEntries = (node: DhtNode): DataEntry[] => {
@@ -25,7 +24,7 @@ describe('Replicate data from node to node in DHT', () => {
     const simulator = new Simulator(LatencyType.FIXED, 20)
 
     beforeEach(async () => {
-        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress(), undefined, MAX_CONNECTIONS)
+        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
         await entryPoint.joinDht([entryPointDescriptor])
         nodes = []
@@ -34,8 +33,7 @@ describe('Replicate data from node to node in DHT', () => {
             const node = await createMockConnectionDhtNode(
                 simulator,
                 randomDhtAddress(),
-                undefined,
-                MAX_CONNECTIONS
+                undefined
             )
             nodes.push(node)
         }
