@@ -22,7 +22,6 @@ describe('Find correctness', () => {
             const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
-        await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
     }, 90000)
 
