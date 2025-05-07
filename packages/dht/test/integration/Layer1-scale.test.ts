@@ -1,10 +1,9 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT } from '../../src/dht/DhtNode'
 import { toDhtAddress } from '../../src/identifiers'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
 
 const NODE_COUNT = 48
-const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1', () => {
 
@@ -46,7 +45,7 @@ describe('Layer1', () => {
         const layer1Nodes: DhtNode[] = []
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0 = nodes[i]
-            const layer1 = await createMockConnectionLayer1Node(layer0, undefined, NUM_OF_NODES_PER_KBUCKET)
+            const layer1 = await createMockConnectionLayer1Node(layer0, undefined, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT)
             layer1Nodes.push(layer1)
             layer1CleanUp.push(layer1)
         }
@@ -58,7 +57,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
             expect(layer1Node.getConnectionsView().getConnectionCount()).toEqual(layer0Node.getConnectionsView().getConnectionCount())
-            expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
             expect(layer1Node.getConnectionsView().getConnections()).toEqual(layer0Node.getConnectionsView().getConnections())
         }
     }, 120000)

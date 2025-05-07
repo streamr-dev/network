@@ -1,4 +1,4 @@
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -102,7 +102,7 @@ export const createMockConnectionDhtNode = async (
 export const createMockConnectionLayer1Node = async (
     layer0Node: DhtNode,
     serviceId?: string,
-    numberOfNodesPerKBucket = 8
+    numberOfNodesPerKBucket = NUMBER_OF_NODES_PER_KBUCKET_DEFAULT
 ): Promise<DhtNode> => {
     const descriptor: PeerDescriptor = {
         nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
