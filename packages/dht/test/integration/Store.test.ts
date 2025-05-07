@@ -23,7 +23,6 @@ describe('Storing data in DHT', () => {
         entryPoint = await createMockConnectionDhtNode(simulator)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
-        nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
