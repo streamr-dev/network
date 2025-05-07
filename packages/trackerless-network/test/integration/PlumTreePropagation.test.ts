@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 24
+    const NUM_OF_NODES = 32
     let simulator: Simulator
 
     beforeEach(async () => {

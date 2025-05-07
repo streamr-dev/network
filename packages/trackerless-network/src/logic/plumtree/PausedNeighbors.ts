@@ -1,15 +1,19 @@
 import { DhtAddress } from '@streamr/dht'
-
 export class PausedNeighbors {
     private readonly pausedNeighbors: Map<string, Set<DhtAddress>>
+    private readonly limit: number
 
-    constructor() {
+    constructor(limit: number) {
         this.pausedNeighbors = new Map()
+        this.limit = limit
     }
 
     add(node: DhtAddress, msgChainId: string): void {
         if (!this.pausedNeighbors.has(msgChainId)) {
             this.pausedNeighbors.set(msgChainId, new Set())
+        }
+        if (this.pausedNeighbors.get(msgChainId)!.size >= this.limit) {
+            return
         }
         this.pausedNeighbors.get(msgChainId)!.add(node)
     }
@@ -36,5 +40,11 @@ export class PausedNeighbors {
         }
         return this.pausedNeighbors.get(msgChainId)!.has(node)
     }
+    
+    forEach(fn: (neighbors: Set<DhtAddress>, msgChainId: string) => void): void {
+        this.pausedNeighbors.forEach((neighbors, msgChainId) => {
+            fn(neighbors, msgChainId)
+        })
+    }   
     
 }
