@@ -6,7 +6,6 @@ import { randomDhtAddress, toDhtAddress } from '../../src/identifiers'
 import { wait } from '@streamr/utils'
 
 const NUM_NODES = 5
-const MAX_CONNECTIONS = 5
 
 describe('Storing data in DHT', () => {
 
@@ -19,12 +18,10 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        const entryPoint = await createMockConnectionDhtNode(simulator,
-            randomDhtAddress(), undefined, MAX_CONNECTIONS)
+        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, 
-                undefined, undefined, MAX_CONNECTIONS, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, undefined, undefined, 60000)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
