@@ -20,12 +20,11 @@ import {
     IWebsocketClientConnectorRpc
 } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { Any } from '../../generated/google/protobuf/any'
-import { wait, until } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
