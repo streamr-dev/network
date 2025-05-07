@@ -74,7 +74,7 @@ export const createMockRingNode = async (
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
     nodeId?: DhtAddress,
-    numberOfNodesPerKBucket?: number,
+    numberOfNodesPerKBucket?: undefined,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {

@@ -5,7 +5,6 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { toDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 
 const NUM_NODES = 100
-const K = 8
 
 describe('Find correctness', () => {
 
@@ -16,11 +15,11 @@ describe('Find correctness', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, undefined, K)
+        entryPoint = await createMockConnectionDhtNode(simulator, undefined)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, K, 15, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, undefined, 15, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])
