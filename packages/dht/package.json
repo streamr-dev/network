@@ -54,7 +54,7 @@
     "node-datachannel": "^0.26.0",
     "uuid": "^11.1.0",
     "websocket": "^1.0.34",
-    "ws": "^8.18.1"
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",

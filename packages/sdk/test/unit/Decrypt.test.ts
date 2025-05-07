@@ -43,7 +43,7 @@ describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
         const wallet = await createTestWallet()
-        const groupKeyManager = await createGroupKeyManager(undefined, new EthereumKeyPairIdentity(wallet.privateKey))
+        const groupKeyManager = await createGroupKeyManager(undefined, EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey))
         const destroySignal = new DestroySignal()
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

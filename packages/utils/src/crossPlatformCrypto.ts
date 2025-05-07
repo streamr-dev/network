@@ -1,5 +1,7 @@
 import crypto from 'crypto'
 
+declare const window: any
+
 export function getSubtle(): crypto.webcrypto.SubtleCrypto {
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : crypto.webcrypto.subtle
     if (!subtle) {

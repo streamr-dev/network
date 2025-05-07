@@ -1,3 +1,3 @@
-export { createBroker, Broker } from './broker'
-export { Config } from './config/config'
-export { StreamrClientConfig } from '@streamr/sdk'
+export { createBroker, type Broker } from './broker'
+export type { Config } from './config/config'
+export type { StreamrClientConfig } from '@streamr/sdk'

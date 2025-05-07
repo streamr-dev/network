@@ -184,7 +184,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
      * Removes connections if there are more than maxConnections: in that case we remove unlocked connections
      * which hasn't been used within maxIdleTime.
      */
-    public garbageCollectConnections(maxConnections: number, maxIdleTime: number): void {
+    private garbageCollectConnections(maxConnections: number, maxIdleTime: number): void {
         if (this.endpoints.size <= maxConnections) {
             return
         }

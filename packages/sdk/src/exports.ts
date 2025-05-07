@@ -1,65 +1,68 @@
 /**
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
-export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
+export { StreamrClient, type SubscribeOptions, type ExtraSubscribeOptions } from './StreamrClient'
 export { Stream } from './Stream'
-export { StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
-export { Message, MessageMetadata, MessageSignatureType } from './Message'
-export { StreamrClientEvents } from './events'
-export { PublishMetadata } from './publish/Publisher'
-export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
+export { type StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'
+export type { Message, MessageMetadata, MessageSignatureType } from './Message'
+export type { StreamrClientEvents } from './events'
+export type { PublishMetadata } from './publish/Publisher'
+export { Subscription, type SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
-export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
-export { GapFillStrategy } from './subscribe/ordering/GapFiller'
+export type { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
+export type { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
-    PermissionQuery,
-    UserPermissionQuery,
-    PublicPermissionQuery,
-    PermissionAssignment,
-    UserPermissionAssignment,
-    PublicPermissionAssignment
+    type PermissionQuery,
+    type UserPermissionQuery,
+    type PublicPermissionQuery,
+    type PermissionAssignment,
+    type UserPermissionAssignment,
+    type PublicPermissionAssignment
 } from './permission'
-export { StreamCreationEvent } from './contracts/StreamRegistry'
-export { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
-export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
+export type { StreamCreationEvent } from './contracts/StreamRegistry'
+export type { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
+export type { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
+export type { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
-    StreamrClientConfig,
-    ConnectionInfo,
-    EthereumNetworkConfig,
-    IdentityConfig,
-    KeyPairIdentityConfig,
-    EthereumProviderIdentityConfig,
-    CustomIdentityConfig,
+    type StreamrClientConfig,
+    type ConnectionInfo,
+    type EthereumNetworkConfig,
+    type IdentityConfig,
+    type KeyPairIdentityConfig,
+    type EthereumProviderIdentityConfig,
+    type CustomIdentityConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAMR_STORAGE_NODE_ADDRESS,
-    NetworkConfig,
-    ControlLayerConfig,
-    NetworkNodeConfig,
-    NetworkPeerDescriptor,
-    ConnectivityMethod,
+    type NetworkConfig,
+    type ControlLayerConfig,
+    type NetworkNodeConfig,
+    type NetworkPeerDescriptor,
+    type ConnectivityMethod,
     NetworkNodeType,
-    StrictStreamrClientConfig,
-    EnvironmentId,
+    type StrictStreamrClientConfig,
+    type EnvironmentId,
     ENVIRONMENT_IDS,
     DEFAULT_ENVIRONMENT_ID,
-    EntryPointDiscovery
+    type EntryPointDiscovery
 } from './Config'
-export { validKeyTypeValues, KeyType, DEFAULT_KEY_TYPE, IdentityMapping } from './identity/IdentityMapping'
+
+export { DEFAULT_KEY_TYPE } from './identity/IdentityMapping'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-export { StreamDefinition } from './types'
+export type { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
+export type { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
-export { Identity, SignerWithProvider } from './identity/Identity'
+export { Identity, type SignerWithProvider } from './identity/Identity'
+export { KeyPairIdentity } from './identity/KeyPairIdentity'
 export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
-export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
 export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
+export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
+export { ECDSAKeyPairIdentity } from './identity/ECDSAKeyPairIdentity'
 export { RpcProviderSource } from './RpcProviderSource'
 
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
-export { DhtAddress } from '@streamr/dht'
+export type { DhtAddress } from '@streamr/dht'
 export { ContentType, EncryptedGroupKey, EncryptionType,
     ProxyDirection, SignatureType } from '@streamr/trackerless-network'
 export type { 
@@ -67,6 +70,7 @@ export type {
     StreamPartID,
     BrandedString,
     EthereumAddress,
+    KeyType,
     LogLevel,
     Metric,
     MetricsContext,
@@ -81,19 +85,19 @@ export { MessageID } from './protocol/MessageID'
 export { MessageRef } from './protocol/MessageRef'
 export {
     StreamMessage,
-    StreamMessageAESEncrypted,
-    StreamMessageOptions,
+    type StreamMessageAESEncrypted,
+    type StreamMessageOptions,
     StreamMessageType
 } from './protocol/StreamMessage'
 
 // These are exported for the internal Operator class
 export {
     Operator,
-    OperatorEvents,
-    StakeEvent,
-    ReviewRequestEvent,
-    GetOperatorSponsorshipsResult,
-    Flag
+    type OperatorEvents,
+    type StakeEvent,
+    type ReviewRequestEvent,
+    type GetOperatorSponsorshipsResult,
+    type Flag
 } from './contracts/Operator'
 import {
     delegate,

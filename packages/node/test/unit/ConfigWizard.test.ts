@@ -1264,7 +1264,7 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).toMatch(/has 0\.09 matic/i)
+        expect(summary).toMatch(/has 0\.09 POL/i)
 
         expect(summary).toMatch(/you'll need to fund it with/i)
     })
@@ -1284,7 +1284,7 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).toMatch(/has 0\.11 matic/i)
+        expect(summary).toMatch(/has 0\.11 POL/i)
 
         expect(summary).not.toMatch(/you'll need to fund it with/i)
     })
@@ -1309,7 +1309,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/failed to fetch node's balance/i)
 
-        expect(summary).not.toMatch(/has \d+.\d+ matic/i)
+        expect(summary).not.toMatch(/has \d+.\d+ POL/i)
 
         expect(summary).not.toMatch(/you'll need to fund it with/i)
     })

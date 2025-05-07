@@ -15,7 +15,7 @@ import { StreamDefinition } from '../types'
 import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date

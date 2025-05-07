@@ -45,7 +45,7 @@ describe('MessageFactory', () => {
         groupKeyQueue?: GroupKeyQueue
         erc1271ContractFacade?: ERC1271ContractFacade
     }) => {
-        const identity = new EthereumKeyPairIdentity(wallet.privateKey)
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey)
         return new MessageFactory(
             merge<MessageFactoryOptions>(
                 {
@@ -181,7 +181,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(new EthereumKeyPairIdentity(wallet.privateKey), GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)

@@ -1,30 +1,28 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT } from '../../src/dht/DhtNode'
 import { toDhtAddress } from '../../src/identifiers'
 import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
-
-const NUM_OF_NODES_PER_KBUCKET = 8
 
 const runTest = async (latencyType: LatencyType) => {
     const simulator = new Simulator(latencyType)
     const entrypointDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
-    const entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(entrypointDescriptor.nodeId), NUM_OF_NODES_PER_KBUCKET)
+    const entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(entrypointDescriptor.nodeId))
     const nodes: DhtNode[] = []
     for (let i = 1; i < 100; i++) {
-        const node = await createMockConnectionDhtNode(simulator, undefined, NUM_OF_NODES_PER_KBUCKET)
+        const node = await createMockConnectionDhtNode(simulator, undefined)
         nodes.push(node)
     }
 
     await entryPoint.joinDht([entrypointDescriptor])
     await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
     nodes.forEach((node) => {
-        expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
-        expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+        expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
+        expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
     })
-    expect(entryPoint.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+    expect(entryPoint.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
 
     await Promise.all([
         entryPoint.stop(),
