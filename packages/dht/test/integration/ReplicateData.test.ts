@@ -30,11 +30,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes = []
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(
-                simulator,
-                randomDhtAddress(),
-                undefined
-            )
+            const node = await createMockConnectionDhtNode(simulator, randomDhtAddress())
             nodes.push(node)
         }
     }, 60000)

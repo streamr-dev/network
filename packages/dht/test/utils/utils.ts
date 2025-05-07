@@ -73,10 +73,7 @@ export const createMockRingNode = async (
 
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
-    nodeId?: DhtAddress,
-    numberOfNodesPerKBucket?: undefined,
-    maxConnections?: undefined,
-    dhtJoinTimeout?: undefined
+    nodeId?: DhtAddress
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
         nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
@@ -90,9 +87,6 @@ export const createMockConnectionDhtNode = async (
         transport: mockConnectionManager,
         connectionsView: mockConnectionManager,
         connectionLocker: mockConnectionManager,
-        numberOfNodesPerKBucket,
-        maxConnections,
-        dhtJoinTimeout,
         rpcRequestTimeout: 5000
     }
     const node = new class extends DhtNode {
