@@ -1,15 +1,22 @@
 import { DhtAddress } from '@streamr/dht'
+import { Logger } from '@streamr/utils'
 
+const logger = new Logger(module)
 export class PausedNeighbors {
     private readonly pausedNeighbors: Map<string, Set<DhtAddress>>
+    private readonly limit: number
 
-    constructor() {
+    constructor(limit: number) {
         this.pausedNeighbors = new Map()
+        this.limit = limit
     }
 
     add(node: DhtAddress, msgChainId: string): void {
         if (!this.pausedNeighbors.has(msgChainId)) {
             this.pausedNeighbors.set(msgChainId, new Set())
+        }
+        if (this.pausedNeighbors.get(msgChainId)!.size >= this.limit) {
+            return
         }
         this.pausedNeighbors.get(msgChainId)!.add(node)
     }
