@@ -7,7 +7,6 @@ import { StreamPartIDUtils, until, wait } from '@streamr/utils'
 import { randomUserId } from '@streamr/test-utils'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { create } from 'lodash'
 
 describe('PlumTreeManager', () => {
 
@@ -113,5 +112,3 @@ describe('PlumTreeManager', () => {
     })
 
 })
-
-

@@ -1,7 +1,4 @@
 import { DhtAddress } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
-
-const logger = new Logger(module)
 export class PausedNeighbors {
     private readonly pausedNeighbors: Map<string, Set<DhtAddress>>
     private readonly limit: number

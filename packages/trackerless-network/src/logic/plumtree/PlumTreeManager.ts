@@ -66,7 +66,6 @@ export class PlumTreeManager extends EventEmitter<Events> {
         if (this.neighbors.has(toNodeId(node)) && !this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)) {
             logger.debug(`Pausing neighbor ${toNodeId(node)}`)
             this.remotePausedNeighbors.add(toNodeId(node), msgChainId)
-            console.log(this.remotePausedNeighbors, this.localPausedNeighbors, this.neighbors.getAll().map((node) => toNodeId(node.getPeerDescriptor())))
             const remote = this.createRemote(node)
             await remote.pauseNeighbor(msgChainId)
         }
