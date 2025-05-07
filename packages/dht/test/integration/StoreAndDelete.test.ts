@@ -7,7 +7,6 @@ import { wait } from '@streamr/utils'
 
 const NUM_NODES = 5
 const MAX_CONNECTIONS = 5
-const K = 4
 
 describe('Storing data in DHT', () => {
 
@@ -21,11 +20,11 @@ describe('Storing data in DHT', () => {
     beforeEach(async () => {
         nodes = []
         const entryPoint = await createMockConnectionDhtNode(simulator,
-            randomDhtAddress(), K, MAX_CONNECTIONS)
+            randomDhtAddress(), undefined, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator, 
-                undefined, K, MAX_CONNECTIONS, 60000)
+                undefined, undefined, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))

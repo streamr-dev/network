@@ -7,7 +7,6 @@ import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/
 
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 20
-const K = 4
 
 describe('Storing data in DHT', () => {
 
@@ -23,13 +22,13 @@ describe('Storing data in DHT', () => {
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
-            undefined, K, MAX_CONNECTIONS)
+            undefined, undefined, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator,
-                undefined, K, MAX_CONNECTIONS, 60000)
+                undefined, undefined, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
