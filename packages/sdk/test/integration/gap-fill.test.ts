@@ -39,7 +39,7 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        const identity = new EthereumKeyPairIdentity(publisherWallet.privateKey)
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
             identity,
             streamId: stream.id,

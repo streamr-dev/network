@@ -1,4 +1,4 @@
-import { toEthereumAddress, toUserIdRaw, ECDSA_SECP256K1_EVM, SigningUtil } from '@streamr/utils'
+import { toEthereumAddress, toUserIdRaw, SigningUtil } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { StreamMessage } from '../protocol/StreamMessage'
@@ -6,12 +6,14 @@ import { StreamrClientError } from '../StreamrClientError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
-import { IdentityMapping } from '../identity/IdentityMapping'
+import { IDENTITY_MAPPING } from '../identity/IdentityMapping'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
-    Object.values(IdentityMapping).map((config) => [config.signatureType, config.signingUtil])
+    IDENTITY_MAPPING.map((idMapping) => [idMapping.signatureType, SigningUtil.getInstance(idMapping.keyType)])
 )
+
+const evmSigner = SigningUtil.getInstance('ECDSA_SECP256K1_EVM')
 
 @scoped(Lifecycle.ContainerScoped)
 export class SignatureValidator {
@@ -52,7 +54,7 @@ export class SignatureValidator {
 
         // Special handling: different payload computation, same SigningUtil
         if (streamMessage.signatureType === SignatureType.ECDSA_SECP256K1_LEGACY) {
-            return ECDSA_SECP256K1_EVM.verifySignature(
+            return evmSigner.verifySignature(
                 // publisherId is hex encoded Ethereum address string
                 toUserIdRaw(streamMessage.getPublisherId()),
                 createLegacySignaturePayload(streamMessage),

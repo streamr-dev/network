@@ -46,15 +46,18 @@ export {
     DEFAULT_ENVIRONMENT_ID,
     type EntryPointDiscovery
 } from './Config'
-export { validKeyTypeValues, type KeyType, DEFAULT_KEY_TYPE, IdentityMapping } from './identity/IdentityMapping'
+
+export { DEFAULT_KEY_TYPE } from './identity/IdentityMapping'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export type { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export type { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { Identity, type SignerWithProvider } from './identity/Identity'
+export { KeyPairIdentity } from './identity/KeyPairIdentity'
 export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
-export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
 export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
+export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
+export { ECDSAKeyPairIdentity } from './identity/ECDSAKeyPairIdentity'
 export { RpcProviderSource } from './RpcProviderSource'
 
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
@@ -67,6 +70,7 @@ export type {
     StreamPartID,
     BrandedString,
     EthereumAddress,
+    KeyType,
     LogLevel,
     Metric,
     MetricsContext,

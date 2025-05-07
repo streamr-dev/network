@@ -14,6 +14,7 @@ Changes before Tatum release are not documented in this file.
 
 - Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 - Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
+- Add support for ECDSA on secp256r1 curve (https://github.com/streamr-dev/network/pull/3088)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 
 #### Changed

@@ -39,7 +39,7 @@ describe('Resends', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()
-        const identity = new EthereumKeyPairIdentity(publisherPrivateKey)
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(publisherPrivateKey)
         messageFactory = new MessageFactory({
             identity,
             streamId: stream.id,

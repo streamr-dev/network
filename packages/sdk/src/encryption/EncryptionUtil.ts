@@ -5,8 +5,7 @@ import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
-import { binaryToUtf8 } from '@streamr/utils'
-import { getSubtle } from '../utils/crossPlatformCrypto'
+import { binaryToUtf8, getSubtle } from '@streamr/utils'
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 

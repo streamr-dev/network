@@ -70,7 +70,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        const publisherIdentity = new EthereumKeyPairIdentity(publisherWallet.privateKey)
+        const publisherIdentity = EthereumKeyPairIdentity.fromPrivateKey(publisherWallet.privateKey)
         messageSigner = new MessageSigner(publisherIdentity)
     })
 

@@ -41,7 +41,7 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const messageSigner = new MessageSigner(new EthereumKeyPairIdentity(publisher.privateKey))
+        const messageSigner = new MessageSigner(EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey))
         return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,
@@ -87,7 +87,7 @@ describe('messagePipeline', () => {
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
                 config,
-                new EthereumKeyPairIdentity(publisher.privateKey),
+                EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey),
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),

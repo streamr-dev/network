@@ -1,35 +1,35 @@
-import { binaryToHex, MlDsa87, UserIDRaw } from '@streamr/utils'
-import { MLDSAKeyPairIdentity } from '../../src/identity/MLDSAKeyPairIdentity'
+import { binaryToHex, EcdsaSecp256r1 } from '@streamr/utils'
+import { ECDSAKeyPairIdentity } from '../../src/identity/ECDSAKeyPairIdentity'
 
-const signingUtil = new MlDsa87()
+const signingUtil = new EcdsaSecp256r1()
 
-describe('MLDSAKeyPairIdentity', () => {
+describe('ECDSAKeyPairIdentity', () => {
 
     describe('fromConfig', () => {
         it('can be created without 0x prefix on public and private key', async () => {
             const keyPair = signingUtil.generateKeyPair()
         
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey),
                     privateKey: binaryToHex(keyPair.privateKey),
                 }
-            })).not.toThrow()
+            })
         })
         it('can be created with 0x prefix on public and private key', async () => {
             const keyPair = signingUtil.generateKeyPair()
         
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey, true),
                     privateKey: binaryToHex(keyPair.privateKey, true),
                 }
-            })).not.toThrow()
+            })
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
             const keyPair = signingUtil.generateKeyPair()
 
-            expect(() => MLDSAKeyPairIdentity.fromConfig({
+            expect(() => ECDSAKeyPairIdentity.fromConfig({
                 auth: {
                     publicKey: binaryToHex(keyPair.publicKey).replace('b', 'd'),
                     privateKey: binaryToHex(keyPair.privateKey),
@@ -42,11 +42,9 @@ describe('MLDSAKeyPairIdentity', () => {
 
         it('creates correct signatures', async () => {
             const payload = Buffer.from('data-to-sign')
-            const keyPair = signingUtil.generateKeyPair()
-
-            const identity = new MLDSAKeyPairIdentity(keyPair.publicKey, keyPair.privateKey)
+            const identity = ECDSAKeyPairIdentity.generate()
             const signature = await identity.createMessageSignature(payload)
-            expect(await signingUtil.verifySignature(keyPair.publicKey as UserIDRaw, payload, signature)).toBe(true)
+            expect(await signingUtil.verifySignature(await identity.getUserIdRaw(), payload, signature)).toBe(true)
         })
     })
 })

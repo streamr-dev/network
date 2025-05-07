@@ -43,7 +43,6 @@ export { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 export { filePathToNodeFormat } from './filePathToNodeFormat'
 export { retry } from './retry'
 export { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-export { ECDSA_SECP256K1_EVM, ML_DSA_87, type SigningUtil } from './signingUtils'
 export { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 export { MapWithTtl } from './MapWithTtl'
 export { type StreamID, toStreamID, StreamIDUtils } from './StreamID'
@@ -53,3 +52,5 @@ export { type UserID, type UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEt
 export type { HexString } from './HexString'
 export type { ChangeFieldType, MapKey } from './types'
 export { type WeiAmount, multiplyWeiAmount } from './WeiAmount'
+export { getSubtle } from './crossPlatformCrypto'
+export { SigningUtil, EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, type KeyType, KEY_TYPES } from './SigningUtil'
