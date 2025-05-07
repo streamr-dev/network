@@ -86,7 +86,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         if (this.neighbors.size() > 0) {
             this.remotePausedNeighbors.forEach((pausedNeighbors, msgChainId) => {
                 if (pausedNeighbors.size >= this.neighbors.size()) {
-                    logger.warn('All neighbors are paused, resuming first neighbor')
+                    logger.debug('All neighbors are paused, resuming first neighbor')
                     const neighborToResume = this.neighbors.getFirst([])!.getPeerDescriptor()
                     setImmediate(() => this.resumeNeighbor(
                         neighborToResume,
