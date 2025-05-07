@@ -1,9 +1,8 @@
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT } from '../../src/dht/DhtNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_ID = 'stream'
 const NUM_OF_NODES = 16
-const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
 
@@ -37,8 +36,7 @@ describe('Layer1 Scale', () => {
 
         for (let i = 1; i < NUM_OF_NODES; i++) {
             const node = new DhtNode({ 
-                entryPoints: [epPeerDescriptor],
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
+                entryPoints: [epPeerDescriptor]
             })
             await node.start()
             layer0Nodes.push(node)
@@ -48,8 +46,7 @@ describe('Layer1 Scale', () => {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getLocalPeerDescriptor(),
                 serviceId: STREAM_ID,
-                rpcRequestTimeout: 5000,
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
+                rpcRequestTimeout: 5000
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -67,10 +64,10 @@ describe('Layer1 Scale', () => {
 
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT - 1)
         })
         layer1Nodes.forEach((node) => {
-            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
         })
     })
 })

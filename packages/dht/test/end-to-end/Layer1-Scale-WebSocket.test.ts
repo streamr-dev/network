@@ -1,9 +1,8 @@
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, NUMBER_OF_NODES_PER_KBUCKET_DEFAULT } from '../../src/dht/DhtNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_ID = 'stream'
 const NUM_OF_NODES = 16
-const NUM_OF_NODES_PER_KBUCKET = 8
 const WEBSOCKET_PORT_RANGE = { min: 62200, max: 62200 + NUM_OF_NODES }
 
 describe('Layer1 Scale', () => {
@@ -41,7 +40,6 @@ describe('Layer1 Scale', () => {
                 websocketPortRange: WEBSOCKET_PORT_RANGE,
                 entryPoints: [epPeerDescriptor],
                 websocketServerEnableTls: false,
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await node.start()
             layer0Nodes.push(node)
@@ -50,8 +48,7 @@ describe('Layer1 Scale', () => {
                 connectionsView: node.getConnectionsView(),
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getLocalPeerDescriptor(),
-                serviceId: STREAM_ID,
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
+                serviceId: STREAM_ID
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -73,10 +70,10 @@ describe('Layer1 Scale', () => {
     // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT - 1)
         })
         layer1Nodes.forEach((node ) => {
-            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUMBER_OF_NODES_PER_KBUCKET_DEFAULT / 2)
         })
     })
 })

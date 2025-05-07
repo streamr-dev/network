@@ -129,6 +129,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 
 const logger = new Logger(module)
 
+export const NUMBER_OF_NODES_PER_KBUCKET_DEFAULT = 8
 const PERIODICAL_PING_INTERVAL = 60 * 1000
 
 // TODO move this to trackerless-network package and change serviceId to be a required paramater
@@ -159,7 +160,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: CONTROL_LAYER_NODE_SERVICE_ID,
             joinParallelism: 3,
             maxContactCount: 200,
-            numberOfNodesPerKBucket: 8,
+            numberOfNodesPerKBucket: NUMBER_OF_NODES_PER_KBUCKET_DEFAULT,
             joinNoProgressLimit: 5,
             dhtJoinTimeout: 60000,
             peerDiscoveryQueryBatchSize: 5,

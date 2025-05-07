@@ -1,11 +1,11 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { toDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
+import sample from 'lodash/sample'
 
 const NUM_NODES = 100
-const K = 8
 
 describe('Find correctness', () => {
 
@@ -16,16 +16,14 @@ describe('Find correctness', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, undefined, K)
+        entryPoint = await createMockConnectionDhtNode(simulator, undefined)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, K, 15, 60000)
+            const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
-        await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitForStableTopology(nodes, 15, 45 * 1000)
     }, 90000)
 
     afterEach(async () => {
@@ -36,7 +34,7 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const targetId = toDhtAddressRaw(nodes[45].getNodeId())
+        const targetId = toDhtAddressRaw(sample(nodes)!.getNodeId())
         const closestNodes = await entryPoint.findClosestNodesFromDht(toDhtAddress(targetId))
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))

@@ -1,13 +1,11 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { randomDhtAddress, toDhtAddress } from '../../src/identifiers'
 import { wait } from '@streamr/utils'
 
 const NUM_NODES = 5
-const MAX_CONNECTIONS = 5
-const K = 4
 
 describe('Storing data in DHT', () => {
 
@@ -20,16 +18,13 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        const entryPoint = await createMockConnectionDhtNode(simulator,
-            randomDhtAddress(), K, MAX_CONNECTIONS)
+        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, 
-                undefined, K, MAX_CONNECTIONS, 60000)
+            const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
-        await waitForStableTopology(nodes, MAX_CONNECTIONS)
     }, 90000)
 
     afterEach(async () => {
