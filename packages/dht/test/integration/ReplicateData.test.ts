@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
@@ -9,8 +9,6 @@ import { DataEntry, PeerDescriptor } from '../../generated/packages/dht/protos/D
 
 const DATA = createMockDataEntry()
 const NUM_NODES = 100
-const MAX_CONNECTIONS = 80
-const K = 8
 const ENTRY_POINT_INDEX = 0
 
 const getDataEntries = (node: DhtNode): DataEntry[] => {
@@ -26,18 +24,13 @@ describe('Replicate data from node to node in DHT', () => {
     const simulator = new Simulator(LatencyType.FIXED, 20)
 
     beforeEach(async () => {
-        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress(), K, MAX_CONNECTIONS)
+        const entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
         entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
         await entryPoint.joinDht([entryPointDescriptor])
         nodes = []
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(
-                simulator,
-                randomDhtAddress(),
-                K,
-                MAX_CONNECTIONS
-            )
+            const node = await createMockConnectionDhtNode(simulator, randomDhtAddress())
             nodes.push(node)
         }
     }, 60000)
@@ -70,7 +63,6 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitForStableTopology(nodes)
 
         const data = getDataEntries(closest[0])
         expect(data).toHaveLength(1)
@@ -85,8 +77,6 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitForStableTopology(nodes)
-
         const randomIndex = Math.floor(Math.random() * nodes.length)
         const storerDescriptors = await nodes[randomIndex].storeDataToDht(toDhtAddress(DATA.key), DATA.data!)
         const stoppedNodeIds: DhtAddress[] = []

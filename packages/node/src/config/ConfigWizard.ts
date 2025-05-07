@@ -99,7 +99,7 @@ export async function start(): Promise<void> {
         if (operator) {
             const resume = animateLine((spinner) =>
                 style(
-                    `> Your node address has *${spinner} MATIC* _– checking balance…_`
+                    `> Your node address has *${spinner} POL* _– checking balance…_`
                 )
             )
 
@@ -111,13 +111,13 @@ export async function start(): Promise<void> {
 
                 const content = `Your node address has *${Number(
                     formatEther(balance)
-                ).toFixed(2)} MATIC*`
+                ).toFixed(2)} POL*`
 
                 resume()
 
                 if (balance < MIN_BALANCE) {
                     log(`
-                        > ! ${content}. You'll need to fund it with a small amount of MATIC tokens.
+                        > ! ${content}. You'll need to fund it with a small amount of POL tokens.
                     `)
                 } else {
                     log(`> ${content}`)

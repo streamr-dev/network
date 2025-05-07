@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Creating streams
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
   id: '/foo/bar',
 });
@@ -15,7 +15,7 @@ console.log(stream.id); // e.g. `0x12345.../foo/bar`
 You can also create a stream by defining the address in the provided id. Please note that the creation will only succeed if you specify the same address as provided for authentication when creating the `streamr` instance:
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
   id: `${address}/foo/bar`,
 });
