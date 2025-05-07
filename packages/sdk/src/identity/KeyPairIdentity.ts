@@ -39,6 +39,7 @@ export abstract class KeyPairIdentity extends Identity {
         throw new Error('This key pair can not sign transactions!')
     }
 
+    /** @internal */
     static getKeyPairFromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): KeyPairIdentityConfig {
         const result = (config.auth as KeyPairIdentityConfig)
         if (!result.privateKey) {

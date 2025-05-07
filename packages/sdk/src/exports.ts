@@ -53,6 +53,7 @@ export type { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore
 export type { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { Identity, type SignerWithProvider } from './identity/Identity'
+export { KeyPairIdentity } from './identity/KeyPairIdentity'
 export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
 export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
 export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
