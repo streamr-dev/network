@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
@@ -70,7 +70,6 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitForStableTopology(nodes)
 
         const data = getDataEntries(closest[0])
         expect(data).toHaveLength(1)
@@ -85,8 +84,6 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitForStableTopology(nodes)
-
         const randomIndex = Math.floor(Math.random() * nodes.length)
         const storerDescriptors = await nodes[randomIndex].storeDataToDht(toDhtAddress(DATA.key), DATA.data!)
         const stoppedNodeIds: DhtAddress[] = []

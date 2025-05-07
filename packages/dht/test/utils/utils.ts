@@ -247,23 +247,3 @@ export const createMockPeers = (): PeerDescriptor[] => {
         n1, n2, n3, n4
     ]
 }
-
-/*
- * When we start multiple nodes, most of the nodes have unlocked connections. This promise will resolve when some of those 
- * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
- * are neighbors.
- */
-export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000, waitTime = 20000): Promise<void> => {
-    const MAX_IDLE_TIME = 100
-    const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
-    await Promise.all(connectionManagers.map(async (connectionManager) => {
-        connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
-        try {
-            await until(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
-        } catch {
-            // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
-            // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
-            // connections
-        }
-    }))
-}

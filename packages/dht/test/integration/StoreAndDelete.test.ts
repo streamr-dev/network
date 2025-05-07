@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { randomDhtAddress, toDhtAddress } from '../../src/identifiers'
 import { wait } from '@streamr/utils'
@@ -29,7 +29,6 @@ describe('Storing data in DHT', () => {
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
-        await waitForStableTopology(nodes, MAX_CONNECTIONS)
     }, 90000)
 
     afterEach(async () => {
