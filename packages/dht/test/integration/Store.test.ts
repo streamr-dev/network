@@ -25,7 +25,7 @@ describe('Storing data in DHT', () => {
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, undefined, undefined, 60000)
+            const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))

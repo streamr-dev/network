@@ -19,7 +19,7 @@ describe('Find correctness', () => {
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, undefined, undefined, 60000)
+            const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])

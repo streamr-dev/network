@@ -23,13 +23,7 @@ describe('Layer1', () => {
         layer1CleanUp = []
 
         for (let i = 0; i < NODE_COUNT; i++) {
-            const node = await createMockConnectionDhtNode(
-                simulator,
-                undefined,
-                undefined,
-                undefined,
-                60000
-            )
+            const node = await createMockConnectionDhtNode(simulator)
             nodes.push(node)
         }
 

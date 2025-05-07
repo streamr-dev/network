@@ -76,7 +76,7 @@ export const createMockConnectionDhtNode = async (
     nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: undefined,
     maxConnections?: undefined,
-    dhtJoinTimeout = 45000
+    dhtJoinTimeout?: undefined
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
         nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
