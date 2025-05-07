@@ -3,6 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { toDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
+import sample from 'lodash/sample'
 
 const NUM_NODES = 100
 
@@ -33,7 +34,7 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const targetId = toDhtAddressRaw(nodes[45].getNodeId())
+        const targetId = toDhtAddressRaw(sample(nodes)!.getNodeId())
         const closestNodes = await entryPoint.findClosestNodesFromDht(toDhtAddress(targetId))
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))
