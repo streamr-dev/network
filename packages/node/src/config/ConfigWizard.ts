@@ -21,7 +21,7 @@ import * as BrokerConfigSchema from './config.schema.json'
 
 const MIN_BALANCE = parseEther('0.1')
 
-type EnvironmentId = 'polygon' | 'polygonAmoy'
+type EnvironmentId = 'polygon' | 'polygonAmoy' | 'peaq'
 
 export async function start(): Promise<void> {
     log(`

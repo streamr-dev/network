@@ -10,6 +10,7 @@
             "enum": [
                 "polygon",
                 "polygonAmoy",
+                "peaq",
                 "dev2"
             ],
             "description": "applies all environment-specific defaults for the given environment"
