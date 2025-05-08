@@ -90,7 +90,7 @@
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/config": "^5.5.4",
+    "@streamr/config": "^5.5.5",
     "@streamr/dht": "103.0.0-rc.13",
     "@streamr/network-contracts": "^9.1.0",
     "@streamr/proto-rpc": "103.0.0-rc.13",
