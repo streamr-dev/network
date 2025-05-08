@@ -38,7 +38,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@inquirer/prompts": "^7.5.0",
-    "@streamr/config": "^5.5.4",
+    "@streamr/config": "^5.5.6",
     "@streamr/dht": "103.0.0-rc.13",
     "@streamr/sdk": "103.0.0-rc.13",
     "@streamr/utils": "103.0.0-rc.13",
