@@ -28,10 +28,11 @@ describe('ECDSAKeyPairIdentity', () => {
         })
         it('throws if the given publicKey does not match the publicKey', async () => {
             const keyPair = signingUtil.generateKeyPair()
+            const wrongPublicKey = new Uint8Array(keyPair.publicKey.length)
 
             expect(() => ECDSAKeyPairIdentity.fromConfig({
                 auth: {
-                    publicKey: binaryToHex(keyPair.publicKey).replace('b', 'd'),
+                    publicKey: binaryToHex(wrongPublicKey),
                     privateKey: binaryToHex(keyPair.privateKey),
                 }
             })).toThrow()
