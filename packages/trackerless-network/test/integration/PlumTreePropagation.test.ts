@@ -109,7 +109,7 @@ describe('Propagation', () => {
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
-
+        totalReceived = 0
         const numberOfNewNodes = 32
 
         await Promise.all(range(numberOfNewNodes).map(async (_i) => {
