@@ -161,7 +161,6 @@ describe('Config', () => {
             })).not.toThrow()
         })
 
-
         it('override', () => {
             const environmentId = 'polygonAmoy'  // some environment id
             const config: any = {
