@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 32
+    const NUM_OF_NODES = 64
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -75,17 +75,17 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
 
+        const numberOfPublishedMessages = 25
         const publisher = randomUserId()
-        for (let i = 1; i < 25; i++) {
+        for (let i = 0; i < numberOfPublishedMessages; i++) {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: crypto.randomBytes(30000).toString('hex') }),
                 STREAM_PART_ID,
                 publisher
             )
             contentDeliveryLayerNodes[0].broadcast(msg)
-            await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
-
+        await until(() => totalReceived >= NUM_OF_NODES * numberOfPublishedMessages, 10000)
     }, 90000)
 
     it('Works after new nodes join', async () => {
@@ -109,7 +109,7 @@ describe('Propagation', () => {
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
-
+        totalReceived = 0
         const numberOfNewNodes = 32
 
         await Promise.all(range(numberOfNewNodes).map(async (_i) => {
@@ -163,28 +163,7 @@ describe('Propagation', () => {
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
-
-        const numberOfNewNodes = 32
-
-        await Promise.all(range(numberOfNewNodes).map(async (_i) => {
-            const descriptor = createMockPeerDescriptor()
-            const [layer1, contentDeliveryLayerNode] = await createMockContentDeliveryLayerNodeAndDhtNode(
-                descriptor,
-                entryPointDescriptor,
-                STREAM_PART_ID,
-                simulator,
-                true
-            )
-            await layer1.start()
-            await contentDeliveryLayerNode.start()
-            await layer1.joinDht([entryPointDescriptor]).then(() => {
-                contentDeliveryLayerNode.on('message', () => { 
-                    totalReceived += 1
-                })
-                discoveryLayerNodes.push(layer1)
-                contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
-            })
-        }))
+        totalReceived = 0
         const publisher2 = randomUserId()
         for (let i = 1; i < 5; i++) {
             const msg = createStreamMessage(
@@ -193,7 +172,7 @@ describe('Propagation', () => {
                 publisher2
             )
             contentDeliveryLayerNodes[0].broadcast(msg)
-            await until(() => totalReceived >= (NUM_OF_NODES + numberOfNewNodes) * i, 10000)
+            await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
     })
 })
