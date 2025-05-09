@@ -16,6 +16,7 @@ Changes before Tatum release are not documented in this file.
 - Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
 - Add support for ECDSA on secp256r1 curve (https://github.com/streamr-dev/network/pull/3088)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
+- Add `peaq` environment (https://github.com/streamr-dev/network/pull/3111)
 
 #### Changed
 
@@ -144,7 +145,7 @@ Changes before Tatum release are not documented in this file.
   - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
-  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801)
   - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Removed
@@ -167,7 +168,7 @@ Changes before Tatum release are not documented in this file.
   - fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
   - make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
   - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
-  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
+  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)
 
 ### @streamr/node
 
