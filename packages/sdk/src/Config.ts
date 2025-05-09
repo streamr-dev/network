@@ -241,10 +241,8 @@ export interface EthereumNetworkConfig {
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2' | 'peaq'
-
-export const ENVIRONMENT_IDS: EnvironmentId[] = ['polygon', 'polygonAmoy', 'dev2', 'peaq']
-
+export const ENVIRONMENT_IDS = ['polygon', 'polygonAmoy', 'peaq', 'dev2'] as const
+export type EnvironmentId = typeof ENVIRONMENT_IDS[number]
 export const DEFAULT_ENVIRONMENT_ID: EnvironmentId = 'polygon'
 
 /**
