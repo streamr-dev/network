@@ -1,7 +1,7 @@
 import { randomString } from '@streamr/utils'
 import fs from 'fs/promises'
 import { runCommand } from './utils'
-import { ENVIRONMENT_IDS, StreamrClientConfig } from '@streamr/sdk'
+import { StreamrClientConfig } from '@streamr/sdk'
 
 const POLYGON_AMOY_CHAIN_ID = 80002
 
@@ -27,6 +27,6 @@ describe('env command line option', () => {
             devEnvironment: false
         })
         expect(outputLines).toHaveLength(1)
-        expect(outputLines[0]).toEqual(`env must be one of: "${ENVIRONMENT_IDS.join('", "')}"`)
+        expect(outputLines[0]).toEqual('env must be one of: "polygon", "polygonAmoy", "peaq", "dev2"')
     }, 60 * 1000)
 })
