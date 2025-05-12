@@ -3,7 +3,7 @@ import {
     NumberPair,
     GapMisMatchError,
     InvalidNumberingError
-} from '../../src/ContentDeliveryLayer/DuplicateMessageDetector'
+} from '../../src/content-delivery-layer/DuplicateMessageDetector'
 
 test('starts empty', () => {
     const detector = new DuplicateMessageDetector()

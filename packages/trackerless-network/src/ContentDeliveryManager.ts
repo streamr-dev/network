@@ -22,20 +22,20 @@ import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import sampleSize from 'lodash/sampleSize'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryLayerNode } from './ContentDeliveryLayer/ContentDeliveryLayerNode'
-import { ControlLayerNode } from './ControlLayer/ControlLayerNode'
-import { DiscoveryLayerNode } from './DiscoveryLayer/DiscoveryLayerNode'
-import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './ControlLayer/PeerDescriptorStoreManager'
+import { ContentDeliveryLayerNode } from './content-delivery-layer/ContentDeliveryLayerNode'
+import { ControlLayerNode } from './control-layer/ControlLayerNode'
+import { DiscoveryLayerNode } from './discovery-layer/DiscoveryLayerNode'
+import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './control-layer/PeerDescriptorStoreManager'
 import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 import { StreamPartReconnect } from './StreamPartReconnect'
-import { createContentDeliveryLayerNode } from './ContentDeliveryLayer/createContentDeliveryLayerNode'
-import { ProxyClient } from './ContentDeliveryLayer/proxy/ProxyClient'
+import { createContentDeliveryLayerNode } from './content-delivery-layer/createContentDeliveryLayerNode'
+import { ProxyClient } from './content-delivery-layer/proxy/ProxyClient'
 import { StreamPartitionInfo } from './types'
 import {
     DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
     DEFAULT_MIN_PROPAGATION_TARGETS,
     DEFAULT_PROPAGATION_BUFFER_TTL
-} from './ContentDeliveryLayer/propagation/Propagation'
+} from './content-delivery-layer/propagation/Propagation'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void

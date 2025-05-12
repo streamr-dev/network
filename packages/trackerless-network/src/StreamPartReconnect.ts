@@ -1,6 +1,6 @@
 import { scheduleAtInterval } from '@streamr/utils'
-import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './ControlLayer/PeerDescriptorStoreManager'
-import { DiscoveryLayerNode } from './DiscoveryLayer/DiscoveryLayerNode'
+import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './control-layer/PeerDescriptorStoreManager'
+import { DiscoveryLayerNode } from './discovery-layer/DiscoveryLayerNode'
 
 const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
 export class StreamPartReconnect {

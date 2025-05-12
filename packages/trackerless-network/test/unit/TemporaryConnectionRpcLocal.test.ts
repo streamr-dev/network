@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, toDhtAddress } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
-import { TemporaryConnectionRpcLocal } from '../../src/ContentDeliveryLayer/temporary-connection/TemporaryConnectionRpcLocal'
+import { TemporaryConnectionRpcLocal } from '../../src/content-delivery-layer/temporary-connection/TemporaryConnectionRpcLocal'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 

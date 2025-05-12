@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Handshaker } from '../../../src/ContentDeliveryLayer/neighbor-discovery/Handshaker'
+import { Handshaker } from '../../../src/content-delivery-layer/neighbor-discovery/Handshaker'
 import { DhtAddress } from '@streamr/dht'
 
 export class MockHandshaker implements Methods<Handshaker> {

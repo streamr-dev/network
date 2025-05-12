@@ -1,4 +1,4 @@
-import { NumberPair } from '../../src/ContentDeliveryLayer/DuplicateMessageDetector'
+import { NumberPair } from '../../src/content-delivery-layer/DuplicateMessageDetector'
 
 test('equalTo', () => {
     expect(new NumberPair(5, 2).equalTo(new NumberPair(5, 3))).toEqual(false)

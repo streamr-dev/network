@@ -19,10 +19,10 @@ import {
 import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import type { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
-import { Inspector } from './inspect/Inspector'
+import { Inspector } from './inspection/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
-import { PlumTreeManager } from './plumtree/PlumTreeManager'
+import { PlumTreeManager } from './plum-tree/PlumTreeManager'
 
 type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNodeOptions,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'

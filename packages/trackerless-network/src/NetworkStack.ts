@@ -11,9 +11,9 @@ import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until }
 import pull from 'lodash/pull'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions, StreamPartDeliveryOptions } from './ContentDeliveryManager'
-import { ControlLayerNode } from './ControlLayer/ControlLayerNode'
-import { NodeInfoClient } from './NodeInfo/NodeInfoClient'
-import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './NodeInfo/NodeInfoRpcLocal'
+import { ControlLayerNode } from './control-layer/ControlLayerNode'
+import { NodeInfoClient } from './NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './NodeInfoRpcLocal'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NodeInfo } from './types'
 

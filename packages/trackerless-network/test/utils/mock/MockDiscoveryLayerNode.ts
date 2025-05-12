@@ -1,6 +1,6 @@
 import { PeerDescriptor, RingContacts } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { DiscoveryLayerNode, DiscoveryLayerNodeEvents } from '../../../src/DiscoveryLayer/DiscoveryLayerNode'
+import { DiscoveryLayerNode, DiscoveryLayerNodeEvents } from '../../../src/discovery-layer/DiscoveryLayerNode'
 import { createMockPeerDescriptor } from '../utils'
 
 export class MockDiscoveryLayerNode extends EventEmitter<DiscoveryLayerNodeEvents> implements DiscoveryLayerNode {

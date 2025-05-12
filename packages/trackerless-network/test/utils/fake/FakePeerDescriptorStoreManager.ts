@@ -1,5 +1,5 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { PeerDescriptorStoreManager } from '../../../src/ControlLayer/PeerDescriptorStoreManager'
+import { PeerDescriptorStoreManager } from '../../../src/control-layer/PeerDescriptorStoreManager'
 
 export const createFakePeerDescriptorStoreManager = (): PeerDescriptorStoreManager => {
     return new FakePeerDescriptorStoreManager() as unknown as PeerDescriptorStoreManager

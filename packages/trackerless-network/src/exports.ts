@@ -15,5 +15,5 @@ export {
     StreamMessage,
     ControlLayerInfo
 } from '../generated/packages/trackerless-network/protos/NetworkRpc'
-export type { ExternalRpcClient, ExternalRpcClientClass } from './ControlLayer/ExternalNetworkRpc'
+export type { ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
 export type { NodeInfo, StreamPartitionInfo, ContentDeliveryLayerNeighborInfo } from './types'

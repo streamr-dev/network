@@ -1,12 +1,12 @@
 import { ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { NodeList } from '../../src/ContentDeliveryLayer/NodeList'
-import { PlumTreeManager } from '../../src/ContentDeliveryLayer/plumtree/PlumTreeManager'
+import { NodeList } from '../../src/content-delivery-layer/NodeList'
+import { PlumTreeManager } from '../../src/content-delivery-layer/plum-tree/PlumTreeManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { StreamPartIDUtils, until, wait } from '@streamr/utils'
 import { randomUserId } from '@streamr/test-utils'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { ContentDeliveryRpcRemote } from '../../src/ContentDeliveryLayer/ContentDeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../../src/content-delivery-layer/ContentDeliveryRpcRemote'
 
 describe('PlumTreeManager', () => {
 

@@ -5,11 +5,11 @@ import {
     toNodeId
 } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
-import { NodeList } from '../../src/ContentDeliveryLayer/NodeList'
-import { Handshaker } from '../../src/ContentDeliveryLayer/neighbor-discovery/Handshaker'
+import { NodeList } from '../../src/content-delivery-layer/NodeList'
+import { Handshaker } from '../../src/content-delivery-layer/neighbor-discovery/Handshaker'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { ContentDeliveryRpcRemote } from '../../src/ContentDeliveryLayer/ContentDeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../../src/content-delivery-layer/ContentDeliveryRpcRemote'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Handshakes', () => {

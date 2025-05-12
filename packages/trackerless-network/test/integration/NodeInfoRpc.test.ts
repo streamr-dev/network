@@ -1,8 +1,8 @@
 import { ListeningRpcCommunicator, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeInfoClient } from '../../src/NodeInfo/NodeInfoClient'
-import { NODE_INFO_RPC_SERVICE_ID } from '../../src/NodeInfo/NodeInfoRpcLocal'
+import { NodeInfoClient } from '../../src/NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID } from '../../src/NodeInfoRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 // TODO add Jest utility so that the normalization is not needed (NET-1254)

@@ -1,4 +1,4 @@
-import { PeerDescriptorStoreManager } from '../../src/ControlLayer/PeerDescriptorStoreManager'
+import { PeerDescriptorStoreManager } from '../../src/control-layer/PeerDescriptorStoreManager'
 import { StreamPartReconnect } from '../../src/StreamPartReconnect'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDescriptorStoreManager'
