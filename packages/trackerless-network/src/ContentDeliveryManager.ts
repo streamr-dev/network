@@ -31,7 +31,11 @@ import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './ContentDeliveryLayer/createContentDeliveryLayerNode'
 import { ProxyClient } from './ContentDeliveryLayer/proxy/ProxyClient'
 import { StreamPartitionInfo } from './types'
-import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './ContentDeliveryLayer/propagation/Propagation'
+import {
+    DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+    DEFAULT_MIN_PROPAGATION_TARGETS,
+    DEFAULT_PROPAGATION_BUFFER_TTL
+} from './ContentDeliveryLayer/propagation/Propagation'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void

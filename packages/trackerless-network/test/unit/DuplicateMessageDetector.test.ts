@@ -1,4 +1,9 @@
-import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from '../../src/ContentDeliveryLayer/DuplicateMessageDetector'
+import {
+    DuplicateMessageDetector,
+    NumberPair,
+    GapMisMatchError,
+    InvalidNumberingError
+} from '../../src/ContentDeliveryLayer/DuplicateMessageDetector'
 
 test('starts empty', () => {
     const detector = new DuplicateMessageDetector()
