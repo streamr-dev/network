@@ -1,6 +1,6 @@
 import { areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
+import { ContentDeliveryManager } from '../../src/ContentDeliveryManager'
 import { ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'

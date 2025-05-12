@@ -1,4 +1,4 @@
-import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
+import { InspectSession, Events } from '../../src/content-delivery-layer/inspection/InspectSession'
 import { MessageID } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 import { utf8ToBinary } from '@streamr/utils'

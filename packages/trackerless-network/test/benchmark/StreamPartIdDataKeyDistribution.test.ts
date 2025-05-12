@@ -4,7 +4,7 @@ import { DhtAddress } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import groupBy from 'lodash/groupBy'
 import range from 'lodash/range'
-import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { streamPartIdToDataKey } from '../../src/ContentDeliveryManager'
 
 describe('StreamPartIdDataKeyDistribution', () => {
 
