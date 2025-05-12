@@ -54,6 +54,8 @@ After this, the operator will continue to operate the nodes and earn. When they 
 
 ## Technical description
 
+NOTE: Everything here is "good to know", but this isn't a developer guide. This is a description of the internal mechanics and token flows inside the contracts, on a relatively high level. Please refer to [the smart contracts document](../smart-contracts.md) for how to interact with the contracts.
+
 The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the staked Operators.
 
 Operator contracts are controlled by their operators. The DATA tokens held by the Operator contract are the funds that the controlling operator can `stake` into whichever Sponsorship contracts they like. By staking into a Sponsorship, the operator commits to servicing the sponsored stream.
@@ -156,6 +158,13 @@ The ERC-20 "delegation token" works in a manner similar to a liquidity pool: dur
 Being an ERC-20, the Operator contract address can be added to wallet and its delegation tokens transferred, albeit with two restrictions: one for the operator and one for the rest of the delegators. The operator's self-delegation must remain above the [`minimumSelfDelegationFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) of the total "delegation token" supply. Other delegations must still be above [`minimumDelegationWei`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 1 delegation token), or completely undelegate to zero. The value of 1 delegation token starts at 1 DATA, but appreciates as profits accumulate. This limitation prevents rounding error shenanigans in contracts with very low self-delegation.
 
 The outcome of the linear exchange rate between DATA and delegation token is: in the user interfaces we can ignore the delegation token and just convert the values to DATA by simple multiplication. The profits are shared in direct proportion to delegations, much like in Sponsorships where Operators share the continuous sponsorship payment in direct proportion to their stake. Note that the DATA tokens corresponding to delegations might not exist in the contract, since in typical case we expect the Operator contract's DATA tokens to be staked out into Sponsorship contracts. Delegation bookkeeping is done in the form of the ERC-20 delegation token, and those delegation tokens correspond to all of the staked DATA tokens in addition to what DATA is actually in the Operator contract.
+
+# Glossary
+
+operator value
+- why "value without earnings"
+
+sponsorship is running
 
 <!-- Should a non-linear bonding curve be introduced later, this interpretation should remain the same: the value of the delegation tokens is the amount of DATA tokens the delegator would receive after undelegating them. -->
 
