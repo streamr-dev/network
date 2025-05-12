@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, randomDhtAddress, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
-import { Inspector } from '../../src/logic/inspect/Inspector'
+import { Inspector } from '../../src/ContentDeliveryLayer/inspect/Inspector'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
 

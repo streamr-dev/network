@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { NeighborFinder } from '../../../src/logic/neighbor-discovery/NeighborFinder'
+import { NeighborFinder } from '../../../src/ContentDeliveryLayer/neighbor-discovery/NeighborFinder'
 
 export class MockNeighborFinder implements Methods<NeighborFinder> {
 

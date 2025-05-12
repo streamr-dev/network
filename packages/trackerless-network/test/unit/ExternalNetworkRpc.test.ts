@@ -1,5 +1,5 @@
 import { Message } from '@streamr/dht'
-import { ExternalNetworkRpc, SERVICE_ID } from '../../src/logic/ExternalNetworkRpc'
+import { ExternalNetworkRpc, SERVICE_ID } from '../../src/ControlLayer/ExternalNetworkRpc'
 import { HandshakeRequest, HandshakeResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { RpcMessage } from '@streamr/proto-rpc'

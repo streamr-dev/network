@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
-import { Propagation } from '../../src/logic/propagation/Propagation'
+import { Propagation } from '../../src/ContentDeliveryLayer/propagation/Propagation'
 import {
     ContentType,
     EncryptionType,

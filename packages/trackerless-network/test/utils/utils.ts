@@ -12,11 +12,11 @@ import {
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { ContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/ContentDeliveryLayerNode'
+import { ContentDeliveryRpcRemote } from '../../src/ContentDeliveryLayer/ContentDeliveryRpcRemote'
+import { DiscoveryLayerNode } from '../../src/DiscoveryLayer/DiscoveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/createContentDeliveryLayerNode'
+import { HandshakeRpcRemote } from '../../src/ContentDeliveryLayer/neighbor-discovery/HandshakeRpcRemote'
 import {
     ContentType,
     EncryptionType,

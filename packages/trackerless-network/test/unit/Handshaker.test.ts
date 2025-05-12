@@ -1,8 +1,8 @@
 import { ListeningRpcCommunicator, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import range from 'lodash/range'
-import { NodeList } from '../../src/logic/NodeList'
-import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
+import { NodeList } from '../../src/ContentDeliveryLayer/NodeList'
+import { Handshaker } from '../../src/ContentDeliveryLayer/neighbor-discovery/Handshaker'
 import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '../utils/utils'
 
 describe('Handshaker', () => {

@@ -1,9 +1,9 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/ContentDeliveryLayerNode'
+import { ControlLayerNode } from '../../src/ControlLayer/ControlLayerNode'
+import { DiscoveryLayerNode } from '../../src/DiscoveryLayer/DiscoveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

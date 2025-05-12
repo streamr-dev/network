@@ -23,7 +23,7 @@ import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
 import { formStreamPartContentDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 import { Propagation } from '../propagation/Propagation'
-import { markAndCheckDuplicate } from '../utils'
+import { markAndCheckDuplicate } from '../../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 // TODO use options option or named constant?

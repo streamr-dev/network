@@ -1,12 +1,12 @@
 import { ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { PlumTreeRpcLocal } from '../../src/logic/plumtree/PlumTreeRpcLocal'
+import { PlumTreeRpcLocal } from '../../src/ContentDeliveryLayer/plumtree/PlumTreeRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { NodeList } from '../../src/logic/NodeList'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { NodeList } from '../../src/ContentDeliveryLayer/NodeList'
+import { ContentDeliveryRpcRemote } from '../../src/ContentDeliveryLayer/ContentDeliveryRpcRemote'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { PausedNeighbors } from '../../src/logic/plumtree/PausedNeighbors'
-import { MAX_PAUSED_NEIGHBORS_DEFAULT } from '../../src/logic/plumtree/PlumTreeManager'
+import { PausedNeighbors } from '../../src/ContentDeliveryLayer/plumtree/PausedNeighbors'
+import { MAX_PAUSED_NEIGHBORS_DEFAULT } from '../../src/ContentDeliveryLayer/plumtree/PlumTreeManager'
 
 describe('PlumTreeRpcLocal', () => {
 

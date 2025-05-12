@@ -20,7 +20,7 @@ import {
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
-import { DiscoveryLayerNode } from './DiscoveryLayerNode'
+import { DiscoveryLayerNode } from '../DiscoveryLayer/DiscoveryLayerNode'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { NodeList } from './NodeList'
 import { Inspector } from './inspect/Inspector'
@@ -30,7 +30,7 @@ import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManage
 import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
-import { markAndCheckDuplicate } from './utils'
+import { markAndCheckDuplicate } from '../utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
 import { PlumTreeManager } from './plumtree/PlumTreeManager'
 

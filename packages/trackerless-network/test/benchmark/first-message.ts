@@ -19,9 +19,9 @@ import {
     utf8ToBinary, waitForEvent3
 } from '@streamr/utils'
 import fs from 'fs'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/ContentDeliveryLayerNode'
+import { streamPartIdToDataKey } from '../../src/ContentDeliveryManager'
+import { DiscoveryLayerNode } from '../../src/DiscoveryLayer/DiscoveryLayerNode'
 import { NetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'

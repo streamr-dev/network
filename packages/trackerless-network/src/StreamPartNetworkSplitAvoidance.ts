@@ -1,6 +1,6 @@
 import { areEqualPeerDescriptors, DhtAddress, toNodeId, PeerDescriptor } from '@streamr/dht'
 import { Logger, wait } from '@streamr/utils'
-import { DiscoveryLayerNode } from './DiscoveryLayerNode'
+import { DiscoveryLayerNode } from './DiscoveryLayer/DiscoveryLayerNode'
 
 /*
  * Tries to find new neighbors if we currently have less than MIN_NEIGHBOR_COUNT neigbors. It does so by

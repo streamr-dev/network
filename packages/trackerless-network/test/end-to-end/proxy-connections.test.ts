@@ -2,8 +2,8 @@ import { DhtAddress } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, wait, until, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
+import { ContentDeliveryLayerNode } from '../../src/ContentDeliveryLayer/ContentDeliveryLayerNode'
+import { ProxyClient } from '../../src/ContentDeliveryLayer/proxy/ProxyClient'
 import {
     ContentType,
     EncryptionType,

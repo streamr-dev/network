@@ -1,5 +1,5 @@
 import { PeerDescriptor, DataEntry, ITransport, TransportEvents, ConnectionsView } from '@streamr/dht'
-import { ControlLayerNode } from '../../../src/logic/ControlLayerNode'
+import { ControlLayerNode } from '../../../src/ControlLayer/ControlLayerNode'
 import { EventEmitter } from 'eventemitter3'
 import { MockConnectionsView } from './MockConnectionsView'
 

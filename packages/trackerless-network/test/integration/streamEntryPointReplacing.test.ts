@@ -2,7 +2,7 @@ import { LatencyType, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import range from 'lodash/range'
 import { NetworkStack } from '../../src/NetworkStack'
-import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
+import { MAX_NODE_COUNT } from '../../src/ControlLayer/PeerDescriptorStoreManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

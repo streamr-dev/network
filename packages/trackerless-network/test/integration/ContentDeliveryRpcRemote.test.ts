@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../../src/ContentDeliveryLayer/ContentDeliveryRpcRemote'
 import { Empty } from '../../generated/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,

@@ -1,4 +1,4 @@
-import { FifoMapWithTTL } from '../../src/logic/propagation/FifoMapWithTTL'
+import { FifoMapWithTTL } from '../../src/ContentDeliveryLayer/propagation/FifoMapWithTTL'
 
 describe('FifoMapWithTtl', () => {
     describe('invalid constructor arguments', () => {
