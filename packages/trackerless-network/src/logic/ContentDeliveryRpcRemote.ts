@@ -17,6 +17,7 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
     private rtt?: number
     private statistics: ConnectionStatistics = {
         uploadRateBytesPerSecond: 0,
+        downloadRateBytesPerSecond: 0,
         bufferedAmount: 0
     }
     public readonly emitter: EventEmitter<ContentDeliveryRpcRemoteEvents> = new EventEmitter<ContentDeliveryRpcRemoteEvents>()

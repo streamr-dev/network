@@ -20,6 +20,7 @@ export type ConnectionID = BrandedString<'ConnectionID'>
 
 export interface ConnectionStatistics {
     uploadRateBytesPerSecond: number
+    downloadRateBytesPerSecond: number
     bufferedAmount: number
 }
 

@@ -39,9 +39,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private currentBufferedAmount = 0
     private statistics: ConnectionStatistics = {
         uploadRateBytesPerSecond: 0,
+        downloadRateBytesPerSecond: 0,
         bufferedAmount: 0
     }
     private lastBytesSent = 0
+    private lastBytesReceived = 0
     private lastStatsCollectionTime = 0
     private statsInterval?: NodeJS.Timeout
     private readonly statsUpdateInterval = 200 // ms, adjust as needed for X times per second
@@ -286,23 +288,30 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             
             const stats = await this.peerConnection.getStats()
             let currentBytesSent = 0
-
+            let currentBytesReceived = 0
             stats.forEach((report) => {
                 if (report.type === 'transport') {
                     currentBytesSent = report.bytesSent ?? 0
+                    currentBytesReceived = report.bytesReceived ?? 0
                 }
             })
 
-            // Calculate upload rate based on actual elapsed time
+            // Calculate upload and download rates based on actual elapsed time
             const bytesSentDelta = Math.max(0, currentBytesSent - this.lastBytesSent)
             const uploadRateBytesPerSecond = Math.round(bytesSentDelta / elapsedTimeSeconds)
             
+            const bytesReceivedDelta = Math.max(0, currentBytesReceived - this.lastBytesReceived)
+            const downloadRateBytesPerSecond = Math.round(bytesReceivedDelta / elapsedTimeSeconds)
+            
             this.lastBytesSent = currentBytesSent
+            this.lastBytesReceived = currentBytesReceived
+            
             this.lastStatsCollectionTime = currentTime
             
             // Update statistics and emit event
             this.statistics = {
                 uploadRateBytesPerSecond,
+                downloadRateBytesPerSecond,
                 bufferedAmount: this.currentBufferedAmount
             }
             
