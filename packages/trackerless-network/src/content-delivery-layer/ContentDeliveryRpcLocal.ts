@@ -9,7 +9,7 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
-import { PlumTreeManager } from './plumtree/PlumTreeManager'
+import { PlumTreeManager } from './plum-tree/PlumTreeManager'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor

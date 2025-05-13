@@ -3,40 +3,24 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { Identity, SignerWithProvider } from './Identity'
 import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
 
+/**
+ * KeyPairIdentity is an Identity that is defined by a public key and a private key.
+ * It uses the public key as the UserID.
+ */
 export abstract class KeyPairIdentity extends Identity {
-    readonly publicKeyString: UserID
-    readonly publicKey: UserIDRaw
-    readonly privateKey: Uint8Array
+    protected readonly publicKeyString: UserID
+    protected readonly publicKey: UserIDRaw
+    protected readonly privateKey: Uint8Array
 
     constructor(publicKey: Uint8Array, privateKey: Uint8Array) {
         super()
         this.publicKey = publicKey
         this.privateKey = privateKey
         this.publicKeyString = toUserId(this.publicKey)
-
-        if (this.publicKey.length !== this.getExpectedPublicKeyLength()) {
-            throw new Error(`Unexpected publicKey length! Expected ${
-                this.getExpectedPublicKeyLength()
-            } bytes, got ${
-                this.publicKey.length
-            } bytes.`)
-        }
-
-        if (this.privateKey.length !== this.getExpectedPrivateKeyLength()) {
-            throw new Error(`Unexpected privateKey length! Expected ${
-                this.getExpectedPrivateKeyLength()
-            } bytes, got ${
-                this.privateKey.length
-            } bytes.`)
-        }
-
-        this.assertKeyPairIsValid()
+        this.assertValidKeyPair()
     }
 
-    /**
-     * Should throw if the publicKey and privateKey don't match each other
-     */
-    abstract assertKeyPairIsValid(): void
+    abstract assertValidKeyPair(): void
 
     async getUserIdRaw(): Promise<UserIDRaw> { 
         return this.publicKey
@@ -50,14 +34,12 @@ export abstract class KeyPairIdentity extends Identity {
         return this.privateKey
     }
 
-    abstract getExpectedPublicKeyLength(): number
-    abstract getExpectedPrivateKeyLength(): number
-
     // eslint-disable-next-line class-methods-use-this
     async getTransactionSigner(_rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {
         throw new Error('This key pair can not sign transactions!')
     }
 
+    /** @internal */
     static getKeyPairFromConfig(config: Pick<StrictStreamrClientConfig, 'auth'>): KeyPairIdentityConfig {
         const result = (config.auth as KeyPairIdentityConfig)
         if (!result.privateKey) {

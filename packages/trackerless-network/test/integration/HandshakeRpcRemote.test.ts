@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { HandshakeRpcRemote } from '../../src/content-delivery-layer/neighbor-discovery/HandshakeRpcRemote'
 import {
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse

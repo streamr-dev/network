@@ -79,7 +79,7 @@ const streamr = new StreamrClient()
 
 ### Creating a stream
 ```js
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
     id: '/foo/bar'
 })
@@ -100,7 +100,7 @@ streamr.subscribe(streamId, (message) => {
 Publishing messages requires your Ethereum account to have permission to publish. See the [stream permission docs](https://docs.streamr.network/usage/streams/permissions) for more information.
 
 ```js
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
     id: '/foo/bar'
 })

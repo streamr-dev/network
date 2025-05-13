@@ -63,7 +63,7 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of publishers) {
-            const identity = new EthereumKeyPairIdentity(publisher.wallet.privateKey)
+            const identity = EthereumKeyPairIdentity.fromPrivateKey(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 identity: identity,

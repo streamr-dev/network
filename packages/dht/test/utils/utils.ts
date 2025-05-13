@@ -20,12 +20,11 @@ import {
     IWebsocketClientConnectorRpc
 } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../generated/google/protobuf/empty'
 import { Any } from '../../generated/google/protobuf/any'
-import { wait, until } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
@@ -74,10 +73,7 @@ export const createMockRingNode = async (
 
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
-    nodeId?: DhtAddress,
-    numberOfNodesPerKBucket?: number,
-    maxConnections = 80,
-    dhtJoinTimeout = 45000
+    nodeId?: DhtAddress
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
         nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
@@ -91,9 +87,6 @@ export const createMockConnectionDhtNode = async (
         transport: mockConnectionManager,
         connectionsView: mockConnectionManager,
         connectionLocker: mockConnectionManager,
-        numberOfNodesPerKBucket,
-        maxConnections: maxConnections,
-        dhtJoinTimeout,
         rpcRequestTimeout: 5000
     }
     const node = new class extends DhtNode {
@@ -108,8 +101,7 @@ export const createMockConnectionDhtNode = async (
 
 export const createMockConnectionLayer1Node = async (
     layer0Node: DhtNode,
-    serviceId?: string,
-    numberOfNodesPerKBucket = 8
+    serviceId?: string
 ): Promise<DhtNode> => {
     const descriptor: PeerDescriptor = {
         nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
@@ -120,7 +112,6 @@ export const createMockConnectionLayer1Node = async (
         transport: layer0Node,
         connectionsView: layer0Node.getConnectionsView(),
         serviceId: serviceId ?? 'layer1',
-        numberOfNodesPerKBucket,
         rpcRequestTimeout: 10000
     })
     await node.start()
@@ -246,24 +237,4 @@ export const createMockPeers = (): PeerDescriptor[] => {
     return [
         n1, n2, n3, n4
     ]
-}
-
-/*
- * When we start multiple nodes, most of the nodes have unlocked connections. This promise will resolve when some of those 
- * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
- * are neighbors.
- */
-export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000, waitTime = 20000): Promise<void> => {
-    const MAX_IDLE_TIME = 100
-    const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
-    await Promise.all(connectionManagers.map(async (connectionManager) => {
-        connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
-        try {
-            await until(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
-        } catch {
-            // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
-            // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
-            // connections
-        }
-    }))
 }

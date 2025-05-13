@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { HexString, LogLevel, merge } from '@streamr/utils'
+import { HexString, LogLevel, merge, KeyType } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
@@ -10,11 +10,10 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 import { Identity } from './identity/Identity'
-import { KeyType } from './identity/IdentityMapping'
 
 /**
- * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193} 
- * compatible provider will do. The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type 
+ * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193}
+ * compatible provider will do. The {@link https://docs.ethers.org/v6/api/providers/#Eip1193Provider Eip1193Provider} type
  * definition used here is from the `ethers` library.
  */
 export interface EthereumProviderIdentityConfig {
@@ -119,7 +118,7 @@ export interface ControlLayerConfig {
 
     /**
      * The host name or IP address of the WebSocket server used to connect to it over the internet.
-     * If not specified, the host name will be auto-detected. 
+     * If not specified, the host name will be auto-detected.
      * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
      */
     websocketHost?: string
@@ -128,7 +127,7 @@ export interface ControlLayerConfig {
      * TLS configuration for the WebSocket server
      */
     tlsCertificate?: TlsCertificate
-    
+
     /*
      * Used to assign a custom external IPv4 address for the node.
      * Useful in cases where the node has a public IP address but
@@ -158,7 +157,7 @@ export interface ControlLayerConfig {
 
     /**
      * If the node is running a WS server, this option can be used to disable TLS autocertification to
-     * run the server without TLS. This will speed up the starting time of the network node 
+     * run the server without TLS. This will speed up the starting time of the network node
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
@@ -239,13 +238,11 @@ export interface EthereumNetworkConfig {
 // - do not include legacy configs, which no longer work, e.g. "dev0"
 // - and no need to include configs, which users won't use in practice
 // - note that there is no special handling for empty arrays in the applyConfig and therefore
-//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
+//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
-
-export const ENVIRONMENT_IDS: EnvironmentId[] = ['polygon', 'polygonAmoy', 'dev2']
-
+export const ENVIRONMENT_IDS = ['polygon', 'polygonAmoy', 'peaq', 'dev2'] as const
+export type EnvironmentId = typeof ENVIRONMENT_IDS[number]
 export const DEFAULT_ENVIRONMENT_ID: EnvironmentId = 'polygon'
 
 /**
@@ -370,13 +367,13 @@ export interface StreamrClientConfig {
         rsaKeyLength?: number
 
         /**
-         * Default: false. 
-         * 
+         * Default: false.
+         *
          * The default behavior on subscribers is to request key exchange using ML-KEM if a quantum secure
          * identity key pair is configured, otherwise RSA.
-         * 
+         *
          * The default behavior on publishers is to do key exchange using whichever method requested by subscribers.
-         * 
+         *
          * If set to true, subscribers will always request using ML-KEM, and publishers will reject key requests that use RSA.
          */
         requireQuantumResistantKeyExchange?: boolean
@@ -497,7 +494,7 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
         } as any
     }, data) as any
     if (environmentId === 'polygon') {
-        config.contracts.ethereumNetwork = { 
+        config.contracts.ethereumNetwork = {
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }

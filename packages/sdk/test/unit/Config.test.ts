@@ -155,6 +155,12 @@ describe('Config', () => {
             })
         })
 
+        it('peaq environment exists', () => {
+            expect(() => createStrictConfig({
+                environment: 'peaq'
+            })).not.toThrow()
+        })
+
         it('override', () => {
             const environmentId = 'polygonAmoy'  // some environment id
             const config: any = {

@@ -35,7 +35,7 @@ describe('GroupKeyManager', () => {
                     keyRequestTimeout: 100
                 } as any
             },
-            new EthereumKeyPairIdentity(wallet.privateKey),
+            EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey),
             eventEmitter,
             new DestroySignal()
         )

@@ -13,7 +13,7 @@ const stream = await streamr.getStream(streamId);
 The method getOrCreateStream gets the stream if it exists, and if not, creates it:
 
 ```ts
-// May require MATIC tokens (Polygon blockchain gas token)
+// May require POL tokens (Polygon blockchain gas token)
 const stream = await streamr.getOrCreateStream({
   id: streamId,
 });
@@ -23,7 +23,7 @@ const stream = await streamr.getOrCreateStream({
 To update the description of a stream:
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 await stream.update({
   description: 'New description',
 });
@@ -33,6 +33,6 @@ await stream.update({
 To delete a stream:
 
 ```ts
-// Requires MATIC tokens (Polygon blockchain gas token)
+// Requires POL tokens (Polygon blockchain gas token)
 await stream.delete();
 ```

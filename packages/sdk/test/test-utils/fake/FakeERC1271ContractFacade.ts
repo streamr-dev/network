@@ -1,9 +1,11 @@
 import { Methods } from '@streamr/test-utils'
-import { EthereumAddress, ECDSA_SECP256K1_EVM, toUserId } from '@streamr/utils'
+import { EcdsaSecp256k1Evm, EthereumAddress, toUserId } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
 import { FakeChain } from './FakeChain'
+
+const signingUtil = new EcdsaSecp256k1Evm()
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade> {
@@ -14,7 +16,7 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
     }
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const recoveredSignerUserId = toUserId(ECDSA_SECP256K1_EVM.recoverSignerUserId(signature, payload))
+        const recoveredSignerUserId = toUserId(signingUtil.recoverSignerUserId(signature, payload))
         return this.chain.hasErc1271AllowedAddress(contractAddress, recoveredSignerUserId)
     }
 

@@ -1,63 +1,67 @@
-import { ECDSA_SECP256K1_EVM, ML_DSA_87, SigningUtil } from '@streamr/utils'
+import { KeyType, KEY_TYPES } from '@streamr/utils'
+import { SignatureType } from '@streamr/trackerless-network'
 import { KeyPairIdentityConfig, EthereumProviderIdentityConfig, StrictStreamrClientConfig, CustomIdentityConfig } from '../Config'
 import { EthereumKeyPairIdentity } from './EthereumKeyPairIdentity'
 import { EthereumProviderIdentity } from './EthereumProviderIdentity'
 import { Identity } from './Identity'
 import { MLDSAKeyPairIdentity } from './MLDSAKeyPairIdentity'
-import { SignatureType } from '@streamr/trackerless-network'
+import { ECDSAKeyPairIdentity } from './ECDSAKeyPairIdentity'
 
 /**
  * This is where config keyTypes are connected to Identity implementations.
  * 
  * How to configure new Identity types:
  * 1. Add a new SignatureType entry to NetworkRpc.proto in network package
- * 2. Add the needed SigningUtil to signingUtils.ts
- * 3. Create the Identity implementation itself (eg. extend KeyPairIdentity)
+ * 2. Add the needed SigningUtil to SigningUtil.ts and tests to SigningUtil.test.ts
+ * 3. Add the new SigningUtil to exports.ts in the utils package
+ * 3. Create the Identity implementation itself (eg. extend KeyPairIdentity) and tests for it
  * 4. Wire everything together below
  */
-export const validKeyTypeValues = ['ECDSA_SECP256K1_EVM', 'ML_DSA_87'] as const
-/** @internal */
-export const IdentityMapping: Record<KeyType, {
+export const IDENTITY_MAPPING: {
+    keyType: KeyType
+    // Used by createIdentityFromConfig
     fromConfig: (config: Pick<StrictStreamrClientConfig, 'auth'>) => Identity
-    generate: () => Identity
-    signingUtil: SigningUtil
+    // Used by SignatureValidator
     signatureType: SignatureType
-}> = {
-    'ECDSA_SECP256K1_EVM': { 
+}[] = [
+    { 
+        keyType: 'ECDSA_SECP256K1_EVM',
         fromConfig: EthereumKeyPairIdentity.fromConfig, 
-        generate: EthereumKeyPairIdentity.generate,
-        signingUtil: ECDSA_SECP256K1_EVM,
         signatureType: SignatureType.ECDSA_SECP256K1_EVM,
     },
-    'ML_DSA_87': {
+    { 
+        keyType: 'ECDSA_SECP256R1',
+        fromConfig: ECDSAKeyPairIdentity.fromConfig, 
+        signatureType: SignatureType.ECDSA_SECP256R1,
+    },
+    {
+        keyType: 'ML_DSA_87',
         fromConfig: MLDSAKeyPairIdentity.fromConfig,
-        generate: MLDSAKeyPairIdentity.generate, 
-        signingUtil: ML_DSA_87,
         signatureType: SignatureType.ML_DSA_87,
-    }
-}
+    },
+] as const
 
-export type KeyType = typeof validKeyTypeValues[number]
 export const DEFAULT_KEY_TYPE: KeyType = 'ECDSA_SECP256K1_EVM'
 
 // Static check that all valid key types have corresponding factory functions above
-validKeyTypeValues.forEach((keyType) => {
-    if (!(keyType in IdentityMapping)) {
-        throw new Error(`Missing factory function for keyType: ${keyType}`)
+KEY_TYPES.forEach((keyType) => {
+    if (!IDENTITY_MAPPING.find((id) => id.keyType === keyType)) {
+        throw new Error(`keyType missing from IDENTITIES: ${keyType}`)
     }
 })
 
 /**
  * Creates an Identity instance based on what's in the StreamrClient config
  */
-export const createIdentityFromConfig = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Identity => {
+export function createIdentityFromConfig(config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Identity {
     // Key pair -based identities
     if ((config.auth as KeyPairIdentityConfig)?.privateKey !== undefined) {
         // Default key type is secp256k1 private key (="Ethereum private key")
         const keyType = (config.auth as KeyPairIdentityConfig).keyType ?? DEFAULT_KEY_TYPE
 
-        if (IdentityMapping[keyType]) {
-            return IdentityMapping[keyType].fromConfig(config)
+        const idMapping = IDENTITY_MAPPING.find((id) => id.keyType === keyType)
+        if (idMapping) {
+            return idMapping.fromConfig(config)
         } else {
             throw new Error(`Unsupported keyType given in config: ${keyType}`)
         }

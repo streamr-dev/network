@@ -1,8 +1,8 @@
 import { LatencyType, Simulator } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import range from 'lodash/range'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode'
 import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 import crypto from 'crypto'
@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 24
+    const NUM_OF_NODES = 32
     let simulator: Simulator
 
     beforeEach(async () => {

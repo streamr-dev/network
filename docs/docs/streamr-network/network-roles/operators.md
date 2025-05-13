@@ -75,7 +75,7 @@ The Operator’s cut is the percentage taken by the Operator from all earnings. 
 #### Operator uncollected earnings limit
 Operators continuously earn rewards from Sponsorships on every block. For the Operator’s total value to be correctly reflected on-chain, those earnings must be periodically collected to limit the error between the recorded on-chain value and the ‘real-time’ value of the Operator, which constantly changes due to uncollected earnings accumulating.
 
-Normally, the node software handles this earnings collection and maintenance of Operator value automatically. The Operator is responsible for ensuring that this happens by ensuring their nodes are running and the wallets of their nodes have enough `MATIC` to pay gas for transactions.
+Normally, the node software handles this earnings collection and maintenance of Operator value automatically. The Operator is responsible for ensuring that this happens by ensuring their nodes are running and the wallets of their nodes have enough `POL` to pay gas for transactions.
 
 The uncollected earnings limit has been set to 5% and this value is subject to change by Streamr DAO governance vote.
 
@@ -90,7 +90,7 @@ This reward is set to 25% and this value is subject to change by Streamr DAO gov
 Streamr nodes are also the validators in the Streamr Network. They inspect and validate that other nodes in the same [sponsored stream] are doing the work
 If an operator fails completely (all their nodes go offline), they will eventually get flagged in all the sponsorships where they are staked. So yes more Sponsorships means more flagging in this case.
 
-If the flags are raised by the random inspection process, it's likely that the flags will be raised evenly by all the other operators, so no one operator's MATIC balance gets a major unexpected drain.
+If the flags are raised by the random inspection process, it's likely that the flags will be raised evenly by all the other operators, so no one operator's POL balance gets a major unexpected drain.
 
 By default, nodes inspect each other quite lazily (pick one operator-sponsorship-partition triplet every 15 minutes). However, correctly flagging and voting is profitable, so more 'eager' flaggers might appear in the network, with smarter inspection strategies - for example if a node gets slashed in one sponsorship, it might be worthwhile for someone to inspect them in all their other sponsorships too, and raise flags if the inspection fails.
 How to earn DATA tokens by being an Operator

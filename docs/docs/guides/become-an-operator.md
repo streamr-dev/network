@@ -6,7 +6,7 @@ sidebar_position: 7
 **TL;DR 👨‍💻 Do these things to become an earning Streamr node Operator:**
 - Deploy an Operator smart contract.
 - Run Streamr node(s) and pair them with your Operator.
-- Stake `DATA` tokens on your Operator and give your node address a few `MATIC`
+- Stake `DATA` tokens on your Operator and give your node address a few `POL`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
 ## Operator setup instructions
@@ -19,7 +19,7 @@ The wallet/account that you use to make the Operator creation transaction will b
 
 You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators.md#owners-cut) at the time of your Operator deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first. The average cut Operators are choosing appears to be around 10%.
 
-You can also practice your Operator deployment in the Polygon Amoy testnet environment with the [Streamr Hub](https://streamr.network/hub) (select "Polygon Amoy testnet" on the Streamr Hub). You'll need Amoy `MATIC` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
+You can also practice your Operator deployment in the Polygon Amoy testnet environment with the [Streamr Hub](https://streamr.network/hub) (select "Polygon Amoy testnet" on the Streamr Hub). You'll need Amoy `POL` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Step 2: Run a Streamr node
 Spin up a Streamr node using the **[How to run a Streamr node guide](./how-to-run-streamr-node.md#streamr-node-hardware-recommendations)**.
@@ -56,7 +56,7 @@ The format of your node config file should match [this template](./how-to-run-st
 After any config file change you should restart your node. If you're building your Operator in Amoy (for testing purposes), copy and paste [this config snippet](#amoy-node-config) instead.
 
 ### Step 4: Fund your Node address
-You’ll need a some `MATIC` (the gas token of Polygon) in your node address since the node(s) will periodically make transactions. 5 to 10 `MATIC` is recommended since the nodes will be making a few transactions per day.
+You’ll need a some `POL` (the gas token of Polygon) in your node address since the node(s) will periodically make transactions. 5 to 10 `POL` is recommended since the nodes will be making a few transactions per day.
 
 If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
@@ -121,7 +121,7 @@ While the Streamr team provides regular updates on the **#node-announcements** D
 ## The Amoy test environment
 The [Streamr Hub](https://streamr.network/hub) is the place to test out your Operator before creating it on Polygon with real tokens, just select "Polygon Amoy testnet" from top-right network selector. You'll need to use the [Amoy node config](./how-to-run-streamr-node.md#amoy-node-config).
 
-You'll need Amoy `MATIC` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
+You'll need Amoy `POL` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ## Amoy node config
 Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/testnet-default.json).

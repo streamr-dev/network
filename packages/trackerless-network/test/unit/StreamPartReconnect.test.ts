@@ -1,5 +1,5 @@
-import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
-import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
+import { PeerDescriptorStoreManager } from '../../src/control-layer/PeerDescriptorStoreManager'
+import { StreamPartReconnect } from '../../src/StreamPartReconnect'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDescriptorStoreManager'
 import { until } from '@streamr/utils'

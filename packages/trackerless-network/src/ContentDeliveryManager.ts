@@ -21,18 +21,22 @@ import {
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import sampleSize from 'lodash/sampleSize'
-import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
-import { ControlLayerNode } from './ControlLayerNode'
-import { DiscoveryLayerNode } from './DiscoveryLayerNode'
-import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
+import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryLayerNode } from './content-delivery-layer/ContentDeliveryLayerNode'
+import { ControlLayerNode } from './control-layer/ControlLayerNode'
+import { DiscoveryLayerNode } from './discovery-layer/DiscoveryLayerNode'
+import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './control-layer/PeerDescriptorStoreManager'
 import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 import { StreamPartReconnect } from './StreamPartReconnect'
-import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
-import { ProxyClient } from './proxy/ProxyClient'
-import { StreamPartitionInfo } from '../types'
-import { DEFAULT_MAX_PROPAGATION_BUFFER_SIZE, DEFAULT_MIN_PROPAGATION_TARGETS, DEFAULT_PROPAGATION_BUFFER_TTL } from './propagation/Propagation'
-import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
+import { createContentDeliveryLayerNode } from './content-delivery-layer/createContentDeliveryLayerNode'
+import { ProxyClient } from './content-delivery-layer/proxy/ProxyClient'
+import { StreamPartitionInfo } from './types'
+import {
+    DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
+    DEFAULT_MIN_PROPAGATION_TARGETS,
+    DEFAULT_PROPAGATION_BUFFER_TTL
+} from './content-delivery-layer/propagation/Propagation'
+import { ContentDeliveryRpcRemote } from './content-delivery-layer/ContentDeliveryRpcRemote'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void

@@ -1,15 +1,15 @@
-import { HexString, StreamID } from '@streamr/utils'
+import { HexString, StreamID, KeyType } from '@streamr/utils'
 import { StreamMessage } from './protocol/StreamMessage'
 import { SignatureType } from '@streamr/trackerless-network'
-import { IdentityMapping, KeyType } from './identity/IdentityMapping'
+import { IDENTITY_MAPPING } from './identity/IdentityMapping'
 
 // Lookup structure for converting SignatureType to KeyType string
 export type MessageSignatureType = KeyType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
 const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
     // Read key pair SignatureTypes from IdentityMapping
     ...Object.fromEntries(
-        Object.entries(IdentityMapping).map(
-            ([keyType, config]) => [config.signatureType, keyType as KeyType]
+        IDENTITY_MAPPING.map(
+            (idMapping) => [idMapping.signatureType, idMapping.keyType]
         )
     ),
     // These special ones need to be added manually
@@ -71,7 +71,7 @@ export interface Message {
     /**
      * Identifiers group key used to encrypt the message.
      */
-    groupKeyId: string | undefined
+    encryptionKeyId: string | undefined
 
     /** @internal */
     streamMessage: StreamMessage // TODO remove this field if possible
@@ -98,7 +98,7 @@ export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
         signatureType: signatureTypeToString(msg.signatureType),
         publisherId: msg.getPublisherId(),
         msgChainId: msg.getMsgChainId(),
-        groupKeyId: msg.groupKeyId,
+        encryptionKeyId: msg.groupKeyId,
         streamMessage: msg
         // TODO add other relevant fields (could update some test assertions to
         // use those keys instead of getting the fields via from streamMessage property)

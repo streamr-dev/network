@@ -1,11 +1,12 @@
 import { ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { PlumTreeRpcLocal } from '../../src/logic/plumtree/PlumTreeRpcLocal'
+import { PlumTreeRpcLocal } from '../../src/content-delivery-layer/plum-tree/PlumTreeRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { NodeList } from '../../src/logic/NodeList'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { NodeList } from '../../src/content-delivery-layer/NodeList'
+import { ContentDeliveryRpcRemote } from '../../src/content-delivery-layer/ContentDeliveryRpcRemote'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
-import { PausedNeighbors } from '../../src/logic/plumtree/PausedNeighbors'
+import { PausedNeighbors } from '../../src/content-delivery-layer/plum-tree/PausedNeighbors'
+import { MAX_PAUSED_NEIGHBORS_DEFAULT } from '../../src/content-delivery-layer/plum-tree/PlumTreeManager'
 
 describe('PlumTreeRpcLocal', () => {
 
@@ -21,7 +22,7 @@ describe('PlumTreeRpcLocal', () => {
         localPeerDescriptor = createMockPeerDescriptor()
         rpcCommunicator = new ListeningRpcCommunicator('plumtree', new MockTransport())
         neighbors = new NodeList(toNodeId(localPeerDescriptor), 4)
-        pausedNodes = new PausedNeighbors()
+        pausedNodes = new PausedNeighbors(MAX_PAUSED_NEIGHBORS_DEFAULT)
         onMetadata = jest.fn()
         sendBuffer = jest.fn()
         rpcLocal = new PlumTreeRpcLocal(

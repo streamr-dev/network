@@ -1,6 +1,6 @@
-import { NodeInfoRequest, NodeInfoResponse } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { INodeInfoRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
-import { NetworkStack } from '../../NetworkStack'
+import { NodeInfoRequest, NodeInfoResponse } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+import { INodeInfoRpc } from '../generated/packages/trackerless-network/protos/NetworkRpc.server'
+import { NetworkStack } from './NetworkStack'
 import { ListeningRpcCommunicator } from '@streamr/dht'
 
 export const NODE_INFO_RPC_SERVICE_ID = 'system/node-info-rpc'
