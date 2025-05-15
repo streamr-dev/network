@@ -1,6 +1,6 @@
 export { NetworkNode, createNetworkNode } from './NetworkNode'
-export { NetworkOptions, NetworkStack } from './NetworkStack'
-export { ContentDeliveryManagerOptions, streamPartIdToDataKey } from './logic/ContentDeliveryManager'
+export { type NetworkOptions, NetworkStack } from './NetworkStack'
+export { type ContentDeliveryManagerOptions, streamPartIdToDataKey } from './ContentDeliveryManager'
 export {
     AsymmetricEncryptionType,
     ContentType,
@@ -15,5 +15,5 @@ export {
     StreamMessage,
     ControlLayerInfo
 } from '../generated/packages/trackerless-network/protos/NetworkRpc'
-export { ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
-export { NodeInfo, StreamPartitionInfo, ContentDeliveryLayerNeighborInfo } from './types'
+export type { ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
+export type { NodeInfo, StreamPartitionInfo, ContentDeliveryLayerNeighborInfo } from './types'

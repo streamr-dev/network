@@ -1,11 +1,14 @@
-import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig } from '@streamr/sdk'
+import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, DEFAULT_KEY_TYPE } from '@streamr/sdk'
+import { KeyType, KEY_TYPES } from '@streamr/utils'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
 import { createFnParseEnum, formEnumArgValueDescription } from './common'
 
 export interface Options {
+    publicKey?: string
     privateKey?: string
+    keyType?: KeyType
     config?: string
     env?: EnvironmentId
     quantum?: boolean
@@ -31,11 +34,14 @@ export const createClientCommand = (
     }
 ): commander.Command => {
     return createCommand()
-        .option('--private-key <key>', 'use an Ethereum private key to authenticate')
-        .option('--config <file>', 'read connection and authentication settings from a config file')
+        .option('--private-key <key>', 'a private key to establish your identity')
+        .option('--key-type [key-type]', `type of public/private key (${formEnumArgValueDescription(KEY_TYPES, DEFAULT_KEY_TYPE)})`, 
+            createFnParseEnum('key-type', KEY_TYPES))
+        .option('--public-key [public-key]', 'a public key - required by some key types')
+        .option('--config <file>', 'read connection and identity settings from a config file')
         .option('--env <environmentId>', `use pre-defined environment (${formEnumArgValueDescription(ENVIRONMENT_IDS, DEFAULT_ENVIRONMENT_ID)})`,
             createFnParseEnum('env', ENVIRONMENT_IDS))
-        .option('--quantum', 'use and require quantum secure algorithms where available')
+        .option('--quantum', 'require quantum resistant key exchange and signature algorithms to be used')
         .action(async (...args: any[]) => {
             const commandOptions = args[args.length - 1].opts()
             try {

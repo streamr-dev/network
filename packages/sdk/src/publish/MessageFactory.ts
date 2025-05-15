@@ -1,7 +1,7 @@
 import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, toUserId, utf8ToBinary } from '@streamr/utils'
-import { EncryptedGroupKey } from '@streamr/trackerless-network'
+import { ContentType, EncryptedGroupKey, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 import random from 'lodash/random'
-import { Authentication } from '../Authentication'
+import { Identity } from '../identity/Identity'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
@@ -10,9 +10,6 @@ import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
 import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamMessage,
     StreamMessageType
 } from '../protocol/StreamMessage'
@@ -23,20 +20,23 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
+import { StreamrClientConfig } from '../Config'
+import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
-    authentication: Authentication
+    identity: Identity
     streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
+    config: Pick<StreamrClientConfig, 'encryption'>
 }
 
 export class MessageFactory {
 
     private readonly streamId: StreamID
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<number, string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
@@ -45,15 +45,17 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly config: Pick<StreamrClientConfig, 'encryption'>
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
-        this.authentication = opts.authentication
+        this.identity = opts.identity
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
+        this.config = opts.config
         this.defaultMessageChainIds = createLazyMap<number, string>({
             valueFactory: async () => {
                 return createRandomMsgChainId()
@@ -98,6 +100,12 @@ export class MessageFactory {
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        if (!isCompliantEncryptionType(encryptionType, this.config)) {
+            throw new StreamrClientError(
+                `Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`,
+                'ENCRYPTION_POLICY_VIOLATION'
+            )
+        }
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let rawContent: Uint8Array
@@ -127,7 +135,7 @@ export class MessageFactory {
             groupKeyId,
             newGroupKey,
             contentType
-        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1)
+        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : this.identity.getSignatureType())
 
         // Assert the signature is valid for the first message. This is done here to improve user experience
         // in case the client signer is not authorized for the ERC-1271 contract.
@@ -146,7 +154,7 @@ export class MessageFactory {
             // calling also toEthereumAddress() as it has stricter input validation than toUserId()
             return toUserId(toEthereumAddress(metadata.erc1271Contract))
         } else {
-            return this.authentication.getUserId()
+            return this.identity.getUserId()
         }
     }
 

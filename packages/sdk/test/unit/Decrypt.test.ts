@@ -3,14 +3,15 @@ import 'reflect-metadata'
 import { createTestWallet } from '@streamr/test-utils'
 import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { decrypt } from '../../src/encryption/decrypt'
 import { createGroupKeyManager, createMockMessage } from '../test-utils/utils'
-import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+import { EncryptionType } from '@streamr/trackerless-network'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 describe('Decrypt', () => {
 
@@ -42,7 +43,7 @@ describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
         const wallet = await createTestWallet()
-        const groupKeyManager = await createGroupKeyManager(undefined, createPrivateKeyAuthentication(wallet.privateKey))
+        const groupKeyManager = await createGroupKeyManager(undefined, EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey))
         const destroySignal = new DestroySignal()
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

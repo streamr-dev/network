@@ -22,6 +22,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "moduleResolution": "node",
+        "isolatedModules": true,
         "types": ["node", "jest"],
         "sourceMap": true,
         "skipLibCheck": true,

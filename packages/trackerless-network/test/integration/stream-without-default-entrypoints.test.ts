@@ -3,7 +3,7 @@ import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
 import range from 'lodash/range'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { streamPartIdToDataKey } from '../../src/ContentDeliveryManager'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -39,7 +39,7 @@ describe('stream without default entrypoints', () => {
                 encryptionType: EncryptionType.NONE
             }
         },
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
     }
 

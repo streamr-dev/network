@@ -1,4 +1,11 @@
 import {
+    Operator as OperatorContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
+import {
+    _operatorContractUtils,
+    DeployOperatorContractOpts,
+    DeploySponsorshipContractOpts,
     NetworkPeerDescriptor,
     Stream,
     StreamMetadata,
@@ -146,4 +153,12 @@ async function createAssignmentStream(client: StreamrClient): Promise<Stream> {
         permissions: [StreamPermission.SUBSCRIBE]
     })
     return stream
+}
+
+export const deployTestOperatorContract = async (opts: Omit<DeployOperatorContractOpts, 'environmentId'>): Promise<OperatorContract> => {
+    return _operatorContractUtils.deployOperatorContract({ ...opts, 'environmentId': 'dev2' })
+}
+
+export const deployTestSponsorshipContract = async (opts: Omit<DeploySponsorshipContractOpts, 'environmentId'>): Promise<SponsorshipContract> => {
+    return _operatorContractUtils.deploySponsorshipContract({ ...opts, 'environmentId': 'dev2' })
 }

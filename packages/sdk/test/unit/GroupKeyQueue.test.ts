@@ -2,34 +2,34 @@ import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { Authentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
+import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
 
 const streamId = toStreamID('mock-stream')
 
 describe('GroupKeyQueue', () => {
 
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
-    let authentication: Authentication
+    let identity: Identity
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
 
     beforeEach(async () => {
         groupKeyStore = mock<LocalGroupKeyStore>()
-        authentication = await createRandomAuthentication()
-        groupKeyManager = await createGroupKeyManager(groupKeyStore, authentication)
-        queue = await GroupKeyQueue.createInstance(streamId, authentication, groupKeyManager)
+        identity = await createRandomIdentity()
+        groupKeyManager = await createGroupKeyManager(groupKeyStore, identity)
+        queue = await GroupKeyQueue.createInstance(streamId, identity, groupKeyManager)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(groupKeyStore.set).toHaveBeenCalledTimes(1)
-        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await authentication.getUserId(), groupKey.data)
+        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, await identity.getUserId(), groupKey.data)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

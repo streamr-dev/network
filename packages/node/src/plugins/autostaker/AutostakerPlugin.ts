@@ -1,4 +1,4 @@
-import { _operatorContractUtils, StreamrClient } from '@streamr/sdk'
+import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, scheduleAtInterval, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther, Wallet } from 'ethers'
@@ -37,7 +37,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         logger.info('Run autostaker actions')
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
-            .connect(new Wallet(this.pluginConfig.operatorOwnerPrivateKey, provider))
+            .connect(provider)
         const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
         const availableBalance = (await operatorContract.valueWithoutEarnings()) - stakedAmount
         logger.info(`Available balance: ${formatEther(availableBalance)} (staked=${formatEther(stakedAmount)})`)
@@ -68,7 +68,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             const targetSponsorship = sample(sponsorships)!
             logger.info(`Stake ${formatEther(STAKE_AMOUNT)} to ${targetSponsorship.id}`)
             await _operatorContractUtils.stake(
-                operatorContract,
+                new Wallet(this.pluginConfig.operatorOwnerPrivateKey, provider) as SignerWithProvider,
+                this.pluginConfig.operatorContractAddress,
                 targetSponsorship.id,
                 STAKE_AMOUNT
             )

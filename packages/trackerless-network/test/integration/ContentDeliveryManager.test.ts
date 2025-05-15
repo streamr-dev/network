@@ -4,8 +4,8 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { StreamPartIDUtils, until, waitForEvent3, wait } from '@streamr/utils'
-import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
-import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
+import { ContentDeliveryManager, Events } from '../../src/ContentDeliveryManager'
+import { ControlLayerNode } from '../../src/control-layer/ControlLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

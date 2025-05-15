@@ -2,8 +2,7 @@ import crypto from 'crypto'
 import { promisify } from 'util'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
-import { utf8ToBinary } from '@streamr/utils'
-import { getSubtle } from '../utils/crossPlatformCrypto'
+import { utf8ToBinary, getSubtle } from '@streamr/utils'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA

@@ -1,5 +1,5 @@
-import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
-import { NodeList } from '../../src/logic/NodeList'
+import { NeighborFinder } from '../../src/content-delivery-layer/neighbor-discovery/NeighborFinder'
+import { NodeList } from '../../src/content-delivery-layer/NodeList'
 import { until } from '@streamr/utils'
 import range from 'lodash/range'
 import { expect } from 'expect'

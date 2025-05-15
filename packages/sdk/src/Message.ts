@@ -1,5 +1,21 @@
-import { HexString, StreamID } from '@streamr/utils'
-import { SignatureType, StreamMessage } from './protocol/StreamMessage'
+import { HexString, StreamID, KeyType } from '@streamr/utils'
+import { StreamMessage } from './protocol/StreamMessage'
+import { SignatureType } from '@streamr/trackerless-network'
+import { IDENTITY_MAPPING } from './identity/IdentityMapping'
+
+// Lookup structure for converting SignatureType to KeyType string
+export type MessageSignatureType = KeyType | 'ECDSA_SECP256K1_LEGACY' | 'ERC_1271'
+const stringVersionsOfSignatureTypes: Record<number, MessageSignatureType> = {
+    // Read key pair SignatureTypes from IdentityMapping
+    ...Object.fromEntries(
+        IDENTITY_MAPPING.map(
+            (idMapping) => [idMapping.signatureType, idMapping.keyType]
+        )
+    ),
+    // These special ones need to be added manually
+    [SignatureType.ECDSA_SECP256K1_LEGACY]: 'ECDSA_SECP256K1_LEGACY',
+    [SignatureType.ERC_1271]: 'ERC_1271',
+}
 
 /**
  * Represents a message in the Streamr Network.
@@ -40,7 +56,7 @@ export interface Message {
     /**
      * Signature method used to sign message.
      */
-    signatureType: 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271'
+    signatureType: MessageSignatureType
 
     /**
      * Publisher of message.
@@ -55,7 +71,7 @@ export interface Message {
     /**
      * Identifiers group key used to encrypt the message.
      */
-    groupKeyId: string | undefined
+    encryptionKeyId: string | undefined
 
     /** @internal */
     streamMessage: StreamMessage // TODO remove this field if possible
@@ -63,17 +79,12 @@ export interface Message {
 
 export type MessageMetadata = Omit<Message, 'content'>
 
-function signatureTypeToString(signatureType: SignatureType): 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' {
-    switch (signatureType) {
-        case SignatureType.LEGACY_SECP256K1:
-            return 'LEGACY_SECP256K1'
-        case SignatureType.SECP256K1:
-            return 'SECP256K1'
-        case SignatureType.ERC_1271:
-            return 'ERC_1271'
-        default:
-            throw new Error(`Unknown signature type: ${signatureType}`)
+function signatureTypeToString(signatureType: SignatureType): MessageSignatureType {
+    const result = stringVersionsOfSignatureTypes[signatureType]
+    if (!result) {
+        throw new Error(`Unknown signature type: ${signatureType}`)
     }
+    return result
 }
 
 export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
@@ -87,7 +98,7 @@ export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
         signatureType: signatureTypeToString(msg.signatureType),
         publisherId: msg.getPublisherId(),
         msgChainId: msg.getMsgChainId(),
-        groupKeyId: msg.groupKeyId,
+        encryptionKeyId: msg.groupKeyId,
         streamMessage: msg
         // TODO add other relevant fields (could update some test assertions to
         // use those keys instead of getting the fields via from streamMessage property)

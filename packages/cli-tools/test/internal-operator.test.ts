@@ -2,7 +2,7 @@ import { _operatorContractUtils } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { parseEther } from 'ethers'
-import { createTestClient, runCommand } from './utils'
+import { createTestClient, deployTestOperatorContract, deployTestSponsorshipContract, runCommand } from './utils'
 
 const DELEGATION_AMOUNT = '20000'
 const STAKE_AMOUNT = '10000'
@@ -14,40 +14,40 @@ describe('operator', () => {
     it('happy path', async () => {
         const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream('/test')
-        const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({ 
+        const sponsorshipContract = await deployTestSponsorshipContract({ 
             streamId: stream.id,
             deployer: await createTestWallet({ gas: true })
         })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         const operator = await createTestWallet({ gas: true, tokens: true })
-        const operatorContract = await _operatorContractUtils.deployOperatorContract({
+        const operatorContract = await deployTestOperatorContract({
             deployer: operator
         })
         await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), parseEther(SELF_DELEGATION_AMOUNT))
         const delegator = await createTestWallet({ gas: true, tokens: true })
-        const operatorAddress: string = await operatorContract.getAddress()
+        const operatorContractAddress: string = await operatorContract.getAddress()
 
         // delegate
-        await runCommand(`internal operator-delegate ${operatorAddress} ${DELEGATION_AMOUNT}`, {
+        await runCommand(`internal operator-delegate ${operatorContractAddress} ${DELEGATION_AMOUNT}`, {
             privateKey: delegator.privateKey
         })
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(parseEther(DELEGATION_AMOUNT))
 
         // stake
-        await runCommand(`internal operator-stake ${operatorAddress} ${sponsorshipAddress} ${STAKE_AMOUNT}`, {
+        await runCommand(`internal operator-stake ${operatorContractAddress} ${sponsorshipAddress} ${STAKE_AMOUNT}`, {
             privateKey: operator.privateKey
         })
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT))
 
         // unstake
-        await runCommand(`internal operator-unstake ${operatorAddress} ${sponsorshipAddress}`, {
+        await runCommand(`internal operator-unstake ${operatorContractAddress} ${sponsorshipAddress}`, {
             privateKey: operator.privateKey
         })
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(0n)
 
         // undelegate
         await wait(MINIMUM_DELEGATION_SECONDS)
-        await runCommand(`internal operator-undelegate ${operatorAddress} ${DELEGATION_AMOUNT}`, {
+        await runCommand(`internal operator-undelegate ${operatorContractAddress} ${DELEGATION_AMOUNT}`, {
             privateKey: delegator.privateKey
         })
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(0n)

@@ -13,11 +13,11 @@ SPONSORER_ADDRESS=$(ethereum-address $SPONSORER_PRIVATE_KEY | jq -r '.address')
 
 cd ../../cli-tools
 echo 'Mint tokens'
-npx tsx bin/streamr.ts internal token-mint $NODE_ADDRESS 10000000 10000000
-npx tsx bin/streamr.ts internal token-mint $OWNER_ADDRESS 10000000 10000000
+npx tsx bin/streamr.ts internal token-mint $NODE_ADDRESS 10000000 10000000 --env dev2
+npx tsx bin/streamr.ts internal token-mint $OWNER_ADDRESS 10000000 10000000 --env dev2
 echo 'Create operator'
 OPERATOR_CONTRACT_ADDRESS=$(npx tsx bin/streamr.ts internal operator-create -c 10 --node-addresses $NODE_ADDRESS --env dev2 --private-key $OWNER_PRIVATE_KEY | jq -r '.address') 
-npx tsx bin/streamr.ts internal token-mint $SPONSORER_ADDRESS 10000000 10000000
+npx tsx bin/streamr.ts internal token-mint $SPONSORER_ADDRESS 10000000 10000000 --env dev2
 npx tsx bin/streamr.ts stream create /foo --env dev2 --private-key $SPONSORER_PRIVATE_KEY
 SPONSORSHIP_CONTRACT_ADDRESS=$(npx tsx bin/streamr.ts internal sponsorship-create /foo -e $EARNINGS_PER_SECOND --env dev2 --private-key $SPONSORER_PRIVATE_KEY | jq -r '.address') 
 npx tsx bin/streamr.ts internal sponsorship-sponsor $SPONSORSHIP_CONTRACT_ADDRESS $SPONSOR_AMOUNT --env dev2 --private-key $SPONSORER_PRIVATE_KEY

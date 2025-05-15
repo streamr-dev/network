@@ -1,5 +1,9 @@
 import 'reflect-metadata'
 
+import {
+    Operator as OperatorContract,
+    Sponsorship as SponsorshipContract
+} from '@streamr/network-contracts'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import {
     DEFAULT_PARTITION_COUNT,
@@ -21,7 +25,8 @@ import { mock } from 'jest-mock-extended'
 import { AddressInfo } from 'net'
 import path from 'path'
 import { DependencyContainer } from 'tsyringe'
-import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
+import { Identity } from '../../src/identity/Identity'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -30,6 +35,12 @@ import { Stream } from '../../src/Stream'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import {
+    deployOperatorContract,
+    DeployOperatorContractOpts,
+    deploySponsorshipContract,
+    DeploySponsorshipContractOpts
+} from '../../src/contracts/operatorContractUtils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -129,18 +140,19 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
-    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
+    const identity = EthereumKeyPairIdentity.fromPrivateKey(opts.publisher.privateKey)
     const factory = new MessageFactory({
-        authentication,
+        identity,
+        config: CONFIG_TEST,
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
+        groupKeyQueue: await createGroupKeyQueue(identity, opts.encryptionKey, opts.nextEncryptionKey),
         signatureValidator: mock<SignatureValidator>(),
-        messageSigner: new MessageSigner(authentication)
+        messageSigner: new MessageSigner(identity)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -154,13 +166,13 @@ export const createMockMessage = async (
 export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
-    const authentication = {
+    const identity = {
         getUserId: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
         new PersistenceManager(
-            authentication,
+            identity,
             new DestroySignal(),
             loggerFactory
         ),
@@ -176,8 +188,8 @@ export const startPublisherKeyExchangeSubscription = async (
     await node.join(streamPartId)
 }
 
-export const createRandomAuthentication = async (): Promise<Authentication> => {
-    return createPrivateKeyAuthentication(await createTestPrivateKey())
+export const createRandomIdentity = async (): Promise<Identity> => {
+    return EthereumKeyPairIdentity.fromPrivateKey(await createTestPrivateKey())
 }
 
 export const createStreamRegistry = (opts?: {
@@ -205,7 +217,7 @@ export const createStreamRegistry = (opts?: {
 
 export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    authentication?: Authentication 
+    identity?: Identity 
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
@@ -216,19 +228,21 @@ export const createGroupKeyManager = async (
                 keyRequestTimeout: 50,
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!,
                 requireQuantumResistantKeyExchange: false,
+                requireQuantumResistantSignatures: false,
+                requireQuantumResistantEncryption: false,
             }
         },
-        authentication ?? await createRandomAuthentication(),
+        identity ?? await createRandomIdentity(),
         new StreamrClientEventEmitter(),
         new DestroySignal()
     )
 }
 
-export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+export const createGroupKeyQueue = async (identity: Identity, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
-        authentication,
-        await createGroupKeyManager(undefined, authentication)
+        identity,
+        await createGroupKeyManager(undefined, identity)
     )
     if (current !== undefined) {
         await queue.rekey(current)
@@ -321,4 +335,12 @@ export const formEthereumFunctionSelector = (methodSignature: string): string =>
 
 export const parseEthereumFunctionSelectorFromCallData = (data: string): string => {
     return data.substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
+}
+
+export const deployTestOperatorContract = async (opts: Omit<DeployOperatorContractOpts, 'environmentId'>): Promise<OperatorContract> => {
+    return deployOperatorContract({ ...opts, 'environmentId': 'dev2' })
+}
+
+export const deployTestSponsorshipContract = async (opts: Omit<DeploySponsorshipContractOpts, 'environmentId'>): Promise<SponsorshipContract> => {
+    return deploySponsorshipContract({ ...opts, 'environmentId': 'dev2' })
 }
