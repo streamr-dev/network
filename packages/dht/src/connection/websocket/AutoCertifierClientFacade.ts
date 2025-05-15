@@ -35,6 +35,7 @@ export interface IAutoCertifierClient {
     start(): Promise<void>
     stop(): void
     on(eventName: string, cb: (subdomain: CertifiedSubdomain) => void): void
+    off(eventName: string, cb: (subdomain: CertifiedSubdomain) => void): void
 }
 
 interface AutoCertifierClientFacadeOptions {
