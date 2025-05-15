@@ -1,5 +1,5 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
-import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
+import { ConnectionType, IConnection, ConnectionID } from '../IConnection'
 import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
@@ -38,9 +38,7 @@ initLogger('Fatal')
 
 type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 
-type Events = WebrtcConnectionEvents & ConnectionEvents
-
-export class NodeWebrtcConnection extends EventEmitter<Events> implements IConnection, IWebrtcConnection {
+export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IConnection, IWebrtcConnection {
 
     public connectionId: ConnectionID
     private connection?: PeerConnection
