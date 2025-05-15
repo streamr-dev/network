@@ -94,12 +94,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
 
         await newNodeInStream.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 })
         newNodeInStream.broadcast(msg)
-        try {
-            await until(() => receivedMessages === NUM_OF_LATER_NODES)
-        } catch (err) {
-            console.log(receivedMessages)
-            throw err
-        }
+        await until(() => receivedMessages === NUM_OF_LATER_NODES)
        
     }, 180 * 1000)
 })
