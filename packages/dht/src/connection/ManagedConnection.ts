@@ -1,4 +1,4 @@
-import { ConnectionID, IConnection } from './IConnection'
+import { ConnectionID, ConnectionStatistics, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
@@ -10,6 +10,7 @@ import { createRandomConnectionId } from './Connection'
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     disconnected: (gracefulLeave: boolean) => void
+    statisticsUpdated: (statistics: ConnectionStatistics) => void
 }
 
 const logger = new Logger(module)
@@ -42,7 +43,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
         connection.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
-
+        connection.on('statisticsUpdated', (statistics: ConnectionStatistics) => this.emit('statisticsUpdated', statistics))
         this.lastUsedTimestamp = Date.now()
         this.remotePeerDescriptor = peerDescriptor
     }
