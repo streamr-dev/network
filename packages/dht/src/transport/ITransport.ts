@@ -2,9 +2,9 @@ import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/Dht
 import { ConnectionStatistics } from '../connection/IConnection'
 
 export interface TransportEvents {
+    connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
     message: (message: Message) => void
-    connected: (peerDescriptor: PeerDescriptor) => void
     statisticsUpdated: (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics) => void
 }
 

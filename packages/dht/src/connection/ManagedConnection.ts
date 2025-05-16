@@ -15,8 +15,6 @@ export interface ManagedConnectionEvents {
 
 const logger = new Logger(module)
 
-export type Events = ManagedConnectionEvents
-
 // ManagedConnection is a component used as a wrapper for IConnection after they have been successfully handshaked.
 // Should only be used in the ConnectionManager.
 export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {

@@ -2,7 +2,7 @@
 
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
-import { IConnection, ConnectionID, ConnectionEvents, ConnectionType, ConnectionStatistics } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionType, ConnectionStatistics } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { EARLY_TIMEOUT, IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
@@ -15,13 +15,11 @@ enum DisconnectedRtcPeerConnectionStateEnum {
 
 const logger = new Logger(module)
 
-type Events = WebrtcConnectionEvents & ConnectionEvents
-
 interface Params {
     iceServers?: IceServer[]
 }
 
-export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
+export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IWebrtcConnection, IConnection {
 
     public connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC

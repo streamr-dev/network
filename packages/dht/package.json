@@ -51,7 +51,7 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "lru-cache": "^11.1.0",
-    "node-datachannel": "^0.26.0",
+    "node-datachannel": "^0.27.0",
     "uuid": "^11.1.0",
     "websocket": "^1.0.34",
     "ws": "^8.18.2"
