@@ -43,7 +43,7 @@ export type RunAndRaceEventsReturnType<TEvents
  * within timeout else rejects
  */
 
-export function raceEvents3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+export function raceEvents<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     emitter: {
         on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
         off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
@@ -71,7 +71,7 @@ export function raceEvents3<TEvents extends Record<string, (...args: any[]) => v
         return withTimeout(
             Promise.race(promises.map((promise) => promise.task)),
             timeout,
-            'raceEvents3'
+            'raceEvents'
         ).finally(() => {
             cancelAll()
         })
@@ -83,7 +83,7 @@ export function raceEvents3<TEvents extends Record<string, (...args: any[]) => v
 
 }
 
-export function runAndRaceEvents3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+export function runAndRaceEvents<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     operations: (() => void)[],
     emitter: {
         on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
@@ -92,12 +92,12 @@ export function runAndRaceEvents3<TEvents extends Record<string, (...args: any[]
     eventNames: TEventName[],
     timeout: number
 ): Promise<RunAndRaceEventsReturnType<TEvents, TEventName>> {
-    const promise = raceEvents3(emitter, eventNames, timeout)
+    const promise = raceEvents(emitter, eventNames, timeout)
     operations.forEach((op) => {
         try {
             op()
         } catch (e) {
-            logger.error('runAndRaceEvents3 caught exception ' + e)
+            logger.error('runAndRaceEvents caught exception ' + e)
         }
     })
     return promise
@@ -131,7 +131,7 @@ const runAndWait = async <TEvents extends Record<string, (...args: any[]) => voi
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout. Otherwise rejected.
  */
-export const runAndWaitForEvents3 = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+export const runAndWaitForEvents = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     operations: (() => void)[],
     waitedEvents: [
         emitter: {

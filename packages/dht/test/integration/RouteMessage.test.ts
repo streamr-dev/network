@@ -1,7 +1,7 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, runAndWaitForEvents3, until } from '@streamr/utils'
+import { Logger, runAndWaitForEvents, until } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
@@ -69,7 +69,7 @@ describe('Route Message With Mock Connections', () => {
             targetDescriptor: destinationNode.getLocalPeerDescriptor()
         }
 
-        await runAndWaitForEvents3([() => {
+        await runAndWaitForEvents([() => {
             // @ts-expect-error private
             sourceNode.router!.doRouteMessage({
                 message,
@@ -216,7 +216,7 @@ describe('Route Message With Mock Connections', () => {
             parallelRootNodeIds: []
         }
 
-        await runAndWaitForEvents3([() => {
+        await runAndWaitForEvents([() => {
             // @ts-expect-error private
             sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         }], [[destinationNode, 'message']])

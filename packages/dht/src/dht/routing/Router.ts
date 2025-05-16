@@ -1,6 +1,6 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingMode, RoutingRemoteContact, RoutingSession } from './RoutingSession'
-import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
+import { Logger, executeSafePromise, raceEvents, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
 import { v4 } from 'uuid'
@@ -125,7 +125,7 @@ export class Router {
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
-                eventReceived = raceEvents3(
+                eventReceived = raceEvents(
                     session,
                     ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
                     null
