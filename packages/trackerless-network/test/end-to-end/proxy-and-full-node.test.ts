@@ -1,5 +1,5 @@
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForEvent } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import {
     ContentType,
@@ -92,14 +92,14 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage'),
             proxiedNode.broadcast(createMessage(regularStreamPart1))
         ])
 
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(true)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage'),
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
@@ -112,13 +112,13 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage', 5000, 
                 (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage', 5000, 
                 (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage', 5000, 
                 (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage', 5000, 
                 (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
             proxiedNode.broadcast(createMessage(regularStreamPart1)),
             proxiedNode.broadcast(createMessage(regularStreamPart2)),
@@ -129,7 +129,7 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(true)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(proxyNode.stack.getContentDeliveryManager(), 'newMessage'),
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 

@@ -7,7 +7,7 @@ import {
     HasSession
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { Logger, waitForEvent3 } from '@streamr/utils'
+import { Logger, waitForEvent } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
 
 const START_TIMEOUT = 60 * 1000
@@ -77,7 +77,7 @@ export class AutoCertifierClientFacade {
             logger.trace(`Updated certificate`)
         })
         await Promise.all([
-            waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT),
+            waitForEvent(this.autoCertifierClient, 'updatedCertificate', START_TIMEOUT),
             this.autoCertifierClient.start()
         ])
     }

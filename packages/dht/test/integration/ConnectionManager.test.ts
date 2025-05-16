@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, until, wait, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, until, wait, waitForEvent } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
@@ -8,7 +8,6 @@ import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { ConnectivityResponse, Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
-import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import range from 'lodash/range'
@@ -393,7 +392,7 @@ describe('ConnectionManager', () => {
             } 
         }
         await Promise.all([
-            waitForEvent3<TransportEvents>(connectionManager1, 'disconnected'),
+            waitForEvent(connectionManager1, 'disconnected'),
             expect(connectionManager1.send(msg))      
                 .rejects
                 .toThrow()

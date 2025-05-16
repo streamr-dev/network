@@ -1,7 +1,6 @@
-import { wait, waitForEvent3 } from '@streamr/utils'
+import { wait, waitForEvent } from '@streamr/utils'
 import { PendingConnection } from '../../src/exports'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { PendingConnectionEvents } from '../../src/connection/PendingConnection'
 import { MockConnection } from '../utils/mock/MockConnection'
 
 describe('PendingConnection', () => {
@@ -26,7 +25,7 @@ describe('PendingConnection', () => {
     })
 
     it('emits disconnected after timed out', async () => {
-        await waitForEvent3<PendingConnectionEvents>(pendingConnection, 'disconnected')  
+        await waitForEvent(pendingConnection, 'disconnected')  
     })
 
     it('does not emit disconnected if destroyed', async () => {

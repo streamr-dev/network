@@ -1,7 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { waitForEvent3 } from '@streamr/utils'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { TransportEvents } from '../../src/transport/ITransport'
+import { waitForEvent } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const WEBSOCKET_PORT_RANGE = { min: 11222, max: 11223 }
@@ -73,8 +71,8 @@ describe('Layer0MixedConnectionTypes', () => {
     it('2 non-server peers join first', async () => {
 
         await Promise.all([
-            waitForEvent3<TransportEvents>((node3.getTransport() as ConnectionManager), 'connected'),
-            waitForEvent3<TransportEvents>((node4.getTransport() as ConnectionManager), 'connected'),
+            waitForEvent(node3.getTransport(), 'connected'),
+            waitForEvent(node4.getTransport(), 'connected'),
             node3.joinDht([epPeerDescriptor]),
             node4.joinDht([epPeerDescriptor])
         ])
