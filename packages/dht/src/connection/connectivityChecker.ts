@@ -1,11 +1,11 @@
-import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents3 } from '@streamr/utils'
+import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
     Message, PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { ConnectionEvents, IConnection } from './IConnection'
+import { IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedProtocolVersion } from '../helpers/version'
@@ -17,9 +17,9 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
     { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
     const socket = new WebsocketClientConnection()
-    let result: RunAndRaceEventsReturnType<ConnectionEvents>
+    let result: RunAndRaceEventsReturnType<any, 'connected' | 'error'>
     try {
-        result = await runAndRaceEvents3<ConnectionEvents>([
+        result = await runAndRaceEvents([
             () => { socket.connect(url, allowSelfSignedCertificate) }],
         socket, ['connected', 'error'],
         timeoutMs)

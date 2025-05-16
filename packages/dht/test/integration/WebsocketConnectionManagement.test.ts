@@ -1,4 +1,4 @@
-import { MetricsContext, until, waitForEvent3 } from '@streamr/utils'
+import { MetricsContext, until, waitForEvent } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
@@ -6,7 +6,6 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import * as Err from '../../src/helpers/errors'
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
-import { TransportEvents } from '../../src/transport/ITransport'
 import { toNodeId } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -131,7 +130,7 @@ describe('Websocket Connection Management', () => {
         }
 
         await Promise.allSettled([
-            waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
+            waitForEvent(wsServerManager, 'disconnected', 15000),
             wsServerManager.send(dummyMessage)
         ])
         expect(wsServerManager.hasConnection(toNodeId(dummyMessage.targetDescriptor!))).toBeFalse()

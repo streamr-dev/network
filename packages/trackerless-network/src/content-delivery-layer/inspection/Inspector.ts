@@ -1,9 +1,9 @@
 import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { Logger, StreamPartID, waitForEvent3 } from '@streamr/utils'
+import { Logger, StreamPartID, waitForEvent } from '@streamr/utils'
 import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { TemporaryConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
-import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
+import { InspectSession } from './InspectSession'
 
 interface InspectorOptions {
     localPeerDescriptor: PeerDescriptor
@@ -71,7 +71,7 @@ export class Inspector {
         await this.openInspectConnection(peerDescriptor, lockId)
         let success = false
         try {
-            await waitForEvent3<InspectSessionEvents>(session, 'done', this.inspectionTimeout)
+            await waitForEvent(session, 'done', this.inspectionTimeout)
             success = true
         } catch {
             logger.trace('Inspect session timed out, removing')

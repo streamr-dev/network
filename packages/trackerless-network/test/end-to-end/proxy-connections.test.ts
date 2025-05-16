@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, wait, until, waitForEvent3 } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, wait, until, waitForEvent } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/content-delivery-layer/proxy/ProxyClient'
@@ -110,7 +110,7 @@ describe('Proxy connections', () => {
     it('happy path publishing', async () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         await Promise.all([
-            waitForEvent3(proxyNode1.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(proxyNode1.stack.getContentDeliveryManager(), 'newMessage'),
             proxiedNode.broadcast(MESSAGE)
         ])
     })
@@ -118,7 +118,7 @@ describe('Proxy connections', () => {
     it('happy path subscribing', async () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
         await Promise.all([
-            waitForEvent3(proxiedNode.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(proxiedNode.stack.getContentDeliveryManager(), 'newMessage'),
             proxyNode1.broadcast(MESSAGE)
         ])
     })
