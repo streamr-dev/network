@@ -15,6 +15,13 @@
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
     "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
   },
+  "exports": {
+    "default": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/src/exports-esm.mjs",
+      "require": "./dist/src/exports-commonjs.js"
+    }
+  },
   "files": [
     "dist",
     "!*.tsbuildinfo",
