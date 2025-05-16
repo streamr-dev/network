@@ -124,9 +124,9 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
  * Signing scheme using ECDSA with secp256r1 curve and SHA-256, natively supported by browsers
  */
 export class EcdsaSecp256r1 extends SigningUtil {
-    generateKeyPair(): KeyPair {
+    generateKeyPair(compressPublicKey: boolean = true): KeyPair {
         const privateKey = randomBytes(32)
-        const publicKey = this.getPublicKeyFromPrivateKey(privateKey)
+        const publicKey = this.getPublicKeyFromPrivateKey(privateKey, compressPublicKey)
 
         return {
             publicKey,
@@ -140,6 +140,23 @@ export class EcdsaSecp256r1 extends SigningUtil {
 
     getPublicKeyFromPrivateKey(privateKey: Uint8Array, compressed: boolean = true): Uint8Array {
         return p256.getPublicKey(privateKey, compressed)
+    }
+
+    getUncompressedPublicKey(publicKey: Uint8Array): Uint8Array {
+        if (publicKey.length == 33) {
+            // Decode compressed public key to an elliptic curve point
+            const point = p256.ProjectivePoint.fromHex(publicKey)
+
+            // Convert the point to an uncompressed public key
+            return point.toRawBytes(false)
+        }
+
+        // No-op if called with already uncompressed key
+        if (publicKey.length == 65) {
+            return publicKey
+        }
+
+        throw new Error(`Unexpected public key length: ${publicKey.length}`)
     }
 
     privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
@@ -204,8 +221,8 @@ export class EcdsaSecp256r1 extends SigningUtil {
         return new Uint8Array(signature)
     }
 
-    async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const key = await subtleCrypto.importKey(
+    private async importKey(publicKey: Uint8Array): Promise<webcrypto.CryptoKey> {
+        return subtleCrypto.importKey(
             'raw',
             publicKey,
             {
@@ -215,6 +232,22 @@ export class EcdsaSecp256r1 extends SigningUtil {
             false,
             ['verify']
         )
+    }
+
+    async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
+        let key: webcrypto.CryptoKey
+
+        try {
+            key = await this.importKey(publicKey)
+        } catch (err) {
+            // On some browsers (Safari), uncompressed keys are not supported for some reason!
+            // If that might be the case, retry with an uncompressed key
+            if (publicKey.length === 33) {
+                key = await this.importKey(this.getUncompressedPublicKey(publicKey))
+            } else {
+                throw err
+            }
+        }
 
         const isValid = await subtleCrypto.verify(
             {
