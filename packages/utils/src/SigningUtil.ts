@@ -221,7 +221,7 @@ export class EcdsaSecp256r1 extends SigningUtil {
         return new Uint8Array(signature)
     }
 
-    private async importKey(publicKey: Uint8Array): Promise<webcrypto.CryptoKey> {
+    private async publicKeyToCryptoKey(publicKey: Uint8Array): Promise<webcrypto.CryptoKey> {
         return subtleCrypto.importKey(
             'raw',
             publicKey,
@@ -238,12 +238,12 @@ export class EcdsaSecp256r1 extends SigningUtil {
         let key: webcrypto.CryptoKey
 
         try {
-            key = await this.importKey(publicKey)
+            key = await this.publicKeyToCryptoKey(publicKey)
         } catch (err) {
             // On some browsers (Safari), compressed keys are not supported for some reason!
             // If that might be the case, retry with an uncompressed key
             if (publicKey.length === 33) {
-                key = await this.importKey(this.getUncompressedPublicKey(publicKey))
+                key = await this.publicKeyToCryptoKey(this.getUncompressedPublicKey(publicKey))
             } else {
                 throw err
             }
