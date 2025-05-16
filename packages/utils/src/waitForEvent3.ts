@@ -1,5 +1,6 @@
 import { withTimeout } from './withTimeout'
 import { Logger } from './Logger'
+import { waitForEvent } from './waitForEvent'
 
 const logger = new Logger(module)
 
@@ -25,35 +26,6 @@ const once = <TEvents extends Record<string, (...args: any[]) => void>, TEventNa
         task,
         cancel
     }
-}
-
-/**
- * Wait for an event to be emitted on eventemitter3 within timeout.
- *
- * @param emitter emitter of event
- * @param event event to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<any[]>} resolves with event arguments if event occurred
- * within timeout else rejects
- */
-
-export function waitForEvent3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
-    emitter: {
-        on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-        off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-    },
-    eventName: TEventName,
-    timeout = 5000,
-    predicate: (...eventArgs: any[]) => boolean = () => true
-): Promise<unknown> {
-    const { task, cancel } = once(emitter, eventName, predicate)
-    return withTimeout(
-        task,
-        timeout,
-        'waitForEvent3'
-    ).finally(() => {
-        cancel()
-    })
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -144,7 +116,7 @@ const runAndWait = async <TEvents extends Record<string, (...args: any[]) => voi
     timeout: number,
     promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
-    const promise = promiseFn(waitedEvents.map(([emitter, event]) => waitForEvent3(emitter, event, timeout)))
+    const promise = promiseFn(waitedEvents.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
     operations.forEach((op) => { op() })
     return promise
 }
