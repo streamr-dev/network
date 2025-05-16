@@ -1,21 +1,23 @@
 import { withTimeout } from './withTimeout'
 import { Logger } from './Logger'
-import EventEmitter from 'eventemitter3'
 
 const logger = new Logger(module)
 
-const once = <T extends EventEmitter.ValidEventTypes>(
-    emitter: EventEmitter<T>,
-    eventName: keyof T,
+const once = <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+    emitter: {
+        on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+    },
+    eventName: TEventName,
     predicate: (...eventArgs: any[]) => boolean = () => true,
 ): { task: Promise<any[]>, cancel: () => void } => {
-    let listener: (eventArgs: any[]) => void
-    const task = new Promise<any[]>((resolve) => {
-        listener = (...eventArgs: any[]) => {
+    let listener: TEvents[TEventName]
+    const task: Promise<Parameters<TEvents[TEventName]>> = new Promise((resolve) => {
+        listener = ((...eventArgs: Parameters<TEvents[TEventName]>) => {
             if (predicate(...eventArgs)) {
                 resolve(eventArgs)
             }
-        }
+        }) as TEvents[TEventName]
         emitter.on(eventName as any, listener as any)
     })
     const cancel = () => emitter.off(eventName as any, listener as any)
@@ -35,9 +37,12 @@ const once = <T extends EventEmitter.ValidEventTypes>(
  * within timeout else rejects
  */
 
-export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
-    emitter: EventEmitter<T>,
-    eventName: keyof T,
+export function waitForEvent3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+    emitter: {
+        on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+    },
+    eventName: TEventName,
     timeout = 5000,
     predicate: (...eventArgs: any[]) => boolean = () => true
 ): Promise<unknown> {
@@ -52,7 +57,9 @@ export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> = { winnerName: keyof T, winnerArgs: any[] }
+export type RunAndRaceEventsReturnType<TEvents 
+    extends Record<string, (...args: Parameters<TEvents[TEventName]>) => void>, TEventName extends keyof TEvents>
+    = { winnerName: TEventName, winnerArgs: any[] }
 
 /**
  * Wait for an event to be emitted on eventemitter3 within timeout.
@@ -64,16 +71,19 @@ export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> =
  * within timeout else rejects
  */
 
-export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
-    emitter: EventEmitter<T>,
-    eventNames: (keyof T)[],
+export function raceEvents3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
+    emitter: {
+        on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+    },
+    eventNames: TEventName[],
     timeout: number | null = 5000
-): Promise<RunAndRaceEventsReturnType<T>> {
-    const promises: { task: Promise<RunAndRaceEventsReturnType<T>>, cancel: () => void }[] = []
+): Promise<RunAndRaceEventsReturnType<TEvents, TEventName>> {
+    const promises: { task: Promise<RunAndRaceEventsReturnType<TEvents, TEventName>>, cancel: () => void }[] = []
     eventNames.forEach((eventName) => {
         const item = once(emitter, eventName)
         const wrappedTask = item.task.then((value: any[]) => {
-            const ret: RunAndRaceEventsReturnType<T> = { winnerName: eventName, winnerArgs: value }
+            const ret: RunAndRaceEventsReturnType<TEvents, TEventName> = { winnerName: eventName, winnerArgs: value }
             return ret
         })
         promises.push({ task: wrappedTask, cancel: item.cancel })
@@ -101,12 +111,15 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
 
 }
 
-export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
+export function runAndRaceEvents3<TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     operations: (() => void)[],
-    emitter: EventEmitter<T>,
-    eventNames: (keyof T)[],
+    emitter: {
+        on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+    },
+    eventNames: TEventName[],
     timeout: number
-): Promise<RunAndRaceEventsReturnType<T>> {
+): Promise<RunAndRaceEventsReturnType<TEvents, TEventName>> {
     const promise = raceEvents3(emitter, eventNames, timeout)
     operations.forEach((op) => {
         try {
@@ -119,9 +132,15 @@ export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
 }
 
 // internal
-const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
+const runAndWait = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     operations: (() => void)[],
-    waitedEvents: [emitter: EventEmitter<T>, event: keyof T][],
+    waitedEvents: [
+        emitter: {
+            on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+            off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        },
+        eventName: TEventName
+    ][],
     timeout: number,
     promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
@@ -140,9 +159,15 @@ const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout. Otherwise rejected.
  */
-export const runAndWaitForEvents3 = async <T extends EventEmitter.ValidEventTypes>(
+export const runAndWaitForEvents3 = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
     operations: (() => void)[],
-    waitedEvents: [emitter: EventEmitter<T>, event: keyof T][],
+    waitedEvents: [
+        emitter: {
+            on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+            off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
+        },
+        eventName: TEventName
+    ][],
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))

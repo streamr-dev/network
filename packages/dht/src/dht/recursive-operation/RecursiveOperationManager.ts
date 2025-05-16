@@ -12,7 +12,7 @@ import { RoutingMode } from '../routing/RoutingSession'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
-import { RECURSIVE_OPERATION_TIMEOUT, RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
+import { RECURSIVE_OPERATION_TIMEOUT, RecursiveOperationSession } from './RecursiveOperationSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -110,7 +110,7 @@ export class RecursiveOperationManager {
         this.ongoingSessions.set(session.getId(), session)
         if (waitForCompletion === true) {
             try {
-                await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
+                await runAndWaitForEvents3(
                     [() => session.start(this.options.serviceId)],
                     [[session, 'completed']],
                     // TODO use options option or named constant?
