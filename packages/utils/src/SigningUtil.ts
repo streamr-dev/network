@@ -240,7 +240,7 @@ export class EcdsaSecp256r1 extends SigningUtil {
         try {
             key = await this.importKey(publicKey)
         } catch (err) {
-            // On some browsers (Safari), uncompressed keys are not supported for some reason!
+            // On some browsers (Safari), compressed keys are not supported for some reason!
             // If that might be the case, retry with an uncompressed key
             if (publicKey.length === 33) {
                 key = await this.importKey(this.getUncompressedPublicKey(publicKey))
