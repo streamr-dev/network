@@ -1,4 +1,4 @@
-import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents } from '@streamr/utils'
+import { Logger, raceEvents } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
@@ -17,12 +17,11 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
     { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
     const socket = new WebsocketClientConnection()
-    let result: RunAndRaceEventsReturnType<any, 'connected' | 'error'>
+    let result: { winnerName: 'connected' | 'error' }
     try {
-        result = await runAndRaceEvents([
-            () => { socket.connect(url, allowSelfSignedCertificate) }],
-        socket, ['connected', 'error'],
-        timeoutMs)
+        const resultPromise = raceEvents(socket, ['connected', 'error'], timeoutMs)
+        socket.connect(url, allowSelfSignedCertificate)
+        result = await resultPromise 
     } catch {
         throw new Err.ConnectionFailed('WebSocket connection timed out')
     }

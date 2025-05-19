@@ -9,7 +9,7 @@ import {
 } from '../../../generated/packages/dht/protos/DhtRpc'
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { Logger, areEqualBinaries, runAndWaitForEvents, wait } from '@streamr/utils'
+import { Logger, areEqualBinaries, wait, waitForEvent } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { RECURSIVE_OPERATION_TIMEOUT, RecursiveOperationSession } from './RecursiveOperationSession'
@@ -110,12 +110,9 @@ export class RecursiveOperationManager {
         this.ongoingSessions.set(session.getId(), session)
         if (waitForCompletion === true) {
             try {
-                await runAndWaitForEvents(
-                    [() => session.start(this.options.serviceId)],
-                    [[session, 'completed']],
-                    // TODO use options option or named constant?
-                    RECURSIVE_OPERATION_TIMEOUT
-                )
+                const eventPromise = waitForEvent(session, 'completed', RECURSIVE_OPERATION_TIMEOUT)
+                session.start(this.options.serviceId)
+                await eventPromise
             } catch (err) {
                 logger.debug('start failed', { err })
             }
