@@ -1,6 +1,6 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingMode, RoutingRemoteContact, RoutingSession } from './RoutingSession'
-import { Logger, executeSafePromise, raceEvents, withTimeout } from '@streamr/utils'
+import { Logger, raceForEvent } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
 import { v4 } from 'uuid'
@@ -122,22 +122,18 @@ export class Router {
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
-            logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
-            let eventReceived: Promise<unknown>
-            executeSafePromise(async () => {
-                eventReceived = raceEvents(
-                    session,
-                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
-                    null
-                )
-            })
+            logger.trace('starting to raceForEvent from routingSession: ' + session.sessionId)
+            const eventReceived = raceForEvent(
+                session,
+                ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
+                10000  // TODO use options option or named constant?
+            )
             setImmediate(async () => {
                 try {
-                    // TODO use options option or named constant?
-                    await withTimeout(eventReceived, 10000)
-                    logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
+                    await eventReceived
+                    logger.trace('raceForEvent ended from routingSession: ' + session.sessionId)
                 } catch {
-                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
+                    logger.trace('raceForEvent timed out for routingSession ' + session.sessionId) 
                 }
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 

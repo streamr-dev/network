@@ -1,4 +1,4 @@
-import { Logger, raceEvents } from '@streamr/utils'
+import { Logger, raceForEvent } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
@@ -19,7 +19,7 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
     const socket = new WebsocketClientConnection()
     let result: { winnerName: 'connected' | 'error' }
     try {
-        const resultPromise = raceEvents(socket, ['connected', 'error'], timeoutMs)
+        const resultPromise = raceForEvent(socket, ['connected', 'error'], timeoutMs)
         socket.connect(url, allowSelfSignedCertificate)
         result = await resultPromise 
     } catch {
