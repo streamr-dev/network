@@ -1,6 +1,5 @@
 import { withTimeout } from './withTimeout'
 import { Logger } from './Logger'
-import { waitForEvent } from './waitForEvent'
 
 const logger = new Logger(module)
 
@@ -101,46 +100,4 @@ export function runAndRaceEvents<TEvents extends Record<string, (...args: any[])
         }
     })
     return promise
-}
-
-// internal
-const runAndWait = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
-    operations: (() => void)[],
-    waitedEvents: [
-        emitter: {
-            on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-            off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-        },
-        eventName: TEventName
-    ][],
-    timeout: number,
-    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
-): Promise<unknown[]> => {
-    const promise = promiseFn(waitedEvents.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
-    operations.forEach((op) => { op() })
-    return promise
-}
-
-/**
- * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all()
- * and waitForEvent() calls. Calls the functions after creating the promise.
- *
- * @param operations function(s) to call
- * @param waitedEvents event(s) to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
- * within timeout. Otherwise rejected.
- */
-export const runAndWaitForEvents = async <TEvents extends Record<string, (...args: any[]) => void>, TEventName extends keyof TEvents>(
-    operations: (() => void)[],
-    waitedEvents: [
-        emitter: {
-            on: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-            off: (eventName: TEventName, listener: TEvents[TEventName]) => unknown
-        },
-        eventName: TEventName
-    ][],
-    timeout = 5000
-): Promise<unknown[]> => {
-    return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
 }
