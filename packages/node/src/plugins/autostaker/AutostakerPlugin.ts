@@ -1,10 +1,11 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, scheduleAtInterval, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { formatEther, parseEther, Wallet } from 'ethers'
-import sample from 'lodash/sample'
+import { formatEther, Wallet } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { adjustStakes } from './payoutProportionalStrategy'
+import { Action, SponsorshipId, SponsorshipState } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
@@ -14,9 +15,23 @@ export interface AutostakerPluginConfig {
     runIntervalInMs: number
 }
 
-const STAKE_AMOUNT: WeiAmount = parseEther('10000')
-
 const logger = new Logger(module)
+
+const getStakeOrUnstakeFunction = (action: Action): (
+    operatorOwnerWallet: SignerWithProvider,
+    operatorContractAddress: string,
+    sponsorshipContractAddress: string,
+    amount: WeiAmount
+) => Promise<void> => {
+    switch (action.type) {
+        case 'stake':
+            return _operatorContractUtils.stake
+        case 'unstake':
+            return _operatorContractUtils.unstake
+        default:
+            throw new Error('assertion failed')
+    }
+}
 
 export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
 
@@ -38,11 +53,41 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
-        const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
-        const availableBalance = (await operatorContract.valueWithoutEarnings()) - stakedAmount
-        logger.info(`Available balance: ${formatEther(availableBalance)} (staked=${formatEther(stakedAmount)})`)
+        const stakedWei = await operatorContract.totalStakedIntoSponsorshipsWei()
+        const unstakedWei = (await operatorContract.valueWithoutEarnings()) - stakedWei
+        logger.info(`Balance: unstaked=${formatEther(unstakedWei)}, staked=${formatEther(stakedWei)}`)
+        const stakeableSponsorships = await this.getStakeableSponsorships(streamrClient)
+        logger.info(`Stakeable sponsorships: ${[...stakeableSponsorships.keys()].join(',')}`)
+        const stakes = await this.getStakes(streamrClient)
+        const stakeDescription = [...stakes.entries()].map(([sponsorshipId, amountWei]) => `${sponsorshipId}=${formatEther(amountWei)}`).join(', ')
+        logger.info(`Stakes before adjustments: ${stakeDescription}`)
+        const actions = adjustStakes({
+            operatorState: {
+                stakes,
+                unstakedWei
+            },
+            operatorConfig: {},  // TODO add maxSponsorshipCount
+            stakeableSponsorships,
+            environmentConfig: {
+                minimumStakeWei: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
+            }
+        })
+        const operatorOwnerWallet = new Wallet(this.pluginConfig.operatorOwnerPrivateKey, provider) as SignerWithProvider
+        for (const action of actions) {
+            logger.info(`Action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
+            await getStakeOrUnstakeFunction(action)(operatorOwnerWallet,
+                this.pluginConfig.operatorContractAddress,
+                action.sponsorshipId,
+                action.amount
+            )
+        }
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipId, SponsorshipState>> {
         // TODO is there a better way to get the client? Maybe we should add StreamrClient#getTheGraphClient()
-        // TODO what are good where consitions for the sponsorships query
+        // TODO what are good where conditions for the sponsorships query so that we get all stakeable sponsorships
+        // but no non-stakables (e.g. expired)
         // @ts-expect-error private
         const queryResult = streamrClient.theGraphClient.queryEntities((lastId: string, pageSize: number) => {
             return {
@@ -57,23 +102,48 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                             first: ${pageSize}
                         ) {
                             id
+                            totalPayoutWeiPerSec
+                            totalStakedWei
                         }
                     }
                 `
             }
         })
-        const sponsorships: { id: string }[] = await collect(queryResult)
-        logger.info(`Available sponsorships: ${sponsorships.map((s) => s.id).join(',')}`)
-        if ((sponsorships.length) > 0 && (availableBalance >= STAKE_AMOUNT)) {
-            const targetSponsorship = sample(sponsorships)!
-            logger.info(`Stake ${formatEther(STAKE_AMOUNT)} to ${targetSponsorship.id}`)
-            await _operatorContractUtils.stake(
-                new Wallet(this.pluginConfig.operatorOwnerPrivateKey, provider) as SignerWithProvider,
-                this.pluginConfig.operatorContractAddress,
-                targetSponsorship.id,
-                STAKE_AMOUNT
-            )
-        }
+        const sponsorships: { id: SponsorshipId, totalPayoutWeiPerSec: bigint, totalStakedWei: bigint }[] = await collect(queryResult)
+        return new Map(sponsorships.map(
+            (sponsorship) => [sponsorship.id, {
+                totalPayoutWeiPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
+                totalStakedWei: BigInt(sponsorship.totalStakedWei)
+            }])
+        )
+    }
+
+    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipId, bigint>> {
+        // TODO use StreamrClient#getTheGraphClient()
+        // @ts-expect-error private
+        const queryResult = streamrClient.theGraphClient.queryEntities((lastId: string, pageSize: number) => {
+            return {
+                query: `
+                    {
+                        stakes(
+                            where:  {
+                                operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
+                                id_gt: "${lastId}"
+                            },
+                            first: ${pageSize}
+                        ) {
+                            id
+                            sponsorship {
+                                id
+                            }
+                            amountWei
+                        }
+                    }
+                `
+            }
+        })
+        const stakes: { sponsorship: { id: SponsorshipId }, amountWei: bigint }[] = await collect(queryResult)
+        return new Map(stakes.map((stake) => [stake.sponsorship.id, BigInt(stake.amountWei) ]))
     }
 
     async stop(): Promise<void> {
