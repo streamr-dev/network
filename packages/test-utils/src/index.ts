@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DATAv2ABI as DATATokenABI, DATAv2 as DATATokenContract, Operator as OperatorContract } from '@streamr/network-contracts'
-import { binaryToHex, EthereumAddress, Logger, retry, toEthereumAddress, toUserId, until, UserID, waitForEvent } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, Logger, retry, toEthereumAddress, toUserId, until, UserID } from '@streamr/utils'
 import crypto, { randomBytes } from 'crypto'
 import { AbstractSigner, Contract, JsonRpcProvider, parseEther, Provider, Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
@@ -31,63 +31,6 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
             .on('error', reject)
             .on('end', () => resolve(arr))
     })
-}
-
-// internal
-const runAndWait = async (
-    operations: (() => void) | ((() => void)[]),
-    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
-    timeout: number,
-    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
-): Promise<unknown[]> => {
-    const ops = Array.isArray(operations) ? operations : [operations]
-
-    let evs: [emitter: EventEmitter, event: Event][]
-    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0])) {
-        evs = waitedEvents as [emitter: EventEmitter, event: Event][]
-    } else {
-        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
-    }
-
-    const promise = promiseFn(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
-    ops.forEach((op) => { op() })
-    return promise
-}
-
-/**
- * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all() 
- * and waitForEvent() calls. Calls the functions after creating the promise.
- *
- * @param operations function(s) to call
- * @param waitedEvents event(s) to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
- * within timeout. Otherwise rejected.
- */
-export const runAndWaitForEvents = async (
-    operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
-    timeout = 5000
-): Promise<unknown[]> => {
-    return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
-}
-
-/**
- * Run functions and wait for one of the events to be emitted within timeout. Returns a promise created with Promise.race() 
- * and waitForEvent() calls. Calls the functions after creating the promise.
- *
- * @param operations function(s) to call
- * @param waitedEvents event(s) to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
- * within timeout. Otherwise rejected.
- */
-export const runAndRaceEvents = async (
-    operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][], 
-    timeout = 5000
-): Promise<unknown[]> => {
-    return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
 }
 
 /**
