@@ -159,13 +159,6 @@ Being an ERC-20, the Operator contract address can be added to wallet and its de
 
 The outcome of the linear exchange rate between DATA and delegation token is: in the user interfaces we can ignore the delegation token and just convert the values to DATA by simple multiplication. The profits are shared in direct proportion to delegations, much like in Sponsorships where Operators share the continuous sponsorship payment in direct proportion to their stake. Note that the DATA tokens corresponding to delegations might not exist in the contract, since in typical case we expect the Operator contract's DATA tokens to be staked out into Sponsorship contracts. Delegation bookkeeping is done in the form of the ERC-20 delegation token, and those delegation tokens correspond to all of the staked DATA tokens in addition to what DATA is actually in the Operator contract.
 
-# Glossary
-
-operator value
-- why "value without earnings"
-
-sponsorship is running
-
 <!-- Should a non-linear bonding curve be introduced later, this interpretation should remain the same: the value of the delegation tokens is the amount of DATA tokens the delegator would receive after undelegating them. -->
 
 <!-- TODO - re-add these images -->
