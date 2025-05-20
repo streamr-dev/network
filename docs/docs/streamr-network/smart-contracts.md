@@ -29,7 +29,7 @@ The relevant transactions in the staking process are:
 - Reducing stake, pulling some stake back from Sponsorship: [Operator.reduceStakeTo(sponsorshipAddress, targetStakeWei)](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L413)
   - calling this 2nd time with same arguments will fail with `Sponsorship.CannotIncreaseStakeUsingReduceStakeTo` error
 
-- Sponsoring: [`DATA.transferAndCall(operatorAddress, amountWei, "0x")`](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L148)
+- Sponsoring, sending DATA tokens into the Sponsorship contract: [`DATA.transferAndCall(operatorAddress, amountWei, "0x")`](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L148)
   - `transferAndCall` will then activate the Sponsorship contract to register the sponsoring
 
 ### ERC20 compatibility
