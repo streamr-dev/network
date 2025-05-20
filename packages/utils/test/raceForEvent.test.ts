@@ -40,7 +40,11 @@ describe('raceForEvent', () => {
     })
 
     it('should not resolve if no event is emitted', async () => {
+        const offFn = jest.spyOn(eventEmitter, 'off')
         const promise = raceForEvent(eventEmitter, ['a', 'b'], 50)
         await expect(promise).rejects.toThrow('timed out')
+        expect(offFn).toHaveBeenCalledTimes(2)
+        expect(offFn).toHaveBeenCalledWith('a', expect.any(Function))
+        expect(offFn).toHaveBeenCalledWith('b', expect.any(Function))
     })
 })

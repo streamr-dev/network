@@ -16,8 +16,12 @@ export async function raceForEvent<TEvents extends Record<string, (...args: any[
             winnerArgs: eventArgs
         }
     })
-    const result = await Promise.race(promises)
-    raceAbortController.abort()
-    await Promise.allSettled(promises)  // wait for all promises to ensure that the cleanup initiated by raceAbortController.abort() has completed
+    let result
+    try {
+        result = await Promise.race(promises)
+    } finally {
+        raceAbortController.abort()
+        await Promise.allSettled(promises)  // wait for all promises to ensure that the cleanup initiated by raceAbortController.abort() has completed
+    }
     return result
 }
