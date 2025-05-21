@@ -31,7 +31,9 @@ The relevant Operator transactions in the staking process are:
 The tokens enter the staking process in a transaction from the sponsor(s):
 - **Sponsoring**, sending DATA tokens into the Sponsorship contract: `DATA.transferAndCall(operatorAddress, amountWei, "0x")`
 
-### ERC20 token compatibility (no `transferAndCall`)
+### Features for compatibility with arbitrary ERC20 token (no `transferAndCall`)
+
+This section doesn't apply to the deployed Streamr contracts that use DATA token (that supports `transferAndCall`). We **discourage** the use these functions with Streamr contracts: `Sponsorship.sponsor`, `Operator.delegate`; use `DATA.transferAndCall` instead as detailed above.
 
 The tokenomics contracts have been written in such a way that `transferAndCall` isn't strictly required from the token, but any ERC20 token will also work. This however will require an extra `approve` transaction on the token before the actual smart contract call that does the sponsoring or delegating.
 
