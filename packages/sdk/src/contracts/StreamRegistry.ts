@@ -45,7 +45,7 @@ import { Mapping, createCacheMap } from '../utils/Mapping'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
+import { InternalSearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -297,12 +297,10 @@ export class StreamRegistry {
     async* searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy
     ): AsyncGenerator<StreamID> {
         const queryResult = _searchStreams(
             term,
             permissionFilter,
-            orderBy,
             this.theGraphClient)
         for await (const item of queryResult) {
             const id = toStreamID(item.stream.id)

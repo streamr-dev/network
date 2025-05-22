@@ -1,5 +1,5 @@
 import { createTestPrivateKey, randomUserId } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, StreamID } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { SearchStreamsPermissionFilter } from '../../src/contracts/searchStreams'
@@ -31,11 +31,9 @@ describe('searchStreams', () => {
         return streams
     }
 
-    const searchStreamIds = async (searchTerm: string, permissionFilter?: SearchStreamsPermissionFilter) => {
+    const searchStreamIds = async (searchTerm: string, permissionFilter?: SearchStreamsPermissionFilter): Promise<StreamID[]> => {
         const streams = client.searchStreams(searchTerm, permissionFilter)
-        const ids = (await collect(streams)).map((stream) => stream.id)
-        ids.sort()
-        return ids
+        return (await collect(streams)).map((stream) => stream.id)
     }
 
     beforeAll(async () => {

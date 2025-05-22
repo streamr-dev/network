@@ -39,7 +39,7 @@ import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
+import { SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
@@ -442,8 +442,7 @@ export class StreamrClient {
      */
     searchStreams(
         term: string | undefined,
-        permissionFilter: SearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
+        permissionFilter: SearchStreamsPermissionFilter | undefined
     ): AsyncIterable<Stream> {
         logger.debug('Search for streams', { term, permissionFilter })
         if ((term === undefined) && (permissionFilter === undefined)) {
@@ -451,8 +450,7 @@ export class StreamrClient {
         }
         const streamIds = this.streamRegistry.searchStreams(
             term,
-            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
-            orderBy
+            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined
         )
         return map(streamIds, (id) => new Stream(id, this))
     }

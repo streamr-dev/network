@@ -23,7 +23,7 @@ export {
 export type { StreamCreationEvent } from './contracts/StreamRegistry'
 export type { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
 export type { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
-export type { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
+export type { SearchStreamsPermissionFilter } from './contracts/searchStreams'
 export {
     type StreamrClientConfig,
     type ConnectionInfo,
