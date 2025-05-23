@@ -113,14 +113,6 @@ export class TheGraphClient {
         // eslint-disable-next-line no-underscore-dangle
         return response._meta.block.number
     }
-
-    static createWhereClause(variables: Record<string, any>): string {
-        const parameterList = Object.keys(variables)
-            .filter((k) => variables[k] !== undefined)
-            .map((k) => k + ': $' + k)
-            .join(' ')
-        return `where: { ${parameterList} }`
-    }
 }
 
 class BlockNumberGate extends Gate {
