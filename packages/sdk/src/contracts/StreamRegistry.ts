@@ -47,17 +47,6 @@ import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
-/*
- * On-chain registry of stream metadata and permissions.
- *
- * Does not support system streams (the key exchange stream)
- */
-
-export interface StreamQueryResult {
-    id: string
-    metadata: string
-}
-
 interface StreamPublisherOrSubscriberItem {
     id: string
     userId: string
@@ -303,8 +292,8 @@ export class StreamRegistry {
             permissionFilter,
             this.theGraphClient)
         for await (const item of queryResult) {
-            const id = toStreamID(item.stream.id)
-            this.populateMetadataCache(id, parseMetadata(item.stream.metadata))
+            const id = toStreamID(item.id)
+            this.populateMetadataCache(id, parseMetadata(item.metadata))
             yield id
         }
     }
