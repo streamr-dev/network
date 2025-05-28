@@ -15,6 +15,20 @@ export interface AutostakerPluginConfig {
     runIntervalInMs: number
 }
 
+interface SponsorshipQueryResultItem {
+    id: SponsorshipId
+    totalPayoutWeiPerSec: bigint
+    totalStakedWei: bigint
+}
+
+interface StakeQueryResultItem {
+    id: string
+    sponsorship: {
+        id: SponsorshipId
+    }
+    amountWei: bigint
+}
+
 const logger = new Logger(module)
 
 const getStakeOrUnstakeFunction = (action: Action): (
@@ -88,8 +102,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         // TODO is there a better way to get the client? Maybe we should add StreamrClient#getTheGraphClient()
         // TODO what are good where conditions for the sponsorships query so that we get all stakeable sponsorships
         // but no non-stakables (e.g. expired)
-        // @ts-expect-error private
-        const queryResult = streamrClient.theGraphClient.queryEntities((lastId: string, pageSize: number) => {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
@@ -109,7 +122,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 `
             }
         })
-        const sponsorships: { id: SponsorshipId, totalPayoutWeiPerSec: bigint, totalStakedWei: bigint }[] = await collect(queryResult)
+        const sponsorships = await collect(queryResult)
         return new Map(sponsorships.map(
             (sponsorship) => [sponsorship.id, {
                 totalPayoutWeiPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
@@ -119,9 +132,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipId, bigint>> {
-        // TODO use StreamrClient#getTheGraphClient()
-        // @ts-expect-error private
-        const queryResult = streamrClient.theGraphClient.queryEntities((lastId: string, pageSize: number) => {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
@@ -142,7 +153,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 `
             }
         })
-        const stakes: { sponsorship: { id: SponsorshipId }, amountWei: bigint }[] = await collect(queryResult)
+        const stakes = await collect(queryResult)
         return new Map(stakes.map((stake) => [stake.sponsorship.id, BigInt(stake.amountWei) ]))
     }
 
