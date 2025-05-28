@@ -1,7 +1,7 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, scheduleAtInterval, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { formatEther, Wallet } from 'ethers'
+import { formatEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
@@ -9,9 +9,6 @@ import { Action, SponsorshipId, SponsorshipState } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
-    // TODO is it possible implement this without exposing the private key here?
-    // e.g. by configuring so that operator nodes can stake behalf of the operator?
-    operatorOwnerPrivateKey: string
     runIntervalInMs: number
 }
 
@@ -86,10 +83,10 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 minimumStakeWei: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
             }
         })
-        const operatorOwnerWallet = new Wallet(this.pluginConfig.operatorOwnerPrivateKey, provider) as SignerWithProvider
+        const signer = await streamrClient.getSigner()
         for (const action of actions) {
             logger.info(`Action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-            await getStakeOrUnstakeFunction(action)(operatorOwnerWallet,
+            await getStakeOrUnstakeFunction(action)(signer,
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
                 action.amount

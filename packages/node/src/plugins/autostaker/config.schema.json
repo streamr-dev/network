@@ -5,19 +5,13 @@
   "description": "Autostaker plugin configuration",
   "additionalProperties": false,
   "required": [
-    "operatorContractAddress",
-    "operatorOwnerPrivateKey"
+    "operatorContractAddress"
   ],
   "properties": {
     "operatorContractAddress": {
       "type": "string",
       "description": "Operator contract Ethereum address",
       "format": "ethereum-address"
-    },
-    "operatorOwnerPrivateKey": {
-      "type": "string",
-      "description": "Operator owner's private key",
-      "format": "ethereum-private-key"
     },
     "runIntervalInMs": {
       "type": "integer",
