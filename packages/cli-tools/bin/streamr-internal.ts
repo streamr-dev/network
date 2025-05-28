@@ -16,5 +16,6 @@ program
     .command('operator-undelegate', 'undelegate funds from an operator')
     .command('operator-stake', 'stake operator\'s funds to a sponsorship')
     .command('operator-unstake', 'unstake all operator\'s funds from a sponsorship')
+    .command('operator-grant-controller-role', 'grant controller role to a user')
     .command('token-mint', 'mint test tokens')
     .parse()

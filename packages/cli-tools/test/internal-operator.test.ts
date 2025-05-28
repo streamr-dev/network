@@ -52,6 +52,13 @@ describe('operator', () => {
         })
         expect(await operatorContract.balanceInData(await delegator.getAddress())).toEqual(0n)
 
+        // grant controller role
+        const controller = await createTestWallet()
+        await runCommand(`internal operator-grant-controller-role ${operatorContractAddress} ${controller.address}`, {
+            privateKey: operator.privateKey
+        })
+        expect(await operatorContract.hasRole(await operatorContract.CONTROLLER_ROLE(), controller.address)).toBeTrue()
+
         await client.destroy()
     }, 30 * 1000)
 })
