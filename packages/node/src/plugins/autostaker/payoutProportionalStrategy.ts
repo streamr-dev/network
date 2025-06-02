@@ -43,7 +43,10 @@ type TargetStake = [SponsorshipID, WeiAmount]
 
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
-const getExpiredSponsorships = (stakes: Map<SponsorshipID, WeiAmount>, stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>): SponsorshipID[] => {
+const getExpiredSponsorships = (
+    stakes: Map<SponsorshipID, WeiAmount>,
+    stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
+): SponsorshipID[] => {
     return [...stakes.keys()].filter((sponsorshipId) => !stakeableSponsorships.has(sponsorshipId))
 }
 /*
@@ -135,7 +138,10 @@ export const adjustStakes: AdjustStakesFn = ({
     )
 
     const adjustments = [...targetStakes.keys()]
-        .map((sponsorshipId) => ({ sponsorshipId, differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n) }))
+        .map((sponsorshipId) => ({ 
+            sponsorshipId,
+            differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n)
+        }))
         .filter(({ differenceWei: difference }) => difference !== 0n)
 
     // fix rounding errors by forcing the net staking to equal unstakedWei: adjust the largest staking

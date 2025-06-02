@@ -1,11 +1,11 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, scheduleAtInterval, wait, WeiAmount } from '@streamr/utils'
+import { collect, Logger, scheduleAtApproximateInterval, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
-import { Action, SponsorshipID, SponsorshipConfig } from './types'
+import { Action, SponsorshipConfig, SponsorshipID } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
