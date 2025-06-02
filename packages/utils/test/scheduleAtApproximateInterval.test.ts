@@ -1,8 +1,8 @@
 import { scheduleAtApproximateInterval } from '../src/scheduleAtApproximateInterval'
 import { wait } from '../src/wait'
 
-const INTERVAL = 50
-const JITTER = INTERVAL * 2
+const INTERVAL = 100
+const JITTER = INTERVAL /4
 const DRIFT_MULTIPLIER = 0.1
 const AT_LEAST_FIVE_REPEATS_TIME = ((INTERVAL * (1 + DRIFT_MULTIPLIER)) + JITTER) * 5
 
