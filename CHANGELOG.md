@@ -26,6 +26,7 @@ Changes before Tatum release are not documented in this file.
   - Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
 - **BREAKING CHANGE**: The string values in `Message.signatureType` now correspond with the `KeyType` values. This means the previously output value `SECP256K1` is now `ECDSA_SECP256K1_EVM`.
 - **BREAKING CHANGE**: Rename `groupKeyId` field `encryptionKeyId` in `Message` interface (https://github.com/streamr-dev/network/pull/3084)
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
 
 #### Deprecated
 
@@ -48,6 +49,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
+
 #### Deprecated
 
 #### Removed
@@ -65,6 +68,7 @@ Changes before Tatum release are not documented in this file.
 #### Changed
 
 - **BREAKING CHANGE**: CLI tool command `streamr wallet whoami` is now `streamr identity whoami` (https://github.com/streamr-dev/network/pull/3074)
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
 
 #### Deprecated
 
