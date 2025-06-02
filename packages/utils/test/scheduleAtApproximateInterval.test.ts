@@ -31,21 +31,21 @@ describe('scheduleAtApproximateInterval', () => {
 
     it('repeats every `interval`', async () => {
         await scheduleAtApproximateInterval(task, INTERVAL, DRIFT_MULTIPLIER, false, abortController.signal)
-        await wait(AT_LEAST_FIVE_REPEATS_TIME * (1 + DRIFT_MULTIPLIER))
+        await wait(AT_LEAST_FIVE_REPEATS_TIME)
         expect(task.mock.calls.length).toBeGreaterThanOrEqual(5)
     })
 
     it('there is no special handling for slow tasks', async () => {
         task.mockImplementation(() => wait(INTERVAL))
         await scheduleAtApproximateInterval(task, INTERVAL, DRIFT_MULTIPLIER, false, abortController.signal)
-        await wait(AT_LEAST_FIVE_REPEATS_TIME * (1 + DRIFT_MULTIPLIER))
+        await wait(AT_LEAST_FIVE_REPEATS_TIME)
         expect(task.mock.calls.length).toBeLessThan(5)
     })
 
     it('task never invoked if initially aborted', async () => {
         abortController.abort()
         await scheduleAtApproximateInterval(task, INTERVAL, DRIFT_MULTIPLIER, true, abortController.signal)
-        await wait(AT_LEAST_FIVE_REPEATS_TIME * (1 + DRIFT_MULTIPLIER))
+        await wait(AT_LEAST_FIVE_REPEATS_TIME)
         expect(task).not.toHaveBeenCalled()
     })
 })
