@@ -19,6 +19,12 @@
       "minimum": 0,
       "default": 30000
     },
+    "minTransactionDataTokenAmount": {
+      "type": "integer",
+      "description": "Minimum data token amount for stake/unstake transaction",
+      "minimum": 0,
+      "default": 1000
+    },
     "maxSponsorshipCount": {
       "type": "integer",
       "description": "Maximum count of sponsorships which are staked at any given time",

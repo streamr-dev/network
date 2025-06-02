@@ -1,7 +1,7 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, scheduleAtApproximateInterval, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { formatEther } from 'ethers'
+import { formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
@@ -10,6 +10,7 @@ import { Action, SponsorshipConfig, SponsorshipID } from './types'
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
     runIntervalInMs: number
+    minTransactionDataTokenAmount: number
     maxSponsorshipCount?: number
 }
 
@@ -78,8 +79,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 unstakedWei
             },
             operatorConfig: {
-                minTransactionWei: 1000n,  // TODO get from the plugin config, what would be a good default value? 
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,
+                minTransactionWei: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
                 maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount
             },
             stakeableSponsorships,
