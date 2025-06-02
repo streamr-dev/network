@@ -1,5 +1,7 @@
 import { sum, WeiAmount } from '@streamr/utils'
 import partition from 'lodash/partition'
+import maxBy from 'lodash/maxBy'
+import pull from 'lodash/pull'
 import sortBy from 'lodash/sortBy'
 import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './types'
 
@@ -122,24 +124,22 @@ export const adjustStakes: AdjustStakesFn = ({
 
     // TODO: filter out too small (TODO: decide what "too small" means) stakings and unstakings because those just waste gas
 
-    // sort the differences in ascending order (unstakings first, then stakings)
-    differencesWei.sort((a, b) => Number(a.differenceWei) - Number(b.differenceWei))
-
-    // force the net staking to equal unstakedWei (fixes e.g. rounding errors) by adjusting the largest staking (last in list)
+    // fix rounding errors by forcing the net staking to equal unstakedWei: adjust the largest staking
     const netStakingWei = sum(differencesWei.map(({ differenceWei: difference }) => difference))
     if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && differencesWei.length > 0) {
-        const largestDifference = differencesWei.pop()!
+        const largestDifference = maxBy(differencesWei, (d) => Number(d.differenceWei))!
         largestDifference.differenceWei += operatorState.unstakedWei - netStakingWei
-        // don't push back a zero difference
-        if (largestDifference.differenceWei !== 0n) {
-            differencesWei.push(largestDifference)
+        if (largestDifference.differenceWei === 0n) {
+            pull(differencesWei, largestDifference)
         }
     }
 
-    // convert differences to actions
-    return differencesWei.map(({ sponsorshipId, differenceWei }) => ({
-        type: differenceWei > 0n ? 'stake' : 'unstake',
-        sponsorshipId,
-        amount: differenceWei > 0n ? differenceWei : -differenceWei
-    }))
+    return sortBy(
+        differencesWei.map(({ sponsorshipId, differenceWei }) => ({
+            type: differenceWei > 0n ? 'stake' : 'unstake',
+            sponsorshipId,
+            amount: differenceWei > 0n ? differenceWei : -differenceWei
+        })),
+        (action) => ['unstake', 'stake'].indexOf(action.type)
+    )
 }
