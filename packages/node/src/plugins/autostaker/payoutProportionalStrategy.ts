@@ -1,6 +1,6 @@
 import { sum, WeiAmount } from '@streamr/utils'
 import partition from 'lodash/partition'
-import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorState, SponsorshipID, SponsorshipState } from './types'
+import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorState, SponsorshipID, SponsorshipConfig } from './types'
 
 /**
  * Allocate stake in proportion to the payout each sponsorship gives.
@@ -37,7 +37,7 @@ import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorStat
 const getTargetStakes = (
     operatorState: OperatorState,
     operatorConfig: OperatorConfig,
-    stakeableSponsorships: Map<SponsorshipID, SponsorshipState>,
+    stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     environmentConfig: EnvironmentConfig
 ): Map<SponsorshipID, WeiAmount> => {
 

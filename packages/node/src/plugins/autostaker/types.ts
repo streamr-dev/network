@@ -14,14 +14,14 @@ export interface Action {
 export type AdjustStakesFn = (opts: {
     operatorState: OperatorState
     operatorConfig: OperatorConfig
-    stakeableSponsorships: Map<SponsorshipID, SponsorshipState>
+    stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
     environmentConfig: EnvironmentConfig
 }) => Action[]
 
 /**
  * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
  **/
-export interface SponsorshipState {
+export interface SponsorshipConfig {
     totalPayoutWeiPerSec: WeiAmount
 }
 
