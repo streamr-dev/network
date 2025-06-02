@@ -1,6 +1,23 @@
 import { adjustStakes } from '../../../../src/plugins/autostaker/payoutProportionalStrategy'
 
 describe('payoutProportionalStrategy', () => {
+
+    it('stake all', () => {
+        expect(adjustStakes({
+            operatorState: { unstakedWei: 11000n, stakes: new Map() },
+            operatorConfig: { },
+            stakeableSponsorships: new Map([
+                ['a', { totalPayoutWeiPerSec: 2n }],
+                ['b', { totalPayoutWeiPerSec: 4n }],
+                ['c', { totalPayoutWeiPerSec: 6n }],
+            ]),
+            environmentConfig: { minimumStakeWei: 5000n },
+        })).toIncludeSameMembers([
+            { type: 'stake', sponsorshipId: 'b', amount: 5400n },
+            { type: 'stake', sponsorshipId: 'c', amount: 5600n }
+        ])  
+    })
+
     it('unstakes everything if no stakeable sponsorships', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 1000n, stakes: new Map([[ 'a', 2000n ]]) },
@@ -101,7 +118,7 @@ describe('payoutProportionalStrategy', () => {
                 ['a', { totalPayoutWeiPerSec: 10n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
-        })).toEqual([
+        })).toIncludeSameMembers([
             { type: 'unstake', sponsorshipId: 'b', amount: 100n },
             { type: 'stake', sponsorshipId: 'a', amount: 100n },
         ])
@@ -120,14 +137,14 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { totalPayoutWeiPerSec: 10n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
-        })).toEqual([
+        })).toIncludeSameMembers([
             { type: 'unstake', sponsorshipId: 'c', amount: 100n },
             { type: 'stake', sponsorshipId: 'a', amount: 50n },
             { type: 'stake', sponsorshipId: 'b', amount: 50n },
         ])
     })
 
-    it('handles rounding errors by adjusting the largest staking', async () => {
+    it('handles rounding errors', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 1000n, stakes: new Map() },
             operatorConfig: { },
@@ -137,7 +154,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { totalPayoutWeiPerSec: 400n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
-        })).toEqual([
+        })).toIncludeSameMembers([
             { type: 'stake', sponsorshipId: 'a', amount: 166n },
             { type: 'stake', sponsorshipId: 'b', amount: 166n },
             { type: 'stake', sponsorshipId: 'c', amount: 668n },
