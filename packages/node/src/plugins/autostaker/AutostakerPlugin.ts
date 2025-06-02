@@ -61,18 +61,28 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async runActions(streamrClient: StreamrClient): Promise<void> {
-        logger.info('Run autostaker actions')
+        logger.info('Run autostaker analysis')
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
+        const stakeableSponsorships = await this.getStakeableSponsorships(streamrClient)
+        const stakes = await this.getStakes(streamrClient)
         const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
         const unstakedAmount = (await operatorContract.valueWithoutEarnings()) - stakedAmount
-        logger.info(`Balance: unstaked=${formatEther(unstakedAmount)}, staked=${formatEther(stakedAmount)}`)
-        const stakeableSponsorships = await this.getStakeableSponsorships(streamrClient)
-        logger.info(`Stakeable sponsorships: ${[...stakeableSponsorships.keys()].join(',')}`)
-        const stakes = await this.getStakes(streamrClient)
-        const stakeDescription = [...stakes.entries()].map(([sponsorshipId, amount]) => `${sponsorshipId}=${formatEther(amount)}`).join(', ')
-        logger.info(`Stakes before adjustments: ${stakeDescription}`)
+        logger.debug('Analysis state', {
+            stakeableSponsorships: [...stakeableSponsorships.entries()].map(([sponsorshipId, config]) => ({
+                sponsorshipId,
+                payoutPerSec: formatEther(config.payoutPerSec)
+            })),
+            stakes: [...stakes.entries()].map(([sponsorshipId, amount]) => ({
+                sponsorshipId,
+                amount: formatEther(amount)
+            })),
+            balance: {
+                unstaked: formatEther(unstakedAmount),
+                staked: formatEther(stakedAmount)
+            }
+        })
         const actions = adjustStakes({
             operatorState: {
                 stakes,
