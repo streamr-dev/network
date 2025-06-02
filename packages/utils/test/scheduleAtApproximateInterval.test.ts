@@ -6,7 +6,7 @@ const JITTER = INTERVAL * 2
 const DRIFT_MULTIPLIER = 0.1
 const AT_LEAST_FIVE_REPEATS_TIME = INTERVAL * 5 + JITTER
 
-describe('scheduleAtInterval', () => {
+describe('scheduleAtApproximateInterval', () => {
     let task: jest.Mock<Promise<void>, []>
     let abortController: AbortController
 
