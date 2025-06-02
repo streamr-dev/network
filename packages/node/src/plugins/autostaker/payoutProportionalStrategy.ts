@@ -35,6 +35,11 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  * - the algorithm then outputs the stake and unstake actions to change the allocation to the target
  **/
 
+type TargetStake = [SponsorshipID, WeiAmount]
+
+const getExpiredSponsorships = (stakes: Map<SponsorshipID, WeiAmount>, stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>): SponsorshipID[] => {
+    return [...stakes.keys()].filter((sponsorshipId) => !stakeableSponsorships.has(sponsorshipId))
+}
 /*
  * Select sponsorships for which we should have some stake
  */
@@ -63,9 +68,12 @@ const getSelectedSponsorships = (
 }
 
 /*
- * Calculate the target stakes for each sponsorship: minimum stake plus payout-proportional allocation
+ * Calculate the target stakes for each sponsorship:
+ * - for selected sponsorships the stake is minimum stake plus payout-proportional allocation
+ * - for expired sponsorships the stake is zero
  */
 const getTargetStakes = (
+    stakes: Map<SponsorshipID, WeiAmount>,
     selectedSponsorships: SponsorshipID[],
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableWei: WeiAmount,
@@ -74,12 +82,15 @@ const getTargetStakes = (
     const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
     const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
-    return new Map(
-        selectedSponsorships.map((id) => [
-            id,
-            minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.totalPayoutWeiPerSec / payoutSumWeiPerSec
-        ])
-    )
+    const targetsForSelected: TargetStake[] = selectedSponsorships.map((id) => [
+        id,
+        minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.totalPayoutWeiPerSec / payoutSumWeiPerSec
+    ])
+    const targetsForExpired: TargetStake[] = getExpiredSponsorships(stakes, stakeableSponsorships).map((id) => [
+        id,
+        0n
+    ]) 
+    return new Map([...targetsForSelected, ...targetsForExpired])
 }
 
 export const adjustStakes: AdjustStakesFn = ({
@@ -98,18 +109,16 @@ export const adjustStakes: AdjustStakesFn = ({
         operatorConfig.maxSponsorshipCount
     )
     const targetStakes = getTargetStakes(
+        operatorState.stakes,
         selectedSponsorships,
         stakeableSponsorships,
         totalStakeableWei,
         environmentConfig.minimumStakeWei
     )
 
-    // calculate the stake differences for all sponsorships we have stakes in, or want to stake into
-    const sponsorshipIdList = Array.from(new Set([...operatorState.stakes.keys(), ...targetStakes.keys()]))
-    const differencesWei = sponsorshipIdList.map((sponsorshipId) => ({
-        sponsorshipId,
-        differenceWei: (targetStakes.get(sponsorshipId) ?? 0n) - (operatorState.stakes.get(sponsorshipId) ?? 0n)
-    })).filter(({ differenceWei: difference }) => difference !== 0n)
+    const differencesWei = [...targetStakes.keys()]
+        .map((sponsorshipId) => ({ sponsorshipId, differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n) }))
+        .filter(({ differenceWei: difference }) => difference !== 0n)
 
     // TODO: filter out too small (TODO: decide what "too small" means) stakings and unstakings because those just waste gas
 
