@@ -5,7 +5,7 @@ describe('payoutProportionalStrategy', () => {
     it('stake all', () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 11000n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 2n }],
                 ['b', { totalPayoutWeiPerSec: 4n }],
@@ -21,7 +21,7 @@ describe('payoutProportionalStrategy', () => {
     it('unstakes everything if no stakeable sponsorships', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 1000n, stakes: new Map([[ 'a', 2000n ]]) },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map(),
             environmentConfig: { minimumStakeWei: 1234n },
         })).toEqual([
@@ -32,7 +32,7 @@ describe('payoutProportionalStrategy', () => {
     it('limits the targetSponsorshipCount to stakeableSponsorships.size', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 600n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }],
                 ['b', { totalPayoutWeiPerSec: 20n }],
@@ -49,7 +49,7 @@ describe('payoutProportionalStrategy', () => {
     it('limits the targetSponsorshipCount to maxSponsorshipCount', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 500n, stakes: new Map() },
-            operatorConfig: { maxSponsorshipCount: 2 },
+            operatorConfig: { maxSponsorshipCount: 2, minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }], // not included
                 ['b', { totalPayoutWeiPerSec: 20n }], // included
@@ -65,7 +65,7 @@ describe('payoutProportionalStrategy', () => {
     it('limits the targetSponsorshipCount to minimumStakeWei and available tokens', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 500n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }], // not included
                 ['b', { totalPayoutWeiPerSec: 20n }], // not included
@@ -80,7 +80,7 @@ describe('payoutProportionalStrategy', () => {
     it('doesn\'t allocate tokens if less available than minimum stake', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 100n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([['a', { totalPayoutWeiPerSec: 10n }]]),
             environmentConfig: { minimumStakeWei: 300n },
         })).toEqual([])
@@ -93,7 +93,7 @@ describe('payoutProportionalStrategy', () => {
                 [ 'a', 30n ],
                 [ 'b', 70n ],
             ]) },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 40n }], // add stake here
                 ['b', { totalPayoutWeiPerSec: 30n }], // unstake from here
@@ -113,7 +113,7 @@ describe('payoutProportionalStrategy', () => {
         // currently staked into b, but b has expired, so it's not included in the stakeableSponsorships
         expect(adjustStakes({
             operatorState: { unstakedWei: 0n, stakes: new Map([[ 'b', 100n ]]) },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }],
             ]),
@@ -131,7 +131,7 @@ describe('payoutProportionalStrategy', () => {
                 [ 'b', 100n ],
                 [ 'c', 100n ],
             ]) },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }],
                 ['b', { totalPayoutWeiPerSec: 10n }],
@@ -147,7 +147,7 @@ describe('payoutProportionalStrategy', () => {
     it('handles rounding errors', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 1000n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n},
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 100n }],
                 ['b', { totalPayoutWeiPerSec: 100n }],
@@ -168,7 +168,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', 166n ],
                 ['c', 668n ],
             ]) },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 100n }],
                 ['b', { totalPayoutWeiPerSec: 100n }],
@@ -181,7 +181,7 @@ describe('payoutProportionalStrategy', () => {
     it('uses Infinity as default maxSponsorshipCount', async () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 1000n, stakes: new Map() },
-            operatorConfig: { },
+            operatorConfig: { minTransactionWei: 0n },
             stakeableSponsorships: new Map([
                 ['a', { totalPayoutWeiPerSec: 10n }],
                 ['b', { totalPayoutWeiPerSec: 20n }],
@@ -190,5 +190,80 @@ describe('payoutProportionalStrategy', () => {
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toHaveLength(4)
+    })
+
+    describe('exclude small transactions', () => {
+        it('exclude small stakings', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedWei: 1000n, stakes: new Map() },
+                operatorConfig: { minTransactionWei: 20n },
+                stakeableSponsorships: new Map([
+                    ['a', { totalPayoutWeiPerSec: 10n }],
+                    ['b', { totalPayoutWeiPerSec: 20n }],
+                    ['c', { totalPayoutWeiPerSec: 1000n }]
+                ]),
+                environmentConfig: { minimumStakeWei: 0n },
+            })).toIncludeSameMembers([
+                { type: 'stake', sponsorshipId: 'c', amount: 972n }
+            ])
+        })
+
+        it('one small transaction is balanced by removing one staking', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedWei: 820n, stakes: new Map([
+                    ['a', 180n]
+                ]) },
+                operatorConfig: { minTransactionWei: 20n },
+                stakeableSponsorships: new Map([
+                    ['a', { totalPayoutWeiPerSec: 100n }],
+                    ['b', { totalPayoutWeiPerSec: 100n }],
+                    ['c', { totalPayoutWeiPerSec: 400n }],
+                ]),
+                environmentConfig: { minimumStakeWei: 0n }
+            })).toIncludeSameMembers([
+                { type: 'stake', sponsorshipId: 'c', amount: 668n }
+            ])
+        })
+
+        it('multiple small transactions are balanced with by removing multiple stakings', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedWei: 740n, stakes: new Map([
+                    ['a', 180n],
+                    ['b', 200n],
+                    ['c', 295n]
+                ]) },
+                operatorConfig: { minTransactionWei: 50n },
+                stakeableSponsorships: new Map([
+                    ['a', { totalPayoutWeiPerSec: 100n }],
+                    ['b', { totalPayoutWeiPerSec: 100n }],
+                    ['c', { totalPayoutWeiPerSec: 210n }],
+                    ['d', { totalPayoutWeiPerSec: 220n }],
+                    ['e', { totalPayoutWeiPerSec: 230n }]
+                ]),
+                environmentConfig: { minimumStakeWei: 0n }
+            })).toIncludeSameMembers([
+                { type: 'stake', sponsorshipId: 'e', amount: 381n }
+            ])
+        })
+
+        it('multiple small transactions are balanced with by removing all stakings', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedWei: 359n, stakes: new Map([
+                    ['a', 180n],
+                    ['b', 200n],
+                    ['c', 295n],
+                    ['e', 381n]
+                ]) },
+                operatorConfig: { minTransactionWei: 50n },
+                stakeableSponsorships: new Map([
+                    ['a', { totalPayoutWeiPerSec: 100n }],
+                    ['b', { totalPayoutWeiPerSec: 100n }],
+                    ['c', { totalPayoutWeiPerSec: 210n }],
+                    ['d', { totalPayoutWeiPerSec: 220n }],
+                    ['e', { totalPayoutWeiPerSec: 230n }]
+                ]),
+                environmentConfig: { minimumStakeWei: 0n }
+            })).toEqual([])
+        })
     })
 })

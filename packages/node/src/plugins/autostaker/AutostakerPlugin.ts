@@ -76,7 +76,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 stakes,
                 unstakedWei
             },
-            operatorConfig: {},  // TODO add maxSponsorshipCount
+            operatorConfig: { minTransactionWei: 1000n },  // TODO add maxSponsorshipCount, what is a good value for minTransactionWei
             stakeableSponsorships,
             environmentConfig: {
                 minimumStakeWei: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)

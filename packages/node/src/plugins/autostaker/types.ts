@@ -35,6 +35,7 @@ export interface OperatorState {
 
 export interface OperatorConfig {
     maxSponsorshipCount?: number
+    minTransactionWei: WeiAmount
 }
 
 /**
@@ -42,6 +43,6 @@ export interface OperatorConfig {
  * @see https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L226
  */
 export interface EnvironmentConfig {
-    minimumStakeWei: WeiAmount
+    minimumStakeWei: WeiAmount  // TODO rename to minStakeWei?
 }
 

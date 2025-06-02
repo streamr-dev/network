@@ -1,5 +1,6 @@
 import { sum, WeiAmount } from '@streamr/utils'
 import partition from 'lodash/partition'
+import minBy from 'lodash/minBy'
 import maxBy from 'lodash/maxBy'
 import pull from 'lodash/pull'
 import sortBy from 'lodash/sortBy'
@@ -38,6 +39,8 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  **/
 
 type TargetStake = [SponsorshipID, WeiAmount]
+
+const abs = (n: bigint) => (n < 0n) ? -n : n
 
 const getExpiredSponsorships = (stakes: Map<SponsorshipID, WeiAmount>, stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>): SponsorshipID[] => {
     return [...stakes.keys()].filter((sponsorshipId) => !stakeableSponsorships.has(sponsorshipId))
@@ -122,15 +125,25 @@ export const adjustStakes: AdjustStakesFn = ({
         .map((sponsorshipId) => ({ sponsorshipId, differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n) }))
         .filter(({ differenceWei: difference }) => difference !== 0n)
 
-    // TODO: filter out too small (TODO: decide what "too small" means) stakings and unstakings because those just waste gas
-
     // fix rounding errors by forcing the net staking to equal unstakedWei: adjust the largest staking
-    const netStakingWei = sum(adjustments.map(({ differenceWei: difference }) => difference))
+    const netStakingWei = sum(adjustments.map((a) => a.differenceWei))
     if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && adjustments.length > 0) {
-        const largestDifference = maxBy(adjustments, (a) => Number(d.differenceWei))!
+        const largestDifference = maxBy(adjustments, (a) => Number(a.differenceWei))!
         largestDifference.differenceWei += operatorState.unstakedWei - netStakingWei
         if (largestDifference.differenceWei === 0n) {
             pull(adjustments, largestDifference)
+        }
+    }
+
+    const tooSmallAdjustments = adjustments.filter((a) => abs(a.differenceWei) < operatorConfig.minTransactionWei)
+    if (tooSmallAdjustments.length > 0) {
+        pull(adjustments, ...tooSmallAdjustments)
+        let netChange = sum(tooSmallAdjustments.map((a) => a.differenceWei))
+        while (netChange < 0) {
+            // there are more stakings than unstakings: remove smallest of the stakings
+            const smallestStaking = minBy(adjustments.filter((a) => a.differenceWei > 0), (a) => Number(a.differenceWei))!
+            pull(adjustments, smallestStaking)
+            netChange += smallestStaking.differenceWei
         }
     }
 
