@@ -95,7 +95,6 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
 
     // eslint-disable-next-line class-methods-use-this
     private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipConfig>> {
-        // TODO is there a better way to get the client? Maybe we should add StreamrClient#getTheGraphClient()
         // TODO what are good where conditions for the sponsorships query so that we get all stakeable sponsorships
         // but no non-stakables (e.g. expired)
         const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
