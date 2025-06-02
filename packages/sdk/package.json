@@ -53,10 +53,10 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "^7.27.1",
+    "@babel/core": "^7.27.4",
     "@babel/plugin-proposal-decorators": "^7.27.1",
     "@babel/plugin-transform-modules-commonjs": "^7.27.1",
-    "@babel/plugin-transform-runtime": "^7.27.1",
+    "@babel/plugin-transform-runtime": "^7.27.4",
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-typescript": "^7.27.1",
     "@jest/globals": "^29.7.0",
@@ -92,8 +92,8 @@
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
-    "@babel/runtime": "^7.27.1",
-    "@babel/runtime-corejs3": "^7.27.1",
+    "@babel/runtime": "^7.27.4",
+    "@babel/runtime-corejs3": "^7.27.4",
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
@@ -120,7 +120,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.28"
+    "zod": "^3.25.48"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
