@@ -10,7 +10,7 @@ export const scheduleAtInterval = async (
     executeAtStart: boolean,
     abortSignal: AbortSignal
 ): Promise<void> => {
-    if (abortSignal?.aborted) {
+    if (abortSignal.aborted) {
         return
     }
     if (executeAtStart) {
