@@ -80,7 +80,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             },
             operatorConfig: {
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,
-                minTransactionWei: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
+                minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
                 maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount
             },
             stakeableSponsorships,

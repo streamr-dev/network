@@ -154,7 +154,7 @@ export const adjustStakes: AdjustStakesFn = ({
         }
     }
 
-    const tooSmallAdjustments = adjustments.filter((a) => abs(a.differenceWei) < operatorConfig.minTransactionWei)
+    const tooSmallAdjustments = adjustments.filter((a) => abs(a.differenceWei) < operatorConfig.minTransactionAmount)
     if (tooSmallAdjustments.length > 0) {
         pull(adjustments, ...tooSmallAdjustments)
         let netChange = sum(tooSmallAdjustments.map((a) => a.differenceWei))
