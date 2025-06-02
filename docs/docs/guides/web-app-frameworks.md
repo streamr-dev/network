@@ -3,12 +3,12 @@ sidebar_position: 2
 ---
 
 # Use Streamr in your web app
-In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a NodeJS server).
+In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a Node.js server).
 
 **Prerequisites:**
 
 -   NPM v10 or greater
--   NodeJS 20.x or greater (Ideally v22+)
+-   Node.js 20.x or greater (Ideally v22+)
 -   A basic understanding of ReactJS or NextJS
 -   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 

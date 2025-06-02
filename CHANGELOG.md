@@ -370,13 +370,13 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix NodeJS v18 compatibility (https://github.com/streamr-dev/network/pull/2462)
+- Fix Node.js v18 compatibility (https://github.com/streamr-dev/network/pull/2462)
 
 ### @streamr/node
 
 #### Changed
 
-- Update Docker runtime to NodeJS v20 (https://github.com/streamr-dev/network/pull/2466)
+- Update Docker runtime to Node.js v20 (https://github.com/streamr-dev/network/pull/2466)
 
 
 ## [100.2.0] - 2024-03-28
