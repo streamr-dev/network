@@ -3,7 +3,7 @@ sidebar_position: 6
 ---
 
 # Streamr config
-Whether you're developing an application in the browser, in NodeJS, or any other development environment, there will often be a need to configure the Streamr Node, or Streamr SDK to match your use case. Configuration changes are made through either the [Streamr SDK constructor](./configuration.md#the-streamr-sdk-constructor), or the [Streamr config file](./configuration.md#the-node-config-file).
+Whether you're developing an application in the browser, in Node.js, or any other development environment, there will often be a need to configure the Streamr Node, or Streamr SDK to match your use case. Configuration changes are made through either the [Streamr SDK constructor](./configuration.md#the-streamr-sdk-constructor), or the [Streamr config file](./configuration.md#the-node-config-file).
 
 ## The Streamr SDK constructor
 For the full list of parameter options, see:

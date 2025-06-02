@@ -5,7 +5,7 @@ Streamr AutoCertifier is a DynDNS server that upon request by a Streamr node, al
 ## Description
 
 To make it possble for Streamr network nodes running on browsers to join the network, 
-as many Streamr Network nodes running on NodeJS as possible need to be WebSocket-connectable. Because of mixed-content restrictions on modern browsers, the Streamr Network nodes running a WebSocket server need to have a valid domain name and a certificate.
+as many Streamr Network nodes running on Node.js as possible need to be WebSocket-connectable. Because of mixed-content restrictions on modern browsers, the Streamr Network nodes running a WebSocket server need to have a valid domain name and a certificate.
 
 In order to make the process of setting up a WebSocket-connectable Streamr Network node easier, Streamr Autocertifier provides an automated way of obtaining a domain name and a certificate to those node-runners not willing to register their own domain name and obtain a certificate.
 

@@ -5,7 +5,7 @@ These instructions were tested on
 ```
 macOS Monterey Version 12.3
 Apple M1 Max
-nodejs v16.14.2
+Node.js v16.14.2
 npm 8.5.0
 ```
 
