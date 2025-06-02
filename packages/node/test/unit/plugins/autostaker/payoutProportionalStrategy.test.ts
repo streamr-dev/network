@@ -3,12 +3,12 @@ import { adjustStakes } from '../../../../src/plugins/autostaker/payoutProportio
 describe('payoutProportionalStrategy', () => {
     it('unstakes everything if no stakeable sponsorships', async () => {
         expect(adjustStakes({
-            operatorState: { unstakedWei: 1234n, stakes: new Map([[ 'a', 1234n ]]) },
+            operatorState: { unstakedWei: 1000n, stakes: new Map([[ 'a', 2000n ]]) },
             operatorConfig: { },
             stakeableSponsorships: new Map(),
             environmentConfig: { minimumStakeWei: 1234n },
         })).toEqual([
-            { type: 'unstake', sponsorshipId: 'a', amount: 1234n },
+            { type: 'unstake', sponsorshipId: 'a', amount: 2000n },
         ])
     })
 
