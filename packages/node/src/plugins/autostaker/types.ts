@@ -22,12 +22,9 @@ export interface SponsorshipConfig {
     payoutPerSec: WeiAmount
 }
 
-/**
- * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
- **/
 export interface OperatorState {
     stakes: Map<SponsorshipID, WeiAmount>
-    unstakedWei: WeiAmount
+    unstakedAmount: WeiAmount
 }
 
 export interface OperatorConfig {

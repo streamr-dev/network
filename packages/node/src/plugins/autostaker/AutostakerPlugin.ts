@@ -65,18 +65,18 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
-        const stakedWei = await operatorContract.totalStakedIntoSponsorshipsWei()
-        const unstakedWei = (await operatorContract.valueWithoutEarnings()) - stakedWei
-        logger.info(`Balance: unstaked=${formatEther(unstakedWei)}, staked=${formatEther(stakedWei)}`)
+        const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
+        const unstakedAmount = (await operatorContract.valueWithoutEarnings()) - stakedAmount
+        logger.info(`Balance: unstaked=${formatEther(unstakedAmount)}, staked=${formatEther(stakedAmount)}`)
         const stakeableSponsorships = await this.getStakeableSponsorships(streamrClient)
         logger.info(`Stakeable sponsorships: ${[...stakeableSponsorships.keys()].join(',')}`)
         const stakes = await this.getStakes(streamrClient)
-        const stakeDescription = [...stakes.entries()].map(([sponsorshipId, amountWei]) => `${sponsorshipId}=${formatEther(amountWei)}`).join(', ')
+        const stakeDescription = [...stakes.entries()].map(([sponsorshipId, amount]) => `${sponsorshipId}=${formatEther(amount)}`).join(', ')
         logger.info(`Stakes before adjustments: ${stakeDescription}`)
         const actions = adjustStakes({
             operatorState: {
                 stakes,
-                unstakedWei
+                unstakedAmount
             },
             operatorConfig: {
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,

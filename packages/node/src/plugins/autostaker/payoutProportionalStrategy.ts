@@ -93,12 +93,12 @@ const getSelectedSponsorships = (
 const getTargetStakes = (
     stakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    unstakedWei: WeiAmount,
+    unstakedAmount: WeiAmount,
     minimumStakeWei: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
-    const totalStakeableWei = sum([...stakes.values()]) + unstakedWei
+    const totalStakeableWei = sum([...stakes.values()]) + unstakedAmount
     const selectedSponsorships = getSelectedSponsorships(
         stakes,
         stakeableSponsorships,
@@ -131,7 +131,7 @@ export const adjustStakes: AdjustStakesFn = ({
     const targetStakes = getTargetStakes(
         operatorState.stakes,
         stakeableSponsorships,
-        operatorState.unstakedWei,
+        operatorState.unstakedAmount,
         environmentConfig.minimumStakeWei,
         operatorConfig.maxSponsorshipCount,
         operatorConfig.operatorContractAddress
@@ -144,11 +144,11 @@ export const adjustStakes: AdjustStakesFn = ({
         }))
         .filter(({ differenceWei: difference }) => difference !== 0n)
 
-    // fix rounding errors by forcing the net staking to equal unstakedWei: adjust the largest staking
+    // fix rounding errors by forcing the net staking to equal unstakedAmount: adjust the largest staking
     const netStakingWei = sum(adjustments.map((a) => a.differenceWei))
-    if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && adjustments.length > 0) {
+    if (netStakingWei !== operatorState.unstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
         const largestDifference = maxBy(adjustments, (a) => Number(a.differenceWei))!
-        largestDifference.differenceWei += operatorState.unstakedWei - netStakingWei
+        largestDifference.differenceWei += operatorState.unstakedAmount - netStakingWei
         if (largestDifference.differenceWei === 0n) {
             pull(adjustments, largestDifference)
         }
