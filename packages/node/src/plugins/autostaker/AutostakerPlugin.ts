@@ -111,16 +111,13 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
 
     // eslint-disable-next-line class-methods-use-this
     private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipConfig>> {
-        // TODO what are good where conditions for the sponsorships query so that we get all stakeable sponsorships
-        // but no non-stakables (e.g. expired)
         const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
                         sponsorships(
                             where:  {
-                                projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)},
-                                spotAPY_gt: 0
+                                projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
