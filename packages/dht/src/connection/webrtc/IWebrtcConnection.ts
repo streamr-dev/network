@@ -1,4 +1,6 @@
-export interface WebrtcConnectionEvents {
+import { ConnectionEvents } from '../IConnection'
+
+export interface WebrtcConnectionEvents extends ConnectionEvents {
     localDescription: (description: string, type: string) => void
     localCandidate: (candidate: string, mid: string) => void
 }

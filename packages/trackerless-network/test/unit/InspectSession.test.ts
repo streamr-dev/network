@@ -1,6 +1,6 @@
-import { InspectSession, Events } from '../../src/content-delivery-layer/inspection/InspectSession'
+import { InspectSession } from '../../src/content-delivery-layer/inspection/InspectSession'
 import { MessageID } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { utf8ToBinary, waitForEvent } from '@streamr/utils'
 import { DhtAddress, randomDhtAddress } from '@streamr/dht'
 
 describe('InspectSession', () => {
@@ -50,7 +50,7 @@ describe('InspectSession', () => {
     it('should emit done event when inspected node sends seen message', async () => {
         inspectSession.markMessage(anotherNode, messageId1)
         await Promise.all([
-            waitForEvent3<Events>(inspectSession, 'done', 100),
+            waitForEvent(inspectSession, 'done', 100),
             // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             inspectSession.markMessage(inspectedNode, messageId1)
         ])
@@ -60,7 +60,7 @@ describe('InspectSession', () => {
     it('should emit done event another node sends message after inspected node', async () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await Promise.all([
-            waitForEvent3<Events>(inspectSession, 'done', 100),
+            waitForEvent(inspectSession, 'done', 100),
             // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             inspectSession.markMessage(anotherNode, messageId1)
         ])
@@ -71,11 +71,11 @@ describe('InspectSession', () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await expect(async () => {
             await Promise.all([
-                waitForEvent3<Events>(inspectSession, 'done', 100),
+                waitForEvent(inspectSession, 'done', 100),
                 // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
                 inspectSession.markMessage(anotherNode, messageId2)
             ])
-        }).rejects.toThrow('waitForEvent3')
+        }).rejects.toThrow('waitForEvent')
         
         expect(inspectSession.getInspectedMessageCount()).toBe(2)
     })

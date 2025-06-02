@@ -3,7 +3,7 @@ import {
     StreamPartIDUtils,
     hexToBinary,
     toUserIdRaw,
-    waitForEvent3
+    waitForEvent
 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { AsymmetricEncryptionType, ProxyDirection, 
@@ -90,7 +90,7 @@ describe('proxy group key exchange', () => {
         }
 
         await Promise.all([
-            waitForEvent3(publisher.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(publisher.stack.getContentDeliveryManager(), 'newMessage'),
             subscriber.broadcast(request)
         ])
     })
@@ -122,7 +122,7 @@ describe('proxy group key exchange', () => {
         }
 
         await Promise.all([
-            waitForEvent3(subscriber.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(subscriber.stack.getContentDeliveryManager(), 'newMessage'),
             publisher.broadcast(response)
         ])
     })

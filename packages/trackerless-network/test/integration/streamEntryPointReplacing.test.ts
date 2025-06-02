@@ -75,7 +75,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
 
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
-            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 }) 
+            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 15000 }) 
             node.getContentDeliveryManager().on('newMessage', () => {
                 receivedMessages += 1
             })
@@ -91,7 +91,10 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             STREAM_PART_ID,
             randomUserId()
         )
-        newNodeInStream.getContentDeliveryManager().broadcast(msg)
-        await until(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
-    }, 200000)
+
+        await newNodeInStream.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 })
+        newNodeInStream.broadcast(msg)
+        await until(() => receivedMessages === NUM_OF_LATER_NODES)
+       
+    }, 180 * 1000)
 })

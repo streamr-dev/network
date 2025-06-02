@@ -17,8 +17,8 @@ To activate the whole quantum secure stack, simply configure ML-DSA identities o
 ```
 const streamr = new StreamrClient({
     auth: {
-        publicKey: '...',  // hex encoded ml-kem-87 public key
-        privateKey: '...', // hex encoded ml-kem-87 private key
+        publicKey: '...',  // hex encoded ML-DSA-87 public key
+        privateKey: '...', // hex encoded ML-DSA-87 private key
         keyType: 'ML_DSA_87'
     }
 })
@@ -26,10 +26,18 @@ const streamr = new StreamrClient({
 
 ## Generating ML-DSA keys
 
-To generate ML-DSA keys, see `MLDSAKeyPair.generate()` or use CLI tool:
+You can generate the ML-DSA-87 keys using a suitable tool or library of your choice, or use tooling available on Streamr. For example, using the Streamr CLI tool:
 
 ```
 streamr identity generate --key-type ML_DSA_87
+```
+
+Or programmatically using the `MLDSAKeyPairIdentity` class that ships with the Streamr SDK:
+
+```
+const identity = MLDSAKeyPairIdentity.generate()
+const publicKey = await identity.getUserId()
+const privateKey = await identity.getPrivateKey()
 ```
 
 ## Enforcing quantum security

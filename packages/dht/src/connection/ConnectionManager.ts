@@ -1,4 +1,4 @@
-import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
+import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
@@ -18,7 +18,7 @@ import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockStates, LockID } from './ConnectionLockStates'
 import { ConnectorFacade } from './ConnectorFacade'
-import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
+import { ManagedConnection } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
@@ -250,7 +250,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 const connection = endpoint.connection
                 logger.trace('handshake of connection not completed, force-closing')
                 // TODO use options option or named constant?
-                const eventReceived = waitForEvent3(connection as any, 'disconnected', 2000)
+                const eventReceived = waitForEvent(connection, 'disconnected', 2000)
                 // TODO should we have some handling for this floating promise?
                 connection.close(true)
                 try {
@@ -596,7 +596,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             const promise = new Promise<void>((resolve, _reject) => {
                 // TODO use options option or named constant?
                 // eslint-disable-next-line promise/catch-or-return
-                waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
+                waitForEvent(connection, 'disconnected', 2000).then(() => {
                     logger.trace('disconnected event received in gracefullyDisconnectAsync()')
                 })
                     .catch((e) => {

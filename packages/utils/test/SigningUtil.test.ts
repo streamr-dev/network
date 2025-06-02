@@ -125,9 +125,15 @@ describe('EcdsaSecp256r1', () => {
     const validSignature2 = '3a804164f19baf0f52bc34d03be8090ea7957dabf340a9b220bf680d36e5ccd9a2d6423fa14d0ccfd1efcca3044ac788516de703fe28e4f23b644ad482275ea2'
 
     describe('generateKeyPair', () => {
-        it('generates keys of correct length', async () => {
+        it('generates keys of correct length (default)', async () => {
             const keyPair = util.generateKeyPair()
-            expect(keyPair.publicKey.length).toBe(33) // compressed. uncompressed would be 65 bytes
+            expect(keyPair.publicKey.length).toBe(33) // compressed
+            expect(keyPair.privateKey.length).toBe(32)
+        })
+
+        it('generates keys of correct length (uncompressed)', async () => {
+            const keyPair = util.generateKeyPair(false)
+            expect(keyPair.publicKey.length).toBe(65) // uncompressed
             expect(keyPair.privateKey.length).toBe(32)
         })
 
@@ -150,6 +156,15 @@ describe('EcdsaSecp256r1', () => {
         })
         it('passes on known valid pair with uncompressed public key', () => {
             util.assertValidKeyPair(publicKey2, privateKey2)
+        })
+    })
+
+    describe('getUncompressedPublicKey', () => {
+        it('produces the correct uncompressed public key', () => {
+            const compressed = util.getPublicKeyFromPrivateKey(privateKey1, true)
+            const uncompressed = util.getPublicKeyFromPrivateKey(privateKey1, false)
+
+            expect(util.getUncompressedPublicKey(compressed)).toEqual(uncompressed)
         })
     })
 

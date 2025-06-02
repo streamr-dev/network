@@ -1,9 +1,9 @@
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
 export interface TransportEvents {
+    connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
     message: (message: Message) => void
-    connected: (peerDescriptor: PeerDescriptor) => void
 }
 
 export interface SendOptions {

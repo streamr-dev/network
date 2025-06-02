@@ -1,11 +1,11 @@
-import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents3 } from '@streamr/utils'
+import { Logger, raceForEvent } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
     Message, PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
-import { ConnectionEvents, IConnection } from './IConnection'
+import { IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedProtocolVersion } from '../helpers/version'
@@ -17,12 +17,11 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
     { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
     const socket = new WebsocketClientConnection()
-    let result: RunAndRaceEventsReturnType<ConnectionEvents>
+    let result: { winnerName: 'connected' | 'error' }
     try {
-        result = await runAndRaceEvents3<ConnectionEvents>([
-            () => { socket.connect(url, allowSelfSignedCertificate) }],
-        socket, ['connected', 'error'],
-        timeoutMs)
+        const resultPromise = raceForEvent(socket, ['connected', 'error'], timeoutMs)
+        socket.connect(url, allowSelfSignedCertificate)
+        result = await resultPromise 
     } catch {
         throw new Err.ConnectionFailed('WebSocket connection timed out')
     }

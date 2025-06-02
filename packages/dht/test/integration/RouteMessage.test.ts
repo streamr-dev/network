@@ -1,7 +1,7 @@
-import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
+import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, PeerDescriptor, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, runAndWaitForEvents3, until } from '@streamr/utils'
+import { Logger, until, waitForEvent } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
@@ -69,18 +69,18 @@ describe('Route Message With Mock Connections', () => {
             targetDescriptor: destinationNode.getLocalPeerDescriptor()
         }
 
-        await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            // @ts-expect-error private
-            sourceNode.router!.doRouteMessage({
-                message,
-                target: destinationNode.getLocalPeerDescriptor().nodeId,
-                requestId: v4(),
-                sourcePeer: sourceNode.getLocalPeerDescriptor(),
-                reachableThrough: [],
-                routingPath: [],
-                parallelRootNodeIds: []
-            })
-        }], [[destinationNode, 'message']], 20000)
+        const eventPromise = waitForEvent(destinationNode, 'message', 20000)
+        // @ts-expect-error private
+        sourceNode.router!.doRouteMessage({
+            message,
+            target: destinationNode.getLocalPeerDescriptor().nodeId,
+            requestId: v4(),
+            sourcePeer: sourceNode.getLocalPeerDescriptor(),
+            reachableThrough: [],
+            routingPath: [],
+            parallelRootNodeIds: []
+        })
+        await eventPromise
     }, 30000)
 
     it('Receives multiple messages', async () => {
@@ -216,11 +216,10 @@ describe('Route Message With Mock Connections', () => {
             parallelRootNodeIds: []
         }
 
-        await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            // @ts-expect-error private
-            sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
-        }], [[destinationNode, 'message']])
-
+        const eventPromise = waitForEvent(destinationNode, 'message')
+        // @ts-expect-error private
+        sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+        await eventPromise
     })
 
 })

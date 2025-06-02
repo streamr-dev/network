@@ -55,7 +55,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 
-export interface DhtNodeEvents {
+export interface DhtNodeEvents extends TransportEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
     nearbyContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -135,9 +135,7 @@ const PERIODICAL_PING_INTERVAL = 60 * 1000
 // TODO move this to trackerless-network package and change serviceId to be a required paramater
 export const CONTROL_LAYER_NODE_SERVICE_ID = 'layer0'
 
-export type Events = TransportEvents & DhtNodeEvents
-
-export class DhtNode extends EventEmitter<Events> implements ITransport {
+export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     private readonly options: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator

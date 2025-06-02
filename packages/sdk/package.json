@@ -1,6 +1,6 @@
 {
   "name": "@streamr/sdk",
-  "version": "103.0.0-rc.16",
+  "version": "103.0.0-rc.18",
   "description": "JavaScript / TypeScript SDK for Streamr",
   "repository": {
     "type": "git",
@@ -14,6 +14,13 @@
   "browser": {
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
     "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+  },
+  "exports": {
+    "default": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/src/exports-esm.mjs",
+      "require": "./dist/src/exports-commonjs.js"
+    }
   },
   "files": [
     "dist",
@@ -53,9 +60,9 @@
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-typescript": "^7.27.1",
     "@jest/globals": "^29.7.0",
-    "@streamr/test-utils": "103.0.0-rc.16",
+    "@streamr/test-utils": "103.0.0-rc.18",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.17.16",
+    "@types/lodash": "^4.17.17",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "babel-loader": "^10.0.0",
@@ -78,7 +85,7 @@
     "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.99.8",
+    "webpack": "^5.99.9",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
@@ -90,12 +97,12 @@
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/config": "^5.5.6",
-    "@streamr/dht": "103.0.0-rc.16",
+    "@streamr/config": "^5.6.0",
+    "@streamr/dht": "103.0.0-rc.18",
     "@streamr/network-contracts": "^9.1.0",
-    "@streamr/proto-rpc": "103.0.0-rc.16",
-    "@streamr/trackerless-network": "103.0.0-rc.16",
-    "@streamr/utils": "103.0.0-rc.16",
+    "@streamr/proto-rpc": "103.0.0-rc.18",
+    "@streamr/trackerless-network": "103.0.0-rc.18",
+    "@streamr/utils": "103.0.0-rc.18",
     "core-js": "^3.42.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
@@ -113,7 +120,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.24.4"
+    "zod": "^3.25.28"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",

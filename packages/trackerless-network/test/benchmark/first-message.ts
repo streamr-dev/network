@@ -16,7 +16,8 @@ import {
     toStreamPartID,
     toUserId,
     toUserIdRaw,
-    utf8ToBinary, waitForEvent3
+    utf8ToBinary,
+    waitForEvent
 } from '@streamr/utils'
 import fs from 'fs'
 import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
@@ -120,7 +121,7 @@ const measureJoiningTime = async () => {
     await streamSubscriber.start()
 
     await Promise.all([
-        waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000),
+        waitForEvent(streamSubscriber.stack.getContentDeliveryManager(), 'newMessage', 60000),
         streamSubscriber.join(stream)
     ])
 
