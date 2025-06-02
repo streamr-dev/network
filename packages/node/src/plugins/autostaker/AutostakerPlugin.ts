@@ -10,6 +10,7 @@ import { Action, SponsorshipConfig, SponsorshipID } from './types'
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
     runIntervalInMs: number
+    maxSponsorshipCount?: number
 }
 
 interface SponsorshipQueryResultItem {
@@ -76,9 +77,10 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 stakes,
                 unstakedWei
             },
-            operatorConfig: {  // TODO add maxSponsorshipCount
+            operatorConfig: {
                 minTransactionWei: 1000n,  // TODO get from the plugin config, what would be a good default value? 
-                operatorContractAddress: this.pluginConfig.operatorContractAddress
+                operatorContractAddress: this.pluginConfig.operatorContractAddress,
+                maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount
             },
             stakeableSponsorships,
             environmentConfig: {
