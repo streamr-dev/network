@@ -7,9 +7,9 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 11000n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 2n }],
-                ['b', { totalPayoutWeiPerSec: 4n }],
-                ['c', { totalPayoutWeiPerSec: 6n }],
+                ['a', { payoutPerSec: 2n }],
+                ['b', { payoutPerSec: 4n }],
+                ['c', { payoutPerSec: 6n }],
             ]),
             environmentConfig: { minimumStakeWei: 5000n },
         })).toIncludeSameMembers([
@@ -34,9 +34,9 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 600n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }],
-                ['b', { totalPayoutWeiPerSec: 20n }],
-                ['c', { totalPayoutWeiPerSec: 30n }],
+                ['a', { payoutPerSec: 10n }],
+                ['b', { payoutPerSec: 20n }],
+                ['c', { payoutPerSec: 30n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
@@ -51,9 +51,9 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 500n, stakes: new Map() },
             operatorConfig: { maxSponsorshipCount: 2, minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }], // not included
-                ['b', { totalPayoutWeiPerSec: 20n }], // included
-                ['c', { totalPayoutWeiPerSec: 30n }], // included
+                ['a', { payoutPerSec: 10n }], // not included
+                ['b', { payoutPerSec: 20n }], // included
+                ['c', { payoutPerSec: 30n }], // included
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
@@ -67,9 +67,9 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 500n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }], // not included
-                ['b', { totalPayoutWeiPerSec: 20n }], // not included
-                ['c', { totalPayoutWeiPerSec: 30n }], // included
+                ['a', { payoutPerSec: 10n }], // not included
+                ['b', { payoutPerSec: 20n }], // not included
+                ['c', { payoutPerSec: 30n }], // included
             ]),
             environmentConfig: { minimumStakeWei: 300n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
@@ -81,7 +81,7 @@ describe('payoutProportionalStrategy', () => {
         expect(adjustStakes({
             operatorState: { unstakedWei: 100n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
-            stakeableSponsorships: new Map([['a', { totalPayoutWeiPerSec: 10n }]]),
+            stakeableSponsorships: new Map([['a', { payoutPerSec: 10n }]]),
             environmentConfig: { minimumStakeWei: 300n },
         })).toEqual([])
     })
@@ -95,10 +95,10 @@ describe('payoutProportionalStrategy', () => {
             ]) },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 40n }], // add stake here
-                ['b', { totalPayoutWeiPerSec: 30n }], // unstake from here
-                ['c', { totalPayoutWeiPerSec: 20n }], // stake here
-                ['d', { totalPayoutWeiPerSec: 10n }], // stake here
+                ['a', { payoutPerSec: 40n }], // add stake here
+                ['b', { payoutPerSec: 30n }], // unstake from here
+                ['c', { payoutPerSec: 20n }], // stake here
+                ['d', { payoutPerSec: 10n }], // stake here
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         }).map((a) => a.type)).toEqual([
@@ -115,7 +115,7 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 0n, stakes: new Map([[ 'b', 100n ]]) },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }],
+                ['a', { payoutPerSec: 10n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toIncludeSameMembers([
@@ -133,8 +133,8 @@ describe('payoutProportionalStrategy', () => {
             ]) },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }],
-                ['b', { totalPayoutWeiPerSec: 10n }],
+                ['a', { payoutPerSec: 10n }],
+                ['b', { payoutPerSec: 10n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toIncludeSameMembers([
@@ -149,9 +149,9 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 1000n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 100n }],
-                ['b', { totalPayoutWeiPerSec: 100n }],
-                ['c', { totalPayoutWeiPerSec: 400n }],
+                ['a', { payoutPerSec: 100n }],
+                ['b', { payoutPerSec: 100n }],
+                ['c', { payoutPerSec: 400n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toIncludeSameMembers([
@@ -170,9 +170,9 @@ describe('payoutProportionalStrategy', () => {
             ]) },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 100n }],
-                ['b', { totalPayoutWeiPerSec: 100n }],
-                ['c', { totalPayoutWeiPerSec: 400n }],
+                ['a', { payoutPerSec: 100n }],
+                ['b', { payoutPerSec: 100n }],
+                ['c', { payoutPerSec: 400n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toEqual([])
@@ -183,23 +183,23 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedWei: 1000n, stakes: new Map() },
             operatorConfig: { minTransactionWei: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
-                ['a', { totalPayoutWeiPerSec: 10n }],
-                ['b', { totalPayoutWeiPerSec: 20n }],
-                ['c', { totalPayoutWeiPerSec: 30n }],
-                ['d', { totalPayoutWeiPerSec: 40n }],
+                ['a', { payoutPerSec: 10n }],
+                ['b', { payoutPerSec: 20n }],
+                ['c', { payoutPerSec: 30n }],
+                ['d', { payoutPerSec: 40n }],
             ]),
             environmentConfig: { minimumStakeWei: 0n },
         })).toHaveLength(4)
     })
 
-    it('operators may choose different sponsorships if totalPayoutWeiPerSec are same', () => {
+    it('operators may choose different sponsorships if payoutPerSec are same', () => {
         const createArgs = (operatorContractAddress: string) => {
             return {
                 operatorState: { unstakedWei: 1000n, stakes: new Map() },
                 operatorConfig: { minTransactionWei: 0n, operatorContractAddress },
                 stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 100n }],
-                    ['b', { totalPayoutWeiPerSec: 100n }],
+                    ['a', { payoutPerSec: 100n }],
+                    ['b', { payoutPerSec: 100n }],
                 ]),
                 environmentConfig: { minimumStakeWei: 1000n },
             }
@@ -219,9 +219,9 @@ describe('payoutProportionalStrategy', () => {
                 operatorState: { unstakedWei: 1000n, stakes: new Map() },
                 operatorConfig: { minTransactionWei: 20n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 10n }],
-                    ['b', { totalPayoutWeiPerSec: 20n }],
-                    ['c', { totalPayoutWeiPerSec: 1000n }]
+                    ['a', { payoutPerSec: 10n }],
+                    ['b', { payoutPerSec: 20n }],
+                    ['c', { payoutPerSec: 1000n }]
                 ]),
                 environmentConfig: { minimumStakeWei: 0n },
             })).toIncludeSameMembers([
@@ -236,9 +236,9 @@ describe('payoutProportionalStrategy', () => {
                 ]) },
                 operatorConfig: { minTransactionWei: 20n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 100n }],
-                    ['b', { totalPayoutWeiPerSec: 100n }],
-                    ['c', { totalPayoutWeiPerSec: 400n }],
+                    ['a', { payoutPerSec: 100n }],
+                    ['b', { payoutPerSec: 100n }],
+                    ['c', { payoutPerSec: 400n }],
                 ]),
                 environmentConfig: { minimumStakeWei: 0n }
             })).toIncludeSameMembers([
@@ -255,11 +255,11 @@ describe('payoutProportionalStrategy', () => {
                 ]) },
                 operatorConfig: { minTransactionWei: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 100n }],
-                    ['b', { totalPayoutWeiPerSec: 100n }],
-                    ['c', { totalPayoutWeiPerSec: 210n }],
-                    ['d', { totalPayoutWeiPerSec: 220n }],
-                    ['e', { totalPayoutWeiPerSec: 230n }]
+                    ['a', { payoutPerSec: 100n }],
+                    ['b', { payoutPerSec: 100n }],
+                    ['c', { payoutPerSec: 210n }],
+                    ['d', { payoutPerSec: 220n }],
+                    ['e', { payoutPerSec: 230n }]
                 ]),
                 environmentConfig: { minimumStakeWei: 0n }
             })).toIncludeSameMembers([
@@ -277,11 +277,11 @@ describe('payoutProportionalStrategy', () => {
                 ]) },
                 operatorConfig: { minTransactionWei: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 100n }],
-                    ['b', { totalPayoutWeiPerSec: 100n }],
-                    ['c', { totalPayoutWeiPerSec: 210n }],
-                    ['d', { totalPayoutWeiPerSec: 220n }],
-                    ['e', { totalPayoutWeiPerSec: 230n }]
+                    ['a', { payoutPerSec: 100n }],
+                    ['b', { payoutPerSec: 100n }],
+                    ['c', { payoutPerSec: 210n }],
+                    ['d', { payoutPerSec: 220n }],
+                    ['e', { payoutPerSec: 230n }]
                 ]),
                 environmentConfig: { minimumStakeWei: 0n }
             })).toEqual([])

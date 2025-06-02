@@ -125,7 +125,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const sponsorships = await collect(queryResult)
         return new Map(sponsorships.map(
             (sponsorship) => [sponsorship.id, {
-                totalPayoutWeiPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
+                payoutPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
             }])
         )
     }

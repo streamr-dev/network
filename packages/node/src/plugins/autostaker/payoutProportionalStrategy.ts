@@ -11,9 +11,9 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  * Allocate stake in proportion to the payout each sponsorship gives.
  * Detailed allocation formula: each sponsorship should get the stake M + P / T,
  *   where M is the environment-mandated minimum stake,
- *         P is `totalPayoutWeiPerSec` of the considered sponsorship, and
- *         T is sum of `totalPayoutWeiPerSec` of all sponsorships this operator stakes to.
- * `totalPayoutWeiPerSec` is the total payout per second to all staked operators.
+ *         P is `payoutPerSec` of the considered sponsorship, and
+ *         T is sum of `payoutPerSec` of all sponsorships this operator stakes to.
+ * `payoutPerSec` is the total payout per second to all staked operators.
  *
  * In order to prevent that operators' actions cause other operators to change their plans,
  *   this strategy only takes into account the payout, not what others have staked.
@@ -72,9 +72,9 @@ const getSelectedSponsorships = (
     return [
         ...keptSponsorships,
         ...sortBy(potentialSponsorships, 
-            (id) => -Number(stakeableSponsorships.get(id)!.totalPayoutWeiPerSec),
+            (id) => -Number(stakeableSponsorships.get(id)!.payoutPerSec),
             (id) => {
-                // If totalPayoutWeiPerSec is same for multiple sponsorships, different operators should
+                // If payoutPerSec is same for multiple sponsorships, different operators should
                 // choose different sponsorships. Using hash of some operator-specific ID + sponsorshipId
                 // to determine the order. Here we use operatorContractAddress, but it could also
                 // be e.g. the nodeId.
@@ -109,10 +109,10 @@ const getTargetStakes = (
     )
     const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
-    const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
+    const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.payoutPerSec))
     const targetsForSelected: TargetStake[] = selectedSponsorships.map((id) => [
         id,
-        minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.totalPayoutWeiPerSec / payoutSumWeiPerSec
+        minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.payoutPerSec / payoutSumWeiPerSec
     ])
     const targetsForExpired: TargetStake[] = getExpiredSponsorships(stakes, stakeableSponsorships).map((id) => [
         id,

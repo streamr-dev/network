@@ -18,11 +18,8 @@ export type AdjustStakesFn = (opts: {
     environmentConfig: EnvironmentConfig
 }) => Action[]
 
-/**
- * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
- **/
 export interface SponsorshipConfig {
-    totalPayoutWeiPerSec: WeiAmount
+    payoutPerSec: WeiAmount
 }
 
 /**
