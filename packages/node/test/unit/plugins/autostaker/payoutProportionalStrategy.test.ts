@@ -11,7 +11,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 4n }],
                 ['c', { payoutPerSec: 6n }],
             ]),
-            environmentConfig: { minimumStakeWei: 5000n },
+            environmentConfig: { minStakePerSponsorship: 5000n },
         })).toIncludeSameMembers([
             { type: 'stake', sponsorshipId: 'b', amount: 5400n },
             { type: 'stake', sponsorshipId: 'c', amount: 5600n }
@@ -23,7 +23,7 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedAmount: 1000n, stakes: new Map([[ 'a', 2000n ]]) },
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map(),
-            environmentConfig: { minimumStakeWei: 1234n },
+            environmentConfig: { minStakePerSponsorship: 1234n },
         })).toEqual([
             { type: 'unstake', sponsorshipId: 'a', amount: 2000n },
         ])
@@ -38,7 +38,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }],
                 ['c', { payoutPerSec: 30n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
             { type: 'stake', sponsorshipId: 'a', amount: 100n },
             { type: 'stake', sponsorshipId: 'b', amount: 200n },
@@ -55,14 +55,14 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }], // included
                 ['c', { payoutPerSec: 30n }], // included
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
             { type: 'stake', sponsorshipId: 'b', amount: 200n },
             { type: 'stake', sponsorshipId: 'c', amount: 300n },
         ])
     })
 
-    it('limits the targetSponsorshipCount to minimumStakeWei and available tokens', async () => {
+    it('limits the targetSponsorshipCount to minStakePerSponsorship and available tokens', async () => {
         expect(adjustStakes({
             operatorState: { unstakedAmount: 500n, stakes: new Map() },
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
@@ -71,7 +71,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }], // not included
                 ['c', { payoutPerSec: 30n }], // included
             ]),
-            environmentConfig: { minimumStakeWei: 300n },
+            environmentConfig: { minStakePerSponsorship: 300n },
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
             { type: 'stake', sponsorshipId: 'c', amount: 500n },
         ])
@@ -82,7 +82,7 @@ describe('payoutProportionalStrategy', () => {
             operatorState: { unstakedAmount: 100n, stakes: new Map() },
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([['a', { payoutPerSec: 10n }]]),
-            environmentConfig: { minimumStakeWei: 300n },
+            environmentConfig: { minStakePerSponsorship: 300n },
         })).toEqual([])
     })
 
@@ -100,7 +100,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 20n }], // stake here
                 ['d', { payoutPerSec: 10n }], // stake here
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         }).map((a) => a.type)).toEqual([
             'unstake',
             'stake',
@@ -117,7 +117,7 @@ describe('payoutProportionalStrategy', () => {
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         })).toIncludeSameMembers([
             { type: 'unstake', sponsorshipId: 'b', amount: 100n },
             { type: 'stake', sponsorshipId: 'a', amount: 100n },
@@ -136,7 +136,7 @@ describe('payoutProportionalStrategy', () => {
                 ['a', { payoutPerSec: 10n }],
                 ['b', { payoutPerSec: 10n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         })).toIncludeSameMembers([
             { type: 'unstake', sponsorshipId: 'c', amount: 100n },
             { type: 'stake', sponsorshipId: 'a', amount: 50n },
@@ -153,7 +153,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 100n }],
                 ['c', { payoutPerSec: 400n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         })).toIncludeSameMembers([
             { type: 'stake', sponsorshipId: 'a', amount: 166n },
             { type: 'stake', sponsorshipId: 'b', amount: 166n },
@@ -174,7 +174,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 100n }],
                 ['c', { payoutPerSec: 400n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         })).toEqual([])
     })
 
@@ -188,7 +188,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 30n }],
                 ['d', { payoutPerSec: 40n }],
             ]),
-            environmentConfig: { minimumStakeWei: 0n },
+            environmentConfig: { minStakePerSponsorship: 0n },
         })).toHaveLength(4)
     })
 
@@ -201,7 +201,7 @@ describe('payoutProportionalStrategy', () => {
                     ['a', { payoutPerSec: 100n }],
                     ['b', { payoutPerSec: 100n }],
                 ]),
-                environmentConfig: { minimumStakeWei: 1000n },
+                environmentConfig: { minStakePerSponsorship: 1000n },
             }
         }
         const stakesForOperator1 = adjustStakes(createArgs('0x1111'))
@@ -223,7 +223,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', { payoutPerSec: 20n }],
                     ['c', { payoutPerSec: 1000n }]
                 ]),
-                environmentConfig: { minimumStakeWei: 0n },
+                environmentConfig: { minStakePerSponsorship: 0n },
             })).toIncludeSameMembers([
                 { type: 'stake', sponsorshipId: 'c', amount: 972n }
             ])
@@ -240,7 +240,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', { payoutPerSec: 100n }],
                     ['c', { payoutPerSec: 400n }],
                 ]),
-                environmentConfig: { minimumStakeWei: 0n }
+                environmentConfig: { minStakePerSponsorship: 0n }
             })).toIncludeSameMembers([
                 { type: 'stake', sponsorshipId: 'c', amount: 668n }
             ])
@@ -261,7 +261,7 @@ describe('payoutProportionalStrategy', () => {
                     ['d', { payoutPerSec: 220n }],
                     ['e', { payoutPerSec: 230n }]
                 ]),
-                environmentConfig: { minimumStakeWei: 0n }
+                environmentConfig: { minStakePerSponsorship: 0n }
             })).toIncludeSameMembers([
                 { type: 'stake', sponsorshipId: 'e', amount: 381n }
             ])
@@ -283,7 +283,7 @@ describe('payoutProportionalStrategy', () => {
                     ['d', { payoutPerSec: 220n }],
                     ['e', { payoutPerSec: 230n }]
                 ]),
-                environmentConfig: { minimumStakeWei: 0n }
+                environmentConfig: { minStakePerSponsorship: 0n }
             })).toEqual([])
         })
     })

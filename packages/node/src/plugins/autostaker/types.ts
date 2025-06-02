@@ -33,11 +33,7 @@ export interface OperatorConfig {
     maxSponsorshipCount?: number
 }
 
-/**
- * Network-wide constants, also available in thegraph
- * @see https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L226
- */
 export interface EnvironmentConfig {
-    minimumStakeWei: WeiAmount  // TODO rename to minStakeWei?
+    minStakePerSponsorship: WeiAmount
 }
 

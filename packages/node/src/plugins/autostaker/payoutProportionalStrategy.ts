@@ -56,14 +56,14 @@ const getSelectedSponsorships = (
     stakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableWei: WeiAmount,
-    minimumStakeWei: WeiAmount,
+    minStakePerSponsorship: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): SponsorshipID[] => {
     const count = Math.min(
         stakeableSponsorships.size,
         maxSponsorshipCount ?? Infinity,
-        Math.floor(Number(totalStakeableWei) / Number(minimumStakeWei))  // as many as we can afford
+        Math.floor(Number(totalStakeableWei) / Number(minStakePerSponsorship))  // as many as we can afford
     )
     const [
         keptSponsorships,
@@ -94,7 +94,7 @@ const getTargetStakes = (
     stakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     unstakedAmount: WeiAmount,
-    minimumStakeWei: WeiAmount,
+    minStakePerSponsorship: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
@@ -103,16 +103,16 @@ const getTargetStakes = (
         stakes,
         stakeableSponsorships,
         totalStakeableWei,
-        minimumStakeWei,
+        minStakePerSponsorship,
         maxSponsorshipCount,
         operatorContractAddress
     )
-    const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
+    const minimumStakesWei = BigInt(selectedSponsorships.length) * minStakePerSponsorship
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
     const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.payoutPerSec))
     const targetsForSelected: TargetStake[] = selectedSponsorships.map((id) => [
         id,
-        minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.payoutPerSec / payoutSumWeiPerSec
+        minStakePerSponsorship + payoutProportionalWei * stakeableSponsorships.get(id)!.payoutPerSec / payoutSumWeiPerSec
     ])
     const targetsForExpired: TargetStake[] = getExpiredSponsorships(stakes, stakeableSponsorships).map((id) => [
         id,
@@ -132,7 +132,7 @@ export const adjustStakes: AdjustStakesFn = ({
         operatorState.stakes,
         stakeableSponsorships,
         operatorState.unstakedAmount,
-        environmentConfig.minimumStakeWei,
+        environmentConfig.minStakePerSponsorship,
         operatorConfig.maxSponsorshipCount,
         operatorConfig.operatorContractAddress
     )

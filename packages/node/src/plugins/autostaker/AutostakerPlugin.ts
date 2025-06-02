@@ -85,7 +85,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             },
             stakeableSponsorships,
             environmentConfig: {
-                minimumStakeWei: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
+                minStakePerSponsorship: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
             }
         })
         const signer = await streamrClient.getSigner()
