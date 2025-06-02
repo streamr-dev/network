@@ -21,7 +21,6 @@ export type AdjustStakesFn = (opts: {
  **/
 export interface SponsorshipState {
     totalPayoutWeiPerSec: bigint
-    totalStakedWei: bigint
 }
 
 /**

@@ -15,7 +15,6 @@ export interface AutostakerPluginConfig {
 interface SponsorshipQueryResultItem {
     id: SponsorshipId
     totalPayoutWeiPerSec: bigint
-    totalStakedWei: bigint
 }
 
 interface StakeQueryResultItem {
@@ -113,7 +112,6 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                         ) {
                             id
                             totalPayoutWeiPerSec
-                            totalStakedWei
                         }
                     }
                 `
@@ -123,7 +121,6 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         return new Map(sponsorships.map(
             (sponsorship) => [sponsorship.id, {
                 totalPayoutWeiPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
-                totalStakedWei: BigInt(sponsorship.totalStakedWei)
             }])
         )
     }
