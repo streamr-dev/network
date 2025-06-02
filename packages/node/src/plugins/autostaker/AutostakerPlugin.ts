@@ -1,5 +1,5 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtInterval, WeiAmount } from '@streamr/utils'
+import { collect, Logger, scheduleAtApproximateInterval, scheduleAtInterval, wait, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther } from 'ethers'
 import { Plugin } from '../../Plugin'
@@ -49,13 +49,13 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
 
     async start(streamrClient: StreamrClient): Promise<void> {
         logger.info('Start autostaker plugin')
-        scheduleAtInterval(async () => {
+        scheduleAtApproximateInterval(async () => {
             try {
                 await this.runActions(streamrClient)
             } catch (err) {
                 logger.warn('Error while running autostaker actions', { err })
             }
-        }, this.pluginConfig.runIntervalInMs, false, this.abortController.signal)
+        }, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
     }
 
     private async runActions(streamrClient: StreamrClient): Promise<void> {
