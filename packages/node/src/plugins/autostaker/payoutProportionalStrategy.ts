@@ -1,7 +1,8 @@
 import { sum, WeiAmount } from '@streamr/utils'
-import partition from 'lodash/partition'
-import minBy from 'lodash/minBy'
+import crypto from 'crypto'
 import maxBy from 'lodash/maxBy'
+import minBy from 'lodash/minBy'
+import partition from 'lodash/partition'
 import pull from 'lodash/pull'
 import sortBy from 'lodash/sortBy'
 import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './types'
@@ -53,7 +54,8 @@ const getSelectedSponsorships = (
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableWei: WeiAmount,
     minimumStakeWei: WeiAmount,
-    maxSponsorshipCount: number | undefined
+    maxSponsorshipCount: number | undefined,
+    operatorContractAddress: string
 ): SponsorshipID[] => {
     const count = Math.min(
         stakeableSponsorships.size,
@@ -66,9 +68,17 @@ const getSelectedSponsorships = (
     ] = partition([...stakeableSponsorships.keys()], (id) => stakes.has(id))
     return [
         ...keptSponsorships,
-        // TODO: add secondary sorting of potentialSponsorships based on operator ID + sponsorship ID
-        // idea is: in case of a tie, operators should stake to different sponsorships
-        ...sortBy(potentialSponsorships, (id) => -Number(stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
+        ...sortBy(potentialSponsorships, 
+            (id) => -Number(stakeableSponsorships.get(id)!.totalPayoutWeiPerSec),
+            (id) => {
+                // If totalPayoutWeiPerSec is same for multiple sponsorships, different operators should
+                // choose different sponsorships. Using hash of some operator-specific ID + sponsorshipId
+                // to determine the order. Here we use operatorContractAddress, but it could also
+                // be e.g. the nodeId.
+                const buffer = crypto.createHash('md5').update(operatorContractAddress + id).digest()
+                return buffer.readInt32LE(0)
+            }
+        )
     ].slice(0, count)        
 }
 
@@ -82,7 +92,8 @@ const getTargetStakes = (
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     unstakedWei: WeiAmount,
     minimumStakeWei: WeiAmount,
-    maxSponsorshipCount: number | undefined
+    maxSponsorshipCount: number | undefined,
+    operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
     const totalStakeableWei = sum([...stakes.values()]) + unstakedWei
     const selectedSponsorships = getSelectedSponsorships(
@@ -90,7 +101,8 @@ const getTargetStakes = (
         stakeableSponsorships,
         totalStakeableWei,
         minimumStakeWei,
-        maxSponsorshipCount
+        maxSponsorshipCount,
+        operatorContractAddress
     )
     const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
@@ -118,7 +130,8 @@ export const adjustStakes: AdjustStakesFn = ({
         stakeableSponsorships,
         operatorState.unstakedWei,
         environmentConfig.minimumStakeWei,
-        operatorConfig.maxSponsorshipCount
+        operatorConfig.maxSponsorshipCount,
+        operatorConfig.operatorContractAddress
     )
 
     const adjustments = [...targetStakes.keys()]

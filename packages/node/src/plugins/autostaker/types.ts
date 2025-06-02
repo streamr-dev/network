@@ -36,6 +36,7 @@ export interface OperatorState {
 export interface OperatorConfig {
     maxSponsorshipCount?: number
     minTransactionWei: WeiAmount
+    operatorContractAddress: string
 }
 
 /**

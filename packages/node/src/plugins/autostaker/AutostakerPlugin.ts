@@ -76,7 +76,10 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 stakes,
                 unstakedWei
             },
-            operatorConfig: { minTransactionWei: 1000n },  // TODO add maxSponsorshipCount, what is a good value for minTransactionWei
+            operatorConfig: {  // TODO add maxSponsorshipCount
+                minTransactionWei: 1000n,  // TODO get from the plugin config, what would be a good default value? 
+                operatorContractAddress: this.pluginConfig.operatorContractAddress
+            },
             stakeableSponsorships,
             environmentConfig: {
                 minimumStakeWei: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
