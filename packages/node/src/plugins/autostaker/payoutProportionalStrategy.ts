@@ -1,6 +1,6 @@
 import { sum } from '@streamr/utils'
 import partition from 'lodash/partition'
-import { Action, AdjustStakesFn } from './types'
+import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorState, SponsorshipId, SponsorshipState } from './types'
 
 /**
  * Allocate stake in proportion to the payout each sponsorship gives.
@@ -33,21 +33,20 @@ import { Action, AdjustStakesFn } from './types'
  * - final target stakes are: 0, 5400, and 5600 DATA to the three sponsorships
  * - the algorithm then outputs the stake and unstake actions to change the allocation to the target
  **/
-export const adjustStakes: AdjustStakesFn = ({
-    operatorState,
-    operatorConfig,
-    stakeableSponsorships,
-    environmentConfig
-}): Action[] => {
-    const { unstakedWei, stakes } = operatorState
-    const { minimumStakeWei } = environmentConfig
-    const totalStakeableWei = sum([...stakes.values()]) + unstakedWei
 
+const getTargetStakes = (
+    operatorState: OperatorState,
+    operatorConfig: OperatorConfig,
+    stakeableSponsorships: Map<SponsorshipId, SponsorshipState>,
+    environmentConfig: EnvironmentConfig
+): Map<SponsorshipId, bigint> => {
+
+    const totalStakeableWei = sum([...operatorState.stakes.values()]) + operatorState.unstakedWei
     // find the number of sponsorships that we can afford to stake to
     const targetSponsorshipCount = Math.min(
         stakeableSponsorships.size,
         operatorConfig.maxSponsorshipCount ?? Infinity,
-        Math.floor(Number(totalStakeableWei) / Number(minimumStakeWei)),
+        Math.floor(Number(totalStakeableWei) / Number(environmentConfig.minimumStakeWei)),
     )
 
     const sponsorshipList = Array.from(stakeableSponsorships.entries()).map(
@@ -58,7 +57,7 @@ export const adjustStakes: AdjustStakesFn = ({
     const [
         keptSponsorships,
         potentialSponsorships,
-    ] = partition(sponsorshipList, ({ id }) => stakes.has(id))
+    ] = partition(sponsorshipList, ({ id }) => operatorState.stakes.has(id))
 
     // TODO: add secondary sorting of potentialSponsorships based on operator ID + sponsorship ID
     // idea is: in case of a tie, operators should stake to different sponsorships
@@ -70,18 +69,28 @@ export const adjustStakes: AdjustStakesFn = ({
         .slice(0, targetSponsorshipCount)
 
     // calculate the target stakes for each sponsorship: minimum stake plus payout-proportional allocation
-    const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
+    const minimumStakesWei = BigInt(selectedSponsorships.length) * environmentConfig.minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
     const payoutSumWeiPerSec = sum(selectedSponsorships.map(({ totalPayoutWeiPerSec }) => totalPayoutWeiPerSec))
 
-    const targetStakes = new Map(payoutSumWeiPerSec > 0n ? selectedSponsorships.map(({ id, totalPayoutWeiPerSec }) =>
-        [id, minimumStakeWei + payoutProportionalWei * totalPayoutWeiPerSec / payoutSumWeiPerSec]) : [])
+    return new Map(payoutSumWeiPerSec > 0n ? selectedSponsorships.map(({ id, totalPayoutWeiPerSec }) =>
+        [id, environmentConfig.minimumStakeWei + payoutProportionalWei * totalPayoutWeiPerSec / payoutSumWeiPerSec]) : [])
+}
+
+export const adjustStakes: AdjustStakesFn = ({
+    operatorState,
+    operatorConfig,
+    stakeableSponsorships,
+    environmentConfig
+}): Action[] => {
+
+    const targetStakes = getTargetStakes(operatorState, operatorConfig, stakeableSponsorships, environmentConfig)
 
     // calculate the stake differences for all sponsorships we have stakes in, or want to stake into
-    const sponsorshipIdList = Array.from(new Set([...stakes.keys(), ...targetStakes.keys()]))
+    const sponsorshipIdList = Array.from(new Set([...operatorState.stakes.keys(), ...targetStakes.keys()]))
     const differencesWei = sponsorshipIdList.map((sponsorshipId) => ({
         sponsorshipId,
-        differenceWei: (targetStakes.get(sponsorshipId) ?? 0n) - (stakes.get(sponsorshipId) ?? 0n)
+        differenceWei: (targetStakes.get(sponsorshipId) ?? 0n) - (operatorState.stakes.get(sponsorshipId) ?? 0n)
     })).filter(({ differenceWei: difference }) => difference !== 0n)
 
     // TODO: filter out too small (TODO: decide what "too small" means) stakings and unstakings because those just waste gas
@@ -91,9 +100,9 @@ export const adjustStakes: AdjustStakesFn = ({
 
     // force the net staking to equal unstakedWei (fixes e.g. rounding errors) by adjusting the largest staking (last in list)
     const netStakingWei = sum(differencesWei.map(({ differenceWei: difference }) => difference))
-    if (netStakingWei !== unstakedWei && stakeableSponsorships.size > 0 && differencesWei.length > 0) {
+    if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && differencesWei.length > 0) {
         const largestDifference = differencesWei.pop()!
-        largestDifference.differenceWei += unstakedWei - netStakingWei
+        largestDifference.differenceWei += operatorState.unstakedWei - netStakingWei
         // don't push back a zero difference
         if (largestDifference.differenceWei !== 0n) {
             differencesWei.push(largestDifference)
