@@ -18,7 +18,7 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 ```
 npm install -g @streamr/cli-tools
 ```
-Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended.
+Node.js `20` is the minimum required version. Node.js `22`, NPM `10` and later versions are recommended.
 
 ## Use
 All commands follow pattern `streamr <command> <subcommand>`, e.g.

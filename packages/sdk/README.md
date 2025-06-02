@@ -37,7 +37,7 @@ const { StreamrClient } = require('@streamr/sdk')
 The Streamr SDK is built for the browser and NodeJS environments. 
 
 **NodeJS**
-- NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
+- NodeJS `20`, NPM `10` and later versions are recommended.
 
 **Browser (Website/WebApps)**
 - For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
