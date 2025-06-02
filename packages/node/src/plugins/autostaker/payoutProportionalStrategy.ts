@@ -1,6 +1,7 @@
 import { sum, WeiAmount } from '@streamr/utils'
 import partition from 'lodash/partition'
-import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorState, SponsorshipID, SponsorshipConfig } from './types'
+import sortBy from 'lodash/sortBy'
+import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './types'
 
 /**
  * Allocate stake in proportion to the payout each sponsorship gives.
@@ -34,47 +35,51 @@ import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorStat
  * - the algorithm then outputs the stake and unstake actions to change the allocation to the target
  **/
 
-const getTargetStakes = (
-    operatorState: OperatorState,
-    operatorConfig: OperatorConfig,
+/*
+ * Select sponsorships for which we should have some stake
+ */
+const getSelectedSponsorships = (
+    stakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    environmentConfig: EnvironmentConfig
-): Map<SponsorshipID, WeiAmount> => {
-
-    const totalStakeableWei = sum([...operatorState.stakes.values()]) + operatorState.unstakedWei
-    // find the number of sponsorships that we can afford to stake to
-    const targetSponsorshipCount = Math.min(
+    totalStakeableWei: WeiAmount,
+    minimumStakeWei: WeiAmount,
+    maxSponsorshipCount: number | undefined
+): SponsorshipID[] => {
+    const count = Math.min(
         stakeableSponsorships.size,
-        operatorConfig.maxSponsorshipCount ?? Infinity,
-        Math.floor(Number(totalStakeableWei) / Number(environmentConfig.minimumStakeWei)),
+        maxSponsorshipCount ?? Infinity,
+        Math.floor(Number(totalStakeableWei) / Number(minimumStakeWei))  // as many as we can afford
     )
-
-    const sponsorshipList = Array.from(stakeableSponsorships.entries()).map(
-        ([id, { totalPayoutWeiPerSec }]) => ({ id, totalPayoutWeiPerSec })
-    )
-
-    // separate the stakeable sponsorships that we already have stakes in
     const [
         keptSponsorships,
         potentialSponsorships,
-    ] = partition(sponsorshipList, ({ id }) => operatorState.stakes.has(id))
+    ] = partition([...stakeableSponsorships.keys()], (id) => stakes.has(id))
+    return [
+        ...keptSponsorships,
+        // TODO: add secondary sorting of potentialSponsorships based on operator ID + sponsorship ID
+        // idea is: in case of a tie, operators should stake to different sponsorships
+        ...sortBy(potentialSponsorships, (id) => -Number(stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
+    ].slice(0, count)        
+}
 
-    // TODO: add secondary sorting of potentialSponsorships based on operator ID + sponsorship ID
-    // idea is: in case of a tie, operators should stake to different sponsorships
-
-    // pad the kept sponsorships to the target number, in the order of decreasing payout
-    potentialSponsorships.sort((a, b) => Number(b.totalPayoutWeiPerSec) - Number(a.totalPayoutWeiPerSec))
-    const selectedSponsorships = keptSponsorships
-        .concat(potentialSponsorships)
-        .slice(0, targetSponsorshipCount)
-
-    // calculate the target stakes for each sponsorship: minimum stake plus payout-proportional allocation
-    const minimumStakesWei = BigInt(selectedSponsorships.length) * environmentConfig.minimumStakeWei
+/*
+ * Calculate the target stakes for each sponsorship: minimum stake plus payout-proportional allocation
+ */
+const getTargetStakes = (
+    selectedSponsorships: SponsorshipID[],
+    stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
+    totalStakeableWei: WeiAmount,
+    minimumStakeWei: WeiAmount
+): Map<SponsorshipID, WeiAmount> => {
+    const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
-    const payoutSumWeiPerSec = sum(selectedSponsorships.map(({ totalPayoutWeiPerSec }) => totalPayoutWeiPerSec))
-
-    return new Map(payoutSumWeiPerSec > 0n ? selectedSponsorships.map(({ id, totalPayoutWeiPerSec }) =>
-        [id, environmentConfig.minimumStakeWei + payoutProportionalWei * totalPayoutWeiPerSec / payoutSumWeiPerSec]) : [])
+    const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
+    return new Map(
+        selectedSponsorships.map((id) => [
+            id,
+            minimumStakeWei + payoutProportionalWei * stakeableSponsorships.get(id)!.totalPayoutWeiPerSec / payoutSumWeiPerSec
+        ])
+    )
 }
 
 export const adjustStakes: AdjustStakesFn = ({
@@ -84,7 +89,20 @@ export const adjustStakes: AdjustStakesFn = ({
     environmentConfig
 }): Action[] => {
 
-    const targetStakes = getTargetStakes(operatorState, operatorConfig, stakeableSponsorships, environmentConfig)
+    const totalStakeableWei = sum([...operatorState.stakes.values()]) + operatorState.unstakedWei
+    const selectedSponsorships = getSelectedSponsorships(
+        operatorState.stakes,
+        stakeableSponsorships,
+        totalStakeableWei,
+        environmentConfig.minimumStakeWei,
+        operatorConfig.maxSponsorshipCount
+    )
+    const targetStakes = getTargetStakes(
+        selectedSponsorships,
+        stakeableSponsorships,
+        totalStakeableWei,
+        environmentConfig.minimumStakeWei
+    )
 
     // calculate the stake differences for all sponsorships we have stakes in, or want to stake into
     const sponsorshipIdList = Array.from(new Set([...operatorState.stakes.keys(), ...targetStakes.keys()]))
