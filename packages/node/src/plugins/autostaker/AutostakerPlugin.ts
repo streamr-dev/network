@@ -5,7 +5,7 @@ import { formatEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
-import { Action, SponsorshipId, SponsorshipState } from './types'
+import { Action, SponsorshipID, SponsorshipState } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
@@ -13,14 +13,14 @@ export interface AutostakerPluginConfig {
 }
 
 interface SponsorshipQueryResultItem {
-    id: SponsorshipId
+    id: SponsorshipID
     totalPayoutWeiPerSec: bigint
 }
 
 interface StakeQueryResultItem {
     id: string
     sponsorship: {
-        id: SponsorshipId
+        id: SponsorshipID
     }
     amountWei: bigint
 }
@@ -94,7 +94,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipId, SponsorshipState>> {
+    private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipState>> {
         // TODO is there a better way to get the client? Maybe we should add StreamrClient#getTheGraphClient()
         // TODO what are good where conditions for the sponsorships query so that we get all stakeable sponsorships
         // but no non-stakables (e.g. expired)
@@ -125,7 +125,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         )
     }
 
-    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipId, bigint>> {
+    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, bigint>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `

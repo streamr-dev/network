@@ -1,18 +1,18 @@
-export type SponsorshipId = string
+export type SponsorshipID = string
 
 /**
  * Actions that should be executed by the operator
  */
 export interface Action {
     type: 'stake' | 'unstake'
-    sponsorshipId: SponsorshipId
+    sponsorshipId: SponsorshipID
     amount: bigint
 }
 
 export type AdjustStakesFn = (opts: {
     operatorState: OperatorState
     operatorConfig: OperatorConfig
-    stakeableSponsorships: Map<SponsorshipId, SponsorshipState>
+    stakeableSponsorships: Map<SponsorshipID, SponsorshipState>
     environmentConfig: EnvironmentConfig
 }) => Action[]
 
@@ -27,7 +27,7 @@ export interface SponsorshipState {
  * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
  **/
 export interface OperatorState {
-    stakes: Map<SponsorshipId, bigint>
+    stakes: Map<SponsorshipID, bigint>
     unstakedWei: bigint
 }
 
