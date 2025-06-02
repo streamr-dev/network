@@ -34,7 +34,7 @@ describe('scheduleAtInterval', () => {
         expect(task.mock.calls.length).toBeGreaterThanOrEqual(5)
     })
 
-    it('does not take into account the time for the promise to settle', async () => {
+    it('there is no special handling for slow tasks', async () => {
         task.mockImplementation(() => wait(INTERVAL))
         await scheduleAtInterval(task, INTERVAL, false, abortController.signal)
         await wait(AT_LEAST_FIVE_REPEATS_TIME)
