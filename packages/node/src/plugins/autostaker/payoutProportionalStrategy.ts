@@ -55,7 +55,7 @@ const getExpiredSponsorships = (
 const getSelectedSponsorships = (
     stakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    totalStakeableWei: WeiAmount,
+    totalStakeableAmount: WeiAmount,
     minStakePerSponsorship: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
@@ -63,7 +63,7 @@ const getSelectedSponsorships = (
     const count = Math.min(
         stakeableSponsorships.size,
         maxSponsorshipCount ?? Infinity,
-        Math.floor(Number(totalStakeableWei) / Number(minStakePerSponsorship))  // as many as we can afford
+        Math.floor(Number(totalStakeableAmount) / Number(minStakePerSponsorship))  // as many as we can afford
     )
     const [
         keptSponsorships,
@@ -98,21 +98,21 @@ const getTargetStakes = (
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
-    const totalStakeableWei = sum([...stakes.values()]) + unstakedAmount
+    const totalStakeableAmount = sum([...stakes.values()]) + unstakedAmount
     const selectedSponsorships = getSelectedSponsorships(
         stakes,
         stakeableSponsorships,
-        totalStakeableWei,
+        totalStakeableAmount,
         minStakePerSponsorship,
         maxSponsorshipCount,
         operatorContractAddress
     )
-    const minimumStakesWei = BigInt(selectedSponsorships.length) * minStakePerSponsorship
-    const payoutProportionalWei = totalStakeableWei - minimumStakesWei
-    const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.payoutPerSec))
+    const minStakePerSponsorshipSum = BigInt(selectedSponsorships.length) * minStakePerSponsorship
+    const payoutProportionalAmount = totalStakeableAmount - minStakePerSponsorshipSum
+    const payoutPerSecSum = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.payoutPerSec))
     const targetsForSelected: TargetStake[] = selectedSponsorships.map((id) => [
         id,
-        minStakePerSponsorship + payoutProportionalWei * stakeableSponsorships.get(id)!.payoutPerSec / payoutSumWeiPerSec
+        minStakePerSponsorship + payoutProportionalAmount * stakeableSponsorships.get(id)!.payoutPerSec / payoutPerSecSum
     ])
     const targetsForExpired: TargetStake[] = getExpiredSponsorships(stakes, stakeableSponsorships).map((id) => [
         id,
@@ -140,37 +140,37 @@ export const adjustStakes: AdjustStakesFn = ({
     const adjustments = [...targetStakes.keys()]
         .map((sponsorshipId) => ({ 
             sponsorshipId,
-            differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n)
+            difference: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n)
         }))
-        .filter(({ differenceWei: difference }) => difference !== 0n)
+        .filter(({ difference: difference }) => difference !== 0n)
 
     // fix rounding errors by forcing the net staking to equal unstakedAmount: adjust the largest staking
-    const netStakingWei = sum(adjustments.map((a) => a.differenceWei))
-    if (netStakingWei !== operatorState.unstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
-        const largestDifference = maxBy(adjustments, (a) => Number(a.differenceWei))!
-        largestDifference.differenceWei += operatorState.unstakedAmount - netStakingWei
-        if (largestDifference.differenceWei === 0n) {
+    const netStakingAmount = sum(adjustments.map((a) => a.difference))
+    if (netStakingAmount !== operatorState.unstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
+        const largestDifference = maxBy(adjustments, (a) => Number(a.difference))!
+        largestDifference.difference += operatorState.unstakedAmount - netStakingAmount
+        if (largestDifference.difference === 0n) {
             pull(adjustments, largestDifference)
         }
     }
 
-    const tooSmallAdjustments = adjustments.filter((a) => abs(a.differenceWei) < operatorConfig.minTransactionAmount)
+    const tooSmallAdjustments = adjustments.filter((a) => abs(a.difference) < operatorConfig.minTransactionAmount)
     if (tooSmallAdjustments.length > 0) {
         pull(adjustments, ...tooSmallAdjustments)
-        let netChange = sum(tooSmallAdjustments.map((a) => a.differenceWei))
-        while (netChange < 0) {
+        let netDifference = sum(tooSmallAdjustments.map((a) => a.difference))
+        while (netDifference < 0) {
             // there are more stakings than unstakings: remove smallest of the stakings
-            const smallestStaking = minBy(adjustments.filter((a) => a.differenceWei > 0), (a) => Number(a.differenceWei))!
+            const smallestStaking = minBy(adjustments.filter((a) => a.difference > 0), (a) => Number(a.difference))!
             pull(adjustments, smallestStaking)
-            netChange += smallestStaking.differenceWei
+            netDifference += smallestStaking.difference
         }
     }
 
     return sortBy(
-        adjustments.map(({ sponsorshipId, differenceWei }) => ({
-            type: differenceWei > 0n ? 'stake' : 'unstake',
+        adjustments.map(({ sponsorshipId, difference }) => ({
+            type: difference > 0n ? 'stake' : 'unstake',
             sponsorshipId,
-            amount: differenceWei > 0n ? differenceWei : -differenceWei
+            amount: difference > 0n ? difference : -difference
         })),
         (action) => ['unstake', 'stake'].indexOf(action.type)
     )
