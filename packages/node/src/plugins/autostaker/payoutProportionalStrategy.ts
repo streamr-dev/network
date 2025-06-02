@@ -118,24 +118,24 @@ export const adjustStakes: AdjustStakesFn = ({
         operatorConfig.maxSponsorshipCount
     )
 
-    const differencesWei = [...targetStakes.keys()]
+    const adjustments = [...targetStakes.keys()]
         .map((sponsorshipId) => ({ sponsorshipId, differenceWei: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n) }))
         .filter(({ differenceWei: difference }) => difference !== 0n)
 
     // TODO: filter out too small (TODO: decide what "too small" means) stakings and unstakings because those just waste gas
 
     // fix rounding errors by forcing the net staking to equal unstakedWei: adjust the largest staking
-    const netStakingWei = sum(differencesWei.map(({ differenceWei: difference }) => difference))
-    if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && differencesWei.length > 0) {
-        const largestDifference = maxBy(differencesWei, (d) => Number(d.differenceWei))!
+    const netStakingWei = sum(adjustments.map(({ differenceWei: difference }) => difference))
+    if (netStakingWei !== operatorState.unstakedWei && stakeableSponsorships.size > 0 && adjustments.length > 0) {
+        const largestDifference = maxBy(adjustments, (a) => Number(d.differenceWei))!
         largestDifference.differenceWei += operatorState.unstakedWei - netStakingWei
         if (largestDifference.differenceWei === 0n) {
-            pull(differencesWei, largestDifference)
+            pull(adjustments, largestDifference)
         }
     }
 
     return sortBy(
-        differencesWei.map(({ sponsorshipId, differenceWei }) => ({
+        adjustments.map(({ sponsorshipId, differenceWei }) => ({
             type: differenceWei > 0n ? 'stake' : 'unstake',
             sponsorshipId,
             amount: differenceWei > 0n ? differenceWei : -differenceWei
