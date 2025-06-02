@@ -74,11 +74,19 @@ const getSelectedSponsorships = (
  */
 const getTargetStakes = (
     stakes: Map<SponsorshipID, WeiAmount>,
-    selectedSponsorships: SponsorshipID[],
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    totalStakeableWei: WeiAmount,
-    minimumStakeWei: WeiAmount
+    unstakedWei: WeiAmount,
+    minimumStakeWei: WeiAmount,
+    maxSponsorshipCount: number | undefined
 ): Map<SponsorshipID, WeiAmount> => {
+    const totalStakeableWei = sum([...stakes.values()]) + unstakedWei
+    const selectedSponsorships = getSelectedSponsorships(
+        stakes,
+        stakeableSponsorships,
+        totalStakeableWei,
+        minimumStakeWei,
+        maxSponsorshipCount
+    )
     const minimumStakesWei = BigInt(selectedSponsorships.length) * minimumStakeWei
     const payoutProportionalWei = totalStakeableWei - minimumStakesWei
     const payoutSumWeiPerSec = sum(selectedSponsorships.map((id) => stakeableSponsorships.get(id)!.totalPayoutWeiPerSec))
@@ -100,20 +108,12 @@ export const adjustStakes: AdjustStakesFn = ({
     environmentConfig
 }): Action[] => {
 
-    const totalStakeableWei = sum([...operatorState.stakes.values()]) + operatorState.unstakedWei
-    const selectedSponsorships = getSelectedSponsorships(
-        operatorState.stakes,
-        stakeableSponsorships,
-        totalStakeableWei,
-        environmentConfig.minimumStakeWei,
-        operatorConfig.maxSponsorshipCount
-    )
     const targetStakes = getTargetStakes(
         operatorState.stakes,
-        selectedSponsorships,
         stakeableSponsorships,
-        totalStakeableWei,
-        environmentConfig.minimumStakeWei
+        operatorState.unstakedWei,
+        environmentConfig.minimumStakeWei,
+        operatorConfig.maxSponsorshipCount
     )
 
     const differencesWei = [...targetStakes.keys()]
