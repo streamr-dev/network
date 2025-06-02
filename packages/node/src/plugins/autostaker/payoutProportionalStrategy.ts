@@ -1,4 +1,4 @@
-import { sum } from '@streamr/utils'
+import { sum, WeiAmount } from '@streamr/utils'
 import partition from 'lodash/partition'
 import { Action, AdjustStakesFn, EnvironmentConfig, OperatorConfig, OperatorState, SponsorshipID, SponsorshipState } from './types'
 
@@ -39,7 +39,7 @@ const getTargetStakes = (
     operatorConfig: OperatorConfig,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipState>,
     environmentConfig: EnvironmentConfig
-): Map<SponsorshipID, bigint> => {
+): Map<SponsorshipID, WeiAmount> => {
 
     const totalStakeableWei = sum([...operatorState.stakes.values()]) + operatorState.unstakedWei
     // find the number of sponsorships that we can afford to stake to

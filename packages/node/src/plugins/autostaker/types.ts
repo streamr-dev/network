@@ -1,3 +1,5 @@
+import { WeiAmount } from '@streamr/utils'
+
 export type SponsorshipID = string
 
 /**
@@ -6,7 +8,7 @@ export type SponsorshipID = string
 export interface Action {
     type: 'stake' | 'unstake'
     sponsorshipId: SponsorshipID
-    amount: bigint
+    amount: WeiAmount
 }
 
 export type AdjustStakesFn = (opts: {
@@ -20,15 +22,15 @@ export type AdjustStakesFn = (opts: {
  * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
  **/
 export interface SponsorshipState {
-    totalPayoutWeiPerSec: bigint
+    totalPayoutWeiPerSec: WeiAmount
 }
 
 /**
  * Namings here reflect [thegraph schema](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L435)
  **/
 export interface OperatorState {
-    stakes: Map<SponsorshipID, bigint>
-    unstakedWei: bigint
+    stakes: Map<SponsorshipID, WeiAmount>
+    unstakedWei: WeiAmount
 }
 
 export interface OperatorConfig {
@@ -40,6 +42,6 @@ export interface OperatorConfig {
  * @see https://github.com/streamr-dev/network-contracts/blob/master/packages/network-subgraphs/schema.graphql#L226
  */
 export interface EnvironmentConfig {
-    minimumStakeWei: bigint
+    minimumStakeWei: WeiAmount
 }
 

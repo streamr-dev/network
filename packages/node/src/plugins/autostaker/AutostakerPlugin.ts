@@ -14,7 +14,7 @@ export interface AutostakerPluginConfig {
 
 interface SponsorshipQueryResultItem {
     id: SponsorshipID
-    totalPayoutWeiPerSec: bigint
+    totalPayoutWeiPerSec: WeiAmount
 }
 
 interface StakeQueryResultItem {
@@ -22,7 +22,7 @@ interface StakeQueryResultItem {
     sponsorship: {
         id: SponsorshipID
     }
-    amountWei: bigint
+    amountWei: WeiAmount
 }
 
 const logger = new Logger(module)
@@ -125,7 +125,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         )
     }
 
-    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, bigint>> {
+    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, WeiAmount>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `
