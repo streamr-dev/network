@@ -1,10 +1,10 @@
 import { scheduleAtInterval } from './scheduleAtInterval'
 import { wait } from './wait'
 
-/*
+/**
  * @param {number} approximateIntervalInMs - approximate time (in milliseconds) to wait after a task is completed
- * The driftMultiplier defines how much the wait time can vary: e.g. if the interval is 60 minutes and the drift is 0.1,
- * the delay between invocations will range from 54 to 66 minutes.
+ * @param {number} driftMultiplier how much the wait time can vary: e.g. if the interval is 60 minutes and the drift is 0.1,
+ * the delay between invocations will range from 54 to 66 minutes
  */
 export const scheduleAtApproximateInterval = async (
     task: () => Promise<void>,
@@ -13,7 +13,7 @@ export const scheduleAtApproximateInterval = async (
     executeAtStart: boolean,
     abortSignal: AbortSignal
 ): Promise<void> => {
-    if (abortSignal?.aborted) {
+    if (abortSignal.aborted) {
         return
     }
     if (executeAtStart) {
