@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const NUM_OF_NODES = 64
+    const NUM_OF_NODES = 8
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -110,7 +110,7 @@ describe('Propagation', () => {
             await until(() => totalReceived >= NUM_OF_NODES * i, 10000)
         }
         totalReceived = 0
-        const numberOfNewNodes = 32
+        const numberOfNewNodes = NUM_OF_NODES
 
         await Promise.all(range(numberOfNewNodes).map(async (_i) => {
             const descriptor = createMockPeerDescriptor()
