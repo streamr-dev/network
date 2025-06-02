@@ -43,10 +43,6 @@ export const adjustStakes: AdjustStakesFn = ({
     const { minimumStakeWei } = environmentConfig
     const totalStakeableWei = sum([...stakes.values()]) + unstakedWei
 
-    if (Array.from(stakeableSponsorships.values()).find(({ totalPayoutWeiPerSec }) => totalPayoutWeiPerSec <= 0n)) {
-        throw new Error('payoutProportional: sponsorships must have positive totalPayoutWeiPerSec')
-    }
-
     // find the number of sponsorships that we can afford to stake to
     const targetSponsorshipCount = Math.min(
         stakeableSponsorships.size,

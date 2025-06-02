@@ -174,33 +174,4 @@ describe('payoutProportionalStrategy', () => {
             environmentConfig: { minimumStakeWei: 0n },
         })).toHaveLength(4)
     })
-
-    describe('input validation', () => {
-        it('throws if there is a sponsorship with totalPayoutWeiPerSec == 0', async () => {
-            expect(() => adjustStakes({
-                operatorState: { unstakedWei: 1000n, stakes: new Map() },
-                operatorConfig: { },
-                stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 123n, totalStakedWei: 0n }],
-                    ['b', { totalPayoutWeiPerSec: 123n, totalStakedWei: 0n }],
-                    ['c', { totalPayoutWeiPerSec: 0n, totalStakedWei: 0n }],
-                    ['d', { totalPayoutWeiPerSec: 0n, totalStakedWei: 0n }],
-                ]),
-                environmentConfig: { minimumStakeWei: 0n },
-            })).toThrow('payoutProportional: sponsorships must have positive totalPayoutWeiPerSec')
-        })
-        it('throws if there is a sponsorship with totalPayoutWeiPerSec < 0', async () => {
-            expect(() => adjustStakes({
-                operatorState: { unstakedWei: 1000n, stakes: new Map() },
-                operatorConfig: { },
-                stakeableSponsorships: new Map([
-                    ['a', { totalPayoutWeiPerSec: 123n, totalStakedWei: 0n }],
-                    ['b', { totalPayoutWeiPerSec: 123n, totalStakedWei: 0n }],
-                    ['c', { totalPayoutWeiPerSec: -1n, totalStakedWei: 0n }],
-                    ['d', { totalPayoutWeiPerSec: 234n, totalStakedWei: 0n }],
-                ]),
-                environmentConfig: { minimumStakeWei: 0n },
-            })).toThrow('payoutProportional: sponsorships must have positive totalPayoutWeiPerSec')
-        })
-    })
 })
