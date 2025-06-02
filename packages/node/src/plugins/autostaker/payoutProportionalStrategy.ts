@@ -91,7 +91,7 @@ export const adjustStakes: AdjustStakesFn = ({
 
     // force the net staking to equal unstakedWei (fixes e.g. rounding errors) by adjusting the largest staking (last in list)
     const netStakingWei = sum(differencesWei.map(({ differenceWei: difference }) => difference))
-    if (netStakingWei !== unstakedWei && sponsorshipList.length > 0 && differencesWei.length > 0) {
+    if (netStakingWei !== unstakedWei && stakeableSponsorships.size > 0 && differencesWei.length > 0) {
         const largestDifference = differencesWei.pop()!
         largestDifference.differenceWei += unstakedWei - netStakingWei
         // don't push back a zero difference
