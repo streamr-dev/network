@@ -29,6 +29,19 @@ interface StakeQueryResultItem {
 
 const logger = new Logger(module)
 
+const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
+    const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
+        query: `
+            {
+                network (id: "network-entity-id") {
+                    minimumStakeWei
+                }
+            }
+        `
+    })
+    return BigInt(queryResult.network.minimumStakeWei)
+}
+
 const getStakeOrUnstakeFunction = (action: Action): (
     operatorOwnerWallet: SignerWithProvider,
     operatorContractAddress: string,
@@ -51,16 +64,17 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
 
     async start(streamrClient: StreamrClient): Promise<void> {
         logger.info('Start autostaker plugin')
+        const minStakePerSponsorship = await fetchMinStakePerSponsorship(streamrClient.getTheGraphClient())
         scheduleAtApproximateInterval(async () => {
             try {
-                await this.runActions(streamrClient)
+                await this.runActions(streamrClient, minStakePerSponsorship)
             } catch (err) {
                 logger.warn('Error while running autostaker actions', { err })
             }
         }, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
     }
 
-    private async runActions(streamrClient: StreamrClient): Promise<void> {
+    private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
         logger.info('Run autostaker analysis')
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
@@ -95,7 +109,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             },
             stakeableSponsorships,
             environmentConfig: {
-                minStakePerSponsorship: 5000000000000000000000n  // TODO read from The Graph (network.minimumStakeWei)
+                minStakePerSponsorship
             }
         })
         const signer = await streamrClient.getSigner()
