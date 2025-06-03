@@ -100,7 +100,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
         const signer = await streamrClient.getSigner()
         for (const action of actions) {
-            logger.info(`Action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
+            logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
             await getStakeOrUnstakeFunction(action)(signer,
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
