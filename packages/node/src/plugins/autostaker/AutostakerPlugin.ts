@@ -1,5 +1,5 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, WeiAmount } from '@streamr/utils'
+import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
@@ -129,7 +129,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             return {
                 query: `
                     {
-                        sponsorships(
+                        sponsorships (
                             where:  {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 id_gt: "${lastId}"
@@ -156,7 +156,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             return {
                 query: `
                     {
-                        stakes(
+                        stakes (
                             where:  {
                                 operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
                                 id_gt: "${lastId}"
