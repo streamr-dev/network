@@ -1,4 +1,4 @@
-import { sum, WeiAmount } from '@streamr/utils'
+import { WeiAmount } from '@streamr/utils'
 import crypto from 'crypto'
 import maxBy from 'lodash/maxBy'
 import minBy from 'lodash/minBy'
@@ -40,6 +40,10 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  **/
 
 type TargetStake = [SponsorshipID, WeiAmount]
+
+const sum = (values: bigint[]): bigint =>{
+    return values.reduce((acc, value) => acc + value, 0n)
+}
 
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
