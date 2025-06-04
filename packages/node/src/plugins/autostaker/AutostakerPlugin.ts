@@ -126,12 +126,15 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     // eslint-disable-next-line class-methods-use-this
     private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipConfig>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
+            // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
+            // payoutPropotionalStrategy so that we ensure that unstaking doesn't happen too soon)
             return {
                 query: `
                     {
                         sponsorships (
                             where:  {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
+                                minimumStakingPeriodSeconds: "0"
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
