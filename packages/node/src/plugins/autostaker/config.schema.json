@@ -25,6 +25,12 @@
       "minimum": 0,
       "default": 1000
     },
+    "maxAcceptableMinOperatorCount": {
+      "type": "integer",
+      "description": "Maximum acceptable value for a sponsorship's minOperatorCount config option",
+      "minimum": 0,
+      "default": 100
+    },
     "maxSponsorshipCount": {
       "type": "integer",
       "description": "Maximum count of sponsorships which are staked at any given time",

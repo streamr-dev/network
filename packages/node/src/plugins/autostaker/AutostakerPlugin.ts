@@ -11,6 +11,7 @@ export interface AutostakerPluginConfig {
     operatorContractAddress: string
     runIntervalInMs: number
     minTransactionDataTokenAmount: number
+    maxAcceptableMinOperatorCount: number
     maxSponsorshipCount?: number
 }
 
@@ -123,7 +124,6 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipConfig>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
             // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
@@ -135,6 +135,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                             where:  {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 minimumStakingPeriodSeconds: "0"
+                                minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
