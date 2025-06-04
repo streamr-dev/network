@@ -78,6 +78,7 @@ export interface DeploySponsorshipContractOpts {
     metadata?: string
     minOperatorCount?: number
     maxOperatorCount?: number
+    minStakeDuration?: number
     earningsPerSecond?: WeiAmount
     environmentId: EnvironmentId
 }
@@ -94,7 +95,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         param: opts.earningsPerSecond ?? parseEther('1')
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
-        param: 0,
+        param: opts.minStakeDuration ?? 0,
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
         param: 0
