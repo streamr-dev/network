@@ -7,6 +7,7 @@ interface QueryResultItem {
     sponsorships: [{
         totalPayoutWeiPerSec: string
         minOperators: number
+        maxOperators: number
     }]
 }
 
