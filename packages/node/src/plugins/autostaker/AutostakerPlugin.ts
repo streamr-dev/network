@@ -18,6 +18,8 @@ export interface AutostakerPluginConfig {
 interface SponsorshipQueryResultItem {
     id: SponsorshipID
     totalPayoutWeiPerSec: WeiAmount
+    operatorCount: number
+    maxOperators: number | null
 }
 
 interface StakeQueryResultItem {
@@ -142,13 +144,18 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                         ) {
                             id
                             totalPayoutWeiPerSec
+                            operatorCount
+                            maxOperators
                         }
                     }
                 `
             }
         })
         const sponsorships = await collect(queryResult)
-        return new Map(sponsorships.map(
+        const hasAcceptableOperatorCount = (item: SponsorshipQueryResultItem) => {
+            return (item.maxOperators === null) || (item.operatorCount < item.maxOperators)
+        }
+        return new Map(sponsorships.filter(hasAcceptableOperatorCount).map(
             (sponsorship) => [sponsorship.id, {
                 payoutPerSec: BigInt(sponsorship.totalPayoutWeiPerSec),
             }])
