@@ -9,6 +9,7 @@ import { parseEther } from 'ethers'
 interface Options extends BaseOptions {
     earningsPerSecond: string
     minOperatorCount?: number
+    maxOperatorCount?: number
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
@@ -17,6 +18,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         earningsPerSecond: parseEther(options.earningsPerSecond),
         deployer: await client.getSigner(),
         minOperatorCount: options.minOperatorCount,
+        maxOperatorCount: options.maxOperatorCount,
         environmentId: client.getConfig().environment
     })
     console.info(JSON.stringify({ address: await contract.getAddress() }, undefined, 4))
