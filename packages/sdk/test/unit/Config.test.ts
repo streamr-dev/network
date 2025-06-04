@@ -161,6 +161,12 @@ describe('Config', () => {
             })).not.toThrow()
         })
 
+        it('iotex environment exists', () => {
+            expect(() => createStrictConfig({
+                environment: 'iotex'
+            })).not.toThrow()
+        })
+
         it('override', () => {
             const environmentId = 'polygonAmoy'  // some environment id
             const config: any = {
