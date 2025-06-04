@@ -75,8 +75,8 @@ export interface DeploySponsorshipContractOpts {
     streamId: string
     deployer: SignerWithProvider
     metadata?: string
+    earningsPerSecond: WeiAmount
     minOperatorCount?: number
-    earningsPerSecond?: WeiAmount
     environmentId: EnvironmentId
 }
 
@@ -96,7 +96,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
             CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
         ], [
-            opts.earningsPerSecond ?? parseEther('1'),
+            opts.earningsPerSecond,
             '0',
             '0',
         ]

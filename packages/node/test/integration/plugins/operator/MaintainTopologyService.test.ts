@@ -17,6 +17,8 @@ const {
     unstake
 } = _operatorContractUtils
 
+const EARNINGS_PER_SECOND = parseEther('1')
+
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await createTestPrivateKey({ gas: true })
     const client = createClient(privateKey)
@@ -66,12 +68,20 @@ describe('MaintainTopologyService', () => {
     it('happy path', async () => {
         const operatorWallet = await createTestWallet({ gas: true, tokens: true })
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
-        const sponsorship2 = await deployTestSponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
+        const sponsorship1 = await deployTestSponsorshipContract({
+            deployer: operatorWallet,
+            streamId: stream1.id,
+            earningsPerSecond: EARNINGS_PER_SECOND
+        })
+        const sponsorship2 = await deployTestSponsorshipContract({
+            deployer: operatorWallet,
+            streamId: stream2.id,
+            earningsPerSecond: EARNINGS_PER_SECOND
+        })
         const operatorContract = await deployTestOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), parseEther('20000'))
         await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), parseEther('10000'))
-        
+
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
             10 * 1000,
