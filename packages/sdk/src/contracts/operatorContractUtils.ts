@@ -54,10 +54,11 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultDelegationPolicy,
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultExchangeRatePolicy,
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultUndelegationPolicy,
-        ], [
+        ],
+        [
             0,
             0,
-            0,
+            0
         ]
     )).wait()
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
