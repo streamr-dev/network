@@ -9,6 +9,7 @@ import { parseEther } from 'ethers'
 interface Options extends BaseOptions {
     earningsPerSecond: string
     minOperatorCount?: number
+    maxOperatorCount?: number
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
@@ -17,12 +18,14 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         earningsPerSecond: parseEther(options.earningsPerSecond),
         deployer: await client.getSigner(),
         minOperatorCount: options.minOperatorCount,
+        maxOperatorCount: options.maxOperatorCount,
         environmentId: client.getConfig().environment
     })
     console.info(JSON.stringify({ address: await contract.getAddress() }, undefined, 4))
 })
     .description('create sponsorship')
     .arguments('<streamId>')
-    .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second')
-    .option('-c, --min-operator-count <number>', 'Minimum operator count')
+    .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second in data tokens')
+    .option('--min-operator-count <number>', 'Minimum operator count')
+    .option('--max-operator-count <number>', 'Maximum operator count')
     .parseAsync()
