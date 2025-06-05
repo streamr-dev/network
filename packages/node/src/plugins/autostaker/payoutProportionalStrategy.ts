@@ -60,9 +60,9 @@ const getSelectedSponsorships = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableAmount: WeiAmount,
-    minStakePerSponsorship: WeiAmount,
+    operatorContractAddress: string,
     maxSponsorshipCount: number | undefined,
-    operatorContractAddress: string
+    minStakePerSponsorship: WeiAmount
 ): SponsorshipID[] => {
     const count = Math.min(
         stakeableSponsorships.size,
@@ -98,18 +98,18 @@ const getTargetStakes = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     myUnstakedAmount: WeiAmount,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    minStakePerSponsorship: WeiAmount,
+    operatorContractAddress: string,
     maxSponsorshipCount: number | undefined,
-    operatorContractAddress: string
+    minStakePerSponsorship: WeiAmount
 ): Map<SponsorshipID, WeiAmount> => {
     const totalStakeableAmount = sum([...myCurrentStakes.values()]) + myUnstakedAmount
     const selectedSponsorships = getSelectedSponsorships(
         myCurrentStakes,
         stakeableSponsorships,
         totalStakeableAmount,
-        minStakePerSponsorship,
+        operatorContractAddress,
         maxSponsorshipCount,
-        operatorContractAddress
+        minStakePerSponsorship
     )
     const minStakePerSponsorshipSum = BigInt(selectedSponsorships.length) * minStakePerSponsorship
     const payoutProportionalAmount = totalStakeableAmount - minStakePerSponsorshipSum
@@ -132,18 +132,20 @@ const getTargetStakes = (
 export const adjustStakes: AdjustStakesFn = ({
     myCurrentStakes,
     myUnstakedAmount,
-    operatorConfig,
     stakeableSponsorships,
-    environmentConfig
+    operatorContractAddress,
+    maxSponsorshipCount,
+    minTransactionAmount,
+    minStakePerSponsorship
 }): Action[] => {
 
     const targetStakes = getTargetStakes(
         myCurrentStakes,
         myUnstakedAmount,
         stakeableSponsorships,
-        environmentConfig.minStakePerSponsorship,
-        operatorConfig.maxSponsorshipCount,
-        operatorConfig.operatorContractAddress
+        operatorContractAddress,
+        maxSponsorshipCount,
+        minStakePerSponsorship
     )
 
     const adjustments = [...targetStakes.keys()]
@@ -165,7 +167,7 @@ export const adjustStakes: AdjustStakesFn = ({
 
     const tooSmallAdjustments = adjustments.filter(
         // note the edge case: expired sponsorships can be unstaked, even if the transaction amount is considered "too small"
-        (a) => (abs(a.difference) < operatorConfig.minTransactionAmount) && stakeableSponsorships.has(a.sponsorshipId)
+        (a) => (abs(a.difference) < minTransactionAmount) && stakeableSponsorships.has(a.sponsorshipId)
     )
     if (tooSmallAdjustments.length > 0) {
         pull(adjustments, ...tooSmallAdjustments)

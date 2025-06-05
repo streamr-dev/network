@@ -106,15 +106,11 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const actions = adjustStakes({
             myCurrentStakes,
             myUnstakedAmount,
-            operatorConfig: {
-                operatorContractAddress: this.pluginConfig.operatorContractAddress,
-                minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
-                maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount
-            },
             stakeableSponsorships,
-            environmentConfig: {
-                minStakePerSponsorship
-            }
+            operatorContractAddress: this.pluginConfig.operatorContractAddress,
+            maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount,
+            minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
+            minStakePerSponsorship
         })
         const signer = await streamrClient.getSigner()
         for (const action of actions) {
