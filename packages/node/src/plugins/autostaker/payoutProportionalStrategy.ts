@@ -97,12 +97,12 @@ const getSelectedSponsorships = (
 const getTargetStakes = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
-    unstakedAmount: WeiAmount,
+    myUnstakedAmount: WeiAmount,
     minStakePerSponsorship: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
-    const totalStakeableAmount = sum([...myCurrentStakes.values()]) + unstakedAmount
+    const totalStakeableAmount = sum([...myCurrentStakes.values()]) + myUnstakedAmount
     const selectedSponsorships = getSelectedSponsorships(
         myCurrentStakes,
         stakeableSponsorships,
@@ -139,7 +139,7 @@ export const adjustStakes: AdjustStakesFn = ({
     const targetStakes = getTargetStakes(
         operatorState.myCurrentStakes,
         stakeableSponsorships,
-        operatorState.unstakedAmount,
+        operatorState.myUnstakedAmount,
         environmentConfig.minStakePerSponsorship,
         operatorConfig.maxSponsorshipCount,
         operatorConfig.operatorContractAddress
@@ -152,11 +152,11 @@ export const adjustStakes: AdjustStakesFn = ({
         }))
         .filter(({ difference: difference }) => difference !== 0n)
 
-    // fix rounding errors by forcing the net staking to equal unstakedAmount: adjust the largest staking
+    // fix rounding errors by forcing the net staking to equal myUnstakedAmount: adjust the largest staking
     const netStakingAmount = sum(adjustments.map((a) => a.difference))
-    if (netStakingAmount !== operatorState.unstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
+    if (netStakingAmount !== operatorState.myUnstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
         const largestDifference = maxBy(adjustments, (a) => a.difference)!
-        largestDifference.difference += operatorState.unstakedAmount - netStakingAmount
+        largestDifference.difference += operatorState.myUnstakedAmount - netStakingAmount
         if (largestDifference.difference === 0n) {
             pull(adjustments, largestDifference)
         }
@@ -172,7 +172,7 @@ export const adjustStakes: AdjustStakesFn = ({
             const stakings = adjustments.filter((a) => a.difference > 0)
             const unstakings = adjustments.filter((a) => a.difference < 0)
             const stakingSum = sum(stakings.map((a) => a.difference))
-            const availableSum = abs(sum(unstakings.map((a) => a.difference))) + operatorState.unstakedAmount
+            const availableSum = abs(sum(unstakings.map((a) => a.difference))) + operatorState.myUnstakedAmount
             if (stakingSum > availableSum) {
                 const smallestStaking = minBy(stakings, (a) => a.difference)!
                 pull(adjustments, smallestStaking)
