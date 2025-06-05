@@ -125,6 +125,10 @@ const getTargetStakes = (
     return new Map([...targetsForSelected, ...targetsForExpired])
 }
 
+/**
+ * @returns A list of stake and unstake actions. The actions should be ordered so that transactions can be executed sequentially,
+ * e.g. all unstake actions first to ensure sufficient balance for the subsequent staking actions.
+ */
 export const adjustStakes: AdjustStakesFn = ({
     operatorState,
     operatorConfig,
