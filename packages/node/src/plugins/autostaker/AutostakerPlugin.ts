@@ -104,10 +104,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             }
         })
         const actions = adjustStakes({
-            operatorState: {
-                myCurrentStakes,
-                myUnstakedAmount
-            },
+            myCurrentStakes,
+            myUnstakedAmount,
             operatorConfig: {
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,
                 minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),

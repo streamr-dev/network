@@ -12,19 +12,15 @@ export interface Action {
 }
 
 export type AdjustStakesFn = (opts: {
-    operatorState: OperatorState
-    operatorConfig: OperatorConfig
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>
+    myUnstakedAmount: WeiAmount
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
+    operatorConfig: OperatorConfig
     environmentConfig: EnvironmentConfig
 }) => Action[]
 
 export interface SponsorshipConfig {
     payoutPerSec: WeiAmount
-}
-
-export interface OperatorState {
-    myCurrentStakes: Map<SponsorshipID, WeiAmount>
-    myUnstakedAmount: WeiAmount
 }
 
 export interface OperatorConfig {

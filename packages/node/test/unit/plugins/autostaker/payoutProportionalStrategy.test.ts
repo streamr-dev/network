@@ -5,7 +5,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('stake all', () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 11000n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 11000n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 2n }],
@@ -16,12 +17,13 @@ describe('payoutProportionalStrategy', () => {
         })).toIncludeSameMembers([
             { type: 'stake', sponsorshipId: 'b', amount: 5400n },
             { type: 'stake', sponsorshipId: 'c', amount: 5600n }
-        ])  
+        ])
     })
 
     it('unstakes everything if no stakeable sponsorships', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 1000n, myCurrentStakes: new Map([[ 'a', 2000n ]]) },
+            myUnstakedAmount: 1000n,
+            myCurrentStakes: new Map([[ 'a', 2000n ]]),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map(),
             environmentConfig: { minStakePerSponsorship: 1234n },
@@ -32,7 +34,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('limits the targetSponsorshipCount to stakeableSponsorships.size', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 600n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 600n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
@@ -49,7 +52,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('limits the targetSponsorshipCount to maxSponsorshipCount', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 500n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 500n,
+            myCurrentStakes: new Map(),
             operatorConfig: { maxSponsorshipCount: 2, minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }], // not included
@@ -65,7 +69,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('limits the targetSponsorshipCount to minStakePerSponsorship and available tokens', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 500n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 500n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }], // not included
@@ -80,7 +85,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('doesn\'t allocate tokens if less available than minimum stake', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 100n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 100n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([['a', { payoutPerSec: 10n }]]),
             environmentConfig: { minStakePerSponsorship: 300n },
@@ -90,10 +96,11 @@ describe('payoutProportionalStrategy', () => {
     // unstakes must happen first because otherwise there isn't enough tokens for staking
     it('sends out unstakes before stakes', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([
+            myUnstakedAmount: 0n,
+            myCurrentStakes: new Map([
                 [ 'a', 30n ],
                 [ 'b', 70n ],
-            ]) },
+            ]),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 40n }], // add stake here
@@ -113,7 +120,8 @@ describe('payoutProportionalStrategy', () => {
     it('unstakes from expired sponsorships', async () => {
         // currently staked into b, but b has expired, so it's not included in the stakeableSponsorships
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([[ 'b', 100n ]]) },
+            myUnstakedAmount: 0n,
+            myCurrentStakes: new Map([[ 'b', 100n ]]),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
@@ -127,11 +135,12 @@ describe('payoutProportionalStrategy', () => {
 
     it('restakes expired sponsorship stakes into other sponsorships', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([
+            myUnstakedAmount: 0n,
+            myCurrentStakes: new Map([
                 [ 'a', 100n ],
                 [ 'b', 100n ],
                 [ 'c', 100n ],
-            ]) },
+            ]),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
@@ -147,7 +156,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('handles rounding errors', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 1000n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 1000n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 100n }],
@@ -164,11 +174,12 @@ describe('payoutProportionalStrategy', () => {
 
     it('rounding error no-op case', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([
+            myUnstakedAmount: 0n,
+            myCurrentStakes: new Map([
                 ['a', 166n ],
                 ['b', 166n ],
                 ['c', 668n ],
-            ]) },
+            ]),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 100n }],
@@ -181,7 +192,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('uses Infinity as default maxSponsorshipCount', async () => {
         expect(adjustStakes({
-            operatorState: { myUnstakedAmount: 1000n, myCurrentStakes: new Map() },
+            myUnstakedAmount: 1000n,
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
@@ -195,7 +207,8 @@ describe('payoutProportionalStrategy', () => {
 
     it('handles greater than MAX_SAFE_INTEGER payout values correctly', () => {
         const stakes = adjustStakes({
-            operatorState: { myUnstakedAmount: 9n * BigInt(Number.MAX_SAFE_INTEGER), myCurrentStakes: new Map() },
+            myUnstakedAmount: 9n * BigInt(Number.MAX_SAFE_INTEGER),
+            myCurrentStakes: new Map(),
             operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 3n * BigInt(Number.MAX_SAFE_INTEGER) }],
@@ -210,7 +223,8 @@ describe('payoutProportionalStrategy', () => {
     it('operators may choose different sponsorships if payoutPerSec are same', () => {
         const createArgs = (operatorContractAddress: string) => {
             return {
-                operatorState: { myUnstakedAmount: 1000n, myCurrentStakes: new Map() },
+                myUnstakedAmount: 1000n,
+                myCurrentStakes: new Map(),
                 operatorConfig: { minTransactionAmount: 0n, operatorContractAddress },
                 stakeableSponsorships: new Map([
                     ['a', { payoutPerSec: 100n }],
@@ -231,7 +245,8 @@ describe('payoutProportionalStrategy', () => {
     describe('exclude small transactions', () => {
         it('exclude small stakings', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 1000n, myCurrentStakes: new Map() },
+                myUnstakedAmount: 1000n,
+                myCurrentStakes: new Map(),
                 operatorConfig: { minTransactionAmount: 20n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
                     ['a', { payoutPerSec: 10n }],
@@ -246,9 +261,10 @@ describe('payoutProportionalStrategy', () => {
 
         it('one small transaction is balanced by removing one staking', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 820n, myCurrentStakes: new Map([
+                myUnstakedAmount: 820n,
+                myCurrentStakes: new Map([
                     ['a', 180n]
-                ]) },
+                ]),
                 operatorConfig: { minTransactionAmount: 20n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
                     ['a', { payoutPerSec: 100n }],
@@ -263,11 +279,12 @@ describe('payoutProportionalStrategy', () => {
 
         it('multiple small transactions are balanced with by removing multiple stakings', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 740n, myCurrentStakes: new Map([
+                myUnstakedAmount: 740n,
+                myCurrentStakes: new Map([
                     ['a', 180n],
                     ['b', 200n],
                     ['c', 295n]
-                ]) },
+                ]),
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
                     ['a', { payoutPerSec: 100n }],
@@ -284,12 +301,13 @@ describe('payoutProportionalStrategy', () => {
 
         it('multiple small transactions are balanced with by removing all stakings', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 359n, myCurrentStakes: new Map([
+                myUnstakedAmount: 359n, 
+                myCurrentStakes: new Map([
                     ['a', 180n],
                     ['b', 200n],
                     ['c', 295n],
                     ['e', 381n]
-                ]) },
+                ]),
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([
                     ['a', { payoutPerSec: 100n }],
@@ -304,10 +322,11 @@ describe('payoutProportionalStrategy', () => {
 
         it('very small expiration unstake and nothing to stake', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([
+                myUnstakedAmount: 0n,
+                myCurrentStakes: new Map([
                     ['a', 10n],
                     ['b', 1000n]
-                ]) },
+                ]),
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([]),
                 environmentConfig: { minStakePerSponsorship: 0n }
@@ -319,10 +338,11 @@ describe('payoutProportionalStrategy', () => {
 
         it('only multiple very small expiration unstakes', () => {
             expect(adjustStakes({
-                operatorState: { myUnstakedAmount: 0n, myCurrentStakes: new Map([
+                myUnstakedAmount: 0n,
+                myCurrentStakes: new Map([
                     ['a', 10n],
                     ['b', 20n]
-                ]) },
+                ]),
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([]),
                 environmentConfig: { minStakePerSponsorship: 0n }
