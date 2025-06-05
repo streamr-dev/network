@@ -85,8 +85,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
-        const stakeableSponsorships = await this.getStakeableSponsorships(streamrClient)
         const stakes = await this.getStakes(streamrClient)
+        const stakeableSponsorships = await this.getStakeableSponsorships(stakes, streamrClient)
         const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
         const unstakedAmount = (await operatorContract.valueWithoutEarnings()) - stakedAmount
         logger.debug('Analysis state', {
@@ -129,7 +129,10 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         }
     }
 
-    private async getStakeableSponsorships(streamrClient: StreamrClient): Promise<Map<SponsorshipID, SponsorshipConfig>> {
+    private async getStakeableSponsorships(
+        stakes: Map<SponsorshipID, WeiAmount>,
+        streamrClient: StreamrClient
+    ): Promise<Map<SponsorshipID, SponsorshipConfig>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
             // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
             // payoutPropotionalStrategy so that we ensure that unstaking doesn't happen too soon)
@@ -157,7 +160,13 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
         const sponsorships = await collect(queryResult)
         const hasAcceptableOperatorCount = (item: SponsorshipQueryResultItem) => {
-            return (item.maxOperators === null) || (item.operatorCount < item.maxOperators)
+            if (stakes.has(item.id)) {
+                // this operator has already staked to the sponsorship: keep the sponsorship in the list so that
+                // we don't unstake from it
+                return true
+            } else {
+                return (item.maxOperators === null) || (item.operatorCount < item.maxOperators)
+            }
         }
         return new Map(sponsorships.filter(hasAcceptableOperatorCount).map(
             (sponsorship) => [sponsorship.id, {
