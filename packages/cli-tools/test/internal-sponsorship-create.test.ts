@@ -8,12 +8,14 @@ interface QueryResultItem {
         totalPayoutWeiPerSec: string
         minOperators: number
         maxOperators: number
+        minimumStakingPeriodSeconds: string
     }]
 }
 
 const EARNINGS_PER_SECOND = 123
 const MIN_OPERATOR_COUNT = 10
 const MAX_OPERATOR_COUNT = 20
+const MIN_STAKE_DURATION = 456
 
 describe('sponsorship-create', () => {
 
@@ -23,7 +25,7 @@ describe('sponsorship-create', () => {
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
         // eslint-disable-next-line max-len
-        const command = `internal sponsorship-create ${stream.id} --earnings-per-second ${EARNINGS_PER_SECOND} --min-operator-count ${MIN_OPERATOR_COUNT} --max-operator-count ${MAX_OPERATOR_COUNT}`
+        const command = `internal sponsorship-create ${stream.id} --earnings-per-second ${EARNINGS_PER_SECOND} --min-operator-count ${MIN_OPERATOR_COUNT} --max-operator-count ${MAX_OPERATOR_COUNT} --min-stake-duration ${MIN_STAKE_DURATION}`
         await runCommand(command, {
             privateKey: sponsorer.privateKey
         })
@@ -44,6 +46,7 @@ describe('sponsorship-create', () => {
                             totalPayoutWeiPerSec
                             minOperators
                             maxOperators
+                            minimumStakingPeriodSeconds
                         }
                     }
                 `
@@ -54,7 +57,8 @@ describe('sponsorship-create', () => {
         expect(queryResult!.sponsorships[0]).toEqual({ 
             totalPayoutWeiPerSec: parseEther(String(EARNINGS_PER_SECOND)).toString(),
             minOperators: MIN_OPERATOR_COUNT,
-            maxOperators: MAX_OPERATOR_COUNT
+            maxOperators: MAX_OPERATOR_COUNT,
+            minimumStakingPeriodSeconds: MIN_STAKE_DURATION.toString()
         })
 
         await client.destroy()

@@ -10,6 +10,7 @@ interface Options extends BaseOptions {
     earningsPerSecond: string
     minOperatorCount?: number
     maxOperatorCount?: number
+    minStakeDuration?: number
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
@@ -19,6 +20,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         deployer: await client.getSigner(),
         minOperatorCount: options.minOperatorCount,
         maxOperatorCount: options.maxOperatorCount,
+        minStakeDuration: options.minStakeDuration,
         environmentId: client.getConfig().environment
     })
     console.info(JSON.stringify({ address: await contract.getAddress() }, undefined, 4))
@@ -28,4 +30,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second in data tokens')
     .option('--min-operator-count <number>', 'Minimum operator count')
     .option('--max-operator-count <number>', 'Maximum operator count')
+    .option('--min-stake-duration <number>', 'Minimum time in seconds a stake must be held before it can be unstaked without penalty')
     .parseAsync()
