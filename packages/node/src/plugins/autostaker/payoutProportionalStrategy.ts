@@ -162,7 +162,10 @@ export const adjustStakes: AdjustStakesFn = ({
         }
     }
 
-    const tooSmallAdjustments = adjustments.filter((a) => abs(a.difference) < operatorConfig.minTransactionAmount)
+    const tooSmallAdjustments = adjustments.filter(
+        // note the edge case: expired sponsorships can be unstaked, even if the transaction amount is considered "too small"
+        (a) => (abs(a.difference) < operatorConfig.minTransactionAmount) && stakeableSponsorships.has(a.sponsorshipId)
+    )
     if (tooSmallAdjustments.length > 0) {
         pull(adjustments, ...tooSmallAdjustments)
         while (true) {

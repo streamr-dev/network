@@ -311,7 +311,8 @@ describe('payoutProportionalStrategy', () => {
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([]),
                 environmentConfig: { minStakePerSponsorship: 0n }
-            })).toEqual([
+            })).toIncludeSameMembers([
+                { type: 'unstake', sponsorshipId: 'a', amount: 10n },
                 { type: 'unstake', sponsorshipId: 'b', amount: 1000n }
             ])
         })
@@ -325,7 +326,10 @@ describe('payoutProportionalStrategy', () => {
                 operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
                 stakeableSponsorships: new Map([]),
                 environmentConfig: { minStakePerSponsorship: 0n }
-            })).toEqual([])
+            })).toIncludeSameMembers([
+                { type: 'unstake', sponsorshipId: 'a', amount: 10n },
+                { type: 'unstake', sponsorshipId: 'b', amount: 20n }
+            ])
         })
     })
 })
