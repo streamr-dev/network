@@ -76,10 +76,10 @@ export interface DeploySponsorshipContractOpts {
     streamId: string
     deployer: SignerWithProvider
     metadata?: string
+    earningsPerSecond: WeiAmount
     minOperatorCount?: number
     maxOperatorCount?: number
     minStakeDuration?: number
-    earningsPerSecond?: WeiAmount
     environmentId: EnvironmentId
 }
 
@@ -92,7 +92,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     ) as unknown as SponsorshipFactoryContract
     const policies: { contractAddress: string, param: number | bigint }[] = [{
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipStakeWeightedAllocationPolicy,
-        param: opts.earningsPerSecond ?? parseEther('1')
+        param: opts.earningsPerSecond
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
         param: opts.minStakeDuration ?? 0,

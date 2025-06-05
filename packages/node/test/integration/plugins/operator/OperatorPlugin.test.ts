@@ -20,6 +20,7 @@ const {
 } = _operatorContractUtils
 
 const DEFAULT_STREAM_PARTITION = 0
+const EARNINGS_PER_SECOND = parseEther('1')
 
 describe('OperatorPlugin', () => {
 
@@ -54,7 +55,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(subscriber, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer, earningsPerSecond: EARNINGS_PER_SECOND })
         await sponsor(sponsorer, await sponsorship1.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
         await stake(operatorWallet, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
@@ -112,7 +113,7 @@ describe('OperatorPlugin', () => {
         const stream = await createTestStream(client, module)
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })
-        const sponsorship = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
+        const sponsorship = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer, earningsPerSecond: EARNINGS_PER_SECOND })
         await sponsor(sponsorer, await sponsorship.getAddress(), parseEther('10000'))
         await delegate(operatorWallet, operatorContractAddress, parseEther('10000'))
         await stake(operatorWallet, operatorContractAddress, await sponsorship.getAddress(), parseEther('10000'))
