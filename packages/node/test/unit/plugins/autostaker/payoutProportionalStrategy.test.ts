@@ -1,3 +1,4 @@
+import sortBy from 'lodash/sortBy'
 import { adjustStakes } from '../../../../src/plugins/autostaker/payoutProportionalStrategy'
 
 describe('payoutProportionalStrategy', () => {
@@ -190,6 +191,20 @@ describe('payoutProportionalStrategy', () => {
             ]),
             environmentConfig: { minStakePerSponsorship: 0n },
         })).toHaveLength(4)
+    })
+
+    it('handles greater than MAX_SAFE_INTEGER payout values correctly', () => {
+        const stakes = adjustStakes({
+            operatorState: { unstakedAmount: 9n * BigInt(Number.MAX_SAFE_INTEGER), stakes: new Map() },
+            operatorConfig: { minTransactionAmount: 0n, operatorContractAddress: '' },
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 3n * BigInt(Number.MAX_SAFE_INTEGER) }],
+                ['b', { payoutPerSec: 4n * BigInt(Number.MAX_SAFE_INTEGER) }],
+                ['c', { payoutPerSec: 2n * BigInt(Number.MAX_SAFE_INTEGER) }],
+            ]),
+            environmentConfig: { minStakePerSponsorship: 0n },
+        })
+        expect(sortBy(stakes, (a) => a.amount).map((a) => a.sponsorshipId)).toEqual(['c', 'a', 'b'])
     })
 
     it('operators may choose different sponsorships if payoutPerSec are same', () => {

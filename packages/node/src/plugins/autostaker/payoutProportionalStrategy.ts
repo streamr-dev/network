@@ -67,7 +67,7 @@ const getSelectedSponsorships = (
     const count = Math.min(
         stakeableSponsorships.size,
         maxSponsorshipCount ?? Infinity,
-        Math.floor(Number(totalStakeableAmount) / Number(minStakePerSponsorship))  // as many as we can afford
+        (minStakePerSponsorship > 0n) ? Number(totalStakeableAmount / minStakePerSponsorship) : Infinity  // as many as we can afford
     )
     const [
         keptSponsorships,
@@ -76,7 +76,7 @@ const getSelectedSponsorships = (
     return [
         ...keptSponsorships,
         ...sortBy(potentialSponsorships, 
-            (id) => -Number(stakeableSponsorships.get(id)!.payoutPerSec),
+            (id) => -stakeableSponsorships.get(id)!.payoutPerSec,
             (id) => {
                 // If payoutPerSec is same for multiple sponsorships, different operators should
                 // choose different sponsorships. Using hash of some operator-specific ID + sponsorshipId
@@ -155,7 +155,7 @@ export const adjustStakes: AdjustStakesFn = ({
     // fix rounding errors by forcing the net staking to equal unstakedAmount: adjust the largest staking
     const netStakingAmount = sum(adjustments.map((a) => a.difference))
     if (netStakingAmount !== operatorState.unstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
-        const largestDifference = maxBy(adjustments, (a) => Number(a.difference))!
+        const largestDifference = maxBy(adjustments, (a) => a.difference)!
         largestDifference.difference += operatorState.unstakedAmount - netStakingAmount
         if (largestDifference.difference === 0n) {
             pull(adjustments, largestDifference)
@@ -171,7 +171,7 @@ export const adjustStakes: AdjustStakesFn = ({
             const stakingSum = sum(stakings.map((a) => a.difference))
             const availableSum = abs(sum(unstakings.map((a) => a.difference))) + operatorState.unstakedAmount
             if (stakingSum > availableSum) {
-                const smallestStaking = minBy(stakings, (a) => Number(a.difference))!
+                const smallestStaking = minBy(stakings, (a) => a.difference)!
                 pull(adjustments, smallestStaking)
             } else {
                 break
