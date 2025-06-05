@@ -32,6 +32,9 @@ interface StakeQueryResultItem {
 
 const logger = new Logger(module)
 
+// 1e12 wei, i.e. one millionth of one DATA token (we can tweak this later if needed)
+const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
+
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
         query: `
@@ -138,6 +141,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 minimumStakingPeriodSeconds: "0"
                                 minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
+                                totalPayoutWeiPerSec_gte: "${MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND.toString()}"
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
