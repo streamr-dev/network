@@ -286,5 +286,31 @@ describe('payoutProportionalStrategy', () => {
                 environmentConfig: { minStakePerSponsorship: 0n }
             })).toEqual([])
         })
+
+        it('very small expiration unstake and nothing to stake', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedAmount: 0n, stakes: new Map([
+                    ['a', 10n],
+                    ['b', 1000n]
+                ]) },
+                operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
+                stakeableSponsorships: new Map([]),
+                environmentConfig: { minStakePerSponsorship: 0n }
+            })).toEqual([
+                { type: 'unstake', sponsorshipId: 'b', amount: 1000n }
+            ])
+        })
+
+        it('only multiple very small expiration unstakes', () => {
+            expect(adjustStakes({
+                operatorState: { unstakedAmount: 0n, stakes: new Map([
+                    ['a', 10n],
+                    ['b', 20n]
+                ]) },
+                operatorConfig: { minTransactionAmount: 50n, operatorContractAddress: '' },
+                stakeableSponsorships: new Map([]),
+                environmentConfig: { minStakePerSponsorship: 0n }
+            })).toEqual([])
+        })
     })
 })
