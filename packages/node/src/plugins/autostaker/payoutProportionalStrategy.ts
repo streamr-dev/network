@@ -161,7 +161,6 @@ export const adjustStakes: AdjustStakesFn = ({
     const tooSmallAdjustments = adjustments.filter((a) => abs(a.difference) < operatorConfig.minTransactionAmount)
     if (tooSmallAdjustments.length > 0) {
         pull(adjustments, ...tooSmallAdjustments)
-        let netDifference = sum(tooSmallAdjustments.map((a) => a.difference))
         while (true) {
             const stakings = adjustments.filter((a) => a.difference > 0)
             const unstakings = adjustments.filter((a) => a.difference < 0)
@@ -170,7 +169,6 @@ export const adjustStakes: AdjustStakesFn = ({
             if (stakingSum > availableSum) {
                 const smallestStaking = minBy(stakings, (a) => Number(a.difference))!
                 pull(adjustments, smallestStaking)
-                netDifference += smallestStaking.difference
             } else {
                 break
             }
