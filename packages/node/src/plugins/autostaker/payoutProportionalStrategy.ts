@@ -48,16 +48,16 @@ const sum = (values: bigint[]): bigint =>{
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
 const getExpiredSponsorships = (
-    stakes: Map<SponsorshipID, WeiAmount>,
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
 ): SponsorshipID[] => {
-    return [...stakes.keys()].filter((sponsorshipId) => !stakeableSponsorships.has(sponsorshipId))
+    return [...myCurrentStakes.keys()].filter((sponsorshipId) => !stakeableSponsorships.has(sponsorshipId))
 }
 /*
  * Select sponsorships for which we should have some stake
  */
 const getSelectedSponsorships = (
-    stakes: Map<SponsorshipID, WeiAmount>,
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableAmount: WeiAmount,
     minStakePerSponsorship: WeiAmount,
@@ -72,7 +72,7 @@ const getSelectedSponsorships = (
     const [
         keptSponsorships,
         potentialSponsorships,
-    ] = partition([...stakeableSponsorships.keys()], (id) => stakes.has(id))
+    ] = partition([...stakeableSponsorships.keys()], (id) => myCurrentStakes.has(id))
     return [
         ...keptSponsorships,
         ...sortBy(potentialSponsorships, 
@@ -95,16 +95,16 @@ const getSelectedSponsorships = (
  * - for expired sponsorships the stake is zero
  */
 const getTargetStakes = (
-    stakes: Map<SponsorshipID, WeiAmount>,
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     unstakedAmount: WeiAmount,
     minStakePerSponsorship: WeiAmount,
     maxSponsorshipCount: number | undefined,
     operatorContractAddress: string
 ): Map<SponsorshipID, WeiAmount> => {
-    const totalStakeableAmount = sum([...stakes.values()]) + unstakedAmount
+    const totalStakeableAmount = sum([...myCurrentStakes.values()]) + unstakedAmount
     const selectedSponsorships = getSelectedSponsorships(
-        stakes,
+        myCurrentStakes,
         stakeableSponsorships,
         totalStakeableAmount,
         minStakePerSponsorship,
@@ -118,7 +118,7 @@ const getTargetStakes = (
         id,
         minStakePerSponsorship + payoutProportionalAmount * stakeableSponsorships.get(id)!.payoutPerSec / payoutPerSecSum
     ])
-    const targetsForExpired: TargetStake[] = getExpiredSponsorships(stakes, stakeableSponsorships).map((id) => [
+    const targetsForExpired: TargetStake[] = getExpiredSponsorships(myCurrentStakes, stakeableSponsorships).map((id) => [
         id,
         0n
     ]) 
@@ -137,7 +137,7 @@ export const adjustStakes: AdjustStakesFn = ({
 }): Action[] => {
 
     const targetStakes = getTargetStakes(
-        operatorState.stakes,
+        operatorState.myCurrentStakes,
         stakeableSponsorships,
         operatorState.unstakedAmount,
         environmentConfig.minStakePerSponsorship,
@@ -148,7 +148,7 @@ export const adjustStakes: AdjustStakesFn = ({
     const adjustments = [...targetStakes.keys()]
         .map((sponsorshipId) => ({ 
             sponsorshipId,
-            difference: targetStakes.get(sponsorshipId)! - (operatorState.stakes.get(sponsorshipId) ?? 0n)
+            difference: targetStakes.get(sponsorshipId)! - (operatorState.myCurrentStakes.get(sponsorshipId) ?? 0n)
         }))
         .filter(({ difference: difference }) => difference !== 0n)
 

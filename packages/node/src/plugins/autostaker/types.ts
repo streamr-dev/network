@@ -23,7 +23,7 @@ export interface SponsorshipConfig {
 }
 
 export interface OperatorState {
-    stakes: Map<SponsorshipID, WeiAmount>
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>
     unstakedAmount: WeiAmount
 }
 

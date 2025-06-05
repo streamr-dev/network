@@ -85,8 +85,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
-        const stakes = await this.getStakes(streamrClient)
-        const stakeableSponsorships = await this.getStakeableSponsorships(stakes, streamrClient)
+        const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
+        const stakeableSponsorships = await this.getStakeableSponsorships(myCurrentStakes, streamrClient)
         const stakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
         const unstakedAmount = (await operatorContract.valueWithoutEarnings()) - stakedAmount
         logger.debug('Analysis state', {
@@ -94,7 +94,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 sponsorshipId,
                 payoutPerSec: formatEther(config.payoutPerSec)
             })),
-            stakes: [...stakes.entries()].map(([sponsorshipId, amount]) => ({
+            myCurrentStakes: [...myCurrentStakes.entries()].map(([sponsorshipId, amount]) => ({
                 sponsorshipId,
                 amount: formatEther(amount)
             })),
@@ -105,7 +105,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
         const actions = adjustStakes({
             operatorState: {
-                stakes,
+                myCurrentStakes,
                 unstakedAmount
             },
             operatorConfig: {
@@ -175,7 +175,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         )
     }
 
-    private async getStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, WeiAmount>> {
+    private async getMyCurrentStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, WeiAmount>> {
         const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number) => {
             return {
                 query: `
