@@ -11,6 +11,7 @@
                 "polygon",
                 "polygonAmoy",
                 "peaq",
+                "iotex",
                 "dev2"
             ],
             "description": "applies all environment-specific defaults for the given environment"

@@ -54,10 +54,11 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultDelegationPolicy,
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultExchangeRatePolicy,
             CHAIN_CONFIG[opts.environmentId].contracts.OperatorDefaultUndelegationPolicy,
-        ], [
+        ],
+        [
             0,
             0,
-            0,
+            0
         ]
     )).wait()
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
@@ -77,6 +78,8 @@ export interface DeploySponsorshipContractOpts {
     metadata?: string
     earningsPerSecond: WeiAmount
     minOperatorCount?: number
+    maxOperatorCount?: number
+    minStakeDuration?: number
     environmentId: EnvironmentId
 }
 
@@ -87,19 +90,28 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         SponsorshipFactoryABI,
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
+    const policies: { contractAddress: string, param: number | bigint }[] = [{
+        contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipStakeWeightedAllocationPolicy,
+        param: opts.earningsPerSecond
+    }, {
+        contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
+        param: opts.minStakeDuration ?? 0,
+    }, {
+        contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
+        param: 0
+    }]
+    if (opts.maxOperatorCount !== undefined) {
+        policies.push({
+            contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipMaxOperatorsJoinPolicy,
+            param: opts.maxOperatorCount
+        })
+    }
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         (opts.minOperatorCount ?? 1).toString(),
         opts.streamId,
         opts.metadata ?? '{}',
-        [
-            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipStakeWeightedAllocationPolicy,
-            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
-            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
-        ], [
-            opts.earningsPerSecond,
-            '0',
-            '0',
-        ]
+        policies.map((p) => p.contractAddress),
+        policies.map((p) => p.param)
     )
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
     const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
