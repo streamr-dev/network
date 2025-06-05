@@ -9,10 +9,10 @@ import { Action, SponsorshipConfig, SponsorshipID } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
-    runIntervalInMs: number
+    maxSponsorshipCount?: number
     minTransactionDataTokenAmount: number
     maxAcceptableMinOperatorCount: number
-    maxSponsorshipCount?: number
+    runIntervalInMs: number
 }
 
 interface SponsorshipQueryResultItem {

@@ -13,11 +13,10 @@
       "description": "Operator contract Ethereum address",
       "format": "ethereum-address"
     },
-    "runIntervalInMs": {
+    "maxSponsorshipCount": {
       "type": "integer",
-      "description": "The interval (in milliseconds) at which autostaking possibilities are analyzed and executed",
-      "minimum": 0,
-      "default": 30000
+      "description": "Maximum count of sponsorships which are staked at any given time",
+      "minimum": 1
     },
     "minTransactionDataTokenAmount": {
       "type": "integer",
@@ -31,10 +30,11 @@
       "minimum": 0,
       "default": 100
     },
-    "maxSponsorshipCount": {
+    "runIntervalInMs": {
       "type": "integer",
-      "description": "Maximum count of sponsorships which are staked at any given time",
-      "minimum": 1
+      "description": "The interval (in milliseconds) at which autostaking possibilities are analyzed and executed",
+      "minimum": 0,
+      "default": 30000
     }
   }
 }
