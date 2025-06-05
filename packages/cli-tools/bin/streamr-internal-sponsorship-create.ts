@@ -30,5 +30,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .requiredOption('-e, --earnings-per-second <number>', 'Earnings per second in data tokens')
     .option('--min-operator-count <number>', 'Minimum operator count')
     .option('--max-operator-count <number>', 'Maximum operator count')
-    .option('--min-stake-duration <number>', 'Minimum time in seconds a stake must be held before it can be unstaked')
+    .option('--min-stake-duration <number>', 'Minimum time in seconds a stake must be held before it can be unstaked without penalty')
     .parseAsync()
