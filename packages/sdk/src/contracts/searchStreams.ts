@@ -15,11 +15,6 @@ export interface SearchStreamsPermissionFilter {
 
 export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'userId', UserID>
 
-export interface SearchStreamsOrderBy {
-    field: 'id' | 'createdAt' | 'updatedAt'
-    direction: 'asc' | 'desc'
-}
-
 export type SearchStreamsResultItem = {
     id: string
     stream: StreamQueryResult
@@ -35,11 +30,10 @@ export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPer
 export async function* searchStreams(
     term: string | undefined,
     permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-    orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
     const backendResults = theGraphClient.queryEntities<SearchStreamsResultItem>(
-        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)
+        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, lastId, pageSize)
     )
     /*
      * There can be orphaned permission entities if a stream is deleted (currently
@@ -85,7 +79,6 @@ export async function* searchStreams(
 const buildQuery = (
     term: string | undefined,
     permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-    orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
 ): GraphQLQuery => {
@@ -120,8 +113,7 @@ const buildQuery = (
         ) {
             streamPermissions (
                 first: ${pageSize},
-                orderBy: "stream__${orderBy.field}",
-                orderDirection: "${orderBy.direction}", 
+                orderBy: "stream__id",
                 ${TheGraphClient.createWhereClause(variables)}
             ) {
                 id
