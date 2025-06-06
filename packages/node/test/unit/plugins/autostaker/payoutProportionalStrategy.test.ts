@@ -13,6 +13,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 6n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 5000n
         })).toIncludeSameMembers([
@@ -27,6 +28,7 @@ describe('payoutProportionalStrategy', () => {
             myCurrentStakes: new Map([[ 'a', 2000n ]]),
             stakeableSponsorships: new Map(),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 1234n
         })).toEqual([
@@ -44,6 +46,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 30n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
@@ -82,6 +85,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 30n }], // included
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 300n
         }).sort((a, b) => a.sponsorshipId.localeCompare(b.sponsorshipId))).toEqual([
@@ -95,6 +99,7 @@ describe('payoutProportionalStrategy', () => {
             myCurrentStakes: new Map(),
             stakeableSponsorships: new Map([['a', { payoutPerSec: 10n }]]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 300n
         })).toEqual([])
@@ -115,6 +120,7 @@ describe('payoutProportionalStrategy', () => {
                 ['d', { payoutPerSec: 10n }], // stake here
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         }).map((a) => a.type)).toEqual([
@@ -134,6 +140,7 @@ describe('payoutProportionalStrategy', () => {
                 ['a', { payoutPerSec: 10n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         })).toIncludeSameMembers([
@@ -155,6 +162,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 10n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         })).toIncludeSameMembers([
@@ -174,6 +182,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 400n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         })).toIncludeSameMembers([
@@ -197,25 +206,10 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 400n }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         })).toEqual([])
-    })
-
-    it('uses Infinity as default maxSponsorshipCount', async () => {
-        expect(adjustStakes({
-            myUnstakedAmount: 1000n,
-            myCurrentStakes: new Map(),
-            stakeableSponsorships: new Map([
-                ['a', { payoutPerSec: 10n }],
-                ['b', { payoutPerSec: 20n }],
-                ['c', { payoutPerSec: 30n }],
-                ['d', { payoutPerSec: 40n }],
-            ]),
-            operatorContractAddress: '',
-            minTransactionAmount: 0n,
-            minStakePerSponsorship: 0n
-        })).toHaveLength(4)
     })
 
     it('handles greater than MAX_SAFE_INTEGER payout values correctly', () => {
@@ -228,6 +222,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 2n * BigInt(Number.MAX_SAFE_INTEGER) }],
             ]),
             operatorContractAddress: '',
+            maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
             minStakePerSponsorship: 0n
         })
@@ -244,6 +239,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', { payoutPerSec: 100n }],
                 ]),
                 operatorContractAddress,
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 0n,
                 minStakePerSponsorship: 1000n
             }
@@ -268,6 +264,7 @@ describe('payoutProportionalStrategy', () => {
                     ['c', { payoutPerSec: 1000n }]
                 ]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 20n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
@@ -287,6 +284,7 @@ describe('payoutProportionalStrategy', () => {
                     ['c', { payoutPerSec: 400n }],
                 ]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 20n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
@@ -310,6 +308,7 @@ describe('payoutProportionalStrategy', () => {
                     ['e', { payoutPerSec: 230n }]
                 ]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
@@ -334,6 +333,7 @@ describe('payoutProportionalStrategy', () => {
                     ['e', { payoutPerSec: 230n }]
                 ]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
                 minStakePerSponsorship: 0n
             })).toEqual([])
@@ -348,6 +348,7 @@ describe('payoutProportionalStrategy', () => {
                 ]),
                 stakeableSponsorships: new Map([]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
@@ -365,6 +366,7 @@ describe('payoutProportionalStrategy', () => {
                 ]),
                 stakeableSponsorships: new Map([]),
                 operatorContractAddress: '',
+                maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([

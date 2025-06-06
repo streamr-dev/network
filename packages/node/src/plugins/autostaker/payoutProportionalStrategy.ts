@@ -61,12 +61,12 @@ const getSelectedSponsorships = (
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     totalStakeableAmount: WeiAmount,
     operatorContractAddress: string,
-    maxSponsorshipCount: number | undefined,
+    maxSponsorshipCount: number,
     minStakePerSponsorship: WeiAmount
 ): SponsorshipID[] => {
     const count = Math.min(
         stakeableSponsorships.size,
-        maxSponsorshipCount ?? Infinity,
+        maxSponsorshipCount,
         (minStakePerSponsorship > 0n) ? Number(totalStakeableAmount / minStakePerSponsorship) : Infinity  // as many as we can afford
     )
     const [
@@ -99,7 +99,7 @@ const getTargetStakes = (
     myUnstakedAmount: WeiAmount,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
     operatorContractAddress: string,
-    maxSponsorshipCount: number | undefined,
+    maxSponsorshipCount: number,
     minStakePerSponsorship: WeiAmount
 ): Map<SponsorshipID, WeiAmount> => {
     const totalStakeableAmount = sum([...myCurrentStakes.values()]) + myUnstakedAmount

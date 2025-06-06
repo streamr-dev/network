@@ -9,7 +9,7 @@ import { Action, SponsorshipConfig, SponsorshipID } from './types'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
-    maxSponsorshipCount?: number
+    maxSponsorshipCount: number
     minTransactionDataTokenAmount: number
     maxAcceptableMinOperatorCount: number
     runIntervalInMs: number
