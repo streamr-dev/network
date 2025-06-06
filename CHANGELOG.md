@@ -49,6 +49,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add experimental `autostaker` plugin that manages sponsorship staking and unstaking automatically for operators (https://github.com/streamr-dev/network/pull/3086)
+
 #### Changed
 
 - **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
