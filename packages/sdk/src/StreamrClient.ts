@@ -81,11 +81,6 @@ export interface ExtraSubscribeOptions {
     erc1271Contract?: HexString
 
     delivery?: StreamPartDeliveryOptions
-
-    /**
-     * Delivery options for the publish.
-     */
-    publish?: StreamPartDeliveryOptions
 }
 
 const logger = new Logger(module)
