@@ -2,6 +2,7 @@ import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessageStream } from './MessageStream'
+import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 
 /**
  * Events emitted by {@link Subscription}.
@@ -29,6 +30,7 @@ export class Subscription extends MessageStream {
     /** @internal */
     readonly isRaw: boolean
     readonly erc1271ContractAddress: EthereumAddress | undefined
+    readonly deliveryOptions: StreamPartDeliveryOptions
     private readonly eventEmitter: EventEmitter<SubscriptionEvents>
     private readonly logger: Logger
 
@@ -37,6 +39,7 @@ export class Subscription extends MessageStream {
         streamPartId: StreamPartID,
         isRaw: boolean,
         erc1271ContractAddress: EthereumAddress | undefined,
+        deliveryOptions: StreamPartDeliveryOptions,
         eventEmitter: EventEmitter<SubscriptionEvents>,
         loggerFactory: LoggerFactory
     ) {
@@ -44,6 +47,7 @@ export class Subscription extends MessageStream {
         this.streamPartId = streamPartId
         this.isRaw = isRaw
         this.erc1271ContractAddress = erc1271ContractAddress
+        this.deliveryOptions = deliveryOptions
         this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
         this.onError.listen((err) => {

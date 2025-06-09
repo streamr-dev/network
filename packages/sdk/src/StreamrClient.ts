@@ -7,7 +7,7 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
-import { ProxyDirection } from '@streamr/trackerless-network'
+import { ProxyDirection, StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
@@ -79,6 +79,13 @@ export interface ExtraSubscribeOptions {
      * The streamr client wallet address must be an authorized signer for the contract.
      */
     erc1271Contract?: HexString
+
+    delivery?: StreamPartDeliveryOptions
+
+    /**
+     * Delivery options for the publish.
+     */
+    publish?: StreamPartDeliveryOptions
 }
 
 const logger = new Logger(module)
@@ -165,9 +172,10 @@ export class StreamrClient {
     async publish(
         streamDefinition: StreamDefinition,
         content: unknown,
-        metadata?: PublishMetadata
+        metadata?: PublishMetadata,
+        deliveryOptions?: StreamPartDeliveryOptions
     ): Promise<Message> {
-        const result = await this.publisher.publish(streamDefinition, content, metadata)
+        const result = await this.publisher.publish(streamDefinition, content, metadata, deliveryOptions)
         this.eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
     }
@@ -227,6 +235,7 @@ export class StreamrClient {
             streamPartId,
             options.raw ?? false,
             options.erc1271Contract !== undefined ? toEthereumAddress(options.erc1271Contract) : undefined,
+            options.delivery,
             eventEmitter,
             this.loggerFactory
         )
