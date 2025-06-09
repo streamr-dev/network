@@ -235,7 +235,7 @@ export class StreamrClient {
             streamPartId,
             options.raw ?? false,
             options.erc1271Contract !== undefined ? toEthereumAddress(options.erc1271Contract) : undefined,
-            options.delivery,
+            options.delivery ?? {},
             eventEmitter,
             this.loggerFactory
         )
