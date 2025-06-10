@@ -13,7 +13,7 @@ import { Subscription } from './Subscription'
  */
 
 const getAnyItemFromSet = <T>(set: Set<T>): T | undefined => {
-    return Array.from(set.values())[0]
+    return set.values().next().value
 }
 
 export class SubscriptionSession {
