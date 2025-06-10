@@ -1,0 +1,41 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Autostaker plugin configuration",
+  "additionalProperties": false,
+  "required": [
+    "operatorContractAddress"
+  ],
+  "properties": {
+    "operatorContractAddress": {
+      "type": "string",
+      "description": "Operator contract Ethereum address",
+      "format": "ethereum-address"
+    },
+    "maxSponsorshipCount": {
+      "type": "integer",
+      "description": "Maximum count of sponsorships which are staked at any given time",
+      "minimum": 1,
+      "default": 100
+    },
+    "minTransactionDataTokenAmount": {
+      "type": "integer",
+      "description": "Minimum data token amount for stake/unstake transaction",
+      "minimum": 0,
+      "default": 1000
+    },
+    "maxAcceptableMinOperatorCount": {
+      "type": "integer",
+      "description": "Maximum acceptable value for a sponsorship's minOperatorCount config option",
+      "minimum": 0,
+      "default": 100
+    },
+    "runIntervalInMs": {
+      "type": "integer",
+      "description": "The interval (in milliseconds) at which autostaking possibilities are analyzed and executed",
+      "minimum": 0,
+      "default": 3600000
+    }
+  }
+}
