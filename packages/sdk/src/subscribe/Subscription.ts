@@ -30,7 +30,7 @@ export class Subscription extends MessageStream {
     /** @internal */
     readonly isRaw: boolean
     readonly erc1271ContractAddress: EthereumAddress | undefined
-    readonly deliveryOptions: StreamPartDeliveryOptions
+    readonly deliveryOptions: StreamPartDeliveryOptions | undefined
     private readonly eventEmitter: EventEmitter<SubscriptionEvents>
     private readonly logger: Logger
 
@@ -39,7 +39,7 @@ export class Subscription extends MessageStream {
         streamPartId: StreamPartID,
         isRaw: boolean,
         erc1271ContractAddress: EthereumAddress | undefined,
-        deliveryOptions: StreamPartDeliveryOptions,
+        deliveryOptions: StreamPartDeliveryOptions | undefined,
         eventEmitter: EventEmitter<SubscriptionEvents>,
         loggerFactory: LoggerFactory
     ) {

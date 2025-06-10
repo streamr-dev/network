@@ -102,7 +102,7 @@ describe('resend subscription', () => {
         gapFill = true
     ) => {
         const eventEmitter = new EventEmitter<SubscriptionEvents>()
-        sub = new Subscription(STREAM_PART_ID, false, undefined, {}, eventEmitter, mockLoggerFactory())
+        sub = new Subscription(STREAM_PART_ID, false, undefined, undefined, eventEmitter, mockLoggerFactory())
         initResendSubscription(
             sub,
             {} as any,
