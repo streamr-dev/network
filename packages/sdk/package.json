@@ -78,7 +78,7 @@
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^29.7.0",
     "lodash-webpack-plugin": "^0.11.6",
-    "nightwatch": "^3.12.1",
+    "nightwatch": "^3.12.2",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "terser-webpack-plugin": "^5.3.14",
     "ts-loader": "^9.5.2",
@@ -92,8 +92,8 @@
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
-    "@babel/runtime": "^7.27.4",
-    "@babel/runtime-corejs3": "^7.27.4",
+    "@babel/runtime": "^7.27.6",
+    "@babel/runtime-corejs3": "^7.27.6",
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
@@ -103,7 +103,7 @@
     "@streamr/proto-rpc": "103.0.0-rc.20",
     "@streamr/trackerless-network": "103.0.0-rc.20",
     "@streamr/utils": "103.0.0-rc.20",
-    "core-js": "^3.42.0",
+    "core-js": "^3.43.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
@@ -116,11 +116,11 @@
     "reflect-metadata": "^0.2.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "ts-essentials": "^10.0.4",
+    "ts-essentials": "^10.1.0",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.48"
+    "zod": "^3.25.56"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",

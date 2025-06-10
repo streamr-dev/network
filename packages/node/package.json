@@ -60,13 +60,13 @@
     "qs": "^6.14.0",
     "uuid": "^11.1.0",
     "ws": "^8.18.2",
-    "zod": "^3.25.48"
+    "zod": "^3.25.56"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.47",
     "@streamr/network-contracts": "^9.1.0",
     "@streamr/test-utils": "103.0.0-rc.20",
-    "@types/cors": "^2.8.18",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.17",
