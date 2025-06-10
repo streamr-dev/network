@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cdn-location",
-  "version": "103.0.0-rc.18",
+  "version": "103.0.0-rc.20",
   "description": "Library for getting own approximate location by querying CDN servers",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "generate-data-from-tsp-solution": "./data-generation/generateDataFromTSPSolverResult.sh"
   },
   "dependencies": {
-    "@streamr/utils": "103.0.0-rc.18",
+    "@streamr/utils": "103.0.0-rc.20",
     "haversine": "^1.1.1"
   },
   "devDependencies": {

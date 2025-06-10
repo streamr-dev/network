@@ -1,6 +1,6 @@
 {
   "name": "@streamr/node",
-  "version": "103.0.0-rc.18",
+  "version": "103.0.0-rc.20",
   "description": "A full-featured node implementation for the Streamr Network",
   "repository": {
     "type": "git",
@@ -38,10 +38,10 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@inquirer/prompts": "^7.5.3",
-    "@streamr/config": "^5.6.0",
-    "@streamr/dht": "103.0.0-rc.18",
-    "@streamr/sdk": "103.0.0-rc.18",
-    "@streamr/utils": "103.0.0-rc.18",
+    "@streamr/config": "^5.8.0",
+    "@streamr/dht": "103.0.0-rc.20",
+    "@streamr/sdk": "103.0.0-rc.20",
+    "@streamr/utils": "103.0.0-rc.20",
     "aedes": "^0.51.3",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
@@ -60,13 +60,13 @@
     "qs": "^6.14.0",
     "uuid": "^11.1.0",
     "ws": "^8.18.2",
-    "zod": "^3.25.28"
+    "zod": "^3.25.56"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.47",
     "@streamr/network-contracts": "^9.1.0",
-    "@streamr/test-utils": "103.0.0-rc.18",
-    "@types/cors": "^2.8.18",
+    "@streamr/test-utils": "103.0.0-rc.20",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.17",

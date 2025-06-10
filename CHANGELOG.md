@@ -17,6 +17,7 @@ Changes before Tatum release are not documented in this file.
 - Add support for ECDSA on secp256r1 curve (https://github.com/streamr-dev/network/pull/3088)
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 - Add `peaq` environment (https://github.com/streamr-dev/network/pull/3111)
+- Add `iotex` environment (https://github.com/streamr-dev/network/pull/3142)
 
 #### Changed
 
@@ -35,7 +36,8 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 - **BREAKING CHANGE**: Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
-- **BREAKING CHANGE**: Remove `StreamrClient.generateEthereumAccount()` in favour of `EthereumKeyPairIdentity.generate()`
+- **BREAKING CHANGE**: Remove `StreamrClient#generateEthereumAccount()` in favour of `EthereumKeyPairIdentity#generate()`
+- **BREAKING CHANGE**: Remove `orderBy` parameter from `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3131)
 
 #### Fixed
 

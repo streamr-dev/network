@@ -8,6 +8,7 @@ const DELEGATION_AMOUNT = '20000'
 const STAKE_AMOUNT = '10000'
 const SELF_DELEGATION_AMOUNT = '100000'
 const MINIMUM_DELEGATION_SECONDS = 1  // the config value defined in StreamrEnvDeployer in network-contracts repo
+const EARNINGS_PER_SECOND = parseEther('1')
 
 describe('operator', () => {
 
@@ -16,7 +17,8 @@ describe('operator', () => {
         const stream = await client.createStream('/test')
         const sponsorshipContract = await deployTestSponsorshipContract({ 
             streamId: stream.id,
-            deployer: await createTestWallet({ gas: true })
+            deployer: await createTestWallet({ gas: true }),
+            earningsPerSecond: EARNINGS_PER_SECOND
         })
         const sponsorshipAddress: string = await sponsorshipContract.getAddress()
         const operator = await createTestWallet({ gas: true, tokens: true })

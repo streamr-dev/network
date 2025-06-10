@@ -19,6 +19,8 @@ import {
 } from '../../src/contracts/operatorContractUtils'
 import { deployTestOperatorContract, deployTestSponsorshipContract } from '../test-utils/utils'
 
+const EARNINGS_PER_SECOND = parseEther('1')
+
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
         environment: 'dev2',
@@ -67,11 +69,13 @@ describe('Operator', () => {
 
         sponsorship1 = await deployTestSponsorshipContract({
             streamId: streamId1,
-            deployer: deployedOperator.operatorWallet
+            deployer: deployedOperator.operatorWallet,
+            earningsPerSecond: EARNINGS_PER_SECOND
         })
         sponsorship2 = await deployTestSponsorshipContract({
             streamId: streamId2,
-            deployer: deployedOperator.operatorWallet
+            deployer: deployedOperator.operatorWallet,
+            earningsPerSecond: EARNINGS_PER_SECOND
         })
 
     }, 90 * 1000)
