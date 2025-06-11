@@ -18,6 +18,7 @@ Changes before Tatum release are not documented in this file.
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 - Add `peaq` environment (https://github.com/streamr-dev/network/pull/3111)
 - Add `iotex` environment (https://github.com/streamr-dev/network/pull/3142)
+- Add support for using the plumtree optimisation in stream partitions in the SDK (https://github.com/streamr-dev/network/pull/3147)
 
 #### Changed
 
