@@ -6,9 +6,9 @@ import {
     StreamMessage
 } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from '../NodeList'
-import { PlumTreeRpcLocal } from './PlumTreeRpcLocal'
-import { PlumTreeRpcRemote } from './PlumTreeRpcRemote'
-import { ContentDeliveryRpcClient, PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { PlumtreeRpcLocal } from './PlumtreeRpcLocal'
+import { PlumtreeRpcRemote } from './PlumtreeRpcRemote'
+import { ContentDeliveryRpcClient, PlumtreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
@@ -27,14 +27,14 @@ interface Events {
     message: (msg: StreamMessage) => void
 }
 
-export class PlumTreeManager extends EventEmitter<Events> {
+export class PlumtreeManager extends EventEmitter<Events> {
     private readonly neighbors: NodeList
     private readonly localPeerDescriptor: PeerDescriptor
     // We have paused sending real data to these neighbrs and only send metadata
     private readonly localPausedNeighbors: PausedNeighbors = new PausedNeighbors(MAX_PAUSED_NEIGHBORS_DEFAULT)
     // We have asked these nodes to pause sending real data to us, used to limit sending of pausing and resuming requests
     private readonly remotePausedNeighbors: PausedNeighbors = new PausedNeighbors(MAX_PAUSED_NEIGHBORS_DEFAULT)
-    private readonly rpcLocal: PlumTreeRpcLocal
+    private readonly rpcLocal: PlumtreeRpcLocal
     private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly metadataTimestampsAheadOfRealData: Map<string, Set<number>> = new Map()
@@ -43,7 +43,7 @@ export class PlumTreeManager extends EventEmitter<Events> {
         super()
         this.neighbors = options.neighbors
         this.localPeerDescriptor = options.localPeerDescriptor
-        this.rpcLocal = new PlumTreeRpcLocal(
+        this.rpcLocal = new PlumtreeRpcLocal(
             this.neighbors,
             this.localPausedNeighbors,
             (metadata: MessageID, previousNode: PeerDescriptor) => this.onMetadata(metadata, previousNode),
@@ -128,8 +128,8 @@ export class PlumTreeManager extends EventEmitter<Events> {
         }
     }
 
-    private createRemote(neighbor: PeerDescriptor): PlumTreeRpcRemote {
-        return new PlumTreeRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, PlumTreeRpcClient)
+    private createRemote(neighbor: PeerDescriptor): PlumtreeRpcRemote {
+        return new PlumtreeRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, PlumtreeRpcClient)
     }
 
     broadcast(msg: StreamMessage, previousNode: DhtAddress): void {
