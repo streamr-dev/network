@@ -41,7 +41,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator,
-    plumTreeOptimisation?: boolean
+    plumtreeOptimization?: boolean
 ): Promise<[ DiscoveryLayerNode, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
@@ -62,7 +62,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
         isLocalNodeEntryPoint: () => false,
-        plumTreeOptimisation
+        plumtreeOptimization
     })
     return [discoveryLayerNode, contentDeliveryLayerNode]
 }
