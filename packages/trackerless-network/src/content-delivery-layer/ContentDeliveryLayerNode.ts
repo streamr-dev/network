@@ -32,7 +32,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from '../utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
-import { PlumTreeManager } from './plum-tree/PlumTreeManager'
+import { PlumtreeManager } from './plumtree/PlumtreeManager'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -64,7 +64,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
-    plumTreeManager?: PlumTreeManager
+    plumtreeManager?: PlumtreeManager
 }
 
 export const DEFAULT_NODE_VIEW_SIZE = 20
@@ -116,7 +116,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 }
             },
             markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.options.inspector.markMessage(remoteNodeId, messageId),
-            plumTreeManager: this.options.plumTreeManager
+            plumtreeManager: this.options.plumtreeManager
         })
     }
 
@@ -197,9 +197,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.abortController.signal
             )
         }
-        if (this.options.plumTreeManager) {
+        if (this.options.plumtreeManager) {
             addManagedEventListener(
-                this.options.plumTreeManager,
+                this.options.plumtreeManager,
                 'message',
                 (msg: StreamMessage) => this.emit('message', msg),
                 this.abortController.signal
@@ -360,7 +360,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         })
         this.options.rpcCommunicator.destroy()
         this.removeAllListeners()
-        this.options.plumTreeManager?.stop()
+        this.options.plumtreeManager?.stop()
         this.options.nearbyNodeView.stop()
         this.options.neighbors.stop()
         this.options.randomNodeView.stop()

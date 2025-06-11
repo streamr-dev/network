@@ -32,7 +32,7 @@ service NodeInfoRpc {
   rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
-service PlumTreeRpc {
+service PlumtreeRpc {
   rpc pauseNeighbor (PauseNeighborRequest) returns (google.protobuf.Empty);
   rpc resumeNeighbor (ResumeNeighborRequest) returns (google.protobuf.Empty);
   rpc sendMetadata (MessageID) returns (google.protobuf.Empty);

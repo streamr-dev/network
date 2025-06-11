@@ -2,13 +2,13 @@ import { DhtCallContext, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { MessageID, PauseNeighborRequest, ResumeNeighborRequest } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { IPlumTreeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
+import { IPlumtreeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
 import { PausedNeighbors } from './PausedNeighbors'
 
 type OnMetadataCb = (msg: MessageID, previousNode: PeerDescriptor) => Promise<void>
 type SendBufferCb = (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => Promise<void>
-export class PlumTreeRpcLocal implements IPlumTreeRpc {
+export class PlumtreeRpcLocal implements IPlumtreeRpc {
 
     private readonly neighbors: NodeList
     private readonly pausedNodes: PausedNeighbors

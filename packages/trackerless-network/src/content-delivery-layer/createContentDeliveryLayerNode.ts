@@ -22,7 +22,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspection/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
-import { PlumTreeManager } from './plum-tree/PlumTreeManager'
+import { PlumtreeManager } from './plumtree/PlumtreeManager'
 
 type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNodeOptions,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
@@ -68,7 +68,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
         streamPartId: options.streamPartId,
         rpcCommunicator
     }) : undefined
-    const plumTreeManager = options.plumTreeOptimisation ? new PlumTreeManager({
+    const plumtreeManager = options.plumTreeOptimisation ? new PlumtreeManager({
         neighbors,
         localPeerDescriptor: options.localPeerDescriptor,
         rpcCommunicator
@@ -145,7 +145,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
         proxyConnectionRpcLocal,
         inspector,
         temporaryConnectionRpcLocal,
-        plumTreeManager
+        plumtreeManager
     }
 }
 

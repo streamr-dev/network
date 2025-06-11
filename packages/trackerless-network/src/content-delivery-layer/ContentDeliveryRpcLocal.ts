@@ -9,7 +9,7 @@ import {
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
-import { PlumTreeManager } from './plum-tree/PlumTreeManager'
+import { PlumtreeManager } from './plumtree/PlumtreeManager'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
@@ -19,7 +19,7 @@ export interface ContentDeliveryRpcLocalOptions {
     onLeaveNotice(remoteNodeId: DhtAddress, isLocalNodeEntryPoint: boolean): void
     markForInspection(remoteNodeId: DhtAddress, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
-    plumTreeManager?: PlumTreeManager
+    plumtreeManager?: PlumtreeManager
 }
 
 export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
@@ -34,16 +34,16 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
         const previousNode = (context as DhtCallContext).incomingSourceDescriptor!
         const previousNodeId = toNodeId(previousNode)
         this.options.markForInspection(previousNodeId, message.messageId!)
-        if (this.options.plumTreeManager === undefined) {
+        if (this.options.plumtreeManager === undefined) {
             if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
                 this.options.broadcast(message, previousNodeId)
             }
         } else if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
             // Message is not a duplicate, so we can broadcast it over the plumtree
-            this.options.plumTreeManager.broadcast(message, previousNodeId)
+            this.options.plumtreeManager.broadcast(message, previousNodeId)
         } else {
             // Message is a duplicate, so we need to pause the neighbor
-            await this.options.plumTreeManager.pauseNeighbor(previousNode, message.messageId!.messageChainId)
+            await this.options.plumtreeManager.pauseNeighbor(previousNode, message.messageId!.messageChainId)
         }
         return Empty
     }

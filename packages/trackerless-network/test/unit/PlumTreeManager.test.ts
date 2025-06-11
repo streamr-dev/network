@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { NodeList } from '../../src/content-delivery-layer/NodeList'
-import { PlumTreeManager } from '../../src/content-delivery-layer/plum-tree/PlumTreeManager'
+import { PlumtreeManager } from '../../src/content-delivery-layer/plumtree/PlumtreeManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { StreamPartIDUtils, until, wait } from '@streamr/utils'
@@ -8,9 +8,9 @@ import { randomUserId } from '@streamr/test-utils'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../../src/content-delivery-layer/ContentDeliveryRpcRemote'
 
-describe('PlumTreeManager', () => {
+describe('PlumtreeManager', () => {
 
-    let manager: PlumTreeManager
+    let manager: PlumtreeManager
     let neighbors: NodeList
     let localPeerDescriptor: PeerDescriptor
     let rpcCommunicator: ListeningRpcCommunicator
@@ -19,7 +19,7 @@ describe('PlumTreeManager', () => {
         localPeerDescriptor = createMockPeerDescriptor()
         neighbors = new NodeList(toNodeId(localPeerDescriptor), 4)
         rpcCommunicator = new ListeningRpcCommunicator('plumtree', new MockTransport())
-        manager = new PlumTreeManager({
+        manager = new PlumtreeManager({
             neighbors,
             localPeerDescriptor,
             rpcCommunicator
