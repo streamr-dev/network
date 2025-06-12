@@ -65,6 +65,7 @@ export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './prot
 export type { DhtAddress } from '@streamr/dht'
 export { ContentType, EncryptedGroupKey, EncryptionType,
     ProxyDirection, SignatureType } from '@streamr/trackerless-network'
+export type { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 export type { 
     StreamID,
     StreamPartID,

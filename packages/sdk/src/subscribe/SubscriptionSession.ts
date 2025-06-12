@@ -12,6 +12,10 @@ import { Subscription } from './Subscription'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
+const getAnyItemFromSet = <T>(set: Set<T>): T | undefined => {
+    return set.values().next().value
+}
+
 export class SubscriptionSession {
 
     public readonly streamPartId: StreamPartID
@@ -102,7 +106,8 @@ export class SubscriptionSession {
     private async subscribe(): Promise<void> {
         this.node.addMessageListener(this.onMessageInput)
         if (!await this.node.isProxiedStreamPart(this.streamPartId)) {
-            await this.node.join(this.streamPartId)
+            const deliveryOptions = getAnyItemFromSet(this.subscriptions)!.deliveryOptions
+            await this.node.join(this.streamPartId, undefined, deliveryOptions)
         }
     }
 

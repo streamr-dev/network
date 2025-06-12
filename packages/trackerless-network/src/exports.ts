@@ -1,6 +1,6 @@
 export { NetworkNode, createNetworkNode } from './NetworkNode'
 export { type NetworkOptions, NetworkStack } from './NetworkStack'
-export { type ContentDeliveryManagerOptions, streamPartIdToDataKey } from './ContentDeliveryManager'
+export { type ContentDeliveryManagerOptions, type StreamPartDeliveryOptions, streamPartIdToDataKey } from './ContentDeliveryManager'
 export {
     AsymmetricEncryptionType,
     ContentType,

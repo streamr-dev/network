@@ -16,6 +16,7 @@ import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
+import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -87,7 +88,8 @@ export class Publisher {
     async publish(
         streamDefinition: StreamDefinition,
         content: unknown,
-        metadata?: PublishMetadata
+        metadata?: PublishMetadata,
+        deliveryOptions?: StreamPartDeliveryOptions
     ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
         /*
@@ -117,7 +119,7 @@ export class Publisher {
                     },
                     partition
                 )
-                await this.node.broadcast(message)
+                await this.node.broadcast(message, deliveryOptions)
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'
