@@ -11,6 +11,52 @@ Changes before Tatum release are not documented in this file.
 ### @streamr/sdk
 
 #### Added
+- Add support for using the plumtree optimisation in stream partitions in the SDK (https://github.com/streamr-dev/network/pull/3147)
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/node
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/cli-tools
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+
+## [103.0.0] - 2025-06-10
+
+### @streamr/sdk
+
+#### Added
 
 - Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
 - Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
@@ -18,7 +64,6 @@ Changes before Tatum release are not documented in this file.
 - Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
 - Add `peaq` environment (https://github.com/streamr-dev/network/pull/3111)
 - Add `iotex` environment (https://github.com/streamr-dev/network/pull/3142)
-- Add support for using the plumtree optimisation in stream partitions in the SDK (https://github.com/streamr-dev/network/pull/3147)
 
 #### Changed
 
@@ -44,23 +89,15 @@ Changes before Tatum release are not documented in this file.
 
 - Fix memory leak in `DhtNode` (https://github.com/streamr-dev/network/pull/3065)
 
-#### Security
-
 ### @streamr/node
 
 #### Added
 
+- Add experimental `autostaker` plugin that manages sponsorship staking and unstaking automatically for operators (https://github.com/streamr-dev/network/pull/3086)
+
 #### Changed
 
 - **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 ### @streamr/cli-tools
 
@@ -72,14 +109,6 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE**: CLI tool command `streamr wallet whoami` is now `streamr identity whoami` (https://github.com/streamr-dev/network/pull/3074)
 - **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 
 ## [102.1.1] - 2025-04-29
@@ -422,7 +451,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.0.0...HEAD
+[103.0.0]: https://github.com/streamr-dev/network/compare/v102.1.1...v103.0.0
 [102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
 [102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
 [102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
