@@ -12,6 +12,7 @@ program
     .command('sponsorship-create', 'create sponsorship')
     .command('sponsorship-sponsor', 'sponsor a sponsorship')
     .command('operator-create', 'create operator')
+    .command('operator-update', 'update operator')
     .command('operator-delegate', 'delegate funds to an operator')
     .command('operator-undelegate', 'undelegate funds from an operator')
     .command('operator-stake', 'stake operator\'s funds to a sponsorship')
