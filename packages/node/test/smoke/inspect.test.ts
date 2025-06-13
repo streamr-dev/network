@@ -251,7 +251,12 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            unstake(new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider, operator.contractAddress, PRE_BAKED_SPONSORSHIP)
+            unstake(
+                new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider,
+                operator.contractAddress,
+                PRE_BAKED_SPONSORSHIP,
+                STAKE_AMOUNT
+            )
         }
 
         startTimestamp = Date.now()

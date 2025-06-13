@@ -6,6 +6,7 @@ import { createTestClient, deployTestOperatorContract, deployTestSponsorshipCont
 
 const DELEGATION_AMOUNT = '20000'
 const STAKE_AMOUNT = '10000'
+const UNSTAKE_AMOUNT = '3000'
 const SELF_DELEGATION_AMOUNT = '100000'
 const MINIMUM_DELEGATION_SECONDS = 1  // the config value defined in StreamrEnvDeployer in network-contracts repo
 const EARNINGS_PER_SECOND = parseEther('1')
@@ -42,10 +43,10 @@ describe('operator', () => {
         expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT))
 
         // unstake
-        await runCommand(`internal operator-unstake ${operatorContractAddress} ${sponsorshipAddress}`, {
+        await runCommand(`internal operator-unstake ${operatorContractAddress} ${sponsorshipAddress} ${UNSTAKE_AMOUNT}`, {
             privateKey: operator.privateKey
         })
-        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(0n)
+        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT) - parseEther(UNSTAKE_AMOUNT))
 
         // undelegate
         await wait(MINIMUM_DELEGATION_SECONDS)
