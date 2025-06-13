@@ -3,7 +3,7 @@ import '../src/logLevel'
 
 import { EthereumAddress, StreamrClient, _operatorContractUtils } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
-import { createFnParseEthereumAddressList } from '../src/common'
+import { createFnParseEthereumAddressList, createFnParseInt } from '../src/common'
 
 interface Options extends BaseOptions {
     cut: number
@@ -28,7 +28,8 @@ createClientCommand(async (client: StreamrClient, options: Options) => {
 })
     .description('create operator')
     .requiredOption('-c, --cut <number>', 'Operator\'s cut in percentage')
-    .option('-r, --redundancy-factor <number>', 'Redundancy factor')
+    .option('-r, --redundancy-factor <number>', 'Redundancy factor',
+        createFnParseInt('--redundancy-factor'))
     .option('-n, --node-addresses <addresses>', 'Node addresses (comma separated list of Ethereum addresses)', 
         createFnParseEthereumAddressList('nodeAddresses'))
     .parseAsync()
