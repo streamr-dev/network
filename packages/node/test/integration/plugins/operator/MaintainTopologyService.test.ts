@@ -17,6 +17,7 @@ const {
     unstake
 } = _operatorContractUtils
 
+const STAKE_AMOUNT = parseEther('10000')
 const EARNINGS_PER_SECOND = parseEther('1')
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
@@ -113,7 +114,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), await stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), parseEther('10000'))
+        await stake(operatorWallet, await operatorContract.getAddress(), await sponsorship2.getAddress(), STAKE_AMOUNT)
         await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...await stream1.getStreamParts(),
@@ -121,7 +122,7 @@ describe('MaintainTopologyService', () => {
             ])
         }, 10000, 1000)
 
-        await unstake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress())
+        await unstake(operatorWallet, await operatorContract.getAddress(), await sponsorship1.getAddress(), STAKE_AMOUNT)
         await until(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, await stream2.getStreamParts()) && doesNotContainAny(state, await stream1.getStreamParts())
