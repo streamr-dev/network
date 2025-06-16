@@ -266,8 +266,8 @@ describe('inspect', () => {
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
             const operatorContractAddress = await getOperatorContractAddress(operator.privateKey)
-            const sponsorshipContractAddressess = await getSponsorshipAddresses(operatorContractAddress)
-            for (const sponsorshipContractAddress of sponsorshipContractAddressess) {
+            const sponsorshipContractAddresses = await getSponsorshipAddresses(operatorContractAddress)
+            for (const sponsorshipContractAddress of sponsorshipContractAddresses) {
                 const contract = getOperatorContract(operatorContractAddress).connect(getTestProvider())
                 const currentAmount = await contract.stakedInto(sponsorshipContractAddress)
                 unstake(
