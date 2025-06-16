@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
+import { OperatorFactoryABI, OperatorFactory as OperatorFactoryContract, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import {
     createTestPrivateKey,
@@ -9,7 +9,7 @@ import {
     getTestTokenContract,
     setupTestOperatorContract
 } from '@streamr/test-utils'
-import { Logger, multiplyWeiAmount, StreamID, TheGraphClient, until, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, multiplyWeiAmount, StreamID, TheGraphClient, toEthereumAddress, until, wait } from '@streamr/utils'
 import { Contract, parseEther, Wallet } from 'ethers'
 import { Broker, createBroker } from '../../src/broker'
 import { createClient, createTestStream, deployTestOperatorContract, deployTestSponsorshipContract, formConfig } from '../utils'
@@ -46,6 +46,7 @@ const {
     delegate,
     stake,
     unstake,
+    getOperatorContract
 } = _operatorContractUtils
 
 interface Operator {
@@ -68,15 +69,12 @@ const REVIEWER_REWARD_AMOUNT = parseEther('700')
 const FLAGGER_REWARD_AMOUNT = parseEther('900')
 const SLASHING_PERCENTAGE = 25
 
-// two operators and a sponsorship which have been created in dev-chain init
+// two operators which have been created in dev-chain init and have some stakes in pre-baked sponsorships
 const PRE_BAKED_OPERATORS = [{
-    contractAddress: '0x8ac1cee54b9133ab7fe5418c826be60a6353d95e',
     privateKey: '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 }, {
-    contractAddress: '0xb63c856cf861a88f4fa8587716fdc4e69cdf9ef1',
     privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
 }]
-const PRE_BAKED_SPONSORSHIP = '0x5fb705aeb6f9a84499c202fc02c33d6f249dc26a'
 
 const DEV_CHAIN_DEFAULT_MINING_INTERVAL = 1000  // hardhat config option in dev-chain
 
@@ -87,6 +85,22 @@ const createStream = async (): Promise<StreamID> => {
     const stream = await createTestStream(creator, module)
     await creator.destroy()
     return stream.id
+}
+
+const getOperatorContractAddress = async (privateKey: string): Promise<EthereumAddress> => {
+    const operatorFactory = new Contract(
+        CHAIN_CONFIG.dev2.contracts.OperatorFactory,
+        OperatorFactoryABI,
+        getTestProvider()
+    ) as unknown as OperatorFactoryContract
+    return toEthereumAddress(await operatorFactory.operators(new Wallet(privateKey).address))
+}
+
+const getSponsorshipAddresses = async (operatorContractAddress: EthereumAddress): Promise<string[]> => {
+    const client = createClient()
+    const ids = (await client.getOperator(operatorContractAddress).getSponsorships()).map((s) => s.sponsorshipAddress)
+    await client.destroy()
+    return ids
 }
 
 const createOperator = async (
@@ -251,12 +265,18 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            unstake(
-                new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider,
-                operator.contractAddress,
-                PRE_BAKED_SPONSORSHIP,
-                STAKE_AMOUNT
-            )
+            const operatorContractAddress = await getOperatorContractAddress(operator.privateKey)
+            const sponsorshipContractAddresses = await getSponsorshipAddresses(operatorContractAddress)
+            for (const sponsorshipContractAddress of sponsorshipContractAddresses) {
+                const contract = getOperatorContract(operatorContractAddress).connect(getTestProvider())
+                const currentAmount = await contract.stakedInto(sponsorshipContractAddress)
+                unstake(
+                    new Wallet(operator.privateKey, getTestProvider()) as SignerWithProvider,
+                    operatorContractAddress,
+                    sponsorshipContractAddress,
+                    currentAmount
+                )
+            }
         }
 
         startTimestamp = Date.now()
