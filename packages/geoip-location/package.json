@@ -34,7 +34,7 @@
     "@streamr/utils": "103.0.0",
     "eventemitter3": "^5.0.0",
     "long-timeout": "^0.1.1",
-    "mmdb-lib": "^3.0.0",
+    "mmdb-lib": "^3.0.1",
     "tar": "^7.4.3",
     "uuid": "^11.1.0"
   },
