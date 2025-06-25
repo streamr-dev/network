@@ -220,4 +220,8 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         return this
     }
+
+    async [Symbol.asyncDispose](): Promise<void> {
+        await this.cleanup()
+    }
 }
