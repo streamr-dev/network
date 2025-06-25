@@ -13,5 +13,5 @@ createClientCommand(async (client: StreamrClient, sponsorshipAddress: string, da
     )
 })
     .description('sponsor a stream')
-    .arguments('<sponsorshipAddress> <tokenAmount>')
+    .arguments('<sponsorshipAddress> <dataTokenAmount>')
     .parseAsync()

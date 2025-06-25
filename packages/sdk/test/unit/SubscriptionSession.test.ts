@@ -14,7 +14,7 @@ const ADDRESS_ONE = randomEthereumAddress()
 const ADDRESS_TWO = randomEthereumAddress()
 
 function createSubscription(erc1271contractAddress?: EthereumAddress): Subscription {
-    return new Subscription(STREAM_PART_ID, false, erc1271contractAddress, mock(), mock())
+    return new Subscription(STREAM_PART_ID, false, erc1271contractAddress, undefined, mock(), mock())
 }
 
 describe('SubscriptionSession', () => {

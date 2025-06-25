@@ -153,7 +153,7 @@ describe('profit', () => {
         })
         await broker.stop()
 
-        await unstake(operatorWallet, operatorContractAddress, await sponsorshipContract.getAddress())
+        await unstake(operatorWallet, operatorContractAddress, await sponsorshipContract.getAddress(), TOTAL_DELEGATED)
         await undelegate(
             delegatorWallet,
             operatorContractAddress,

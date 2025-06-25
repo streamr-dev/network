@@ -8,8 +8,8 @@ This tutorial will show you how to publish data into the Streamr Network from in
 
 **Prerequisites:**
 
--   NPM v8 or greater
--   NodeJS 18.x or greater (Ideally v20+)
+-   NPM v10 or greater
+-   Node.js 20.x or greater (Ideally v22+)
 -   MacOS/Linux environments (Windows environments may require minor adjustments)
 -   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 -   A MQTT library of your choice (this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt))
@@ -184,7 +184,7 @@ Just like you used the Streamr node's MQTT interface to publish data into the ne
 Once connected, you can listen for the `message` callback on the MQTT client. The first parameter will be the `StreamId` and the second parameter will contain the message JSON payload:
 
 ```ts
-// NodeJS example
+// Node.js example
 
 mqttClient.subscribe(StreamId)
 ...

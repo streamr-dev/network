@@ -2,12 +2,12 @@
 sidebar_position: 1
 ---
 
-# Pub/Sub in NodeJS
-This is a quickstart guide on creating your first stream using the Streamr TypeScript SDK in a NodeJS script.
+# Pub/Sub in Node.js
+This is a quickstart guide on creating your first stream using the Streamr TypeScript SDK in a Node.js script.
 
 **Prerequisites:**
--   NPM v8 or greater
--   NodeJS 18.13.x or greater (version 20 and later ideally)
+-   NPM v10 or greater
+-   Node.js 20.x or greater (version 22 and later ideally)
 -   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 :::tip Key Point:

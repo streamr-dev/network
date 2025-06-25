@@ -75,7 +75,7 @@ export interface ContentDeliveryManagerOptions {
 }
 
 export interface StreamPartDeliveryOptions {
-    plumTreeOptimisation?: boolean
+    plumtreeOptimization?: boolean
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -288,7 +288,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
             doNotBufferWhileConnecting: this.options.doNotBufferWhileConnecting,
-            plumTreeOptimisation: streamPartDeliveryOptions?.plumTreeOptimisation
+            plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization
         })
     }
 

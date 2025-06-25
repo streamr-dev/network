@@ -154,7 +154,10 @@ class IndexingState {
     }
 
     async waitUntilIndexed(blockNumber: number): Promise<void> {
-        this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
+        if (blockNumber <= this.blockNumber) {
+            return
+        }
+        this.logger.debug('Wait until The Graph is synchronized', { blockNumber: this.blockNumber, blockTarget: blockNumber })
         const gate = this.getOrCreateGate(blockNumber)
         try {
             await withTimeout(

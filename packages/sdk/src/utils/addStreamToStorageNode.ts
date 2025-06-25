@@ -36,6 +36,7 @@ export const addStreamToStorageNode = async (
                 streamPartId,
                 false,
                 undefined,
+                undefined,
                 new EventEmitter<SubscriptionEvents>(),
                 loggerFactory
             )

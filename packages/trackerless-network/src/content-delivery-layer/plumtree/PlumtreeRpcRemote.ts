@@ -1,8 +1,8 @@
 import { RpcRemote } from '@streamr/dht'
 import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { PlumTreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { PlumtreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
-export class PlumTreeRpcRemote extends RpcRemote<PlumTreeRpcClient> {
+export class PlumtreeRpcRemote extends RpcRemote<PlumtreeRpcClient> {
 
     async sendMetadata(msg: MessageID): Promise<void> {
         const options = this.formDhtRpcOptions({

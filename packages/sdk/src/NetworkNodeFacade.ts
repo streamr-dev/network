@@ -11,6 +11,7 @@ import {
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
+    StreamPartDeliveryOptions,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
 import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
@@ -32,9 +33,16 @@ export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
     removeMessageListener: (listener: (msg: NewStreamMessage) => void) => void
-    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    join: (
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        deliveryOptions?: StreamPartDeliveryOptions
+    ) => Promise<void>
     leave: (streamPartId: StreamPartID) => Promise<void>
-    broadcast: (streamMessage: NewStreamMessage) => Promise<void>
+    broadcast: (
+        streamMessage: NewStreamMessage,
+        deliveryOptions?: StreamPartDeliveryOptions
+    ) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: (streamPartId: StreamPartID) => readonly DhtAddress[]
     getPeerDescriptor: () => PeerDescriptor
@@ -214,9 +222,13 @@ export class NetworkNodeFacade {
         return node.getNodeId()
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+    async join(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        deliveryOptions?: StreamPartDeliveryOptions
+    ): Promise<void> {
         const node = await this.getNode()
-        await node.join(streamPartId, neighborRequirement)
+        await node.join(streamPartId, neighborRequirement, deliveryOptions)
     }
 
     async leave(streamPartId: StreamPartID): Promise<void> {
@@ -224,9 +236,9 @@ export class NetworkNodeFacade {
         await node.leave(streamPartId)
     }
 
-    async broadcast(msg: OldStreamMessage): Promise<void> {
+    async broadcast(msg: OldStreamMessage, deliveryOptions?: StreamPartDeliveryOptions): Promise<void> {
         const node = await this.getNode()
-        node.broadcast(StreamMessageTranslator.toProtobuf(msg))
+        node.broadcast(StreamMessageTranslator.toProtobuf(msg), deliveryOptions)
     }
 
     addMessageListener(listener: (msg: OldStreamMessage) => void): void {

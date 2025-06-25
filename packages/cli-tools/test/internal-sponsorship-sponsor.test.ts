@@ -3,6 +3,7 @@ import { parseEther } from 'ethers'
 import { createTestClient, deployTestSponsorshipContract, runCommand } from './utils'
 
 const SPONSOR_AMOUNT = '12345'
+const EARNINGS_PER_SECOND = parseEther('1')
 
 describe('sponsorship-sponsor', () => {
 
@@ -11,7 +12,8 @@ describe('sponsorship-sponsor', () => {
         const stream = await client.createStream('/test')
         const sponsorshipContract = await deployTestSponsorshipContract({ 
             streamId: stream.id,
-            deployer: await createTestWallet({ gas: true })
+            deployer: await createTestWallet({ gas: true }),
+            earningsPerSecond: EARNINGS_PER_SECOND
         })
 
         const sponsorer = await createTestWallet({ gas: true, tokens: true })

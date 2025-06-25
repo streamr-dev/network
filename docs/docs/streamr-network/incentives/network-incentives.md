@@ -54,6 +54,8 @@ After this, the operator will continue to operate the nodes and earn. When they 
 
 ## Technical description
 
+NOTE: Everything here is "good to know", but this isn't a developer guide. This is a description of the internal mechanics and token flows inside the contracts, on a relatively high level. Please refer to [the smart contracts document](../smart-contracts.md) for how to interact with the contracts.
+
 The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the staked Operators.
 
 Operator contracts are controlled by their operators. The DATA tokens held by the Operator contract are the funds that the controlling operator can `stake` into whichever Sponsorship contracts they like. By staking into a Sponsorship, the operator commits to servicing the sponsored stream.

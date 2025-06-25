@@ -27,6 +27,6 @@ describe('env command line option', () => {
             devEnvironment: false
         })
         expect(outputLines).toHaveLength(1)
-        expect(outputLines[0]).toEqual('env must be one of: "polygon", "polygonAmoy", "peaq", "dev2"')
+        expect(outputLines[0]).toEqual('env must be one of: "polygon", "polygonAmoy", "peaq", "iotex", "dev2"')
     }, 60 * 1000)
 })
