@@ -158,10 +158,11 @@ export const unstake = async (
     amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Unstake')
-    const contract = getOperatorContract(operatorContractAddress).connect(staker)
-    const currentAmount = await contract.stakedInto(sponsorshipContractAddress)
+    const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
+    const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(staker)
+    const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
-    await (await contract.reduceStakeTo(sponsorshipContractAddress, targetAmount)).wait()
+    await (await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount)).wait()
 }
 
 export const sponsor = async (
