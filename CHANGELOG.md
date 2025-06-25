@@ -11,9 +11,12 @@ Changes before Tatum release are not documented in this file.
 ### @streamr/sdk
 
 #### Added
+
 - Add support for using the plumtree optimization in stream partitions (https://github.com/streamr-dev/network/pull/3147)
 
 #### Changed
+
+- Optimize `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3132)
 
 #### Deprecated
 
