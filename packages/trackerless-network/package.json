@@ -50,7 +50,7 @@
     "@streamr/test-utils": "103.0.0",
     "@types/lodash": "^4.17.17",
     "@types/yallist": "^4.0.1",
-    "expect": "^29.6.2",
+    "expect": "^30.0.2",
     "ts-node": "^10.9.2"
   }
 }
