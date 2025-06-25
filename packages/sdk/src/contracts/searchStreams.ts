@@ -1,5 +1,5 @@
 import { ChangeFieldType, GraphQLQuery, HexString, TheGraphClient, toUserId, UserID } from '@streamr/utils'
-import { ChainPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission } from '../permission'
+import { PUBLIC_PERMISSION_USER_ID, StreamPermission } from '../permission'
 
 export interface SearchStreamsPermissionFilter {
     userId: HexString
@@ -16,7 +16,6 @@ export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStream
 export interface SearchStreamsResultItem {
     id: string
     metadata: string
-    permissions: ChainPermissions[]
 }
 
 export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPermissionFilter): InternalSearchStreamsPermissionFilter => {
