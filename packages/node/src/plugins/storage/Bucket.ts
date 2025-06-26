@@ -58,7 +58,7 @@ export class Bucket {
         }
 
         if (keepAliveSeconds <= 0) {
-            throw new Error('keepAliveSeconds must be > 0')
+            throw new TypeError('keepAliveSeconds must be > 0')
         }
 
         this.id = id
