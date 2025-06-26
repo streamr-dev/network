@@ -6,6 +6,7 @@ import partition from 'lodash/partition'
 import pull from 'lodash/pull'
 import sortBy from 'lodash/sortBy'
 import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './types'
+import { sum } from './sum'
 
 /**
  * Allocate stake in proportion to the payout each sponsorship gives.
@@ -40,10 +41,6 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  **/
 
 type TargetStake = [SponsorshipID, WeiAmount]
-
-const sum = (values: bigint[]): bigint =>{
-    return values.reduce((acc, value) => acc + value, 0n)
-}
 
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
