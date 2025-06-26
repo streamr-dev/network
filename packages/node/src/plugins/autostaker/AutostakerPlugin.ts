@@ -28,7 +28,7 @@ interface StakeQueryResultItem {
     sponsorship: {
         id: SponsorshipID
     }
-    amountWei: WeiAmount
+    amountWei: string
 }
 
 const logger = new Logger(module)
