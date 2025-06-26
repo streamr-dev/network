@@ -47,12 +47,12 @@ import { createClient, createTestStream, deployTestOperatorContract, deployTestS
 
 const INITIAL_DELEGATED_AMOUNT = parseEther('500000')
 const ADDITIONAL_DELEGATED_AMOUNT = parseEther('100000')
-const SPONSORSHIP_1_EARNINGS_PER_SECOND = parseEther('100')
-const SPONSORSHIP_1_SPONSOR_AMOUNT = parseEther('5000')
-const SPONSORSHIP_2_EARNINGS_PER_SECOND = parseEther('200')
-const SPONSORSHIP_2_SPONSOR_AMOUNT = parseEther('17000')
-const SPONSORSHIP_3_EARNINGS_PER_SECOND = parseEther('300')
-const SPONSORSHIP_3_SPONSOR_AMOUNT = parseEther('10000')
+const SPONSORSHIP_1_EARNINGS_PER_SECOND = parseEther('80')
+const SPONSORSHIP_1_SPONSOR_AMOUNT = parseEther('1500')
+const SPONSORSHIP_2_EARNINGS_PER_SECOND = parseEther('120')
+const SPONSORSHIP_2_SPONSOR_AMOUNT = parseEther('12000')
+const SPONSORSHIP_3_EARNINGS_PER_SECOND = parseEther('40')
+const SPONSORSHIP_3_SPONSOR_AMOUNT = parseEther('24000')
 const RUN_INTERVAL = 10 * 1000
 
 const logger = new Logger(module)
@@ -151,17 +151,24 @@ describe('autostaker', () => {
         }))
         await operatorNode.start()
 
+        let stakes: Map<SponsorshipID, WeiAmount> = new Map()
         await until(async () => {
-            const stakes = await getStakes(operatorContractAddress, theGraphClient)
+            stakes = await getStakes(operatorContractAddress, theGraphClient)
             return stakes.has(sponsorshipId1) && (stakes.has(sponsorshipId2))
         }, 60 * 1000, 1000)
         logger.info('Both sponsorships have been staked')
+        expect(stakes.size).toBe(2)
+        expect(stakes.get(sponsorshipId1)).toBe(parseEther('201000'))
+        expect(stakes.get(sponsorshipId2)).toBe(parseEther('299000'))
 
         await until(async () => {
-            const stakes = await getStakes(operatorContractAddress, theGraphClient)
+            stakes = await getStakes(operatorContractAddress, theGraphClient)
             return !stakes.has(sponsorshipId1)
         }, 5 * 60 * 1000, 1000)
         logger.info('Expired sponsorship1 has been unstaked')
+        expect(stakes.size).toBe(1)
+        expect(stakes.get(sponsorshipId1)).toBeUndefined()
+        expect(stakes.get(sponsorshipId2)).toBe(parseEther('500000'))
 
         const sponsorship3 = await deployTestSponsorshipContract({
             earningsPerSecond: SPONSORSHIP_3_EARNINGS_PER_SECOND,
@@ -170,21 +177,30 @@ describe('autostaker', () => {
         })
         const sponsorshipId3 = (await sponsorship3.getAddress()).toLowerCase()
         await _operatorContractUtils.sponsor(sponsorer, await sponsorship3.getAddress(), SPONSORSHIP_3_SPONSOR_AMOUNT)
+        logger.info(`Deployed sponsorship3: ${sponsorshipId3}`)
 
         await until(async () => {
-            const stakes = await getStakes(operatorContractAddress, theGraphClient)
+            stakes = await getStakes(operatorContractAddress, theGraphClient)
             return stakes.has(sponsorshipId3)
         }, 60 * 1000, 1000)
-        logger.info('New sponsorship3 have been staked')
+        logger.info('Sponsorship3 has been staked')
+        expect(stakes.size).toBe(2)
+        expect(stakes.get(sponsorshipId1)).toBeUndefined()
+        expect(stakes.get(sponsorshipId2)).toBe(parseEther('373568.75'))
+        expect(stakes.get(sponsorshipId3)).toBe(parseEther('127856.25'))
 
         const amountBeforeAdditionalDelegation = (await getStakes(operatorContractAddress, theGraphClient)).get(sponsorshipId3)!
         await _operatorContractUtils.delegate(operator, operatorContractAddress, ADDITIONAL_DELEGATED_AMOUNT)
         await until(async () => {
-            const stakes = await getStakes(operatorContractAddress, theGraphClient)
+            stakes = await getStakes(operatorContractAddress, theGraphClient)
             const amount = stakes.get(sponsorshipId3)!
             return amount > amountBeforeAdditionalDelegation
         }, 60 * 1000, 1000)
-        logger.info('Stakes has been increased in some sponsorships')
+        logger.info('Stakes have been increased in some sponsorships')
+        expect(stakes.size).toBe(2)
+        expect(stakes.get(sponsorshipId1)).toBeUndefined()
+        expect(stakes.get(sponsorshipId2)).toBe(parseEther('448568.75'))
+        expect(stakes.get(sponsorshipId3)).toBe(parseEther('152856.25'))
 
         await operatorNode.stop()
     }, 30 * 60 * 1000)
