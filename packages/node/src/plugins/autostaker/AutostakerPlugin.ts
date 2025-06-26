@@ -6,6 +6,7 @@ import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
 import { Action, SponsorshipConfig, SponsorshipID } from './types'
+import { sum } from './sum'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
@@ -87,7 +88,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             .connect(provider)
         const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
         const stakeableSponsorships = await this.getStakeableSponsorships(myCurrentStakes, streamrClient)
-        const myStakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
+        const myStakedAmount = sum([...myCurrentStakes.values()])
         const myUnstakedAmount = (await operatorContract.valueWithoutEarnings()) - myStakedAmount
         logger.debug('Analysis state', {
             stakeableSponsorships: [...stakeableSponsorships.entries()].map(([sponsorshipId, config]) => ({
