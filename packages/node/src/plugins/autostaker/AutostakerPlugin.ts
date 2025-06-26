@@ -135,7 +135,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 query: `
                     {
                         sponsorships (
-                            where:  {
+                            where: {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 minimumStakingPeriodSeconds: "0"
                                 minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
@@ -176,7 +176,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 query: `
                     {
                         stakes (
-                            where:  {
+                            where: {
                                 operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
                                 id_gt: "${lastId}"
                             },
