@@ -31,6 +31,11 @@ interface StakeQueryResultItem {
     amountWei: string
 }
 
+interface UndelegationQueueQueryResultItem {
+    id: string
+    amount: string
+}
+
 const logger = new Logger(module)
 
 // 1e12 wei, i.e. one millionth of one DATA token (we can tweak this later if needed)
@@ -88,6 +93,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             .connect(provider)
         const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
         const stakeableSponsorships = await this.getStakeableSponsorships(myCurrentStakes, streamrClient)
+        const undelegationQueueAmount = await this.getUndelegationQueueAmount(streamrClient)
         const myStakedAmount = sum([...myCurrentStakes.values()])
         const myUnstakedAmount = (await operatorContract.valueWithoutEarnings()) - myStakedAmount
         logger.debug('Analysis state', {
@@ -99,6 +105,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 sponsorshipId,
                 amount: formatEther(amount)
             })),
+            undelegationQueue: formatEther(undelegationQueueAmount),
             balance: {
                 unstaked: formatEther(myUnstakedAmount),
                 staked: formatEther(myStakedAmount)
@@ -108,6 +115,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             myCurrentStakes,
             myUnstakedAmount,
             stakeableSponsorships,
+            undelegationQueueAmount,
             operatorContractAddress: this.pluginConfig.operatorContractAddress,
             maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount,
             minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
@@ -194,6 +202,29 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
         const stakes = await collect(queryResult)
         return new Map(stakes.map((stake) => [stake.sponsorship.id, BigInt(stake.amountWei) ]))
+    }
+
+    private async getUndelegationQueueAmount(streamrClient: StreamrClient): Promise<WeiAmount> {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number) => {
+            return {
+                query: `
+                    {
+                        queueEntries (
+                             where:  {
+                                operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
+                                id_gt: "${lastId}"
+                            },
+                            first: ${pageSize}
+                        ) {
+                            id
+                            amount
+                        }
+                    }
+                `
+            }
+        })
+        const entries = await collect(queryResult)
+        return sum(entries.map((entry) => BigInt(entry.amount)))
     }
 
     async stop(): Promise<void> {

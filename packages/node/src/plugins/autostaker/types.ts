@@ -15,6 +15,7 @@ export type AdjustStakesFn = (opts: {
     myCurrentStakes: Map<SponsorshipID, WeiAmount>
     myUnstakedAmount: WeiAmount
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
+    undelegationQueueAmount: WeiAmount
     operatorContractAddress: string
     maxSponsorshipCount: number
     minTransactionAmount: WeiAmount
