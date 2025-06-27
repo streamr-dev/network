@@ -1,7 +1,8 @@
 import StreamrClient, { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
 import {
     createTestPrivateKey,
-    createTestWallet
+    createTestWallet,
+    setupTestOperatorContract
 } from '@streamr/test-utils'
 import { collect, Logger, StreamID, TheGraphClient, until, WeiAmount } from '@streamr/utils'
 import { parseEther, Wallet } from 'ethers'
@@ -109,13 +110,23 @@ describe('autostaker', () => {
 
     beforeAll(async () => {
         theGraphClient = new StreamrClient({ environment: 'dev2' }).getTheGraphClient()
-        operator = await createTestWallet({ gas: true, tokens: true })
-        const operatorContract = await deployTestOperatorContract({ deployer: operator })
-        operatorContractAddress = (await operatorContract.getAddress()).toLowerCase()
-        await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), INITIAL_DELEGATED_AMOUNT)
-        const operatorNodeWallet = await createTestWallet({ gas: true, tokens: true })
-        operatorNodePrivateKey = operatorNodeWallet.privateKey
-        await (await operatorContract.grantRole(await operatorContract.CONTROLLER_ROLE(), operatorNodeWallet.address)).wait()
+        const operatorContractSetupResult = await setupTestOperatorContract({
+            nodeCount: 1,
+            deployTestOperatorContract
+        })
+        operatorContractAddress = operatorContractSetupResult.operatorContractAddress.toLowerCase()
+        operator = operatorContractSetupResult.operatorWallet
+        operatorNodePrivateKey = operatorContractSetupResult.nodeWallets[0].privateKey
+        const operatorContract = _operatorContractUtils.getOperatorContract(operatorContractAddress).connect(operator)
+        await (await operatorContract.grantRole(
+            await operatorContract.CONTROLLER_ROLE(),
+            operatorContractSetupResult.nodeWallets[0].address)
+        ).wait()
+        await _operatorContractUtils.delegate(
+            operatorContractSetupResult.operatorWallet,
+            operatorContractAddress,
+            INITIAL_DELEGATED_AMOUNT
+        )
         sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship1 = await deployTestSponsorshipContract({
             earningsPerSecond: SPONSORSHIP_1_EARNINGS_PER_SECOND,
