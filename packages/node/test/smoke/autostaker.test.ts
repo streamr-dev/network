@@ -157,6 +157,10 @@ describe('autostaker', () => {
                 autostaker: {
                     operatorContractAddress,
                     runIntervalInMs: RUN_INTERVAL
+                },
+                // start operator plugin so that heartbeats are published for the fleet state leader analysis
+                operator: {
+                    operatorContractAddress
                 }
             }
         }))
