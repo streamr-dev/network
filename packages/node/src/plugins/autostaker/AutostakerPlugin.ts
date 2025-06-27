@@ -105,11 +105,8 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 sponsorshipId,
                 amount: formatEther(amount)
             })),
-            undelegationQueue: formatEther(undelegationQueueAmount),
-            balance: {
-                unstaked: formatEther(myUnstakedAmount),
-                staked: formatEther(myStakedAmount)
-            }
+            myUnstakedAmount: formatEther(myUnstakedAmount),
+            undelegationQueue: formatEther(undelegationQueueAmount)
         })
         const actions = adjustStakes({
             myCurrentStakes,
