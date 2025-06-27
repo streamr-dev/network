@@ -12,6 +12,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 4n }],
                 ['c', { payoutPerSec: 6n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -27,6 +28,7 @@ describe('payoutProportionalStrategy', () => {
             myUnstakedAmount: 1000n,
             myCurrentStakes: new Map([[ 'a', 2000n ]]),
             stakeableSponsorships: new Map(),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -45,6 +47,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }],
                 ['c', { payoutPerSec: 30n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -65,6 +68,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }], // included
                 ['c', { payoutPerSec: 30n }], // included
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 2,
             minTransactionAmount: 0n,
@@ -84,6 +88,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 20n }], // not included
                 ['c', { payoutPerSec: 30n }], // included
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -98,6 +103,7 @@ describe('payoutProportionalStrategy', () => {
             myUnstakedAmount: 100n,
             myCurrentStakes: new Map(),
             stakeableSponsorships: new Map([['a', { payoutPerSec: 10n }]]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -119,6 +125,7 @@ describe('payoutProportionalStrategy', () => {
                 ['c', { payoutPerSec: 20n }], // stake here
                 ['d', { payoutPerSec: 10n }], // stake here
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -139,6 +146,7 @@ describe('payoutProportionalStrategy', () => {
             stakeableSponsorships: new Map([
                 ['a', { payoutPerSec: 10n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -161,6 +169,7 @@ describe('payoutProportionalStrategy', () => {
                 ['a', { payoutPerSec: 10n }],
                 ['b', { payoutPerSec: 10n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -181,6 +190,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 100n }],
                 ['c', { payoutPerSec: 400n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -205,6 +215,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 100n }],
                 ['c', { payoutPerSec: 400n }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -221,6 +232,7 @@ describe('payoutProportionalStrategy', () => {
                 ['b', { payoutPerSec: 4n * BigInt(Number.MAX_SAFE_INTEGER) }],
                 ['c', { payoutPerSec: 2n * BigInt(Number.MAX_SAFE_INTEGER) }],
             ]),
+            undelegationQueueAmount: 0n,
             operatorContractAddress: '',
             maxSponsorshipCount: 100,
             minTransactionAmount: 0n,
@@ -238,6 +250,7 @@ describe('payoutProportionalStrategy', () => {
                     ['a', { payoutPerSec: 100n }],
                     ['b', { payoutPerSec: 100n }],
                 ]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress,
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 0n,
@@ -253,6 +266,28 @@ describe('payoutProportionalStrategy', () => {
         expect(stakesForOperator1[0].sponsorshipId).toEqual(stakesForOperator1_rerun[0].sponsorshipId)
     })
 
+    it('undelegation queue', () => {
+        expect(adjustStakes({
+            myUnstakedAmount: 500n,
+            myCurrentStakes: new Map([
+                ['a', 2000n ],
+                ['b', 3000n ]
+            ]),
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 20n }],
+                ['b', { payoutPerSec: 30n }]
+            ]),
+            undelegationQueueAmount: 1100n,
+            operatorContractAddress: '',
+            maxSponsorshipCount: 100,
+            minTransactionAmount: 0n,
+            minStakePerSponsorship: 100n
+        })).toIncludeSameMembers([
+            { type: 'unstake', sponsorshipId: 'a', amount: 220n },
+            { type: 'unstake', sponsorshipId: 'b', amount: 380n }
+        ])
+    })
+
     describe('exclude small transactions', () => {
         it('exclude small stakings', () => {
             expect(adjustStakes({
@@ -263,6 +298,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', { payoutPerSec: 20n }],
                     ['c', { payoutPerSec: 1000n }]
                 ]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 20n,
@@ -283,6 +319,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', { payoutPerSec: 100n }],
                     ['c', { payoutPerSec: 400n }],
                 ]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 20n,
@@ -307,6 +344,7 @@ describe('payoutProportionalStrategy', () => {
                     ['d', { payoutPerSec: 220n }],
                     ['e', { payoutPerSec: 230n }]
                 ]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
@@ -332,6 +370,7 @@ describe('payoutProportionalStrategy', () => {
                     ['d', { payoutPerSec: 220n }],
                     ['e', { payoutPerSec: 230n }]
                 ]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
@@ -347,6 +386,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', 1000n]
                 ]),
                 stakeableSponsorships: new Map([]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
@@ -365,6 +405,7 @@ describe('payoutProportionalStrategy', () => {
                     ['b', 20n]
                 ]),
                 stakeableSponsorships: new Map([]),
+                undelegationQueueAmount: 0n,
                 operatorContractAddress: '',
                 maxSponsorshipCount: 100,
                 minTransactionAmount: 50n,
