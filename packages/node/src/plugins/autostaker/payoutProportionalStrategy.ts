@@ -6,6 +6,7 @@ import partition from 'lodash/partition'
 import pull from 'lodash/pull'
 import sortBy from 'lodash/sortBy'
 import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './types'
+import { sum } from './sum'
 
 /**
  * Allocate stake in proportion to the payout each sponsorship gives.
@@ -40,10 +41,6 @@ import { Action, AdjustStakesFn, SponsorshipConfig, SponsorshipID } from './type
  **/
 
 type TargetStake = [SponsorshipID, WeiAmount]
-
-const sum = (values: bigint[]): bigint =>{
-    return values.reduce((acc, value) => acc + value, 0n)
-}
 
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
@@ -98,11 +95,12 @@ const getTargetStakes = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     myUnstakedAmount: WeiAmount,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>,
+    undelegationQueueAmount: WeiAmount,
     operatorContractAddress: string,
     maxSponsorshipCount: number,
     minStakePerSponsorship: WeiAmount
 ): Map<SponsorshipID, WeiAmount> => {
-    const totalStakeableAmount = sum([...myCurrentStakes.values()]) + myUnstakedAmount
+    const totalStakeableAmount = sum([...myCurrentStakes.values()]) + myUnstakedAmount - undelegationQueueAmount
     const selectedSponsorships = getSelectedSponsorships(
         myCurrentStakes,
         stakeableSponsorships,
@@ -133,6 +131,7 @@ export const adjustStakes: AdjustStakesFn = ({
     myCurrentStakes,
     myUnstakedAmount,
     stakeableSponsorships,
+    undelegationQueueAmount,
     operatorContractAddress,
     maxSponsorshipCount,
     minTransactionAmount,
@@ -143,6 +142,7 @@ export const adjustStakes: AdjustStakesFn = ({
         myCurrentStakes,
         myUnstakedAmount,
         stakeableSponsorships,
+        undelegationQueueAmount,
         operatorContractAddress,
         maxSponsorshipCount,
         minStakePerSponsorship
@@ -155,11 +155,13 @@ export const adjustStakes: AdjustStakesFn = ({
         }))
         .filter(({ difference: difference }) => difference !== 0n)
 
-    // fix rounding errors by forcing the net staking to equal myUnstakedAmount: adjust the largest staking
+    const targetAdjustmentDifference = myUnstakedAmount - undelegationQueueAmount
+
+    // fix rounding errors by forcing the net staking to equal myUnstakedAndUndelegationQueueAmount: adjust the largest staking
     const netStakingAmount = sum(adjustments.map((a) => a.difference))
-    if (netStakingAmount !== myUnstakedAmount && stakeableSponsorships.size > 0 && adjustments.length > 0) {
+    if (netStakingAmount !== targetAdjustmentDifference && stakeableSponsorships.size > 0 && adjustments.length > 0) {
         const largestDifference = maxBy(adjustments, (a) => a.difference)!
-        largestDifference.difference += myUnstakedAmount - netStakingAmount
+        largestDifference.difference += targetAdjustmentDifference - netStakingAmount
         if (largestDifference.difference === 0n) {
             pull(adjustments, largestDifference)
         }
@@ -175,7 +177,7 @@ export const adjustStakes: AdjustStakesFn = ({
             const stakings = adjustments.filter((a) => a.difference > 0)
             const unstakings = adjustments.filter((a) => a.difference < 0)
             const stakingSum = sum(stakings.map((a) => a.difference))
-            const availableSum = abs(sum(unstakings.map((a) => a.difference))) + myUnstakedAmount
+            const availableSum = abs(sum(unstakings.map((a) => a.difference))) + targetAdjustmentDifference
             if (stakingSum > availableSum) {
                 const smallestStaking = minBy(stakings, (a) => a.difference)!
                 pull(adjustments, smallestStaking)
