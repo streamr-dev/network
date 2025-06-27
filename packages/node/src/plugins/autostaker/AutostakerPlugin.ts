@@ -1,11 +1,14 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, WeiAmount } from '@streamr/utils'
+import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
 import { Action, SponsorshipConfig, SponsorshipID } from './types'
+import { formCoordinationStreamId } from '../operator/formCoordinationStreamId'
+import { OperatorFleetState } from '../operator/OperatorFleetState'
+import { createIsLeaderFn } from '../operator/createIsLeaderFn'
 import { sum } from './sum'
 
 export interface AutostakerPluginConfig {
@@ -14,6 +17,13 @@ export interface AutostakerPluginConfig {
     minTransactionDataTokenAmount: number
     maxAcceptableMinOperatorCount: number
     runIntervalInMs: number
+    fleetState: {
+        heartbeatUpdateIntervalInMs: number
+        pruneAgeInMs: number
+        pruneIntervalInMs: number
+        latencyExtraInMs: number
+        warmupPeriodInMs: number
+    }
 }
 
 interface SponsorshipQueryResultItem {
@@ -77,9 +87,23 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     async start(streamrClient: StreamrClient): Promise<void> {
         logger.info('Start autostaker plugin')
         const minStakePerSponsorship = await fetchMinStakePerSponsorship(streamrClient.getTheGraphClient())
+        const fleetState = new OperatorFleetState(
+            streamrClient,
+            formCoordinationStreamId(toEthereumAddress(this.pluginConfig.operatorContractAddress)),
+            this.pluginConfig.fleetState.heartbeatUpdateIntervalInMs,
+            this.pluginConfig.fleetState.pruneAgeInMs,
+            this.pluginConfig.fleetState.pruneIntervalInMs,
+            this.pluginConfig.fleetState.latencyExtraInMs,
+            this.pluginConfig.fleetState.warmupPeriodInMs
+        )
+        await fleetState.start()
+        await fleetState.waitUntilReady()
+        const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
         scheduleAtApproximateInterval(async () => {
             try {
-                await this.runActions(streamrClient, minStakePerSponsorship)
+                if (isLeader()) {
+                    await this.runActions(streamrClient, minStakePerSponsorship)
+                }
             } catch (err) {
                 logger.warn('Error while running autostaker actions', { err })
             }

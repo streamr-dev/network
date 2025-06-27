@@ -2,6 +2,7 @@ import StreamrClient, { _operatorContractUtils, SignerWithProvider } from '@stre
 import {
     createTestPrivateKey,
     createTestWallet,
+    setupTestOperatorContract,
     getTestProvider,
     getTestTokenContract
 } from '@streamr/test-utils'
@@ -124,14 +125,24 @@ describe('autostaker', () => {
 
     beforeAll(async () => {
         theGraphClient = new StreamrClient({ environment: 'dev2' }).getTheGraphClient()
-        operator = await createTestWallet({ gas: true, tokens: true })
+        const operatorContractSetupResult = await setupTestOperatorContract({
+            nodeCount: 1,
+            deployTestOperatorContract
+        })
+        operatorContractAddress = operatorContractSetupResult.operatorContractAddress.toLowerCase()
+        operator = operatorContractSetupResult.operatorWallet
+        operatorNodePrivateKey = operatorContractSetupResult.nodeWallets[0].privateKey
+        const operatorContract = _operatorContractUtils.getOperatorContract(operatorContractAddress).connect(operator)
+        await (await operatorContract.grantRole(
+            await operatorContract.CONTROLLER_ROLE(),
+            operatorContractSetupResult.nodeWallets[0].address)
+        ).wait()
+        await _operatorContractUtils.delegate(
+            operatorContractSetupResult.operatorWallet,
+            operatorContractAddress,
+            INITIAL_DELEGATED_AMOUNT
+        )
         delegator = await createTestWallet({ gas: true, tokens: true })
-        const operatorContract = await deployTestOperatorContract({ deployer: operator })
-        operatorContractAddress = (await operatorContract.getAddress()).toLowerCase()
-        await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), INITIAL_DELEGATED_AMOUNT)
-        const operatorNodeWallet = await createTestWallet({ gas: true, tokens: true })
-        operatorNodePrivateKey = operatorNodeWallet.privateKey
-        await (await operatorContract.grantRole(await operatorContract.CONTROLLER_ROLE(), operatorNodeWallet.address)).wait()
         sponsorer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship1 = await deployTestSponsorshipContract({
             earningsPerSecond: SPONSORSHIP_1_EARNINGS_PER_SECOND,
@@ -163,6 +174,10 @@ describe('autostaker', () => {
                 autostaker: {
                     operatorContractAddress,
                     runIntervalInMs: RUN_INTERVAL
+                },
+                // start operator plugin so that heartbeats are published for the fleet state leader analysis
+                operator: {
+                    operatorContractAddress
                 }
             }
         }))
