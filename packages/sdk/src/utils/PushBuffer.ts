@@ -214,6 +214,11 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
         return this
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    async [Symbol.asyncDispose](): Promise<void> {
+        this.end()
+    }
 }
 
 /**
