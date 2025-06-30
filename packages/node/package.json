@@ -38,7 +38,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@inquirer/prompts": "^7.5.3",
-    "@streamr/config": "^5.8.0",
+    "@streamr/config": "^5.9.0",
     "@streamr/dht": "103.0.0",
     "@streamr/sdk": "103.0.0",
     "@streamr/utils": "103.0.0",
@@ -59,8 +59,8 @@
     "p-limit": "^3.1.0",
     "qs": "^6.14.0",
     "uuid": "^11.1.0",
-    "ws": "^8.18.2",
-    "zod": "^3.25.56"
+    "ws": "^8.18.3",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.47",
@@ -69,7 +69,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.17.17",
+    "@types/lodash": "^4.17.19",
     "@types/merge2": "^1.4.4",
     "@types/qs": "^6.14.0",
     "@types/stream-to-array": "^2.3.3",
