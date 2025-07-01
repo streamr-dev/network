@@ -1,6 +1,5 @@
 import { WeiAmount } from '@streamr/utils'
 import crypto from 'crypto'
-import maxBy from 'lodash/maxBy'
 import minBy from 'lodash/minBy'
 import partition from 'lodash/partition'
 import pull from 'lodash/pull'
@@ -155,35 +154,27 @@ export const adjustStakes: AdjustStakesFn = ({
         }))
         .filter(({ difference: difference }) => difference !== 0n)
 
-    const targetAdjustmentDifference = myUnstakedAmount - undelegationQueueAmount
-
-    // fix rounding errors by forcing the net staking to equal myUnstakedAndUndelegationQueueAmount: adjust the largest staking
-    const netStakingAmount = sum(adjustments.map((a) => a.difference))
-    if (netStakingAmount !== targetAdjustmentDifference && stakeableSponsorships.size > 0 && adjustments.length > 0) {
-        const largestDifference = maxBy(adjustments, (a) => a.difference)!
-        largestDifference.difference += targetAdjustmentDifference - netStakingAmount
-        if (largestDifference.difference === 0n) {
-            pull(adjustments, largestDifference)
-        }
-    }
-
     const tooSmallAdjustments = adjustments.filter(
         // note the edge case: expired sponsorships can be unstaked, even if the transaction amount is considered "too small"
         (a) => (abs(a.difference) < minTransactionAmount) && stakeableSponsorships.has(a.sponsorshipId)
     )
-    if (tooSmallAdjustments.length > 0) {
-        pull(adjustments, ...tooSmallAdjustments)
-        while (true) {
-            const stakings = adjustments.filter((a) => a.difference > 0)
-            const unstakings = adjustments.filter((a) => a.difference < 0)
-            const stakingSum = sum(stakings.map((a) => a.difference))
-            const availableSum = abs(sum(unstakings.map((a) => a.difference))) + targetAdjustmentDifference
-            if (stakingSum > availableSum) {
-                const smallestStaking = minBy(stakings, (a) => a.difference)!
-                pull(adjustments, smallestStaking)
+    pull(adjustments, ...tooSmallAdjustments)
+    while (true) {
+        const stakings = adjustments.filter((a) => a.difference > 0)
+        const unstakings = adjustments.filter((a) => a.difference < 0)
+        const stakingSum = sum(stakings.map((a) => a.difference))
+        const availableSum = abs(sum(unstakings.map((a) => a.difference))) + myUnstakedAmount - undelegationQueueAmount
+        if (stakingSum > availableSum && stakings.length > 0) {
+            const smallestStaking = minBy(stakings, (a) => a.difference)!
+            const newDifference = smallestStaking.difference - (stakingSum - availableSum)
+            const hasAlreadyStaked = myCurrentStakes.has(smallestStaking.sponsorshipId)
+            if (newDifference >= minTransactionAmount && (hasAlreadyStaked || newDifference >= minStakePerSponsorship)) {
+                smallestStaking.difference = newDifference
             } else {
-                break
+                pull(adjustments, smallestStaking)
             }
+        } else {
+            break
         }
     }
 
