@@ -373,4 +373,21 @@ describe('payoutProportionalStrategy', () => {
             ])
         })
     })
+
+    it('not enough to stake (below minStakePerSponsorship) after undelegation queue is handled', () => {
+        expect(adjustStakes({
+            myUnstakedAmount: 1000n,
+            myCurrentStakes: new Map([
+                ['a', 4000n]
+            ]),
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 10n }]
+            ]),
+            undelegationQueueAmount: 4900n,
+            operatorContractAddress: '',
+            maxSponsorshipCount: 100,
+            minTransactionAmount: 50n,
+            minStakePerSponsorship: 500n
+        })).toIncludeSameMembers([])
+    })
 })
