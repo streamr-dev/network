@@ -1,6 +1,5 @@
 import { WeiAmount } from '@streamr/utils'
 import crypto from 'crypto'
-import maxBy from 'lodash/maxBy'
 import minBy from 'lodash/minBy'
 import partition from 'lodash/partition'
 import pull from 'lodash/pull'
