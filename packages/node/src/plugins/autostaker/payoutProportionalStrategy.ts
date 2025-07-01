@@ -165,7 +165,7 @@ export const adjustStakes: AdjustStakesFn = ({
         const unstakings = adjustments.filter((a) => a.difference < 0)
         const stakingSum = sum(stakings.map((a) => a.difference))
         const availableSum = abs(sum(unstakings.map((a) => a.difference))) + myUnstakedAmount - undelegationQueueAmount
-        if (stakingSum > availableSum) {
+        if (stakingSum > availableSum && stakings.length > 0) {
             const smallestStaking = minBy(stakings, (a) => a.difference)!
             const newDifference = smallestStaking.difference - (stakingSum - availableSum)
             const hasAlreadyStaked = myCurrentStakes.has(smallestStaking.sponsorshipId)
