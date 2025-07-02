@@ -111,7 +111,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
-        logger.info('Run autostaker analysis')
+        logger.info('Run analysis')
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
@@ -141,6 +141,16 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount,
             minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
             minStakePerSponsorship
+        })
+        if (actions.length === 0) {
+            logger.info('Analysis done, no actions to execute')
+            return
+        }
+        logger.info('Analysis done, proceeding to execute plan', {
+            actions: actions.map((a) => ({
+                ...a,
+                amount: formatEther(a.amount)
+            }))
         })
         const signer = await streamrClient.getSigner()
         for (const action of actions) {
