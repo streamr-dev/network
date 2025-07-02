@@ -146,7 +146,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             logger.info('Analysis done, no actions to execute')
             return
         }
-        logger.info('Analysis done, proceeding to execute plan', {
+        logger.info(`Analysis done, proceeding to execute plan with ${actions.length} actions`, {
             actions: actions.map((a) => ({
                 ...a,
                 amount: formatEther(a.amount)
