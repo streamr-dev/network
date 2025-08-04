@@ -26,18 +26,18 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@noble/curves": "^1.9.2",
+    "@noble/curves": "^1.9.6",
     "@noble/post-quantum": "^0.4.1",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "pino": "^9.7.0",
-    "pino-pretty": "^13.0.0",
+    "pino-pretty": "^13.1.1",
     "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.17.17",
+    "@types/lodash": "^4.17.20",
     "@types/secp256k1": "^4.0.6"
   }
 }

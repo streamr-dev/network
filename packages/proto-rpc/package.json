@@ -40,7 +40,7 @@
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.1.0-rc.0",
-    "@types/lodash": "^4.17.17"
+    "@types/lodash": "^4.17.20"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
