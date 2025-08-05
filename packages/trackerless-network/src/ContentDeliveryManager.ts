@@ -75,7 +75,7 @@ export interface ContentDeliveryManagerOptions {
 }
 
 type PlumtreeOptions = {
-    enabled: true,
+    enabled: true
     maxPausedNeighbors?: number
 } | {
     enabled: false

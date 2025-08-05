@@ -63,7 +63,8 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
         isLocalNodeEntryPoint: () => false,
-        plumtreeOptimization
+        plumtreeOptimization,
+        plumtreeMaxPausedNeighbors
     })
     return [discoveryLayerNode, contentDeliveryLayerNode]
 }
