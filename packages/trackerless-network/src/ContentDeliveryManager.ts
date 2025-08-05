@@ -74,8 +74,14 @@ export interface ContentDeliveryManagerOptions {
     doNotBufferWhileConnecting?: boolean
 }
 
+type PlumtreeOptions = {
+    enabled: true,
+    maxPausedNeighbors?: number
+} | {
+    enabled: false
+}
 export interface StreamPartDeliveryOptions {
-    plumtreeOptimization?: boolean
+    plumtreeOptimization?: PlumtreeOptions
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -288,7 +294,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
             doNotBufferWhileConnecting: this.options.doNotBufferWhileConnecting,
-            plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization
+            plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization?.enabled,
+            plumtreeMaxPausedNeighbors: 
+                streamPartDeliveryOptions?.plumtreeOptimization?.enabled === true ? 
+                    streamPartDeliveryOptions?.plumtreeOptimization?.maxPausedNeighbors : undefined
         })
     }
 

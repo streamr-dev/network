@@ -27,7 +27,8 @@ describe('Propagation', () => {
             entryPointDescriptor,
             STREAM_PART_ID,
             simulator,
-            true
+            true,
+            2
         )
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
@@ -45,7 +46,9 @@ describe('Propagation', () => {
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator,
-                true
+                true,
+                2
+                
             )
             await layer1.start()
             await contentDeliveryLayerNode.start()
@@ -119,7 +122,8 @@ describe('Propagation', () => {
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator,
-                true
+                true,
+                2
             )
             await layer1.start()
             await contentDeliveryLayerNode.start()
