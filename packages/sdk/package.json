@@ -59,7 +59,7 @@
     "@babel/plugin-transform-runtime": "^7.28.0",
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-typescript": "^7.27.1",
-    "@jest/globals": "^30.0.5",
+    "@jest/globals": "^29.7.0",
     "@streamr/test-utils": "103.1.0-rc.0",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.20",
