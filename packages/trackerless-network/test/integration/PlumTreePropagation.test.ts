@@ -70,15 +70,7 @@ describe('Propagation', () => {
     })
 
     it('All nodes receive messages', async () => {
-        await until(
-            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
-        )
-        await until(() => {
-            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
-                return acc + curr.getNeighbors().length
-            }, 0) / contentDeliveryLayerNodes.length
-            return avg >= 4
-        }, 20000)
+        await until(() => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 4), 20000)
 
         const numberOfPublishedMessages = 25
         const publisher = randomUserId()
@@ -94,15 +86,7 @@ describe('Propagation', () => {
     }, 90000)
 
     it('Works after new nodes join', async () => {
-        await until(
-            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
-        )
-        await until(() => {
-            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
-                return acc + curr.getNeighbors().length
-            }, 0) / contentDeliveryLayerNodes.length
-            return avg >= 4
-        }, 20000)
+        await until(() => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 4), 20000)
 
         const publisher = randomUserId()
         for (let i = 1; i < 5; i++) {
@@ -148,15 +132,7 @@ describe('Propagation', () => {
     }, 90000)
 
     it('Multiple publishers', async () => {
-        await until(
-            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 60000
-        )
-        await until(() => {
-            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
-                return acc + curr.getNeighbors().length
-            }, 0) / contentDeliveryLayerNodes.length
-            return avg >= 4
-        }, 20000)
+        await until(() => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 4), 20000)
 
         const publisher1 = randomUserId()
         for (let i = 1; i < 5; i++) {
