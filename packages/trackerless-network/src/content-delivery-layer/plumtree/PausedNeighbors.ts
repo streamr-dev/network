@@ -45,6 +45,10 @@ export class PausedNeighbors {
         this.pausedNeighbors.forEach((neighbors, msgChainId) => {
             fn(neighbors, msgChainId)
         })
-    }   
+    }
+
+    size(msgChainId: string): number {
+        return this.pausedNeighbors.get(msgChainId)?.size ?? 0
+    }
     
 }
