@@ -13,7 +13,7 @@ const testIp = '128.214.222.50'
 
 // Helsinki, Finland
 const testLatitude = 60.1719
-const testLongitude = 24.9347
+const testLongitude = 25.1127
 
 const dbPath = '/tmp/geoipdatabasesintegration'
 
