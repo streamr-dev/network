@@ -13,7 +13,7 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const INITIAL_NODE_COUNT = 32
+    const INITIAL_NODE_COUNT = 64
     const NEW_NODE_COUNT = 16
     const MAX_PAUSED_NEIGHBORS = 2
     let simulator: Simulator
@@ -155,5 +155,5 @@ describe('Propagation', () => {
             contentDeliveryLayerNodes[0].broadcast(msg)
             await until(() => totalReceived >= INITIAL_NODE_COUNT * i, 10000)
         }
-    })
+    }, 30000)
 })
