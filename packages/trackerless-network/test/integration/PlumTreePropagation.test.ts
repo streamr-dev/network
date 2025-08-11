@@ -13,8 +13,9 @@ describe('Propagation', () => {
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
-    const INITIAL_NODE_COUNT = 8
-    const NEW_NODE_COUNT = 8
+    const INITIAL_NODE_COUNT = 32
+    const NEW_NODE_COUNT = 16
+    const MAX_PAUSED_NEIGHBORS = 2
     let simulator: Simulator
 
     beforeEach(async () => {
@@ -27,7 +28,8 @@ describe('Propagation', () => {
             entryPointDescriptor,
             STREAM_PART_ID,
             simulator,
-            true
+            true,
+            MAX_PAUSED_NEIGHBORS
         )
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
@@ -45,7 +47,9 @@ describe('Propagation', () => {
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator,
-                true
+                true,
+                MAX_PAUSED_NEIGHBORS
+                
             )
             await layer1.start()
             await contentDeliveryLayerNode.start()
@@ -119,7 +123,8 @@ describe('Propagation', () => {
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator,
-                true
+                true,
+                MAX_PAUSED_NEIGHBORS
             )
             await layer1.start()
             await contentDeliveryLayerNode.start()

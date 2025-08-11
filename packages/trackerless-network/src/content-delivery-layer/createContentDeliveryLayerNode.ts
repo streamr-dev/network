@@ -36,6 +36,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         maxPropagationBufferSize?: number
         doNotBufferWhileConnecting?: boolean
         plumtreeOptimization?: boolean
+        plumtreeMaxPausedNeighbors?: number
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
@@ -71,7 +72,8 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     const plumtreeManager = options.plumtreeOptimization ? new PlumtreeManager({
         neighbors,
         localPeerDescriptor: options.localPeerDescriptor,
-        rpcCommunicator
+        rpcCommunicator,
+        maxPausedNeighbors: options.plumtreeMaxPausedNeighbors
     }) : undefined
     const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,

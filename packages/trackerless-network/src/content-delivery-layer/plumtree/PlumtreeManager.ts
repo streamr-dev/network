@@ -18,6 +18,7 @@ interface Options {
     neighbors: NodeList
     localPeerDescriptor: PeerDescriptor
     rpcCommunicator: ListeningRpcCommunicator
+    maxPausedNeighbors?: number
 }
 
 export const MAX_PAUSED_NEIGHBORS_DEFAULT = 3
@@ -31,9 +32,9 @@ export class PlumtreeManager extends EventEmitter<Events> {
     private readonly neighbors: NodeList
     private readonly localPeerDescriptor: PeerDescriptor
     // We have paused sending real data to these neighbrs and only send metadata
-    private readonly localPausedNeighbors: PausedNeighbors = new PausedNeighbors(MAX_PAUSED_NEIGHBORS_DEFAULT)
+    private readonly localPausedNeighbors: PausedNeighbors
     // We have asked these nodes to pause sending real data to us, used to limit sending of pausing and resuming requests
-    private readonly remotePausedNeighbors: PausedNeighbors = new PausedNeighbors(MAX_PAUSED_NEIGHBORS_DEFAULT)
+    private readonly remotePausedNeighbors: PausedNeighbors
     private readonly rpcLocal: PlumtreeRpcLocal
     private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -43,6 +44,8 @@ export class PlumtreeManager extends EventEmitter<Events> {
         super()
         this.neighbors = options.neighbors
         this.localPeerDescriptor = options.localPeerDescriptor
+        this.localPausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
+        this.remotePausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
         this.rpcLocal = new PlumtreeRpcLocal(
             this.neighbors,
             this.localPausedNeighbors,
