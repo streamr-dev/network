@@ -45,8 +45,8 @@ export class PlumtreeManager extends EventEmitter<Events> {
         this.neighbors = options.neighbors
         this.maxPausedNeighbors = options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT
         this.localPeerDescriptor = options.localPeerDescriptor
-        this.localPausedNeighbors = new PausedNeighbors(this.maxPausedNeighbors)
-        this.remotePausedNeighbors = new PausedNeighbors(this.maxPausedNeighbors)
+        this.localPausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
+        this.remotePausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
         this.rpcLocal = new PlumtreeRpcLocal(
             this.neighbors,
             this.localPausedNeighbors,
