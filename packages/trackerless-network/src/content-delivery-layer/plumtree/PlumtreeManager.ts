@@ -39,10 +39,11 @@ export class PlumtreeManager extends EventEmitter<Events> {
     private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly metadataTimestampsAheadOfRealData: Map<string, Set<number>> = new Map()
-
+    private readonly maxPausedNeighbors: number
     constructor(options: Options) {
         super()
         this.neighbors = options.neighbors
+        this.maxPausedNeighbors = options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT
         this.localPeerDescriptor = options.localPeerDescriptor
         this.localPausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
         this.remotePausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
@@ -66,7 +67,9 @@ export class PlumtreeManager extends EventEmitter<Events> {
     }
 
     async pauseNeighbor(node: PeerDescriptor, msgChainId: string): Promise<void> {
-        if (this.neighbors.has(toNodeId(node)) && !this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)) {
+        if (this.neighbors.has(toNodeId(node)) 
+            && !this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)
+            && this.remotePausedNeighbors.size(msgChainId) < this.maxPausedNeighbors) {
             logger.debug(`Pausing neighbor ${toNodeId(node)}`)
             this.remotePausedNeighbors.add(toNodeId(node), msgChainId)
             const remote = this.createRemote(node)
