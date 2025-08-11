@@ -104,7 +104,7 @@ export default [
                 allowSingleLine: true
             }],
             '@stylistic/comma-spacing': 'error',
-            '@stylistic/func-call-spacing': 'error',
+            '@stylistic/function-call-spacing': 'error',
             '@stylistic/keyword-spacing': 'error',
             '@stylistic/member-delimiter-style': ['error', {
                 singleline: { delimiter: 'comma' },

@@ -333,11 +333,7 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                 default: defaultPort.toString(),
                 validate(value) {
                     try {
-                        z.coerce
-                            .number({
-                                invalid_type_error:
-                                    'Non-numeric value provided',
-                            })
+                        z.coerce.number('Non-numeric value provided')
                             .int('Non-integer value provided')
                             .min(1024)
                             .max(49151)
