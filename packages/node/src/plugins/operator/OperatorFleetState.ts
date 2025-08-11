@@ -56,7 +56,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         )
     }
 
-    private constructor(
+    constructor(
         streamrClient: StreamrClient,
         coordinationStreamId: StreamID,
         heartbeatIntervalInMs: number,

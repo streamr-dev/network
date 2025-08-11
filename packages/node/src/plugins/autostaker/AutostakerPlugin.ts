@@ -1,11 +1,15 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, WeiAmount } from '@streamr/utils'
+import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
 import { Action, SponsorshipConfig, SponsorshipID } from './types'
+import { formCoordinationStreamId } from '../operator/formCoordinationStreamId'
+import { OperatorFleetState } from '../operator/OperatorFleetState'
+import { createIsLeaderFn } from '../operator/createIsLeaderFn'
+import { sum } from './sum'
 
 export interface AutostakerPluginConfig {
     operatorContractAddress: string
@@ -13,6 +17,13 @@ export interface AutostakerPluginConfig {
     minTransactionDataTokenAmount: number
     maxAcceptableMinOperatorCount: number
     runIntervalInMs: number
+    fleetState: {
+        heartbeatUpdateIntervalInMs: number
+        pruneAgeInMs: number
+        pruneIntervalInMs: number
+        latencyExtraInMs: number
+        warmupPeriodInMs: number
+    }
 }
 
 interface SponsorshipQueryResultItem {
@@ -27,7 +38,12 @@ interface StakeQueryResultItem {
     sponsorship: {
         id: SponsorshipID
     }
-    amountWei: WeiAmount
+    amountWei: string
+}
+
+interface UndelegationQueueQueryResultItem {
+    id: string
+    amount: string
 }
 
 const logger = new Logger(module)
@@ -71,9 +87,23 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     async start(streamrClient: StreamrClient): Promise<void> {
         logger.info('Start autostaker plugin')
         const minStakePerSponsorship = await fetchMinStakePerSponsorship(streamrClient.getTheGraphClient())
+        const fleetState = new OperatorFleetState(
+            streamrClient,
+            formCoordinationStreamId(toEthereumAddress(this.pluginConfig.operatorContractAddress)),
+            this.pluginConfig.fleetState.heartbeatUpdateIntervalInMs,
+            this.pluginConfig.fleetState.pruneAgeInMs,
+            this.pluginConfig.fleetState.pruneIntervalInMs,
+            this.pluginConfig.fleetState.latencyExtraInMs,
+            this.pluginConfig.fleetState.warmupPeriodInMs
+        )
+        await fleetState.start()
+        await fleetState.waitUntilReady()
+        const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
         scheduleAtApproximateInterval(async () => {
             try {
-                await this.runActions(streamrClient, minStakePerSponsorship)
+                if (isLeader()) {
+                    await this.runActions(streamrClient, minStakePerSponsorship)
+                }
             } catch (err) {
                 logger.warn('Error while running autostaker actions', { err })
             }
@@ -81,13 +111,14 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
-        logger.info('Run autostaker analysis')
+        logger.info('Run analysis')
         const provider = (await streamrClient.getSigner()).provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
         const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
         const stakeableSponsorships = await this.getStakeableSponsorships(myCurrentStakes, streamrClient)
-        const myStakedAmount = await operatorContract.totalStakedIntoSponsorshipsWei()
+        const undelegationQueueAmount = await this.getUndelegationQueueAmount(streamrClient)
+        const myStakedAmount = sum([...myCurrentStakes.values()])
         const myUnstakedAmount = (await operatorContract.valueWithoutEarnings()) - myStakedAmount
         logger.debug('Analysis state', {
             stakeableSponsorships: [...stakeableSponsorships.entries()].map(([sponsorshipId, config]) => ({
@@ -98,19 +129,28 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 sponsorshipId,
                 amount: formatEther(amount)
             })),
-            balance: {
-                unstaked: formatEther(myUnstakedAmount),
-                staked: formatEther(myStakedAmount)
-            }
+            myUnstakedAmount: formatEther(myUnstakedAmount),
+            undelegationQueue: formatEther(undelegationQueueAmount)
         })
         const actions = adjustStakes({
             myCurrentStakes,
             myUnstakedAmount,
             stakeableSponsorships,
+            undelegationQueueAmount,
             operatorContractAddress: this.pluginConfig.operatorContractAddress,
             maxSponsorshipCount: this.pluginConfig.maxSponsorshipCount,
             minTransactionAmount: parseEther(String(this.pluginConfig.minTransactionDataTokenAmount)),
             minStakePerSponsorship
+        })
+        if (actions.length === 0) {
+            logger.info('Analysis done, no actions to execute')
+            return
+        }
+        logger.info(`Analysis done, proceeding to execute plan with ${actions.length} actions`, {
+            actions: actions.map((a) => ({
+                ...a,
+                amount: formatEther(a.amount)
+            }))
         })
         const signer = await streamrClient.getSigner()
         for (const action of actions) {
@@ -134,7 +174,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 query: `
                     {
                         sponsorships (
-                            where:  {
+                            where: {
                                 projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
                                 minimumStakingPeriodSeconds: "0"
                                 minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
@@ -175,7 +215,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 query: `
                     {
                         stakes (
-                            where:  {
+                            where: {
                                 operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
                                 id_gt: "${lastId}"
                             },
@@ -193,6 +233,29 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
         const stakes = await collect(queryResult)
         return new Map(stakes.map((stake) => [stake.sponsorship.id, BigInt(stake.amountWei) ]))
+    }
+
+    private async getUndelegationQueueAmount(streamrClient: StreamrClient): Promise<WeiAmount> {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number) => {
+            return {
+                query: `
+                    {
+                        queueEntries (
+                             where:  {
+                                operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
+                                id_gt: "${lastId}"
+                            },
+                            first: ${pageSize}
+                        ) {
+                            id
+                            amount
+                        }
+                    }
+                `
+            }
+        })
+        const entries = await collect(queryResult)
+        return sum(entries.map((entry) => BigInt(entry.amount)))
     }
 
     async stop(): Promise<void> {

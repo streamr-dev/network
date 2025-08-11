@@ -36,6 +36,44 @@
       "description": "The interval (in milliseconds) at which autostaking possibilities are analyzed and executed",
       "minimum": 0,
       "default": 3600000
+    },
+    "fleetState": {
+      "type": "object",
+      "description": "Operator fleet state settings",
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "heartbeatUpdateIntervalInMs": {
+          "type": "integer",
+          "description": "The interval (in milliseconds) at which heartbeats get published to coordination stream",
+          "minimum": 0,
+          "default": 10000
+        },
+        "pruneAgeInMs": {
+          "type": "integer",
+          "description": "The maximum time (in milliseconds) of a heartbeat to count towards a node being online",
+          "minimum": 0,
+          "default": 180000
+        },
+        "pruneIntervalInMs": {
+          "type": "integer",
+          "description": "The interval (in milliseconds) at which to prune old heartbeats",
+          "minimum": 0,
+          "default": 30000
+        },
+        "latencyExtraInMs": {
+          "type": "integer",
+          "description": "Account for extra latency (milliseconds) due to networking",
+          "minimum": 0,
+          "default": 2000
+        },
+        "warmupPeriodInMs": {
+          "type": "integer",
+          "description": "The time (in milliseconds) to wait before starting to count heartbeats",
+          "minimum": 0,
+          "default": 10000
+        }
+      }
     }
   }
 }

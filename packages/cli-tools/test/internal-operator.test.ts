@@ -40,13 +40,13 @@ describe('operator', () => {
         await runCommand(`internal operator-stake ${operatorContractAddress} ${sponsorshipAddress} ${STAKE_AMOUNT}`, {
             privateKey: operator.privateKey
         })
-        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT))
+        expect(await sponsorshipContract.stakedWei(operatorContractAddress)).toEqual(parseEther(STAKE_AMOUNT))
 
         // unstake
         await runCommand(`internal operator-unstake ${operatorContractAddress} ${sponsorshipAddress} ${UNSTAKE_AMOUNT}`, {
             privateKey: operator.privateKey
         })
-        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toEqual(parseEther(STAKE_AMOUNT) - parseEther(UNSTAKE_AMOUNT))
+        expect(await sponsorshipContract.stakedWei(operatorContractAddress)).toEqual(parseEther(STAKE_AMOUNT) - parseEther(UNSTAKE_AMOUNT))
 
         // undelegate
         await wait(MINIMUM_DELEGATION_SECONDS)
