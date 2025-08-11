@@ -863,12 +863,12 @@ describe('Config wizard', () => {
             Step.pubsubPort(
                 { type: '12' },
                 'enter',
-                { find: /greater than or equal to 1024/i },
+                { find: /expected number to be >=1024/i },
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
                 { type: '128000' },
                 'enter',
-                { find: /less than or equal to 49151/i },
+                { find: /expected number to be <=49151/i },
                 'abort'
             ),
         ])
