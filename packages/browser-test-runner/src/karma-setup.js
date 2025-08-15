@@ -3,9 +3,6 @@
 
 import * as jestMock from 'jest-mock'
 
-// The following lines need to use the require syntax to fix 
-// process.stdout dependency in expect v. 28+ 
-process.stdout = {}
 const expect = require('expect').default
 
 import { ModernFakeTimers } from '@jest/fake-timers'
