@@ -6,6 +6,7 @@
  * `jest-mock-extend` and get rid of this hack.
 */
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { fn } from 'jest-mock'
 
 export const jest = {
