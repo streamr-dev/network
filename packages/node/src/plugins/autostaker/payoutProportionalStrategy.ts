@@ -43,6 +43,10 @@ type TargetStake = [SponsorshipID, WeiAmount]
 
 const abs = (n: bigint) => (n < 0n) ? -n : n
 
+const bigIntMax = (...args: bigint[]): bigint => args.reduce((m, e) => e > m ? e : m)
+
+export const bigIntMin = (...args: bigint[]): bigint => args.reduce((m, e) => e < m ? e : m)
+
 const getExpiredSponsorships = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
     stakeableSponsorships: Map<SponsorshipID, SponsorshipConfig>
@@ -71,7 +75,7 @@ const getSelectedSponsorships = (
     ] = partition([...stakeableSponsorships.keys()], (id) => myCurrentStakes.has(id))
     return [
         ...keptSponsorships,
-        ...sortBy(potentialSponsorships, 
+        ...sortBy(potentialSponsorships,
             (id) => -stakeableSponsorships.get(id)!.payoutPerSec,
             (id) => {
                 // If payoutPerSec is same for multiple sponsorships, different operators should
@@ -82,7 +86,7 @@ const getSelectedSponsorships = (
                 return buffer.readInt32LE(0)
             }
         )
-    ].slice(0, count)        
+    ].slice(0, count)
 }
 
 /*
@@ -118,7 +122,7 @@ const getTargetStakes = (
     const targetsForExpired: TargetStake[] = getExpiredSponsorships(myCurrentStakes, stakeableSponsorships).map((id) => [
         id,
         0n
-    ]) 
+    ])
     return new Map([...targetsForSelected, ...targetsForExpired])
 }
 
@@ -148,7 +152,7 @@ export const adjustStakes: AdjustStakesFn = ({
     )
 
     const adjustments = [...targetStakes.keys()]
-        .map((sponsorshipId) => ({ 
+        .map((sponsorshipId) => ({
             sponsorshipId,
             difference: targetStakes.get(sponsorshipId)! - (myCurrentStakes.get(sponsorshipId) ?? 0n)
         }))
@@ -164,14 +168,42 @@ export const adjustStakes: AdjustStakesFn = ({
         const unstakings = adjustments.filter((a) => a.difference < 0)
         const stakingSum = sum(stakings.map((a) => a.difference))
         const availableSum = abs(sum(unstakings.map((a) => a.difference))) + myUnstakedAmount - undelegationQueueAmount
-        if (stakingSum > availableSum && stakings.length > 0) {
-            const smallestStaking = minBy(stakings, (a) => a.difference)!
-            const newDifference = smallestStaking.difference - (stakingSum - availableSum)
-            const hasAlreadyStaked = myCurrentStakes.has(smallestStaking.sponsorshipId)
-            if (newDifference >= minTransactionAmount && (hasAlreadyStaked || newDifference >= minStakePerSponsorship)) {
-                smallestStaking.difference = newDifference
-            } else {
+        let excess = stakingSum - availableSum
+        if (excess > 0 && stakings.length > 0) {
+            const stakingReductionAllowances = new Map(
+                stakings.map((a) => {
+                    const minDiff = bigIntMax(minTransactionAmount, myCurrentStakes.has(a.sponsorshipId) ? 0n : minStakePerSponsorship)
+                    const allowance = bigIntMax(a.difference - minDiff, 0n)
+                    return [a.sponsorshipId, allowance]
+                })
+            )
+            const totalAllowance = sum([...stakingReductionAllowances.values()])
+            if (excess > totalAllowance) {
+                const smallestStaking = minBy(stakings, (a) => a.difference)!
                 pull(adjustments, smallestStaking)
+            } else {
+                const stakingsSortedByEarnings = stakings.sort((a, b) => {
+                    const aEarnings = stakeableSponsorships.get(a.sponsorshipId)!.payoutPerSec
+                    const bEarnings = stakeableSponsorships.get(b.sponsorshipId)!.payoutPerSec
+                    if (aEarnings < bEarnings) {
+                        return -1
+                    } else if (aEarnings > bEarnings) {
+                        return 1
+                    } else {
+                        return 0
+                    }
+                })
+                for (const staking of stakingsSortedByEarnings) {
+                    const allowance = stakingReductionAllowances.get(staking.sponsorshipId)!
+                    if (allowance > 0n) {
+                        const reduction = bigIntMin(allowance, excess)
+                        excess -= reduction
+                        staking.difference -= reduction
+                        if (excess <= 0n) {
+                            break
+                        }
+                    }
+                }
             }
         } else {
             break
