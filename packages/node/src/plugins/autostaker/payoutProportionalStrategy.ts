@@ -45,7 +45,7 @@ const abs = (n: bigint) => (n < 0n) ? -n : n
 
 const bigIntMax = (...args: bigint[]): bigint => args.reduce((m, e) => e > m ? e : m)
 
-export const bigIntMin = (...args: bigint[]): bigint => args.reduce((m, e) => e < m ? e : m)
+const bigIntMin = (...args: bigint[]): bigint => args.reduce((m, e) => e < m ? e : m)
 
 const getExpiredSponsorships = (
     myCurrentStakes: Map<SponsorshipID, WeiAmount>,
