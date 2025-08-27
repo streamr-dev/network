@@ -330,7 +330,8 @@ describe('payoutProportionalStrategy', () => {
                 minTransactionAmount: 50n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
-                { type: 'stake', sponsorshipId: 'd', amount: 361n },
+                { type: 'stake', sponsorshipId: 'c', amount: 50n },
+                { type: 'stake', sponsorshipId: 'd', amount: 312n },
                 { type: 'stake', sponsorshipId: 'e', amount: 378n }
             ])
         })
