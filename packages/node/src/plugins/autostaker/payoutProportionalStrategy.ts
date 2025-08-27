@@ -163,6 +163,8 @@ export const adjustStakes: AdjustStakesFn = ({
         (a) => (abs(a.difference) < minTransactionAmount) && stakeableSponsorships.has(a.sponsorshipId)
     )
     pull(adjustments, ...tooSmallAdjustments)
+
+    // Balance out any excess staking we incurred by filtering out too-small adjustments
     while (true) {
         const stakings = adjustments.filter((a) => a.difference > 0)
         const unstakings = adjustments.filter((a) => a.difference < 0)
