@@ -396,6 +396,7 @@ export interface StreamrClientConfig {
         streamRegistryChainAddress?: HexString
         streamStorageRegistryChainAddress?: HexString
         storageNodeRegistryChainAddress?: HexString
+        sponsorshipFactoryChainAddress?: HexString
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
         rpcs?: ConnectionInfo[]
@@ -489,6 +490,7 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
+            sponsorshipFactoryChainAddress: defaults.contracts.SponsorshipFactory,
             rpcs: defaults.rpcEndpoints,
             theGraphUrl: defaults.theGraphUrl
         } as any

@@ -317,6 +317,10 @@
                     "type": "string",
                     "format": "ethereum-address"
                 },
+                "sponsorshipFactoryChainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
                 "rpcs": {
                     "type": "array",
                     "items": {

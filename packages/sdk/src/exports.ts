@@ -22,6 +22,7 @@ export {
 } from './permission'
 export type { StreamCreationEvent } from './contracts/StreamRegistry'
 export type { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
+export type { SponsorshipCreatedEvent } from './contracts/SponsorshipFactory'
 export type { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
 export type { SearchStreamsPermissionFilter } from './contracts/searchStreams'
 export {

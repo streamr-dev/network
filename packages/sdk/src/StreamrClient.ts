@@ -60,6 +60,7 @@ import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
+import { SponsorshipFactory } from './contracts/SponsorshipFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -148,6 +149,7 @@ export class StreamrClient {
         this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
         container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
+        container.resolve<SponsorshipFactory>(SponsorshipFactory) // side effect: activates sponsorship event listeners
     }
 
     // --------------------------------------------------------------------------------------------
