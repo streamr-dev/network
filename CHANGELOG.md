@@ -13,8 +13,8 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Add support for using the plumtree optimization in stream partitions (https://github.com/streamr-dev/network/pull/3147)
-- Add new listenable event `sponsorshipCreated` (https://github.com/streamr-dev/network/pull/3191)
-- Add new config option `contracts.sponsorshipFactoryChainAddress` (https://github.com/streamr-dev/network/pull/3191)
+- Add listenable event `sponsorshipCreated` (https://github.com/streamr-dev/network/pull/3191)
+- Add config option `contracts.sponsorshipFactoryChainAddress` (https://github.com/streamr-dev/network/pull/3191)
 
 #### Changed
 
