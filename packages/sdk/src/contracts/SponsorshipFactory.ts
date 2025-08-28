@@ -1,5 +1,5 @@
 import { SponsorshipFactoryABI } from '@streamr/network-contracts'
-import { EthereumAddress, Logger, StreamID, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { EthereumAddress, StreamID, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Interface } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -16,17 +16,15 @@ export interface SponsorshipCreatedEvent {
 
 @scoped(Lifecycle.ContainerScoped)
 export class SponsorshipFactory {
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly logger: Logger
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
         chainEventPoller: ChainEventPoller,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
         this.config = config
-        this.logger = loggerFactory.createLogger(module)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
     }
 
