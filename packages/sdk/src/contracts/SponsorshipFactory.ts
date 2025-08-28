@@ -25,10 +25,10 @@ export class SponsorshipFactory {
         loggerFactory: LoggerFactory
     ) {
         this.config = config
-        this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
+        this.initEventListener(eventEmitter, chainEventPoller, loggerFactory)
     }
 
-    private initStreamAssignmentEventListeners(
+    private initEventListener(
         eventEmitter: StreamrClientEventEmitter,
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
