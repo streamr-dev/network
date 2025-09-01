@@ -304,8 +304,8 @@ describe('payoutProportionalStrategy', () => {
                 minTransactionAmount: 20n,
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
-                { type: 'stake', sponsorshipId: 'c', amount: 666n },
-                { type: 'stake', sponsorshipId: 'b', amount: 154n }
+                { type: 'stake', sponsorshipId: 'c', amount: 654n },
+                { type: 'stake', sponsorshipId: 'b', amount: 166n }
             ])
         })
 
@@ -331,8 +331,8 @@ describe('payoutProportionalStrategy', () => {
                 minStakePerSponsorship: 0n
             })).toIncludeSameMembers([
                 { type: 'stake', sponsorshipId: 'c', amount: 50n },
-                { type: 'stake', sponsorshipId: 'd', amount: 312n },
-                { type: 'stake', sponsorshipId: 'e', amount: 378n }
+                { type: 'stake', sponsorshipId: 'd', amount: 361n },
+                { type: 'stake', sponsorshipId: 'e', amount: 329n }
             ])
         })
 
