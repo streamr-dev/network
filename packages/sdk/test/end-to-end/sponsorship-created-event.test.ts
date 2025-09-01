@@ -37,7 +37,8 @@ describe('sponsorship created event', () => {
         const sponsorship = await deployTestSponsorshipContract({
             streamId: testStream.id,
             deployer: creatorWallet as any,
-            earningsPerSecond: parseEther('1')
+            earningsPerSecond: parseEther('1'),
+            metadata: '{"foo": "bar"}'
         })
         const expectedSponsorshipAddress = toEthereumAddress(await sponsorship.getAddress())
 
@@ -46,6 +47,6 @@ describe('sponsorship created event', () => {
         expect(sponsorshipCreatedEvent.length).toEqual(1)
         expect(sponsorshipCreatedEvent[0].sponsorshipContractAddress).toEqual(expectedSponsorshipAddress)
         expect(sponsorshipCreatedEvent[0].streamId).toBe(testStream.id)
-        expect(sponsorshipCreatedEvent[0].metadata).toBeDefined()
+        expect(sponsorshipCreatedEvent[0].metadata).toEqual('{"foo": "bar"}')
     }, TEST_TIMEOUT)
 })
