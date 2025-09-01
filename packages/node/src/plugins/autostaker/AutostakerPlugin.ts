@@ -99,13 +99,13 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         await fleetState.start()
         await fleetState.waitUntilReady()
         const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
-        let alreadyRunning = false
+        let running = false
         const triggerRun = async () => {
-            if (alreadyRunning) {
+            if (running) {
                 logger.info('Previous run still in progress, skipping this run')
                 return
             }
-            alreadyRunning = true
+            running = true
             try {
                 if (isLeader()) {
                     await this.runActions(streamrClient, minStakePerSponsorship)
@@ -114,7 +114,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 logger.warn('Error while running autostaker actions', { err })
             } finally {
                 // eslint-disable-next-line require-atomic-updates
-                alreadyRunning = false
+                running = false
             }
         }
         scheduleAtApproximateInterval(triggerRun, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
