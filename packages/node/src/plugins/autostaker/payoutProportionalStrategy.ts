@@ -184,18 +184,7 @@ export const adjustStakes: AdjustStakesFn = ({
                 const smallestStaking = minBy(stakings, (a) => a.difference)!
                 pull(adjustments, smallestStaking)
             } else {
-                const stakingsSortedByEarnings = [...stakings].sort((a, b) => {
-                    const aEarnings = stakeableSponsorships.get(a.sponsorshipId)!.payoutPerSec
-                    const bEarnings = stakeableSponsorships.get(b.sponsorshipId)!.payoutPerSec
-                    if (aEarnings < bEarnings) {
-                        return -1
-                    } else if (aEarnings > bEarnings) {
-                        return 1
-                    } else {
-                        return 0
-                    }
-                })
-                for (const staking of stakingsSortedByEarnings) {
+                for (const staking of stakings) { // iterate in any order
                     const allowance = stakingReductionAllowances.get(staking.sponsorshipId)!
                     if (allowance > 0n) {
                         const reduction = bigIntMin(allowance, excess)
