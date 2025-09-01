@@ -195,6 +195,7 @@ export const adjustStakes: AdjustStakesFn = ({
                         }
                     }
                 }
+                break
             }
         } else {
             break
