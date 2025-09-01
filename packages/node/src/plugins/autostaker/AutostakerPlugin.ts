@@ -119,6 +119,9 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         }
         scheduleAtApproximateInterval(triggerRun, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
         streamrClient.on('sponsorshipCreated', triggerRun)
+        this.abortController.signal.addEventListener('abort', () => {
+            streamrClient.off('sponsorshipCreated', triggerRun)
+        })
     }
 
     private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
