@@ -17,7 +17,7 @@
       "type": "integer",
       "description": "Maximum count of sponsorships which are staked at any given time",
       "minimum": 1,
-      "default": 100
+      "default": 25
     },
     "minTransactionDataTokenAmount": {
       "type": "integer",
@@ -29,7 +29,7 @@
       "type": "integer",
       "description": "Maximum acceptable value for a sponsorship's minOperatorCount config option",
       "minimum": 0,
-      "default": 100
+      "default": 50
     },
     "runIntervalInMs": {
       "type": "integer",
