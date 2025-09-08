@@ -36,7 +36,7 @@
     "long-timeout": "^0.1.1",
     "mmdb-lib": "^3.0.1",
     "tar": "^7.4.3",
-    "uuid": "^11.1.0"
+    "uuid": "^12.0.0"
   },
   "devDependencies": {
     "@types/long-timeout": "^0.1.2",

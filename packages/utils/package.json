@@ -26,11 +26,11 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@noble/curves": "^1.9.6",
-    "@noble/post-quantum": "^0.4.1",
+    "@noble/curves": "^2.0.0",
+    "@noble/post-quantum": "^0.5.1",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^9.7.0",
+    "pino": "^9.9.4",
     "pino-pretty": "^13.1.1",
     "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
