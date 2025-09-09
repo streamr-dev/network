@@ -4,7 +4,6 @@ import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, deployTestOperatorContract } from '../../../utils'
-import { StrictConfig } from '../../../../src/config/config'
 
 const TIMEOUT = 40 * 1000
 
