@@ -48,7 +48,7 @@ describe('heartbeatUtils', () => {
         expect(() => HeartbeatMessageSchema.parse(msg)).toThrow(ZodError)
     })
 
-    it('applicationEnabled is true if and only if autostaker plugin is enabled', () => {
+    it('autostakerEnabled is true if and only if autostaker plugin is enabled', () => {
         const msg1 = createHeartbeatMessage(PEER_DESCRIPTOR, { plugins: {} })
         expect(msg1.autostakerEnabled).toBeFalse()
 

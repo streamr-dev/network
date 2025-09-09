@@ -16,7 +16,7 @@ export const HeartbeatMessageSchema = z.object({
         region: z.optional(z.number())
     }),
     applicationVersion: z.optional(z.string()),  // optional for backward compatibility (written from v102 onward)
-    autostakerEnabled: z.optional(z.boolean()) // optional for backward compatibilit)
+    autostakerEnabled: z.optional(z.boolean()) // optional for backward compatibility
 })
 
 export type HeartbeatMessage = z.infer<typeof HeartbeatMessageSchema>
