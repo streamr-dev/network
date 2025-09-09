@@ -4,6 +4,7 @@ import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, deployTestOperatorContract } from '../../../utils'
+import { StrictConfig } from '../../../../src/config/config'
 
 const TIMEOUT = 40 * 1000
 
@@ -20,13 +21,14 @@ describe('announceNodeToStream', () => {
         const anonymousClient = createClient()
         const subscription = await anonymousClient.subscribe(streamId)
 
-        await announceNodeToStream(operatorContractAddress, client)
+        await announceNodeToStream(operatorContractAddress, client, { plugins: {} })
 
         const [{ content }] = await collect(subscription, 1)
         expect(content).toEqual({
             msgType: 'heartbeat',
             peerDescriptor: await client.getPeerDescriptor(),
-            applicationVersion
+            applicationVersion,
+            autostakerEnabled: false
         })
 
         await anonymousClient.destroy()

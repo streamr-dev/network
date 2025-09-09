@@ -125,7 +125,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 (async () => {
                     await announceNodeToStream(
                         toEthereumAddress(this.pluginConfig.operatorContractAddress),
-                        streamrClient
+                        streamrClient,
+                        this.brokerConfig
                     )
                 })()
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
