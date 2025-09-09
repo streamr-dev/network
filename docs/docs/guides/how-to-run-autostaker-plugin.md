@@ -7,8 +7,9 @@ sidebar_position: 8
 The autostaker plugin assists an operator by automatically selecting
 sponsorships to stake in and to unstake from, and by adjusting existing
 stakes to reflect the earnings available from sponsorships relative to
-other sponsorships. It also makes sure the operator's nodes discover
-new sponsorships opportunities as they emerge.
+other sponsorships. It also makes sure the operator swiftly discovers
+and joins new sponsorships as they emerge. This frees the operator from
+having to manually monitor and adjust stakes.
 
 To run the autostaker plugin, a user must first be running one or more
 operator nodes. See [How to become an Operator](./become-an-operator.md)
@@ -35,15 +36,12 @@ so they can adjust stakes on behalf of the operator. See [Staking angets](../str
 for how this is done.
 
 :::info
-When choosing to run the autostaker plugin, the user should not manually adjust
+- When choosing to run the autostaker plugin, the user should not manually adjust
 their operator's stakes, e.g. via the Hub. The autostaker will most likely undo
 any manual changes by returning the stakes back to the state it considers optimal.
-:::
-
-:::info
-To withdraw earnings while the autostaker enabled nodes are running, you simply
-initiate a withdraw and wait for the undelegation queue to be processed by the
-autostaker. This will not be immediate.
+- To withdraw earnings while the autostaker is enabled, you simply
+  initiate a withdraw and wait for the undelegation queue to be processed by the
+  autostaker. This will not be immediate.
 :::
 
 
@@ -72,7 +70,7 @@ operators may currently already be staked into such a sponsorship.)
 addition to time-based runs, the autostaker will also run whenever a new sponsorship is
 created.
 
-Example of these setting values:
+Example of setting these values:
 ```json
 {
   "plugins": {
