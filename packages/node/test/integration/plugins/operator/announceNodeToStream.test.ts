@@ -20,13 +20,14 @@ describe('announceNodeToStream', () => {
         const anonymousClient = createClient()
         const subscription = await anonymousClient.subscribe(streamId)
 
-        await announceNodeToStream(operatorContractAddress, client)
+        await announceNodeToStream(operatorContractAddress, client, { plugins: {} })
 
         const [{ content }] = await collect(subscription, 1)
         expect(content).toEqual({
             msgType: 'heartbeat',
             peerDescriptor: await client.getPeerDescriptor(),
-            applicationVersion
+            applicationVersion,
+            autostakerEnabled: false
         })
 
         await anonymousClient.destroy()
