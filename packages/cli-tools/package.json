@@ -50,7 +50,7 @@
     "@types/event-stream": "^4.0.5",
     "@types/lodash": "^4.17.20",
     "@types/merge2": "^1.4.4",
-    "@types/semver": "^7.7.0",
+    "@types/semver": "^7.7.1",
     "merge2": "^1.4.1"
   }
 }
