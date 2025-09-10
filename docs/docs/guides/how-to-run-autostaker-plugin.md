@@ -31,17 +31,20 @@ configuration (under the plugins section):
 }
 ```
 
-In addition, you need to assign the staking agent (aka `CONTROLLER`) role for each nodes' wallet
-so they can adjust stakes on behalf of the operator. See [Staking angets](../streamr-network/network-roles/operators.md#staking-agents)
+In addition, you need to assign the staking agent role to each node's address
+so they can adjust stakes on behalf of the operator. See [Staking agents](../streamr-network/network-roles/operators.md#staking-agents)
 for how this is done.
+
+![Setting staking agent role in the Hub](@site/static/img/staking-agent-selector-in-hub.png)
 
 :::info
 - When choosing to run the autostaker plugin, the user should not manually adjust
 their operator's stakes, e.g. via the Hub. The autostaker will most likely undo
 any manual changes by returning the stakes back to the state it considers optimal.
 - To withdraw earnings while the autostaker is enabled, you simply
-  initiate a withdraw and wait for the undelegation queue to be processed by the
-  autostaker. This will not be immediate.
+initiate a withdraw and wait for the undelegation queue to be processed by the
+autostaker. This will not be immediate, but will happen on the next activation
+of the autostaker (by default every 60 minutes).
 :::
 
 
@@ -70,7 +73,7 @@ operators may currently already be staked into such a sponsorship.)
 addition to time-based runs, the autostaker will also run whenever a new sponsorship is
 created.
 
-Example of setting these values:
+Example of setting these values (default values):
 ```json
 {
   "plugins": {
