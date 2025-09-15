@@ -18,4 +18,9 @@ export class Cache<V> {
         }
         return this.value!
     }
+
+    invalidate(): void {
+        this.value = undefined
+        this.valueTimestamp = undefined
+    }
 }
