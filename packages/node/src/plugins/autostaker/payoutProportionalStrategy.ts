@@ -119,11 +119,15 @@ const getTargetStakes = (
         id,
         minStakePerSponsorship + payoutProportionalAmount * stakeableSponsorships.get(id)!.payoutPerSec / payoutPerSecSum
     ])
+    const targetsForFullUnstake: TargetStake[] = [...myCurrentStakes.keys()].filter((id) => !selectedSponsorships.includes(id)).map((id) => [
+        id,
+        0n
+    ])
     const targetsForExpired: TargetStake[] = getExpiredSponsorships(myCurrentStakes, stakeableSponsorships).map((id) => [
         id,
         0n
     ])
-    return new Map([...targetsForSelected, ...targetsForExpired])
+    return new Map([...targetsForSelected, ...targetsForFullUnstake, ...targetsForExpired])
 }
 
 /**

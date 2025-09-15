@@ -117,6 +117,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 running = false
             }
         }
+        logger.info(`First activation in approximately ${this.pluginConfig.runIntervalInMs / (1000 * 60) } minutes`)
         scheduleAtApproximateInterval(triggerRun, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
         streamrClient.on('sponsorshipCreated', triggerRun)
         this.abortController.signal.addEventListener('abort', () => {

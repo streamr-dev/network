@@ -389,6 +389,33 @@ describe('payoutProportionalStrategy', () => {
             maxSponsorshipCount: 100,
             minTransactionAmount: 50n,
             minStakePerSponsorship: 500n
-        })).toIncludeSameMembers([])
+        })).toIncludeSameMembers([
+            { type: 'unstake', sponsorshipId: 'a', amount: 4000n }
+        ])
+    })
+
+    it('unstakes to match maxSponsorchipCount if has more current sponsorships', () => {
+        expect(adjustStakes({
+            myUnstakedAmount: 0n,
+            myCurrentStakes: new Map([
+                ['a', 10000n],
+                ['b', 5000n],
+                ['c', 5000n]
+            ]),
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 4n }],
+                ['b', { payoutPerSec: 2n }],
+                ['c', { payoutPerSec: 2n }],
+            ]),
+            undelegationQueueAmount: 0n,
+            operatorContractAddress: '',
+            maxSponsorshipCount: 1,
+            minTransactionAmount: 0n,
+            minStakePerSponsorship: 5000n
+        })).toIncludeSameMembers([
+            { type: 'stake', sponsorshipId: 'a', amount: 10000n },
+            { type: 'unstake', sponsorshipId: 'b', amount: 5000n },
+            { type: 'unstake', sponsorshipId: 'c', amount: 5000n }
+        ])
     })
 })

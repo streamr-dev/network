@@ -34,7 +34,7 @@
     "runIntervalInMs": {
       "type": "integer",
       "description": "The interval (in milliseconds) at which autostaking possibilities are analyzed and executed",
-      "minimum": 0,
+      "minimum": 300000,
       "default": 3600000
     },
     "fleetState": {
