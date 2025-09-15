@@ -21,4 +21,16 @@ describe('Cache', () => {
         expect(await cache.get()).toEqual('bar')
         expect(valueFactory).toHaveBeenCalledTimes(2)
     })
+
+    it('invalidate', async () => {
+        const valueFactory = jest.fn().mockImplementation(async () => 'foo')
+        const cache = new Cache(valueFactory, MAX_AGE)
+        expect(await cache.get()).toEqual('foo')
+        expect(valueFactory).toHaveBeenCalledTimes(1)
+        cache.invalidate()
+        expect(await cache.get()).toEqual('foo')
+        expect(valueFactory).toHaveBeenCalledTimes(2)
+        expect(await cache.get()).toEqual('foo')
+        expect(valueFactory).toHaveBeenCalledTimes(2)
+    })
 })
