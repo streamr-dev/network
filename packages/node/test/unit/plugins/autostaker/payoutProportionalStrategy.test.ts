@@ -418,4 +418,48 @@ describe('payoutProportionalStrategy', () => {
             { type: 'unstake', sponsorshipId: 'c', amount: 5000n }
         ])
     })
+
+    it('unstakes from all if maxSponsorshipCount is set to zero', () => {
+        expect(adjustStakes({
+            myUnstakedAmount: 10000n,
+            myCurrentStakes: new Map([
+                ['a', 10000n],
+                ['b', 5000n],
+                ['c', 5000n]
+            ]),
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 4n }],
+                ['b', { payoutPerSec: 3n }],
+                ['c', { payoutPerSec: 2n }],
+                ['d', { payoutPerSec: 1n }]
+            ]),
+            undelegationQueueAmount: 0n,
+            operatorContractAddress: '',
+            maxSponsorshipCount: 0,
+            minTransactionAmount: 0n,
+            minStakePerSponsorship: 5000n
+        })).toIncludeSameMembers([
+            { type: 'unstake', sponsorshipId: 'a', amount: 10000n },
+            { type: 'unstake', sponsorshipId: 'b', amount: 5000n },
+            { type: 'unstake', sponsorshipId: 'c', amount: 5000n }
+        ])
+    })
+
+    it('does not stake into anything if maxSponsorshipCount is set to zero', () => {
+        expect(adjustStakes({
+            myUnstakedAmount: 30000n,
+            myCurrentStakes: new Map([]),
+            stakeableSponsorships: new Map([
+                ['a', { payoutPerSec: 4n }],
+                ['b', { payoutPerSec: 3n }],
+                ['c', { payoutPerSec: 2n }],
+                ['d', { payoutPerSec: 1n }]
+            ]),
+            undelegationQueueAmount: 0n,
+            operatorContractAddress: '',
+            maxSponsorshipCount: 0,
+            minTransactionAmount: 0n,
+            minStakePerSponsorship: 5000n
+        })).toIncludeSameMembers([])
+    })
 })

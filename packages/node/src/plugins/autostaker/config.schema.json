@@ -16,7 +16,7 @@
     "maxSponsorshipCount": {
       "type": "integer",
       "description": "Maximum count of sponsorships which are staked at any given time",
-      "minimum": 1,
+      "minimum": 0,
       "default": 25
     },
     "minTransactionDataTokenAmount": {
