@@ -65,7 +65,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         entryPointDiscoveryLayerNode.stop()
         entryPointContentDeliveryLayerNode.stop()
         await Promise.all(otherDiscoveryLayerNodes.map((node) => node.stop()))
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
+        otherContentDeliveryLayerNodes.forEach((node) => node.stop())
     })
 
     it('happy path single node', async () => {

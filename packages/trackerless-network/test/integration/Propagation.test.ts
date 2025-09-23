@@ -51,7 +51,7 @@ describe('Propagation', () => {
     }, 45000)
 
     afterEach(async () => {
-        await Promise.all(contentDeliveryLayerNodes.map((node) => node.stop()))
+        contentDeliveryLayerNodes.forEach((node) => node.stop())
         await Promise.all(discoveryLayerNodes.map((node) => node.stop()))
     })
 
