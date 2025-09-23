@@ -162,6 +162,7 @@ describe('Group Key Persistence', () => {
 
             await Promise.all([
                 collect(sub2, 3),
+                // eslint-disable-next-line @typescript-eslint/await-thenable
                 published.push(...await publishTestMessages(3)),
             ])
 

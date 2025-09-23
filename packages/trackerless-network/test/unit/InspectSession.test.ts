@@ -51,7 +51,7 @@ describe('InspectSession', () => {
         inspectSession.markMessage(anotherNode, messageId1)
         await Promise.all([
             waitForEvent(inspectSession, 'done', 100),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             inspectSession.markMessage(inspectedNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -61,7 +61,7 @@ describe('InspectSession', () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await Promise.all([
             waitForEvent(inspectSession, 'done', 100),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             inspectSession.markMessage(anotherNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -72,7 +72,7 @@ describe('InspectSession', () => {
         await expect(async () => {
             await Promise.all([
                 waitForEvent(inspectSession, 'done', 100),
-                // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+                // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
                 inspectSession.markMessage(anotherNode, messageId2)
             ])
         }).rejects.toThrow('waitForEvent')
