@@ -106,15 +106,15 @@ describe('content delivery layer node with real connections', () => {
             dhtNode2.stop(),
             dhtNode3.stop(),
             dhtNode4.stop(),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             contentDeliveryLayerNode1.stop(),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             contentDeliveryLayerNode2.stop(),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             contentDeliveryLayerNode3.stop(),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             contentDeliveryLayerNode4.stop(),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             contentDeliveryLayerNode5.stop(),
             (epDhtNode.getTransport() as ConnectionManager).stop(),
             (dhtNode1.getTransport() as ConnectionManager).stop(),

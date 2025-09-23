@@ -85,7 +85,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
         await entryPointDiscoveryLayerNode.stop()
         entryPointContentDeliveryLayerNode.stop()
         await Promise.all(otherDiscoveryLayerNodes.map((node) => node.stop()))
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
+        otherContentDeliveryLayerNodes.forEach((node) => node.stop())
     })
 
     it('happy path single node ', async () => {
@@ -126,7 +126,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
     it('happy path 64 nodes', async () => {
         await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
         await Promise.all(range(otherNodeCount).map((i) => {
-            otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
+            return otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             until(() => node.getNeighbors().length >= 4, 10000)
