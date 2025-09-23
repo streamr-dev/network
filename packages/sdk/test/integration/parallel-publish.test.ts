@@ -3,6 +3,7 @@ import 'reflect-metadata'
 import { wait } from '@streamr/utils'
 import random from 'lodash/random'
 import uniq from 'lodash/uniq'
+import range from 'lodash/range'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -29,16 +30,14 @@ describe('parallel publish', () => {
     })
 
     it('messages in order and in same chain', async () => {
-        const publishTasks = []
-        for (let i = 0; i < MESSAGE_COUNT; i++) {
-            const task = await publisher.publish(stream.id, {
+        const publishTasks = range(MESSAGE_COUNT).map(async (i) => {
+            await publisher.publish(stream.id, {
                 mockId: i
             })
-            publishTasks.push(task)
             if (Math.random() < 0.5) {
                 await wait(random(5))
             }
-        }
+        })
         await Promise.all(publishTasks)
 
         const sentMessages = await environment.getNetwork().waitForSentMessages({
