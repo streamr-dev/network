@@ -13,6 +13,7 @@ export async function pTransaction<T>(
         try {
             results.push(await promise)
         } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/await-thenable
             await Promise.allSettled(results.map((r) => rollback(r)))
             throw err
         }
