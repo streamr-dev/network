@@ -551,22 +551,22 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     public async enablePrivateClientMode(): Promise<void> {
         this.privateClientMode = true
-        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
-            if (endpoint.connected) {
-                const peerDescription = endpoint.connection.getPeerDescriptor()
-                return this.setPrivateForConnection(peerDescription!, true)
-            }
+        await Promise.all(this.getConnectedEndpoints().map((endpoint) => {
+            const peerDescription = endpoint.connection.getPeerDescriptor()
+            return this.setPrivateForConnection(peerDescription!, true)
         }))
     }
 
     public async disablePrivateClientMode(): Promise<void> {
         this.privateClientMode = false
-        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
-            if (endpoint.connected) {
-                const peerDescription = endpoint.connection.getPeerDescriptor()
-                return this.setPrivateForConnection(peerDescription!, false)
-            }
+        await Promise.all(this.getConnectedEndpoints().map((endpoint) => {
+            const peerDescription = endpoint.connection.getPeerDescriptor()
+            return this.setPrivateForConnection(peerDescription!, false)
         }))
+    }
+
+    private getConnectedEndpoints(): Endpoint[] {
+        return Array.from(this.endpoints.values()).filter((endpoint) => endpoint.connected)
     }
 
     public isPrivateClientMode(): boolean {
