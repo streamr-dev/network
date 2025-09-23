@@ -280,7 +280,7 @@ export class WebsocketServerConnector {
         this.abortController.abort()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
+        requests.forEach((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true))
 
         await this.websocketServer?.stop()
         this.geoIpLocator?.stop()
