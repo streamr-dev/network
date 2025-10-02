@@ -43,7 +43,8 @@ export default class ServerPersistence implements PersistenceContext {
     }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
         const paths = envPaths('streamr-sdk')
-        this.dbFilePath = resolve(paths.data, join('./', ownerId, `GroupKeys.db`))
+        // ownerId could be too long for the FS, but unlikely to collide locally - concatenate to first 50 chars
+        this.dbFilePath = resolve(paths.data, join('./', ownerId.substring(0, 50), `GroupKeys.db`))
         this.migrationsPath = migrationsPath
         this.onInit = onInit
         this.init = pOnce(this.init.bind(this))
@@ -119,9 +120,7 @@ export default class ServerPersistence implements PersistenceContext {
             this.store = store
         } catch (err) {
             this.logger.trace('Failed to open database', err)
-            if (!this.error) {
-                this.error = err
-            }
+            this.error ??= err
         }
 
         if (this.error) {

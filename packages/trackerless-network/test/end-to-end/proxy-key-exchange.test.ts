@@ -3,10 +3,11 @@ import {
     StreamPartIDUtils,
     hexToBinary,
     toUserIdRaw,
-    waitForEvent3
+    waitForEvent
 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ProxyDirection, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { AsymmetricEncryptionType, ProxyDirection, 
+    SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
@@ -79,16 +80,17 @@ describe('proxy group key exchange', () => {
                 groupKeyRequest: {
                     requestId: 'requestId',
                     recipientId: toUserIdRaw(publisherUserId),
-                    rsaPublicKey: new Uint8Array(),
-                    groupKeyIds: ['mock']
+                    publicKey: new Uint8Array(),
+                    groupKeyIds: ['mock'],
+                    encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: hexToBinary('1234')
         }
 
         await Promise.all([
-            waitForEvent3(publisher.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(publisher.stack.getContentDeliveryManager(), 'newMessage'),
             subscriber.broadcast(request)
         ])
     })
@@ -111,15 +113,16 @@ describe('proxy group key exchange', () => {
                 groupKeyResponse: {
                     requestId: 'requestId',
                     recipientId: toUserIdRaw(publisherUserId),
-                    groupKeys: []
+                    groupKeys: [],
+                    encryptionType: AsymmetricEncryptionType.RSA
                 }
             },
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
             signature: hexToBinary('1234')
         }
 
         await Promise.all([
-            waitForEvent3(subscriber.stack.getContentDeliveryManager() as any, 'newMessage'),
+            waitForEvent(subscriber.stack.getContentDeliveryManager(), 'newMessage'),
             publisher.broadcast(response)
         ])
     })

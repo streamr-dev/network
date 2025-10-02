@@ -1,6 +1,6 @@
 import { MetricsReport, merge, wait } from '@streamr/utils'
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
+import { ConfigInjectionToken, StreamrClientConfig, EthereumProviderIdentityConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { StreamrClientEventEmitter } from './events'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
@@ -38,7 +38,7 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
     } else if (config.metrics !== undefined) {
         return merge(DEFAULTS, config.metrics)
     } else {
-        const isEthereumAuth = ((config.auth as ProviderAuthConfig)?.ethereum !== undefined)
+        const isEthereumAuth = ((config.auth as EthereumProviderIdentityConfig)?.ethereum !== undefined)
         return {
             ...DEFAULTS,
             periods: isEthereumAuth ? [] : DEFAULTS.periods

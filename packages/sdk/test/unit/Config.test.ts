@@ -2,7 +2,6 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import cloneDeep from 'lodash/cloneDeep'
 import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
-import { generateEthereumAccount } from '../../src/ethereumUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
@@ -54,34 +53,25 @@ describe('Config', () => {
                 }).toThrow('/contracts/theGraphUrl must match format "uri"')
             })
 
-            it('ethereum address', () => {
+            it('public key', () => {
                 expect(() => {
                     return createStrictConfig({
                         auth: {
-                            address: 'foo'
+                            publicKey: 'foo'
                         }
                     } as any)
-                }).toThrow('/auth/address must match format "ethereum-address"')
+                }).toThrow('/auth/publicKey must match format "hex-string"')
             })
 
-            it('ethereum private key', () => {
+            it('private key', () => {
                 expect(() => {
                     return createStrictConfig({
                         auth: {
                             privateKey: 'foo'
                         }
                     } as any)
-                }).toThrow('/auth/privateKey must match format "ethereum-private-key"')
+                }).toThrow('/auth/privateKey must match format "hex-string"')
             })
-        })
-    })
-
-    describe('ignorable properties', () => {
-        it('auth address', () => {
-            expect(() => {
-                const wallet = generateEthereumAccount()
-                return new StreamrClient({ auth: wallet })
-            }).not.toThrow()
         })
     })
 
@@ -163,6 +153,18 @@ describe('Config', () => {
                     theGraphUrl: CHAIN_CONFIG[environmentId].theGraphUrl
                 }
             })
+        })
+
+        it('peaq environment exists', () => {
+            expect(() => createStrictConfig({
+                environment: 'peaq'
+            })).not.toThrow()
+        })
+
+        it('iotex environment exists', () => {
+            expect(() => createStrictConfig({
+                environment: 'iotex'
+            })).not.toThrow()
         })
 
         it('override', () => {

@@ -1,22 +1,19 @@
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
-import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
 import { MessageRef } from '../../src/protocol/MessageRef'
 import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamMessage,
     StreamMessageType
 } from '../../src/protocol/StreamMessage'
 import { ValidationError } from '../../src/protocol/ValidationError'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const content = {
     hello: 'world',
 }
 
-const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
+const newGroupKey = { id: 'groupKeyId', data: hexToBinary('1234') }
 const signature = hexToBinary('0x123123')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
@@ -27,7 +24,7 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
         contentType: ContentType.JSON,
         messageType: StreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature,
         newGroupKey,
         ...overrides
@@ -63,7 +60,7 @@ describe('StreamMessage', () => {
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.SECP256K1,
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM,
                 signature
             })
             expect(streamMessage.getStreamId()).toEqual('streamId')
@@ -87,7 +84,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
-                signatureType: SignatureType.SECP256K1,
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM,
                 encryptionType: EncryptionType.NONE,
                 signature
             })
@@ -113,7 +110,7 @@ describe('StreamMessage', () => {
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.SECP256K1,
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM,
                 signature
             })
             expect(StreamMessage.isAESEncrypted(streamMessage)).toBe(false)
@@ -123,7 +120,7 @@ describe('StreamMessage', () => {
                 contentType: ContentType.JSON,
                 signature,
                 encryptionType: EncryptionType.AES,
-                signatureType: SignatureType.SECP256K1,
+                signatureType: SignatureType.ECDSA_SECP256K1_EVM,
                 groupKeyId: 'mock-id'
             })
 
@@ -223,10 +220,10 @@ describe('StreamMessage', () => {
                     content: new Uint8Array([1, 2, 3, 4, 5]),
                     contentType: ContentType.BINARY,
                     encryptionType: EncryptionType.AES,
-                    signatureType: SignatureType.SECP256K1,
+                    signatureType: SignatureType.ECDSA_SECP256K1_EVM,
                     signature,
                     groupKeyId: 'foo',
-                    newGroupKey: new EncryptedGroupKey('bar', new Uint8Array([1, 2, 3])),
+                    newGroupKey: { id: 'bar', data: new Uint8Array([1, 2, 3]) },
                     prevMsgRef: new MessageRef(1564046332168, 5),
                 })
                 const copyWithFieldsNullified = new StreamMessage({

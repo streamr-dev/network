@@ -1,8 +1,8 @@
 import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import range from 'lodash/range'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode'
 import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
@@ -51,7 +51,7 @@ describe('Propagation', () => {
     }, 45000)
 
     afterEach(async () => {
-        await Promise.all(contentDeliveryLayerNodes.map((node) => node.stop()))
+        contentDeliveryLayerNodes.forEach((node) => node.stop())
         await Promise.all(discoveryLayerNodes.map((node) => node.stop()))
     })
 

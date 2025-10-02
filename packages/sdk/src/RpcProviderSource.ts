@@ -43,16 +43,14 @@ export class RpcProviderSource {
      * the `getProvider` method as it provides better fail-safety.
      */
     getSubProviders(): AbstractProvider[] {
-        if (this.subProviders === undefined) {
-            this.subProviders = this.config.contracts.rpcs.map((c) => {
-                const f = new FetchRequest(c.url)
-                f.retryFunc = async () => false
-                // eslint-disable-next-line no-underscore-dangle
-                f.timeout = this.config._timeouts.jsonRpcTimeout
-                const opts = formJsonRpcApiProviderOptions(this.config)
-                return new LoggingJsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
-            })
-        }
+        this.subProviders ??= this.config.contracts.rpcs.map((c) => {
+            const f = new FetchRequest(c.url)
+            f.retryFunc = async () => false
+            // eslint-disable-next-line no-underscore-dangle
+            f.timeout = this.config._timeouts.jsonRpcTimeout
+            const opts = formJsonRpcApiProviderOptions(this.config)
+            return new LoggingJsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
+        })
         return this.subProviders
     }
 }

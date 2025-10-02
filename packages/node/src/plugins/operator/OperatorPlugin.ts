@@ -1,12 +1,10 @@
 import {
     ReviewRequestEvent,
-    SignerWithProvider,
     StreamrClient
 } from '@streamr/sdk'
 import {
     addManagedEventListener,
     Cache,
-    EthereumAddress,
     Logger,
     scheduleAtInterval,
     setAbortableInterval,
@@ -14,7 +12,6 @@ import {
     toEthereumAddress
 } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { Overrides } from 'ethers'
 import { Plugin } from '../../Plugin'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainTopologyService } from './MaintainTopologyService'
@@ -64,13 +61,6 @@ export interface OperatorPluginConfig {
         intervalInMs: number
         maxAgeInMs: number
     }
-}
-
-export interface OperatorServiceConfig {
-    signer: SignerWithProvider
-    operatorContractAddress: EthereumAddress
-    theGraphUrl: string
-    getEthersOverrides: () => Promise<Overrides>
 }
 
 const STAKED_OPERATORS_CACHE_MAX_AGE = 2 * 24 * 60 * 60 * 1000
@@ -135,7 +125,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 (async () => {
                     await announceNodeToStream(
                         toEthereumAddress(this.pluginConfig.operatorContractAddress),
-                        streamrClient
+                        streamrClient,
+                        this.brokerConfig
                     )
                 })()
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)

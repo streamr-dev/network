@@ -12,24 +12,17 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
+- Add support for using the plumtree optimization in stream partitions (https://github.com/streamr-dev/network/pull/3147)
+- Add listenable event `sponsorshipCreated` (https://github.com/streamr-dev/network/pull/3191)
+- Add config option `contracts.sponsorshipFactoryChainAddress` (https://github.com/streamr-dev/network/pull/3191)
 
 #### Changed
 
-- **BREAKING CHANGE**: Browser exports improved, but polyfills now required.
-  - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field.
-  - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite).
-
-  Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details.
-
+- Optimize `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3132)
 
 #### Deprecated
 
-- Deprecate storage node address `STREAMR_STORAGE_NODE_GERMANY` (https://github.com/streamr-dev/network/pull/3020)
-
 #### Removed
-
-- *BREAKING* Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
 
 #### Fixed
 
@@ -62,6 +55,75 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [103.0.0] - 2025-06-10
+
+### @streamr/sdk
+
+#### Added
+
+- Add support for quantum resistant key exchange using ML-KEM (https://github.com/streamr-dev/network/pull/3060)
+- Add support for quantum resistant signatures using ML-DSA (https://github.com/streamr-dev/network/pull/3074)
+- Add support for ECDSA on secp256r1 curve (https://github.com/streamr-dev/network/pull/3088)
+- Add new storage node address `STREAMR_STORAGE_NODE_ADDRESS` (https://github.com/streamr-dev/network/pull/3020)
+- Add `peaq` environment (https://github.com/streamr-dev/network/pull/3111)
+- Add `iotex` environment (https://github.com/streamr-dev/network/pull/3142)
+
+#### Changed
+
+- **BREAKING CHANGE**: Browser exports improved, but polyfills now required
+  - The package now correctly exposes a `script` export and maps Node-specific modules via the `browser` field
+  - Some Node.js modules are no longer automatically polyfilled. Use tools like [`node-polyfill-webpack-plugin`](https://www.npmjs.com/package/node-polyfill-webpack-plugin) (Webpack) or [`vite-plugin-node-polyfills`](https://www.npmjs.com/package/vite-plugin-node-polyfills) (Vite)
+  - Refer to [the docs](https://docs.streamr.network/usage/sdk/how-to-use) for migration details
+- **BREAKING CHANGE**: The string values in `Message.signatureType` now correspond with the `KeyType` values. This means the previously output value `SECP256K1` is now `ECDSA_SECP256K1_EVM`.
+- **BREAKING CHANGE**: Rename `groupKeyId` field `encryptionKeyId` in `Message` interface (https://github.com/streamr-dev/network/pull/3084)
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
+
+#### Deprecated
+
+- Deprecate storage node address `STREAMR_STORAGE_NODE_GERMANY` (https://github.com/streamr-dev/network/pull/3020)
+
+#### Removed
+
+- **BREAKING CHANGE**: Remove lit protocol integration and related config options `encryption.litProtocolEnabled` and `encryption.litProtocolLogging` (https://github.com/streamr-dev/network/pull/3036)
+- **BREAKING CHANGE**: Remove `StreamrClient#generateEthereumAccount()` in favour of `EthereumKeyPairIdentity#generate()`
+- **BREAKING CHANGE**: Remove `orderBy` parameter from `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3131)
+
+#### Fixed
+
+- Fix memory leak in `DhtNode` (https://github.com/streamr-dev/network/pull/3065)
+
+### @streamr/node
+
+#### Added
+
+- Add experimental `autostaker` plugin that manages sponsorship staking and unstaking automatically for operators (https://github.com/streamr-dev/network/pull/3086)
+
+#### Changed
+
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
+
+### @streamr/cli-tools
+
+#### Added
+
+- CLI tool allows generating key pairs with `streamr identity generate --key-type [...]` (https://github.com/streamr-dev/network/pull/3074)
+
+#### Changed
+
+- **BREAKING CHANGE**: CLI tool command `streamr wallet whoami` is now `streamr identity whoami` (https://github.com/streamr-dev/network/pull/3074)
+- **BREAKING CHANGE**: Node.js v20 or higher is required (https://github.com/streamr-dev/network/pull/3138)
+
+
+## [102.1.1] - 2025-04-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Update internal list of JSON RPC urls for Polygon
+
 
 ## [102.1.0] - 2025-02-19
 
@@ -124,7 +186,7 @@ Changes before Tatum release are not documented in this file.
   - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
-  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801)
   - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Removed
@@ -147,7 +209,7 @@ Changes before Tatum release are not documented in this file.
   - fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
   - make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
   - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
-  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
+  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)
 
 ### @streamr/node
 
@@ -171,6 +233,7 @@ Changes before Tatum release are not documented in this file.
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 - Fix a bug causing the inspection process to freeze (https://github.com/streamr-dev/network/pull/2893)
+- Fix analysis of WebRTC private address probing warning (https://github.com/streamr-dev/network/pull/3070)
 
 ### @streamr/cli-tools
 
@@ -344,13 +407,13 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix NodeJS v18 compatibility (https://github.com/streamr-dev/network/pull/2462)
+- Fix Node.js v18 compatibility (https://github.com/streamr-dev/network/pull/2462)
 
 ### @streamr/node
 
 #### Changed
 
-- Update Docker runtime to NodeJS v20 (https://github.com/streamr-dev/network/pull/2466)
+- Update Docker runtime to Node.js v20 (https://github.com/streamr-dev/network/pull/2466)
 
 
 ## [100.2.0] - 2024-03-28
@@ -393,7 +456,9 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v102.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.0.0...HEAD
+[103.0.0]: https://github.com/streamr-dev/network/compare/v102.1.1...v103.0.0
+[102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
 [102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0
 [102.0.0]: https://github.com/streamr-dev/network/compare/v101.1.2...v102.0.0
 [101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2

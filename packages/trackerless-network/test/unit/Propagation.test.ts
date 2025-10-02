@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
-import { Propagation } from '../../src/logic/propagation/Propagation'
+import { Propagation } from '../../src/content-delivery-layer/propagation/Propagation'
 import {
     ContentType,
     EncryptionType,
@@ -24,7 +24,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
     return {
         messageId,
         signature: hexToBinary('0x1111'),
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         body: {
             oneofKind: 'contentMessage',
             contentMessage: {

@@ -14,7 +14,7 @@ const READY_WAIT_MS = 500
 const JITTER = 100
 
 function createHeartbeatMsg(nodeId: string): Record<string, unknown> {
-    return createHeartbeatMessage({ nodeId })
+    return createHeartbeatMessage({ nodeId }, { plugins: {} })
 }
 
 describe(OperatorFleetState, () => {

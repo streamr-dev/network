@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier-server",
-  "version": "103.0.0-rc.0",
+  "version": "103.1.0-rc.5",
   "description": "Server for providing TLS Certificates",
   "repository": {
     "type": "git",
@@ -13,6 +13,12 @@
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "browser": {
     "dist/src/exports.js": false
   },
@@ -28,23 +34,23 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.758.0",
-    "@streamr/autocertifier-client": "103.0.0-rc.0",
-    "@streamr/dht": "103.0.0-rc.0",
-    "@streamr/proto-rpc": "103.0.0-rc.0",
-    "@streamr/utils": "103.0.0-rc.0",
+    "@aws-sdk/client-route-53": "^3.896.0",
+    "@streamr/autocertifier-client": "103.1.0-rc.5",
+    "@streamr/dht": "103.1.0-rc.5",
+    "@streamr/proto-rpc": "103.1.0-rc.5",
+    "@streamr/utils": "103.1.0-rc.5",
     "acme-client": "^5.4.0",
-    "body-parser": "^1.20.3",
+    "body-parser": "^2.2.0",
     "dns2": "^2.1.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/dns2": "^2.0.9",
-    "@types/express": "^4.17.21"
+    "@types/dns2": "^2.0.10",
+    "@types/express": "^5.0.1"
   }
 }

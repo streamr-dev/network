@@ -1,3 +1,4 @@
+import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
 import {
     EthereumAddress,
     GraphQLQuery,
@@ -17,14 +18,12 @@ import {
 import { ContractTransactionResponse, Interface } from 'ethers'
 import intersection from 'lodash/intersection'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
-import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
-import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
@@ -42,22 +41,11 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { createCacheMap, Mapping } from '../utils/Mapping'
+import { Mapping, createCacheMap } from '../utils/Mapping'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
-
-/*
- * On-chain registry of stream metadata and permissions.
- *
- * Does not support system streams (the key exchange stream)
- */
-
-export interface StreamQueryResult {
-    id: string
-    metadata: string
-}
+import { InternalSearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 interface StreamPublisherOrSubscriberItem {
     id: string
@@ -123,7 +111,7 @@ export class StreamRegistry {
     private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly logger: Logger
     private readonly metadataCache: Mapping<StreamID, StreamMetadata>
     private readonly publisherCache: Mapping<[StreamID, UserID], boolean>
@@ -138,7 +126,7 @@ export class StreamRegistry {
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -147,17 +135,17 @@ export class StreamRegistry {
         this.theGraphClient = theGraphClient
         this.streamIdBuilder = streamIdBuilder
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.streamRegistryContractReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
             toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
-            StreamRegistryArtifact,
+            StreamRegistryABI,
             this.rpcProviderSource.getProvider(),
             'streamRegistry'
         )
         initContractEventGateway({
             sourceDefinition: {
-                contractInterfaceFragment: new Interface(StreamRegistryArtifact).getEvent('StreamCreated')!,
+                contractInterfaceFragment: new Interface(StreamRegistryABI).getEvent('StreamCreated')!,
                 contractAddress: toEthereumAddress(this.config.contracts.streamRegistryChainAddress)
             },
             sourceEmitter: chainEventPoller,
@@ -202,10 +190,10 @@ export class StreamRegistry {
 
     private async connectToContract(): Promise<void> {
         if (this.streamRegistryContract === undefined) {
-            const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            const chainSigner = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
-                StreamRegistryArtifact,
+                StreamRegistryABI,
                 chainSigner,
                 'streamRegistry'
             )
@@ -250,7 +238,7 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = toEthereumAddress(await this.authentication.getUserId())
+        const userAddress = toEthereumAddress(await this.identity.getUserId())
         if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
@@ -298,16 +286,14 @@ export class StreamRegistry {
     async* searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy
     ): AsyncGenerator<StreamID> {
         const queryResult = _searchStreams(
             term,
             permissionFilter,
-            orderBy,
             this.theGraphClient)
         for await (const item of queryResult) {
-            const id = toStreamID(item.stream.id)
-            this.populateMetadataCache(id, parseMetadata(item.stream.metadata))
+            const id = toStreamID(item.id)
+            this.populateMetadataCache(id, parseMetadata(item.metadata))
             yield id
         }
     }

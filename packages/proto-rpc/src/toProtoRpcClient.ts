@@ -42,8 +42,8 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): Pr
     const notify = async (methodName: string, obj: ClassType, args: any[]): Promise<void> => {
         if (args.length < 2) {
             args.push({})
-        } else if (!args[1]) {
-            args[1] = {}
+        } else {
+            args[1] ??= {}
         }
         args[1].isProtoRpc = true
         args[1].notification = true
@@ -54,8 +54,8 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): Pr
     const callRpc = (methodName: string, obj: ClassType, args: any[]) => {
         if (args.length < 2) {
             args.push({})
-        } else if (!args[1]) {
-            args[1] = {}
+        } else {
+            args[1] ??= {}
         }
         args[1].isProtoRpc = true
         return obj[methodName].apply(obj, args)

@@ -2,6 +2,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     Logger,
     MetricsContext,
+    addManagedEventListener,
     merge,
     scheduleAtInterval,
     until
@@ -54,7 +55,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 
-export interface DhtNodeEvents {
+export interface DhtNodeEvents extends TransportEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
     nearbyContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -128,14 +129,13 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 
 const logger = new Logger(module)
 
+export const NUMBER_OF_NODES_PER_KBUCKET_DEFAULT = 8
 const PERIODICAL_PING_INTERVAL = 60 * 1000
 
 // TODO move this to trackerless-network package and change serviceId to be a required paramater
 export const CONTROL_LAYER_NODE_SERVICE_ID = 'layer0'
 
-export type Events = TransportEvents & DhtNodeEvents
-
-export class DhtNode extends EventEmitter<Events> implements ITransport {
+export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     private readonly options: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
@@ -158,7 +158,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: CONTROL_LAYER_NODE_SERVICE_ID,
             joinParallelism: 3,
             maxContactCount: 200,
-            numberOfNodesPerKBucket: 8,
+            numberOfNodesPerKBucket: NUMBER_OF_NODES_PER_KBUCKET_DEFAULT,
             joinNoProgressLimit: 5,
             dhtJoinTimeout: 60000,
             peerDiscoveryQueryBatchSize: 5,
@@ -262,7 +262,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.options.rpcRequestTimeout }
         )
 
-        this.transport.on('message', (message: Message) => this.handleMessageFromTransport(message))
+        /* eslint-disable indent */
+        addManagedEventListener<'message', (message: Message) => void>(  // TODO remove explicit type in NET-1449
+            this.transport,
+            'message',
+            (message: Message) => this.handleMessageFromTransport(message),
+            this.abortController.signal
+        )
 
         this.initPeerManager()
 
@@ -381,23 +387,35 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 }
             }
         })
-        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.router!.onNodeConnected(peerDescriptor)
-            this.emit('connected', peerDescriptor)
-        })
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            const isControlLayerNode = (this.connectionLocker !== undefined)
-            if (isControlLayerNode) {
-                const nodeId = toNodeId(peerDescriptor)
-                if (gracefulLeave) {
-                    this.peerManager!.removeContact(nodeId)
-                } else {
-                    this.peerManager!.removeNeighbor(nodeId)
+        /* eslint-disable indent */
+        addManagedEventListener<'connected', (peerDescriptor: PeerDescriptor) => void>(  // TODO remove explicit type in NET-1449
+            this.transport!,
+            'connected',
+            (peerDescriptor: PeerDescriptor) => {
+                this.router!.onNodeConnected(peerDescriptor)
+                this.emit('connected', peerDescriptor)
+            },
+            this.abortController.signal
+        )
+        /* eslint-disable indent, max-len */
+        addManagedEventListener<'disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void>(  // TODO remove explicit type in NET-1449
+            this.transport!,
+            'disconnected',
+            (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+                const isControlLayerNode = (this.connectionLocker !== undefined)
+                if (isControlLayerNode) {
+                    const nodeId = toNodeId(peerDescriptor)
+                    if (gracefulLeave) {
+                        this.peerManager!.removeContact(nodeId)
+                    } else {
+                        this.peerManager!.removeNeighbor(nodeId)
+                    }
                 }
-            }
-            this.router!.onNodeDisconnected(peerDescriptor)
-            this.emit('disconnected', peerDescriptor, gracefulLeave)
-        })
+                this.router!.onNodeDisconnected(peerDescriptor)
+                this.emit('disconnected', peerDescriptor, gracefulLeave)
+            },
+            this.abortController.signal
+        )
     }
 
     private bindRpcLocalMethods(): void {
@@ -475,7 +493,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 logger.debug(`Using region ${region} from CDN when generating local PeerDescriptor`)
             }
             
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.options.nodeId)
+            this.localPeerDescriptor = await createPeerDescriptor(connectivityResponse, region, this.options.nodeId)
         }
         return this.localPeerDescriptor
     }
@@ -550,11 +568,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
-        const connectedEntryPoints = this.getConnectedEntryPoints()
-        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.storeDataToDhtViaPeer(key, data, sample(connectedEntryPoints)!)
-        }
-        return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
+        return this.executeRecursiveOperation(
+            () => this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId()),
+            (connectedEntryPoint) => this.storeDataToDhtViaPeer(key, data, connectedEntryPoint)
+        )
     }
 
     public async storeDataToDhtViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -568,12 +585,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async fetchDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
-        const connectedEntryPoints = this.getConnectedEntryPoints()
-        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.fetchDataFromDhtViaPeer(key, sample(connectedEntryPoints)!)
-        }
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
-        return result.dataEntries ?? []  // TODO is this fallback needed?
+        return this.executeRecursiveOperation(
+            async () => {
+                const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
+                return result.dataEntries ?? [] // TODO is this fallback needed?
+            },
+            (connectedEntryPoint) => this.fetchDataFromDhtViaPeer(key, connectedEntryPoint)
+        )
     }
 
     public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
@@ -586,6 +604,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.externalFetchData(key)
     }
 
+    private async executeRecursiveOperation<ReturnType>(
+        executeDirectly: () => ReturnType,
+        executeViaPeer: (connectedEntryPoint: PeerDescriptor) => ReturnType
+    ): Promise<ReturnType> {
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return executeViaPeer(sample(connectedEntryPoints)!)
+        }
+        return executeDirectly()
+    }
+
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
             await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
@@ -593,8 +622,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
-        return result.closestNodes
+        return this.executeRecursiveOperation(
+            async () => {
+                const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
+                return result.closestNodes
+            },
+            (connectedEntryPoint) => this.findClosestNodesViaPeer(key, connectedEntryPoint)
+        )
+    }
+    private async findClosestNodesViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
+        return await rpcRemote.externalFindClosestNode(key)
     }
 
     public getTransport(): ITransport {

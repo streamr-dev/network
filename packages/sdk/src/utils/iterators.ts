@@ -33,12 +33,10 @@ export function iteratorFinally<T>(
     let onFinallyTask: Promise<void> | undefined
     // ensure finally only runs once
     let onFinallyOnce: OnFinallyFn = (err?: Error) => {
-        if (!onFinallyTask) {
-            // eslint-disable-next-line promise/no-promise-in-callback
-            onFinallyTask = Promise.resolve(onFinally(err)).finally(() => {
-                onFinallyOnce = () => {}
-            })
-        }
+        // eslint-disable-next-line promise/no-promise-in-callback
+        onFinallyTask ??= Promise.resolve(onFinally(err)).finally(() => {
+            onFinallyOnce = () => {}
+        })
         return onFinallyTask
     }
 
@@ -60,9 +58,7 @@ export function iteratorFinally<T>(
             try {
                 return await originalFn(...args)
             } catch (err) {
-                if (!error) {
-                    error = err
-                }
+                error ??= err
                 throw err
             } finally {
                 await onFinallyOnce(error)
@@ -76,9 +72,7 @@ export function iteratorFinally<T>(
         try {
             yield* iterable
         } catch (err) {
-            if (!error) {
-                error = err
-            }
+            error ??= err
             throw err
         } finally {
             await onFinallyOnce(error)

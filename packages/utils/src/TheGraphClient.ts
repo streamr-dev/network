@@ -113,14 +113,6 @@ export class TheGraphClient {
         // eslint-disable-next-line no-underscore-dangle
         return response._meta.block.number
     }
-
-    static createWhereClause(variables: Record<string, any>): string {
-        const parameterList = Object.keys(variables)
-            .filter((k) => variables[k] !== undefined)
-            .map((k) => k + ': $' + k)
-            .join(' ')
-        return `where: { ${parameterList} }`
-    }
 }
 
 class BlockNumberGate extends Gate {
@@ -162,7 +154,10 @@ class IndexingState {
     }
 
     async waitUntilIndexed(blockNumber: number): Promise<void> {
-        this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
+        if (blockNumber <= this.blockNumber) {
+            return
+        }
+        this.logger.debug('Wait until The Graph is synchronized', { blockNumber: this.blockNumber, blockTarget: blockNumber })
         const gate = this.getOrCreateGate(blockNumber)
         try {
             await withTimeout(

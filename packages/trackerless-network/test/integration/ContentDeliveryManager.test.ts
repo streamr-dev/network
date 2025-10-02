@@ -3,9 +3,9 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { StreamPartIDUtils, until, waitForEvent3, wait } from '@streamr/utils'
-import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
-import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
+import { StreamPartIDUtils, until, waitForEvent, wait } from '@streamr/utils'
+import { ContentDeliveryManager } from '../../src/ContentDeliveryManager'
+import { ControlLayerNode } from '../../src/control-layer/ControlLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 
@@ -96,8 +96,8 @@ describe('ContentDeliveryManager', () => {
         await until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1)
         await until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         await Promise.all([
-            waitForEvent3<Events>(manager1, 'newMessage'),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            waitForEvent(manager1, 'newMessage'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             manager2.broadcast(msg)
         ])
     })
@@ -122,11 +122,11 @@ describe('ContentDeliveryManager', () => {
             randomUserId()
         )
         await Promise.all([
-            waitForEvent3<Events>(manager1, 'newMessage'),
-            waitForEvent3<Events>(manager2, 'newMessage'),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            waitForEvent(manager1, 'newMessage'),
+            waitForEvent(manager2, 'newMessage'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             manager1.broadcast(msg2),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             manager2.broadcast(msg)
         ])
     })

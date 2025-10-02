@@ -1,16 +1,31 @@
-import { StreamrClient, StreamrClientConfig } from '@streamr/sdk'
+import { KeyPairIdentityConfig, StreamrClient, StreamrClientConfig } from '@streamr/sdk'
 import merge from 'lodash/merge'
 import { Options } from './command'
 import { getConfig } from './config'
 
 export const getClientConfig = (commandOptions: Options, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
     const configFileJson = getConfig(commandOptions.config)?.client
-    const environmentOptions = { environment: commandOptions.env }
-    const authenticationOptions = (commandOptions.privateKey !== undefined) ? { auth: { privateKey: commandOptions.privateKey } } : undefined
+    const environmentOptions: StreamrClientConfig = { environment: commandOptions.env }
+
+    const keyPairConfig: KeyPairIdentityConfig | undefined = 
+        (commandOptions.privateKey) ? { 
+            privateKey: commandOptions.privateKey,
+            publicKey: commandOptions.publicKey,
+            keyType: commandOptions.keyType
+        } : undefined
+
+    const encryptionOptions: StreamrClientConfig = 
+        (commandOptions.quantum === true) ? { 
+            encryption: { 
+                requireQuantumResistantKeyExchange: true,
+                requireQuantumResistantSignatures: true,
+            } 
+        } : {}
     return merge(
         configFileJson,
         environmentOptions,
-        authenticationOptions,
+        keyPairConfig ? { auth: keyPairConfig } : {},
+        encryptionOptions,
         overridenOptions
     )
 }

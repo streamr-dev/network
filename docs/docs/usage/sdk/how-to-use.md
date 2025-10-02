@@ -31,8 +31,8 @@ const { StreamrClient } = require('@streamr/sdk');
 
 ### Environments and frameworks
 
-#### NodeJS
-NodeJS `18.13.x` is the minimum required version, ideally version 20 and later. NodeJS, NPM `8.x` and later versions are recommended.
+#### Node.js
+Node.js `20` is the minimum required version, ideally version 22 and later. Node.js, NPM `10` and later versions are recommended.
 
 #### Browser (Website/WebApps)
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:

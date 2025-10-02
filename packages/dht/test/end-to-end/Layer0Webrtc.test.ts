@@ -1,4 +1,4 @@
-import { areEqualBinaries, waitForEvent3 } from '@streamr/utils'
+import { areEqualBinaries, waitForEvent } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
@@ -53,8 +53,8 @@ describe('Layer0 with WebRTC connections', () => {
     it('Happy path two peers', async () => {
 
         await Promise.all([
-            waitForEvent3<any>(
-                node2 as any,
+            waitForEvent(
+                node2,
                 'connected',
                 20000,
                 (peerDescriptor: PeerDescriptor) => {

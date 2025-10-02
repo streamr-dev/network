@@ -3,14 +3,14 @@ sidebar_position: 2
 ---
 
 # Use Streamr in your web app
-In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a NodeJS server).
+In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a Node.js server).
 
 **Prerequisites:**
 
--   NPM v8 or greater
--   NodeJS 18.x or greater (Ideally v20+)
+-   NPM v10 or greater
+-   Node.js 20.x or greater (Ideally v22+)
 -   A basic understanding of ReactJS or NextJS
--   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+-   A small amount of `POL` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Setup & installation
 
@@ -37,8 +37,7 @@ To do that, we must first set up the `StreamrClient`. The `StreamrClient` handle
 In this case, the stream is set to `PUBLIC` (anyone can read). However, since this information gets stored in the Stream registry, which exists inside a smart contract on the Polygon chain, we need a wallet to receive the information.
 
 :::info
-By default, your stream will only have the creator address set for permission to read from your stream.
-If you have created your own stream, set the `SUBSCRIBE` permission to public or allowlist some addresses so that your users can read data from your stream. Learn more about **[authentication](../usage/authenticate)**.
+Initially, only the creator of the stream can subscribe to it. To allow others to subscribe to your stream, you'll need to modify the stream's permissions. Either make the stream publicly readable or grant the `subscribe` permission to selected users. **Learn more about [Identity](../usage/identity.md) and [Stream Permissions](../usage/streams/permissions.md).**
 :::
 
 ```ts

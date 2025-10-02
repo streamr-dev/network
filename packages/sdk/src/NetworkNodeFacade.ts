@@ -11,13 +11,14 @@ import {
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
+    StreamPartDeliveryOptions,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
 import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import pull from 'lodash/pull'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
@@ -32,9 +33,16 @@ export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
     removeMessageListener: (listener: (msg: NewStreamMessage) => void) => void
-    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    join: (
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        deliveryOptions?: StreamPartDeliveryOptions
+    ) => Promise<void>
     leave: (streamPartId: StreamPartID) => Promise<void>
-    broadcast: (streamMessage: NewStreamMessage) => Promise<void>
+    broadcast: (
+        streamMessage: NewStreamMessage,
+        deliveryOptions?: StreamPartDeliveryOptions
+    ) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: (streamPartId: StreamPartID) => readonly DhtAddress[]
     getPeerDescriptor: () => PeerDescriptor
@@ -99,7 +107,7 @@ export class NetworkNodeFacade {
     private readonly networkNodeFactory: NetworkNodeFactory
     private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly eventEmitter: EventEmitter<Events>
     private readonly destroySignal: DestroySignal
 
@@ -107,13 +115,13 @@ export class NetworkNodeFacade {
         networkNodeFactory: NetworkNodeFactory,
         operatorRegistry: OperatorRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         destroySignal: DestroySignal
     ) {
         this.networkNodeFactory = networkNodeFactory
         this.operatorRegistry = operatorRegistry
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.eventEmitter = new EventEmitter<Events>()
         this.destroySignal = destroySignal
         destroySignal.onDestroy.listen(this.destroy)
@@ -214,9 +222,13 @@ export class NetworkNodeFacade {
         return node.getNodeId()
     }
 
-    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+    async join(
+        streamPartId: StreamPartID,
+        neighborRequirement?: { minCount: number, timeout: number },
+        deliveryOptions?: StreamPartDeliveryOptions
+    ): Promise<void> {
         const node = await this.getNode()
-        await node.join(streamPartId, neighborRequirement)
+        await node.join(streamPartId, neighborRequirement, deliveryOptions)
     }
 
     async leave(streamPartId: StreamPartID): Promise<void> {
@@ -224,9 +236,9 @@ export class NetworkNodeFacade {
         await node.leave(streamPartId)
     }
 
-    async broadcast(msg: OldStreamMessage): Promise<void> {
+    async broadcast(msg: OldStreamMessage, deliveryOptions?: StreamPartDeliveryOptions): Promise<void> {
         const node = await this.getNode()
-        node.broadcast(StreamMessageTranslator.toProtobuf(msg))
+        node.broadcast(StreamMessageTranslator.toProtobuf(msg), deliveryOptions)
     }
 
     addMessageListener(listener: (msg: OldStreamMessage) => void): void {
@@ -294,7 +306,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getUserId(),
+            await this.identity.getUserId(),
             connectionCount
         )
     }

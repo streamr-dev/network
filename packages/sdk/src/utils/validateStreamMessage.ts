@@ -1,10 +1,10 @@
-import { UserID } from '@streamr/utils'
+import { toUserId, UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
+import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -16,9 +16,7 @@ export const validateStreamMessage = async (
         // here if e.g. contract call fails? TODO is this really needed as
         // the onError callback in messagePipeline knows which message
         // it is handling?
-        if (!err.streamMessage) {
-            err.streamMessage = msg
-        }
+        err.streamMessage ??= msg
         throw err
     })
 }
@@ -44,7 +42,7 @@ const doValidate = async (
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                convertBytesToGroupKeyRequest(streamMessage.content).recipient,
+                toUserId(GroupKeyRequest.fromBinary(streamMessage.content).recipientId),
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -52,7 +50,7 @@ const doValidate = async (
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                convertBytesToGroupKeyResponse(streamMessage.content).recipient,
+                toUserId(GroupKeyResponse.fromBinary(streamMessage.content).recipientId),
                 streamRegistry
             )
         default:

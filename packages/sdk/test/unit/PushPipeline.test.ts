@@ -8,9 +8,10 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
-import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const PUBLISHER_ID = randomUserId()
 
@@ -27,12 +28,12 @@ describe('PushPipeline', () => {
             content: utf8ToBinary(JSON.stringify(Msg())),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE
-        }, SignatureType.SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
     }
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        messageSigner = new MessageSigner(await createRandomAuthentication())
+        messageSigner = new MessageSigner(await createRandomIdentity())
     })
 
     afterEach(async () => {
@@ -93,7 +94,7 @@ describe('PushPipeline', () => {
             content: utf8ToBinary(JSON.stringify(testMessage)),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-        }, SignatureType.SECP256K1)
+        }, SignatureType.ECDSA_SECP256K1_EVM)
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)

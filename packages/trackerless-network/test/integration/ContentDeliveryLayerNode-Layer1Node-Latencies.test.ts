@@ -1,9 +1,9 @@
 import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import range from 'lodash/range'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/content-delivery-layer/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
@@ -65,7 +65,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         entryPointDiscoveryLayerNode.stop()
         entryPointContentDeliveryLayerNode.stop()
         await Promise.all(otherDiscoveryLayerNodes.map((node) => node.stop()))
-        await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
+        otherContentDeliveryLayerNodes.forEach((node) => node.stop())
     })
 
     it('happy path single node', async () => {
@@ -107,7 +107,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     it('happy path 64 nodes', async () => {
         await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
         await Promise.all(range(otherNodeCount).map((i) => {
-            otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
+            return otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             until(() => node.getNeighbors().length >= 4, 10000)

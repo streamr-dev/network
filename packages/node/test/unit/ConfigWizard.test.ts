@@ -863,12 +863,12 @@ describe('Config wizard', () => {
             Step.pubsubPort(
                 { type: '12' },
                 'enter',
-                { find: /greater than or equal to 1024/i },
+                { find: /expected number to be >=1024/i },
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
                 { type: '128000' },
                 'enter',
-                { find: /less than or equal to 49151/i },
+                { find: /expected number to be <=49151/i },
                 'abort'
             ),
         ])
@@ -1264,7 +1264,7 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).toMatch(/has 0\.09 matic/i)
+        expect(summary).toMatch(/has 0\.09 POL/i)
 
         expect(summary).toMatch(/you'll need to fund it with/i)
     })
@@ -1284,7 +1284,7 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).toMatch(/has 0\.11 matic/i)
+        expect(summary).toMatch(/has 0\.11 POL/i)
 
         expect(summary).not.toMatch(/you'll need to fund it with/i)
     })
@@ -1309,7 +1309,7 @@ describe('Config wizard', () => {
 
         expect(summary).toMatch(/failed to fetch node's balance/i)
 
-        expect(summary).not.toMatch(/has \d+.\d+ matic/i)
+        expect(summary).not.toMatch(/has \d+.\d+ POL/i)
 
         expect(summary).not.toMatch(/you'll need to fund it with/i)
     })

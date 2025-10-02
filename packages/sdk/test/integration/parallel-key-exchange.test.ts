@@ -5,7 +5,6 @@ import { collect, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import range from 'lodash/range'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -16,6 +15,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -63,18 +63,19 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of publishers) {
-            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey)
+            const identity = EthereumKeyPairIdentity.fromPrivateKey(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication,
+                identity: identity,
                 streamRegistry: createStreamRegistry({
                     partitionCount: 1,
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey),
+                groupKeyQueue: await createGroupKeyQueue(identity, publisher.groupKey),
                 signatureValidator: mock<SignatureValidator>(),
-                messageSigner: new MessageSigner(authentication)
+                messageSigner: new MessageSigner(identity),
+                config: {},
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

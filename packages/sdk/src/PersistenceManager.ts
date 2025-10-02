@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { join } from 'path'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Persistence } from './utils/persistence/Persistence'
@@ -17,16 +17,16 @@ export const NAMESPACES = {
 export class PersistenceManager {
 
     private persistence?: ServerPersistence
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly loggerFactory: LoggerFactory
 
     /* eslint-disable indent */
     constructor(
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory
     ) {
-        this.authentication = authentication
+        this.identity = identity
         this.loggerFactory = loggerFactory
         destroySignal.onDestroy.listen(() => {
             if (this.persistence !== undefined) {
@@ -36,14 +36,12 @@ export class PersistenceManager {
     }
 
     private async ensureInitialized() {
-        if (this.persistence === undefined) {
-            this.persistence = await ServerPersistence.createInstance({
-                loggerFactory: this.loggerFactory,
-                ownerId: await this.authentication.getUserId(),
-                namespaces: Object.values(NAMESPACES),
-                migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
-            })
-        }
+        this.persistence ??= await ServerPersistence.createInstance({
+            loggerFactory: this.loggerFactory,
+            ownerId: await this.identity.getUserId(),
+            namespaces: Object.values(NAMESPACES),
+            migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
+        })
     }
 
     async getPersistence(namespace: string): Promise<Persistence> {

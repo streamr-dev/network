@@ -1,4 +1,4 @@
-import { BrandedString, EthereumAddress, hash, MapWithTtl, recoverSignerUserId, toUserId, UserID } from '@streamr/utils'
+import { BrandedString, EthereumAddress, EcdsaSecp256k1Evm, MapWithTtl, toUserId, UserID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
@@ -11,6 +11,8 @@ export const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as de
 export type CacheKey = BrandedString<string>
 
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+const signingUtil = new EcdsaSecp256k1Evm()
 
 function formCacheKey(contractAddress: EthereumAddress, signerUserId: UserID): CacheKey {
     return `${contractAddress}_${signerUserId}` as CacheKey
@@ -39,14 +41,14 @@ export class ERC1271ContractFacade {
     }
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
+        const recoveredSignerUserId = toUserId(signingUtil.recoverSignerUserId(signature, payload))
         const cacheKey = formCacheKey(contractAddress, recoveredSignerUserId)
         const cachedValue = this.publisherCache.get(cacheKey)
         if (cachedValue !== undefined) {
             return cachedValue
         } else {
             const contract = await this.contractsByAddress.get(contractAddress)
-            const result = await contract.isValidSignature(hash(payload), signature)
+            const result = await contract.isValidSignature(signingUtil.keccakHash(payload), signature)
             const isValid = result === SUCCESS_MAGIC_VALUE
             this.publisherCache.set(cacheKey, isValid)
             return isValid

@@ -18,7 +18,7 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 ```
 npm install -g @streamr/cli-tools
 ```
-Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended.
+Node.js `20` is the minimum required version. Node.js `22`, NPM `10` and later versions are recommended.
 
 ## Use
 All commands follow pattern `streamr <command> <subcommand>`, e.g.
@@ -166,7 +166,7 @@ You must pass either the `--private-key` or `--config` option.
 
 ### Configuration
 
-User can specify environment and authentication details with the following command line arguments:
+User can specify environment and identity details with the following command line arguments:
 - `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
 - `--config <file>`, e.g. `--config foobar.json`
 - `--env` use a pre-defined environment, e.g. `--env dev2` to use the [development environment](https://github.com/streamr-dev/streamr-docker-dev)

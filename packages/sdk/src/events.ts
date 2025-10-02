@@ -4,11 +4,13 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { StreamCreationEvent } from './contracts/StreamRegistry'
 import { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
 import { StreamMessage } from './protocol/StreamMessage'
+import { SponsorshipCreatedEvent } from './contracts/SponsorshipFactory'
 
 export interface StreamrClientEvents {
     streamCreated: (payload: StreamCreationEvent) => void
     streamAddedToStorageNode: (payload: StorageNodeAssignmentEvent) => void
     streamRemovedFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
+    sponsorshipCreated: (payload: SponsorshipCreatedEvent) => void
     /** @internal */
     encryptionKeyStoredToLocalStore: (keyId: string) => void
     /** @internal */

@@ -54,6 +54,8 @@ After this, the operator will continue to operate the nodes and earn. When they 
 
 ## Technical description
 
+NOTE: Everything here is "good to know", but this isn't a developer guide. This is a description of the internal mechanics and token flows inside the contracts, on a relatively high level. Please refer to [the smart contracts document](../smart-contracts.md) for how to interact with the contracts.
+
 The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the staked Operators.
 
 Operator contracts are controlled by their operators. The DATA tokens held by the Operator contract are the funds that the controlling operator can `stake` into whichever Sponsorship contracts they like. By staking into a Sponsorship, the operator commits to servicing the sponsored stream.
@@ -92,7 +94,7 @@ There are two DATA token flow processes in the normal operation of Streamr token
 
 Staking process where Operators stake to earn from Sponsorships:
 - Operators send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
-- Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`
+- Sponsors send DATA tokens to the Sponsorship contract by calling the `sponsor` method, or `transferAndCall`
   - simply using `transfer` is not recommended, since the system will lose track of who funded the Sponsorship
 - Every second, the remaining sponsorship is allocated to the Operators in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy
 - Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called

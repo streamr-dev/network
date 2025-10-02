@@ -2,7 +2,7 @@
 
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
-import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { EARLY_TIMEOUT, IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
@@ -15,13 +15,11 @@ enum DisconnectedRtcPeerConnectionStateEnum {
 
 const logger = new Logger(module)
 
-type Events = WebrtcConnectionEvents & ConnectionEvents
-
 interface Params {
     iceServers?: IceServer[]
 }
 
-export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
+export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IWebrtcConnection, IConnection {
 
     public connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
@@ -30,11 +28,14 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private lastState: RTCPeerConnectionState = 'connecting'
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
+    private readonly bufferThresholdHigh = 2 ** 17
+    private readonly bufferThresholdLow = 2 ** 15
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
     private closed = false
     private earlyTimeout: NodeJS.Timeout
+    private readonly messageQueue: Uint8Array[] = []
 
     constructor(params: Params) {
         super()
@@ -176,7 +177,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public send(data: Uint8Array): void {
         if (this.lastState === 'connected') {
-            this.dataChannel?.send(data as Buffer)
+            if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
+                this.messageQueue.push(data)
+            } else {
+                this.dataChannel?.send(data as Buffer)
+            }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }
@@ -185,7 +190,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         this.dataChannel.binaryType = 'arraybuffer'
-
+        this.dataChannel.bufferedAmountLowThreshold = this.bufferThresholdLow
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()
@@ -203,6 +208,13 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
+        }
+        dataChannel.onbufferedamountlow = () => {
+            logger.trace('dc.onBufferedAmountLow')
+            while (this.messageQueue.length > 0 && this.dataChannel!.bufferedAmount < this.bufferThresholdHigh) {
+                const data = this.messageQueue.shift()!
+                this.dataChannel!.send(data as Buffer)
+            }
         }
     }
 

@@ -1,7 +1,6 @@
-import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
+import { InspectSession } from '../../src/content-delivery-layer/inspection/InspectSession'
 import { MessageID } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
-import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
-import { utf8ToBinary } from '@streamr/utils'
+import { utf8ToBinary, waitForEvent } from '@streamr/utils'
 import { DhtAddress, randomDhtAddress } from '@streamr/dht'
 
 describe('InspectSession', () => {
@@ -51,8 +50,8 @@ describe('InspectSession', () => {
     it('should emit done event when inspected node sends seen message', async () => {
         inspectSession.markMessage(anotherNode, messageId1)
         await Promise.all([
-            waitForEvent3<Events>(inspectSession, 'done', 100),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            waitForEvent(inspectSession, 'done', 100),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             inspectSession.markMessage(inspectedNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -61,8 +60,8 @@ describe('InspectSession', () => {
     it('should emit done event another node sends message after inspected node', async () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await Promise.all([
-            waitForEvent3<Events>(inspectSession, 'done', 100),
-            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+            waitForEvent(inspectSession, 'done', 100),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
             inspectSession.markMessage(anotherNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
@@ -72,11 +71,11 @@ describe('InspectSession', () => {
         inspectSession.markMessage(inspectedNode, messageId1)
         await expect(async () => {
             await Promise.all([
-                waitForEvent3<Events>(inspectSession, 'done', 100),
-                // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+                waitForEvent(inspectSession, 'done', 100),
+                // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/await-thenable
                 inspectSession.markMessage(anotherNode, messageId2)
             ])
-        }).rejects.toThrow('waitForEvent3')
+        }).rejects.toThrow('waitForEvent')
         
         expect(inspectSession.getInspectedMessageCount()).toBe(2)
     })

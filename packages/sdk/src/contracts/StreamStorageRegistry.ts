@@ -1,14 +1,13 @@
+import { StreamStorageRegistryABI, StreamStorageRegistry as StreamStorageRegistryContract } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Interface } from 'ethers'
 import min from 'lodash/min'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
-import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistryV2'
-import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -44,7 +43,7 @@ export class StreamStorageRegistry {
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly logger: Logger
     private readonly storageNodesCache: Mapping<StreamID | typeof GET_ALL_STORAGE_NODES, EthereumAddress[]>
 
@@ -55,7 +54,7 @@ export class StreamStorageRegistry {
         chainEventPoller: ChainEventPoller,
         theGraphClient: TheGraphClient,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -64,11 +63,11 @@ export class StreamStorageRegistry {
         this.rpcProviderSource = rpcProviderSource
         this.theGraphClient = theGraphClient
         this.config = config
-        this.authentication = authentication
+        this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-            StreamStorageRegistryArtifact,
+            StreamStorageRegistryABI,
             rpcProviderSource.getProvider(),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
@@ -92,7 +91,7 @@ export class StreamStorageRegistry {
             blockNumber
         })
         const contractAddress = toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress)
-        const contractInterface = new Interface(StreamStorageRegistryArtifact)
+        const contractInterface = new Interface(StreamStorageRegistryABI)
         initContractEventGateway({
             sourceDefinition: {
                 contractInterfaceFragment: contractInterface.getEvent('Added')!,
@@ -119,10 +118,10 @@ export class StreamStorageRegistry {
 
     private async connectToContract() {
         if (!this.streamStorageRegistryContract) {
-            const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            const chainSigner = await this.identity.getTransactionSigner(this.rpcProviderSource)
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-                StreamStorageRegistryArtifact,
+                StreamStorageRegistryABI,
                 chainSigner,
                 'streamStorageRegistry'
             )

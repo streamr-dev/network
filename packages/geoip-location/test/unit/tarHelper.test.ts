@@ -1,6 +1,6 @@
-import { waitForEvent3 } from '@streamr/utils'
+import { waitForEvent } from '@streamr/utils'
 import { extractFileFromTarStream } from '../../src/tarHelper'
-import { TestServer, TestServerEvents } from '../helpers/TestServer'
+import { TestServer } from '../helpers/TestServer'
 
 describe('tarHelper', () => {
     const serverUrl = 'http://127.0.0.1:'
@@ -76,7 +76,7 @@ describe('tarHelper', () => {
         }, 15 * 1000)
 
         it('throws asynchonously if server gets shut down', async () => {
-            const closedPromise = waitForEvent3<TestServerEvents>(testServer!, 'closed', 10000)
+            const closedPromise = waitForEvent(testServer!, 'closed', 10000)
             setTimeout(async () => {
                 await testServer!.stop()
             }, 5000)

@@ -2,7 +2,7 @@ import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
@@ -15,6 +15,8 @@ import { StreamDefinition } from '../types'
 import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
+import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -49,25 +51,28 @@ export class Publisher {
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly authentication: Authentication
+    private readonly identity: Identity
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly config: StrictStreamrClientConfig
 
     constructor(
         node: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(IdentityInjectionToken) identity: Identity,
         signatureValidator: SignatureValidator,
-        messageSigner: MessageSigner
+        messageSigner: MessageSigner,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
-        this.authentication = authentication
+        this.identity = identity
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
+        this.config = config
         this.messageFactories = createLazyMap({
             valueFactory: async (streamId) => {
                 return this.createMessageFactory(streamId)
@@ -75,7 +80,7 @@ export class Publisher {
         })
         this.groupKeyQueues = createLazyMap({
             valueFactory: async (streamId) => {
-                return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+                return GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
             }
         })
     }
@@ -83,7 +88,8 @@ export class Publisher {
     async publish(
         streamDefinition: StreamDefinition,
         content: unknown,
-        metadata?: PublishMetadata
+        metadata?: PublishMetadata,
+        deliveryOptions?: StreamPartDeliveryOptions
     ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
         /*
@@ -113,7 +119,7 @@ export class Publisher {
                     },
                     partition
                 )
-                await this.node.broadcast(message)
+                await this.node.broadcast(message, deliveryOptions)
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'
@@ -130,11 +136,12 @@ export class Publisher {
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
         return new MessageFactory({
             streamId,
-            authentication: this.authentication,
+            identity: this.identity,
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
-            messageSigner: this.messageSigner
+            messageSigner: this.messageSigner,
+            config: this.config,
         })
     }
 }

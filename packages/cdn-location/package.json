@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cdn-location",
-  "version": "103.0.0-rc.0",
+  "version": "103.1.0-rc.5",
   "description": "Library for getting own approximate location by querying CDN servers",
   "repository": {
     "type": "git",
@@ -9,6 +9,12 @@
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "Apache-2.0",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
@@ -22,7 +28,7 @@
     "generate-data-from-tsp-solution": "./data-generation/generateDataFromTSPSolverResult.sh"
   },
   "dependencies": {
-    "@streamr/utils": "103.0.0-rc.0",
+    "@streamr/utils": "103.1.0-rc.5",
     "haversine": "^1.1.1"
   },
   "devDependencies": {

@@ -12,11 +12,11 @@ import {
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { ContentDeliveryRpcRemote } from '../../src/content-delivery-layer/ContentDeliveryRpcRemote'
+import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/content-delivery-layer/createContentDeliveryLayerNode'
+import { HandshakeRpcRemote } from '../../src/content-delivery-layer/neighbor-discovery/HandshakeRpcRemote'
 import {
     ContentType,
     EncryptionType,
@@ -40,7 +40,9 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
-    simulator: Simulator
+    simulator: Simulator,
+    plumtreeOptimization?: boolean,
+    plumtreeMaxPausedNeighbors?: number
 ): Promise<[ DiscoveryLayerNode, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
@@ -60,7 +62,9 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         connectionLocker: mockCm,
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
-        isLocalNodeEntryPoint: () => false
+        isLocalNodeEntryPoint: () => false,
+        plumtreeOptimization,
+        plumtreeMaxPausedNeighbors
     })
     return [discoveryLayerNode, contentDeliveryLayerNode]
 }
@@ -78,11 +82,11 @@ export const createStreamMessage = (
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
         publisherId: toUserIdRaw(publisherId),
-        messageChainId: 'messageChain0',
+        messageChainId: `messageChain0-${publisherId}`,
     }
     const msg: StreamMessage = {
         messageId,
-        signatureType: SignatureType.SECP256K1,
+        signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         signature: hexToBinary('0x1234'),
         body: {
             oneofKind: 'contentMessage',

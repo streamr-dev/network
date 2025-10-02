@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { createTestPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
-import { createSignature, hash, hexToBinary } from '@streamr/utils'
+import { EcdsaSecp256k1Evm, hexToBinary } from '@streamr/utils'
 import { Provider } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { RpcProviderSource } from '../../src/RpcProviderSource'
@@ -14,6 +14,8 @@ const PAYLOAD = new Uint8Array([1, 2, 3])
 const CONTRACT_ADDRESS_ONE = randomEthereumAddress()
 const CONTRACT_ADDRESS_TWO = randomEthereumAddress()
 
+const signingUtil = new EcdsaSecp256k1Evm()
+
 describe('ERC1271ContractFacade', () => {
 
     let contractOne: MockProxy<ERC1271Contract>
@@ -22,7 +24,7 @@ describe('ERC1271ContractFacade', () => {
     let signature: Uint8Array
 
     beforeAll(async () => {
-        signature = createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
+        signature = await signingUtil.createSignature(PAYLOAD, hexToBinary(await createTestPrivateKey()))
     })
 
     beforeEach(() => {
@@ -46,7 +48,7 @@ describe('ERC1271ContractFacade', () => {
 
     it('isValidSignature delegates to isValidSignature', async () => {
         await contractFacade.isValidSignature(CONTRACT_ADDRESS_ONE, PAYLOAD, signature)
-        expect(contractOne.isValidSignature).toHaveBeenCalledWith(hash(PAYLOAD), signature)
+        expect(contractOne.isValidSignature).toHaveBeenCalledWith(signingUtil.keccakHash(PAYLOAD), signature)
     })
 
     it('isValidSignature: valid case', async () => {

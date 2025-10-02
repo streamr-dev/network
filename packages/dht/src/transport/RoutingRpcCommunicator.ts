@@ -7,8 +7,8 @@ import { ServiceID } from '../types/ServiceID'
 import { DEFAULT_SEND_OPTIONS, SendOptions } from './ITransport'
 
 export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
+
     private ownServiceId: ServiceID
-    private sendFn: (msg: Message, opts: SendOptions) => Promise<void>
 
     constructor(
         ownServiceId: ServiceID,
@@ -17,7 +17,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
     ) {
         super(options)
         this.ownServiceId = ownServiceId
-        this.sendFn = sendFn
 
         this.setOutgoingMessageListener((msg: RpcMessage, _requestId: string, callContext?: DhtCallContext) => {
             let targetDescriptor: PeerDescriptor
@@ -54,7 +53,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
                     sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped,
                     doNotBufferWhileConnecting: callContext?.doNotBufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.doNotBufferWhileConnecting
                 }
-            return this.sendFn(message, sendOpts)
+            return sendFn(message, sendOpts)
         })
     }
 

@@ -16,12 +16,13 @@ import {
     toStreamPartID,
     toUserId,
     toUserIdRaw,
-    utf8ToBinary, waitForEvent3
+    utf8ToBinary,
+    waitForEvent
 } from '@streamr/utils'
 import fs from 'fs'
-import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { streamPartIdToDataKey } from '../../src/ContentDeliveryManager'
+import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode'
 import { NetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
@@ -104,7 +105,7 @@ const measureJoiningTime = async () => {
                 }
             },
             signature: hexToBinary('0x1234'),
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.ECDSA_SECP256K1_EVM,
         }
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)
@@ -120,7 +121,7 @@ const measureJoiningTime = async () => {
     await streamSubscriber.start()
 
     await Promise.all([
-        waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000),
+        waitForEvent(streamSubscriber.stack.getContentDeliveryManager(), 'newMessage', 60000),
         streamSubscriber.join(stream)
     ])
 

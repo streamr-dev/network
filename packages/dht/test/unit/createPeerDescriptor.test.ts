@@ -11,11 +11,11 @@ describe('createPeerDescriptor', () => {
 
     const region = getRandomRegion()
 
-    it('without websocket', () => {
+    it('without websocket', async () => {
         const connectivityResponse = {
             ipAddress: ipv4ToNumber(IP_ADDRESS)
         } as any
-        const peerDescriptor = createPeerDescriptor(connectivityResponse, region)
+        const peerDescriptor = await createPeerDescriptor(connectivityResponse, region)
         expect(peerDescriptor).toEqual({
             nodeId: expect.any(Uint8Array),
             type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
@@ -26,7 +26,7 @@ describe('createPeerDescriptor', () => {
         })
     })
 
-    it('with websocket', () => {
+    it('with websocket', async () => {
         const connectivityResponse = {
             ipAddress: ipv4ToNumber(IP_ADDRESS),
             websocket: {
@@ -35,7 +35,7 @@ describe('createPeerDescriptor', () => {
                 tls: true
             }
         } as any
-        const peerDescriptor = createPeerDescriptor(connectivityResponse, region)
+        const peerDescriptor = await createPeerDescriptor(connectivityResponse, region)
         expect(peerDescriptor).toEqual({
             nodeId: expect.any(Uint8Array),
             type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
@@ -51,12 +51,12 @@ describe('createPeerDescriptor', () => {
         })
     })
 
-    it('explicit nodeId', () => {
+    it('explicit nodeId', async () => {
         const nodeId = randomDhtAddress()
         const connectivityResponse = {
             ipAddress: ipv4ToNumber(IP_ADDRESS)
         } as any
-        const peerDescriptor = createPeerDescriptor(connectivityResponse, region, nodeId)
+        const peerDescriptor = await createPeerDescriptor(connectivityResponse, region, nodeId)
         expect(peerDescriptor).toEqual({
             nodeId: toDhtAddressRaw(nodeId),
             type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,

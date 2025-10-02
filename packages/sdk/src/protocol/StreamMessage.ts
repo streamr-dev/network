@@ -1,31 +1,15 @@
 import { StreamID, StreamPartID, UserID, binaryToUtf8 } from '@streamr/utils'
+import { ContentType, EncryptedGroupKey, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 import { StreamrClientError } from '../StreamrClientError'
-import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID } from './MessageID'
 import { MessageRef } from './MessageRef'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
 
 export enum StreamMessageType {
-    MESSAGE = 27,
-    GROUP_KEY_REQUEST = 28,
-    GROUP_KEY_RESPONSE = 29
-}
-
-export enum ContentType {
-    JSON = 0,
-    BINARY = 1
-}
-
-export enum EncryptionType {
-    NONE = 0,
-    AES = 2
-}
-
-export enum SignatureType {
-    LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
-    SECP256K1,          // Streamr 1.0 payload signed with secp256k1 curve
-    ERC_1271            // ERC-1271 with secp256k1 curve implementation
+    MESSAGE,
+    GROUP_KEY_REQUEST,
+    GROUP_KEY_RESPONSE
 }
 
 export interface StreamMessageOptions {
@@ -72,6 +56,9 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
     }
 }
 
+/**
+ * An internal class representing a message in a stream. Applications see instances of the Message class.
+ */
 export class StreamMessage implements StreamMessageOptions {
 
     readonly messageId: MessageID

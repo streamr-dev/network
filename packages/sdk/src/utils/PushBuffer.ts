@@ -214,6 +214,10 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
         return this
     }
+
+    async [Symbol.asyncDispose](): Promise<void> {
+        this.end()
+    }
 }
 
 /**

@@ -4,66 +4,121 @@ import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encrypti
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { createMockMessage } from '../test-utils/utils'
-import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
+import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
+import { MLKEMKeyPair } from '../../src/encryption/MLKEMKeyPair'
 
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {
-    it('aes decryption after encryption equals the initial plaintext', () => {
-        const key = GroupKey.generate()
-        const plaintext = 'some random text'
-        const ciphertext = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(EncryptionUtil.decryptWithAES(ciphertext, key.data).toString('utf8')).toStrictEqual(plaintext)
-    })
 
-    it('aes encryption preserves size (plus iv)', () => {
-        const key = GroupKey.generate()
-        const plaintext = 'some random text'
-        const plaintextBuffer = Buffer.from(plaintext, 'utf8')
-        const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
-        expect(ciphertext.length).toStrictEqual(plaintextBuffer.length + INITIALIZATION_VECTOR_LENGTH)
-    })
+    const plaintext = Buffer.from('some random text', 'utf8')
 
-    it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
-        const key = GroupKey.generate()
-        const plaintext = 'some random text'
-        const cipher1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        const cipher2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH))
-        expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(INITIALIZATION_VECTOR_LENGTH))
-    })
-
-    it('StreamMessage decryption: happy path', async () => {
-        const key = GroupKey.generate()
-        const nextKey = GroupKey.generate()
-        const streamMessage = await createMockMessage({
-            streamPartId: StreamPartIDUtils.parse('stream#0'),
-            publisher: await createTestWallet(),
-            content: {
-                foo: 'bar'
-            },
-            encryptionKey: key,
-            nextEncryptionKey: nextKey
-        }) as StreamMessageAESEncrypted
-        const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-        expect(content).toEqualBinary(utf8ToBinary('{"foo":"bar"}'))
-        expect(newGroupKey).toEqual(nextKey)
-    })
-
-    it('StreamMessage decryption throws if newGroupKey invalid', async () => {
-        const key = GroupKey.generate()
-        const msg = await createMockMessage({
-            publisher: await createTestWallet(),
-            streamPartId: toStreamPartID(STREAM_ID, 0),
-            encryptionKey: key
+    describe('AES', () => {
+        it('returns a ciphertext which is different from the plaintext', () => {
+            const key = GroupKey.generate()
+            const ciphertext = EncryptionUtil.encryptWithAES(plaintext, key.data)
+            expect(ciphertext).not.toStrictEqual(plaintext)
         })
-        const msg2 = new StreamMessage({
-            ...msg,
-            newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
-        }) as StreamMessageAESEncrypted
-        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError(
-            new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', msg2)
-        )
+
+        it('returns the initial plaintext after decrypting the ciphertext', () => {
+            const key = GroupKey.generate()
+            const ciphertext = EncryptionUtil.encryptWithAES(plaintext, key.data)
+            expect(EncryptionUtil.decryptWithAES(ciphertext, key.data)).toStrictEqual(plaintext)
+        })
+    
+        it('preserves size (plaintext + iv)', () => {
+            const key = GroupKey.generate()
+            const ciphertext = EncryptionUtil.encryptWithAES(plaintext, key.data)
+            expect(ciphertext.length).toStrictEqual(plaintext.length + INITIALIZATION_VECTOR_LENGTH)
+        })
+    
+        it('produces different ivs and ciphertexts upon multiple encrypt() calls', () => {
+            const key = GroupKey.generate()
+            const cipher1 = EncryptionUtil.encryptWithAES(plaintext, key.data)
+            const cipher2 = EncryptionUtil.encryptWithAES(plaintext, key.data)
+            expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH))
+            expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(INITIALIZATION_VECTOR_LENGTH))
+        })
+    })
+
+    describe('RSA', () => {
+        it('returns a ciphertext which is different from the plaintext', async () => {
+            const key = await RSAKeyPair.create(512)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            expect(ciphertext).not.toStrictEqual(plaintext)
+        })
+
+        it('returns the initial plaintext after decrypting the ciphertext', async () => {
+            const key = await RSAKeyPair.create(512)
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            expect(await EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.RSA)).toStrictEqual(plaintext)
+        })
+    
+        it('produces different ciphertexts upon multiple encrypt() calls', async () => {
+            const key = await RSAKeyPair.create(512)
+            const cipher1 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            const cipher2 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
+            expect(cipher1).not.toStrictEqual(cipher2)
+        })
+    })
+
+    describe('ML-KEM', () => {
+        it('returns a ciphertext which is different from the plaintext', async () => {
+            const key = MLKEMKeyPair.create()
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            expect(ciphertext).not.toStrictEqual(plaintext)
+        })
+
+        it('returns the initial plaintext after decrypting the ciphertext', async () => {
+            const key = MLKEMKeyPair.create()
+            const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            expect(await EncryptionUtil.decryptWithPrivateKey(
+                ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.ML_KEM
+            )).toStrictEqual(plaintext)
+        })
+    
+        it('produces different ciphertexts upon multiple encrypt() calls', async () => {
+            const key = MLKEMKeyPair.create()
+            const cipher1 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            const cipher2 = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
+            expect(cipher1).not.toStrictEqual(cipher2)
+        })
+    })
+    
+    describe('StreamMessage decryption', () => {
+        it('passes the happy path', async () => {
+            const key = GroupKey.generate()
+            const nextKey = GroupKey.generate()
+            const streamMessage = await createMockMessage({
+                streamPartId: StreamPartIDUtils.parse('stream#0'),
+                publisher: await createTestWallet(),
+                content: {
+                    foo: 'bar'
+                },
+                encryptionKey: key,
+                nextEncryptionKey: nextKey
+            }) as StreamMessageAESEncrypted
+            const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
+            expect(content).toEqualBinary(utf8ToBinary('{"foo":"bar"}'))
+            expect(newGroupKey).toEqual(nextKey)
+        })
+    
+        it('throws if newGroupKey invalid', async () => {
+            const key = GroupKey.generate()
+            const msg = await createMockMessage({
+                publisher: await createTestWallet(),
+                streamPartId: toStreamPartID(STREAM_ID, 0),
+                encryptionKey: key
+            })
+            const msg2 = new StreamMessage({
+                ...msg,
+                newGroupKey: { id: 'mockId', data: hexToBinary('0x1234') }
+            }) as StreamMessageAESEncrypted
+            expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError(
+                new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', msg2)
+            )
+        })
     })
 })

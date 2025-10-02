@@ -32,7 +32,7 @@ Monorepo containing the main components of Streamr Network.
 * [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
 
 ## NPM scripts
-Node.js version 20 is recommended.
+Node.js version 22 is recommended.
 
 The monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
