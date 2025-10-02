@@ -9,7 +9,8 @@
   },
   "bin": {
     "autocertifier": "dist/bin/run.js",
-    "copyARecordsToRoute53": "dist/bin/copyARecordsToRoute53.js"
+    "copyARecordsToRoute53": "dist/bin/copyARecordsToRoute53.js",
+    "groupSubdomainsByIp": "dist/bin/groupSubdomainsByIp.js"
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
