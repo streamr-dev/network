@@ -112,7 +112,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
         const subdomain = v4()
         const authenticationToken = v4()
-        await this.database!.createSubdomain(subdomain, ipAddress, port, authenticationToken)
+        await this.database!.createSubdomain(subdomain, ipAddress, streamrWebSocketPort, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
 
         if (this.route53Api !== undefined) {
@@ -169,7 +169,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
-        await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
+        await this.database!.updateSubdomainIp(subdomain, ipAddress, streamrWebSocketPort, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
 
         if (this.route53Api !== undefined) {
