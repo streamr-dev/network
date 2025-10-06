@@ -18,6 +18,7 @@ export class Database {
     private updateSubdomainIpStatement?: Statement
     private getSubdomainAcmeChallengeStatement?: Statement
     private updateSubdomainAcmeChallengeStatement?: Statement
+    private getSubdomainsByIpAndPortStatement?: Statement
     private databaseFilePath: string
 
     constructor(filePath: string) {
@@ -57,6 +58,16 @@ export class Database {
             throw new DatabaseError('Subdomain not found ')
         }
         return ret
+    }
+
+    public async getSubdomainsByIpAndPort(ip: string, port: string): Promise<Subdomain[]> {
+        let ret: Subdomain[]
+        try {
+            ret = await this.getSubdomainsByIpAndPortStatement!.all(ip, port)
+        } catch (e) {
+            throw new DatabaseError(`Failed to get subdomains for IP ${ip} and port ${port}`, e)
+        }
+        return ret || []
     }
 
     private async getSubdomainWithToken(subdomain: string, token: string): Promise<Subdomain | undefined> {
@@ -115,7 +126,9 @@ export class Database {
         this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ? WHERE subdomainName = ? AND token = ?")
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
         this.updateSubdomainAcmeChallengeStatement = await this.db.prepare("UPDATE subdomains SET acmeChallenge = ? WHERE subdomainName = ?")
-
+        this.getSubdomainsByIpAndPortStatement = await this.db.prepare("SELECT * FROM subdomains WHERE ip = ? AND port = ?")
+        
+        
         logger.info('Database is running')
     }
 
@@ -140,6 +153,9 @@ export class Database {
         }
         if (this.updateSubdomainAcmeChallengeStatement) {
             await this.updateSubdomainAcmeChallengeStatement.finalize()
+        }
+        if (this.getSubdomainsByIpAndPortStatement) {
+            await this.getSubdomainsByIpAndPortStatement.finalize()
         }
         if (this.db) {
             await this.db.close()
