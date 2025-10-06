@@ -98,10 +98,10 @@ export class Route53Api {
             
             allResponses.push(response)
             
-            isTruncated = response.IsTruncated || false
+            isTruncated = response.IsTruncated ?? false
             if (isTruncated) {
                 startRecordName = response.NextRecordName
-                startRecordType = response.NextRecordType as RRType
+                startRecordType = response.NextRecordType
             }
         }
 
@@ -121,7 +121,7 @@ export class Route53Api {
                         for (const resourceRecord of recordSet.ResourceRecords) {
                             if (resourceRecord.Value === ipAddress) {
                                 matchingRecords.push({
-                                    fqdn: recordSet.Name || '',
+                                    fqdn: recordSet.Name ?? '',
                                     value: resourceRecord.Value
                                 })
                             }
