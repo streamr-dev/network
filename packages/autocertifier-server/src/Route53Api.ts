@@ -7,11 +7,14 @@ import {
     RRType,
     ChangeResourceRecordSetsCommandOutput
 } from '@aws-sdk/client-route-53'
+import { Logger } from '@streamr/utils'
 
 interface Record {
     fqdn: string 
     value: string
 }
+
+const logger = new Logger(module)
 export class Route53Api {
     
     private hostedZoneId: string
@@ -98,7 +101,7 @@ export class Route53Api {
     // Remove all A records that point to a specific IP address
     public async deleteRecordsByIpAddress(ipAddress: string, ttl: number = 300): Promise<ChangeResourceRecordSetsCommandOutput | null> {
         const recordsToDelete = await this.getRecordsByIpAddress(ipAddress)
-        
+        logger.info('deleting records by ip address: ' + ipAddress, { recordsToDelete })
         if (recordsToDelete.length === 0) {
             return null // No records found to delete
         }
