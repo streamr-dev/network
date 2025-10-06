@@ -127,8 +127,7 @@ export class Database {
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
         this.updateSubdomainAcmeChallengeStatement = await this.db.prepare("UPDATE subdomains SET acmeChallenge = ? WHERE subdomainName = ?")
         this.getSubdomainsByIpAndPortStatement = await this.db.prepare("SELECT * FROM subdomains WHERE ip = ? AND port = ?")
-        
-        
+
         logger.info('Database is running')
     }
 
