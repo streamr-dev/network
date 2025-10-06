@@ -116,6 +116,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const fqdn = subdomain + '.' + this.domainName
 
         if (this.route53Api !== undefined) {
+            await this.route53Api.deleteRecordsByIpAddress(ipAddress)
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
 
@@ -144,7 +145,6 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const fqdn = subdomain + '.' + this.domainName
 
         if (this.route53Api !== undefined) {
-            await this.route53Api.deleteRecordsByIpAddress(ipAddress)
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
 
