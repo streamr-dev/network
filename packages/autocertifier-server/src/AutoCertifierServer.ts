@@ -117,7 +117,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
         if (this.route53Api !== undefined) {
             const subdomains = await this.database!.getSubdomainsByIpAndPort(ipAddress, streamrWebSocketPort)
-            logger.info('Deleting all subdomains from ip: ' + ipAddress + ' port: ' + streamrWebSocketPort)
+            logger.info('Deleting all subdomains from ip: ' + ipAddress + ' port: ' + streamrWebSocketPort + ' number of subdomains: ' + subdomains.length, { subdomains })
             await Promise.all(subdomains.map((subdomain) => {
                 this.route53Api!.deleteRecord(RRType.A, subdomain.subdomainName, ipAddress, 300)
             }))
