@@ -32,6 +32,7 @@ describe('Database', () => {
     describe('updateSubdomainIp()', () => {
         // TODO: remove storing port in the data base
         it('should update the IP and port of an existing subdomain', async () => {
+            const testStartTimestamp = new Date()
             const subdomain: Subdomain = {
                 subdomainName: 'example.com',
                 ip: '127.0.0.1',
@@ -50,6 +51,7 @@ describe('Database', () => {
 
             expect(result?.ip).toEqual(newIp)
             expect(result?.port).toEqual(newPort)
+            expect(new Date(result!.modifiedAt!).getTime()).toBeGreaterThanOrEqual(testStartTimestamp.getTime())
         })
 
         it('should throw if a IP and PORT update is tried with wrong token', async () => {
@@ -77,8 +79,7 @@ describe('Database', () => {
                 ip: '127.0.0.1',
                 port: '8080',
                 token: 'abc123',
-                acmeChallenge: '',
-                createdAt: new Date()
+                acmeChallenge: ''
             }
 
             await db.createSubdomain(subdomain.subdomainName, subdomain.ip, subdomain.port, subdomain.token)
@@ -88,7 +89,6 @@ describe('Database', () => {
             await db.updateSubdomainAcmeChallenge(subdomain.subdomainName, newChallenge)
 
             const result = await db.getSubdomain(subdomain.subdomainName)
-
             expect(result?.acmeChallenge).toEqual(newChallenge)
         })
     })

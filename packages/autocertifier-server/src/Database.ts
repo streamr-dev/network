@@ -79,7 +79,7 @@ export class Database {
             throw new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
         }
         try {
-            await this.updateSubdomainIpStatement!.run(ip, port, subdomain, token)
+            await this.updateSubdomainIpStatement!.run(ip, port, new Date().toISOString(), subdomain, token)
         } catch (e) {
             throw new DatabaseError('Failed to update subdomain ' + subdomain, e)
         }
@@ -112,7 +112,7 @@ export class Database {
         this.getSubdomainStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ?")
         this.getAllSubdomainsStatement = await this.db.prepare("SELECT * FROM subdomains")
         this.getSubdomainWithTokenStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ? AND token = ?")
-        this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ? WHERE subdomainName = ? AND token = ?")
+        this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ?, modifiedAt = ? WHERE subdomainName = ? AND token = ?")
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
         this.updateSubdomainAcmeChallengeStatement = await this.db.prepare("UPDATE subdomains SET acmeChallenge = ? WHERE subdomainName = ?")
 
@@ -156,7 +156,8 @@ export class Database {
                 port TEXT NOT NULL,
                 token TEXT NOT NULL,
                 acmeChallenge TEXT,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                modifiedAt DATETIME
             );
             CREATE INDEX subdomain_index on subdomains(subdomainName);
             COMMIT;
@@ -174,6 +175,7 @@ export interface Subdomain {
     port: string
     token: string
     acmeChallenge?: string
-    createdAt?: Date
+    createdAt?: string // ISO format
+    modifiedAt?: string // ISO format
     id?: number
 }
