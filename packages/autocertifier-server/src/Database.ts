@@ -109,11 +109,12 @@ export class Database {
         if (!result) {
             await this.createTables()
         }
-
+        // eslint-disable-next-line max-len
         this.createSubdomainStatement = await this.db.prepare("INSERT INTO subdomains (subdomainName, ip, port, token, createdAt, modifiedAt) VALUES (?, ?, ?, ?, ?, ?)")
         this.getSubdomainStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ?")
         this.getAllSubdomainsStatement = await this.db.prepare("SELECT * FROM subdomains")
         this.getSubdomainWithTokenStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ? AND token = ?")
+        // eslint-disable-next-line max-len
         this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ?, modifiedAt = ? WHERE subdomainName = ? AND token = ?")
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
         this.updateSubdomainAcmeChallengeStatement = await this.db.prepare("UPDATE subdomains SET acmeChallenge = ? WHERE subdomainName = ?")
