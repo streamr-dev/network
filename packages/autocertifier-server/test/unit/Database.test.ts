@@ -14,6 +14,7 @@ describe('Database', () => {
 
     describe('createSubdomain()', () => {
         it('should create a new subdomain', async () => {
+            const testStartTimestamp = new Date()
             const subdomain: Subdomain = {
                 subdomainName: 'example.com',
                 ip: '127.0.0.1',
@@ -26,6 +27,8 @@ describe('Database', () => {
             const result = await db.getSubdomain(subdomain.subdomainName)
 
             expect(result).toEqual(expect.objectContaining(subdomain))
+            expect(new Date(result!.createdAt!).getTime()).toBeGreaterThanOrEqual(testStartTimestamp.getTime())
+            expect(new Date(result!.modifiedAt!).getTime()).toBeGreaterThanOrEqual(testStartTimestamp.getTime())
         })
     })
 

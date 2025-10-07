@@ -26,7 +26,8 @@ export class Database {
 
     public async createSubdomain(subdomain: string, ip: string, port: string, token: string): Promise<void> {
         try {
-            await this.createSubdomainStatement!.run(subdomain, ip, port, token)
+            const now = new Date().toISOString()
+            await this.createSubdomainStatement!.run(subdomain, ip, port, token, now, now)
         } catch (e) {
             throw new DatabaseError('Failed to create subdomain ' + subdomain, e)
         }
@@ -79,7 +80,8 @@ export class Database {
             throw new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
         }
         try {
-            await this.updateSubdomainIpStatement!.run(ip, port, new Date().toISOString(), subdomain, token)
+            const now = new Date().toISOString()
+            await this.updateSubdomainIpStatement!.run(ip, port, now, subdomain, token)
         } catch (e) {
             throw new DatabaseError('Failed to update subdomain ' + subdomain, e)
         }
@@ -108,7 +110,7 @@ export class Database {
             await this.createTables()
         }
 
-        this.createSubdomainStatement = await this.db.prepare("INSERT INTO subdomains (subdomainName, ip, port, token) VALUES (?, ?, ?, ?)")
+        this.createSubdomainStatement = await this.db.prepare("INSERT INTO subdomains (subdomainName, ip, port, token, createdAt, modifiedAt) VALUES (?, ?, ?, ?, ?, ?)")
         this.getSubdomainStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ?")
         this.getAllSubdomainsStatement = await this.db.prepare("SELECT * FROM subdomains")
         this.getSubdomainWithTokenStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ? AND token = ?")
