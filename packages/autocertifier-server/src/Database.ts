@@ -159,6 +159,8 @@ export class Database {
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX subdomain_index on subdomains(subdomainName);
+            CREATE INDEX ip_port_index on subdomains(ip, port);
+            CREATE INDEX subdomain_token_index on subdomains(subdomainName, token);
             COMMIT;
         `
         await this.db!.exec(query)
