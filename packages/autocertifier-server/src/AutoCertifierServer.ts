@@ -127,10 +127,13 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                     300
                 )
             ))
+            logger.info('Upserting new subdomain to ip: ' + ipAddress + ' port: ' 
+                + streamrWebSocketPort + ' fqdn: ' + fqdn)
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
 
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
+        logger.info('Certificate created for ' + fqdn + ' for ip: ' + ipAddress + ' port: ' + streamrWebSocketPort)
         return {
             fqdn,
             authenticationToken,
