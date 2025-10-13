@@ -30,14 +30,14 @@
     "@noble/post-quantum": "^0.4.1",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^9.12.0",
-    "pino-pretty": "^13.1.1",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.2",
     "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@types/lodash": "^4.17.20",
-    "@types/secp256k1": "^4.0.6"
+    "@types/secp256k1": "^4.0.7"
   }
 }
