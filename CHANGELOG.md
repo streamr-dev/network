@@ -12,13 +12,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add support for using the plumtree optimization in stream partitions (https://github.com/streamr-dev/network/pull/3147)
-- Add listenable event `sponsorshipCreated` (https://github.com/streamr-dev/network/pull/3191)
-- Add config option `contracts.sponsorshipFactoryChainAddress` (https://github.com/streamr-dev/network/pull/3191)
-
 #### Changed
-
-- Optimize `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3132)
 
 #### Deprecated
 
@@ -55,6 +49,21 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [103.1.0] - 2025-10-14
+
+### @streamr/sdk
+
+#### Added
+
+- Add support for using the plumtree optimization in stream partitions (https://github.com/streamr-dev/network/pull/3147)
+- Add listenable event `sponsorshipCreated` (https://github.com/streamr-dev/network/pull/3191)
+- Add config option `contracts.sponsorshipFactoryChainAddress` (https://github.com/streamr-dev/network/pull/3191)
+
+#### Changed
+
+- Optimize `StreamrClient#searchStreams()` (https://github.com/streamr-dev/network/pull/3132)
 
 
 ## [103.0.0] - 2025-06-10
@@ -456,7 +465,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.1.0...HEAD
+[103.1.0]: https://github.com/streamr-dev/network/compare/v103.0.0...v103.1.0
 [103.0.0]: https://github.com/streamr-dev/network/compare/v102.1.1...v103.0.0
 [102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
 [102.1.0]: https://github.com/streamr-dev/network/compare/v102.0.0...v102.1.0

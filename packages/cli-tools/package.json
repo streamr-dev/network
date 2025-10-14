@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "103.1.0-rc.5",
+  "version": "103.1.0",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -33,11 +33,11 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@streamr/config": "^5.9.0",
-    "@streamr/dht": "103.1.0-rc.5",
+    "@streamr/dht": "103.1.0",
     "@streamr/network-contracts": "^9.1.0",
-    "@streamr/sdk": "103.1.0-rc.5",
-    "@streamr/trackerless-network": "103.1.0-rc.5",
-    "@streamr/utils": "103.1.0-rc.5",
+    "@streamr/sdk": "103.1.0",
+    "@streamr/trackerless-network": "103.1.0",
+    "@streamr/utils": "103.1.0",
     "commander": "^14.0.1",
     "easy-table": "^1.1.1",
     "ethers": "^6.13.0",
@@ -46,7 +46,7 @@
     "semver": "^7.7.2"
   },
   "devDependencies": {
-    "@streamr/test-utils": "103.1.0-rc.5",
+    "@streamr/test-utils": "103.1.0",
     "@types/event-stream": "^4.0.5",
     "@types/lodash": "^4.17.20",
     "@types/merge2": "^1.4.4",
