@@ -100,7 +100,7 @@
           "description": "The fraction of the withdraw limit to use as a safety margin",
           "minimum": 0,
           "maximum": 1,
-          "default": 0.5
+          "default": 0.9
         },
         "minSponsorshipEarningsInWithdraw": {
           "type": "integer",
