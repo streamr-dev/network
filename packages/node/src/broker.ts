@@ -78,13 +78,3 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         }
     }
 }
-
-process.on('uncaughtException', (err) => {
-    logger.fatal('Encountered uncaughtException', { err })
-    process.exit(1)
-})
-
-process.on('unhandledRejection', (err) => {
-    logger.fatal('Encountered unhandledRejection', { err })
-    process.exit(1)
-})

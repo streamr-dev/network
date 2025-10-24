@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { program } from 'commander'
 import pkg from '../package.json'
-
+import { Logger } from '@streamr/utils'
 import { createBroker } from '../src/broker'
 import { readConfigAndMigrateIfNeeded } from '../src/config/migration'
 import { overrideConfigToEnvVarsIfGiven } from '../src/config/config'
+
+const logger = new Logger(module)
 
 program
     .version(pkg.version)
@@ -17,6 +19,28 @@ program
             const config = readConfigAndMigrateIfNeeded(configFile)
             overrideConfigToEnvVarsIfGiven(config)
             const broker = await createBroker(config)
+            
+            // Set up graceful shutdown handlers
+            const shutdown = async (exitCode: number) => {
+                await broker.stop()
+                process.exit(exitCode)
+            }
+            
+            const exitEvents = ['SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2', 'exit']
+            exitEvents.forEach((event) => {
+                process.on(event, () => shutdown(0))
+            })
+            
+            process.on('uncaughtException', (err) => {
+                logger.fatal('Encountered uncaughtException', { err })
+                shutdown(1)
+            })
+            
+            process.on('unhandledRejection', (err) => {
+                logger.fatal('Encountered unhandledRejection', { err })
+                shutdown(1)
+            })
+            
             if (!program.opts().test) {
                 await broker.start()
             } else {
