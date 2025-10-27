@@ -53,12 +53,12 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "^7.28.4",
+    "@babel/core": "^7.28.5",
     "@babel/plugin-proposal-decorators": "^7.28.0",
     "@babel/plugin-transform-modules-commonjs": "^7.27.1",
-    "@babel/plugin-transform-runtime": "^7.28.3",
-    "@babel/preset-env": "^7.28.3",
-    "@babel/preset-typescript": "^7.27.1",
+    "@babel/plugin-transform-runtime": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@jest/globals": "^30.0.5",
     "@streamr/test-utils": "103.1.0",
     "@types/heap": "^0.2.34",
@@ -85,7 +85,7 @@
     "ts-node": "^10.9.2",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.101.3",
+    "webpack": "^5.102.1",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
@@ -103,7 +103,7 @@
     "@streamr/proto-rpc": "103.1.0",
     "@streamr/trackerless-network": "103.1.0",
     "@streamr/utils": "103.1.0",
-    "core-js": "^3.45.1",
+    "core-js": "^3.46.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
@@ -120,7 +120,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",

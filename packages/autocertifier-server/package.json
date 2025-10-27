@@ -34,7 +34,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.896.0",
+    "@aws-sdk/client-route-53": "^3.917.0",
     "@streamr/autocertifier-client": "103.1.0",
     "@streamr/dht": "103.1.0",
     "@streamr/proto-rpc": "103.1.0",
@@ -42,7 +42,7 @@
     "acme-client": "^5.4.0",
     "body-parser": "^2.2.0",
     "dns2": "^2.1.0",
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
