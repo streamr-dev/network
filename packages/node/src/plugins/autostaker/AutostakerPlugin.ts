@@ -1,7 +1,7 @@
 import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { formatEther, parseEther } from 'ethers'
+import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
@@ -68,8 +68,9 @@ const getStakeOrUnstakeFunction = (action: Action): (
     operatorOwnerWallet: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-) => Promise<void> => {
+    amount: WeiAmount,
+    onSubmit: (tx: ContractTransactionResponse) => void
+) => Promise<ContractTransactionReceipt | null> => {
     switch (action.type) {
         case 'stake':
             return _operatorContractUtils.stake
@@ -177,27 +178,47 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         // First execute all unstake actions in parallel, then all stake actions in parallel
         const unstakeActions = actions.filter((a) => a.type === 'unstake')
         const stakeActions = actions.filter((a) => a.type === 'stake')
+        const allTxs: ContractTransactionResponse[] = []
+        
+        // Broadcasts a transaction corresponding to the action without waiting for it to be mined
+        const submitAction = async (action: Action): Promise<ContractTransactionResponse> => {
+            const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
+            return new Promise((resolve, reject) => {
+                stakeOrUnstakeFunction(signer,
+                    this.pluginConfig.operatorContractAddress,
+                    action.sponsorshipId,
+                    action.amount,
+                    (tx) => resolve(tx) // resolve onSubmit
+                ).catch(reject)
+            })
+        }
 
-        const executeActions = async (actions: Action[]) => {
-            return Promise.all(actions.map((action) => {
-                return retry(async () => {
-                    return getStakeOrUnstakeFunction(action)(signer,
-                        this.pluginConfig.operatorContractAddress,
-                        action.sponsorshipId,
-                        action.amount
-                    )
-                },
+        // This will retry the transaction preflight checks, defends against various transient errors
+        const submitActionWithRetry = async (action: Action): Promise<ContractTransactionResponse> => {
+            return await retry(
+                () => submitAction(action),
                 (message, error) => {
                     logger.error(message, { error })
-                }, 
-                'Execute action', 
-                5, // max retries
-                10000 // retry delay in ms
-                )
-            }))
+                },
+                `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
+                5,
+                5000
+            )
         }
-        await executeActions(unstakeActions)
-        await executeActions(stakeActions)
+
+        // Broadcast each unstake action, sequentially (to avoid nonce overlap) but without waiting for each one to be mined
+        for (const action of unstakeActions) {
+            const tx = await submitActionWithRetry(action)
+            allTxs.push(tx)
+        }
+        // Broadcast each stake action, sequentially (to avoid nonce overlap) but without waiting for each one to be mined
+        for (const action of stakeActions) {
+            const tx = await submitActionWithRetry(action)
+            allTxs.push(tx)
+        }
+        // Wait for all transactions to be mined (don't stop waiting if some of them fail)
+        // Note that if the actual submitted transaction errors, it won't get retried
+        await Promise.allSettled(allTxs.map((tx) => tx.wait()))
     }
 
     private async getStakeableSponsorships(

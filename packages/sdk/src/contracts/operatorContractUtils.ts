@@ -12,7 +12,7 @@ import {
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
-import { Contract, EventLog, parseEther, ZeroAddress } from 'ethers'
+import { Contract, ContractTransactionReceipt, ContractTransactionResponse, EventLog, parseEther, ZeroAddress } from 'ethers'
 import { EnvironmentId } from '../Config'
 import { SignerWithProvider } from '../identity/Identity'
 
@@ -144,8 +144,9 @@ export const stake = async (
     staker: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-): Promise<void> => {
+    amount: WeiAmount,
+    onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: amount.toString() })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
     
@@ -153,15 +154,18 @@ export const stake = async (
     // be staking at the same time so we bump the gas limit to be safe
     const gasLimit = bumpGasLimit(await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount))
     
-    await (await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })).wait()
+    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
+    onSubmit(tx)
+    return tx.wait()
 }
 
 export const unstake = async (
     staker: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-): Promise<void> => {
+    amount: WeiAmount,
+    onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Unstake')
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
     const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(staker)
@@ -172,7 +176,9 @@ export const unstake = async (
     // be unstaking at the same time so we bump the gas limit to be safe
     const gasLimit = bumpGasLimit(await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount))
     
-    await (await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })).wait()
+    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
+    onSubmit(tx)
+    return tx.wait()
 }
 
 export const sponsor = async (
