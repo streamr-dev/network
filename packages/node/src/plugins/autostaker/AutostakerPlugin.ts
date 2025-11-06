@@ -182,6 +182,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         
         // Broadcasts a transaction corresponding to the action without waiting for it to be mined
         const submitAction = async (action: Action): Promise<ContractTransactionResponse> => {
+            logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
             const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
             return new Promise((resolve, reject) => {
                 stakeOrUnstakeFunction(signer,
