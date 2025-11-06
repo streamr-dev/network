@@ -147,8 +147,13 @@ export const stake = async (
     amount: WeiAmount
 ): Promise<void> => {
     logger.debug('Stake', { amount: amount.toString() })
-    const contract = getOperatorContract(operatorContractAddress).connect(staker)
-    await (await contract.stake(sponsorshipContractAddress, amount)).wait()
+    const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
+    
+    // Gas limit needed for staking is a little unstable because others might 
+    // be staking at the same time so we bump the gas limit to be safe
+    const gasLimit = bumpGasLimit(await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount))
+    
+    await (await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })).wait()
 }
 
 export const unstake = async (
@@ -162,7 +167,12 @@ export const unstake = async (
     const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(staker)
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
-    await (await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount)).wait()
+
+    // Gas limit needed for unstaking is a little unstable because others might 
+    // be unstaking at the same time so we bump the gas limit to be safe
+    const gasLimit = bumpGasLimit(await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount))
+    
+    await (await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })).wait()
 }
 
 export const sponsor = async (
@@ -192,4 +202,8 @@ export const getOperatorContract = (operatorAddress: string): OperatorContract =
 
 const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract => {
     return new Contract(sponsorshipAddress, SponsorshipABI) as unknown as SponsorshipContract
+}
+
+const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number = 20): bigint => {
+    return gasEstimate * BigInt(100 + increasePercentage) / 100n
 }
