@@ -1,5 +1,5 @@
 import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
+import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
@@ -170,10 +170,19 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const signer = await streamrClient.getSigner()
         for (const action of actions) {
             logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-            await getStakeOrUnstakeFunction(action)(signer,
-                this.pluginConfig.operatorContractAddress,
-                action.sponsorshipId,
-                action.amount
+            await retry(async () => {
+                return getStakeOrUnstakeFunction(action)(signer,
+                    this.pluginConfig.operatorContractAddress,
+                    action.sponsorshipId,
+                    action.amount
+                )
+            }, 
+            (message, error) => {
+                logger.error(message, { error })
+            }, 
+            'Execute action', 
+            5, // max retries
+            10000 // retry delay in ms
             )
         }
     }
