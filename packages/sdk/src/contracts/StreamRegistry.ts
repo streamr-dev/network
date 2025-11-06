@@ -151,7 +151,7 @@ export class StreamRegistry {
             sourceEmitter: chainEventPoller,
             targetName: 'streamCreated',
             targetEmitter: eventEmitter,
-            transformation: (streamId: string, metadata: string, blockNumber: number) => ({
+            transformation: ([streamId, metadata]: [string, string], blockNumber: number) => ({
                 streamId: toStreamID(streamId),
                 metadata: parseMetadata(metadata),
                 blockNumber

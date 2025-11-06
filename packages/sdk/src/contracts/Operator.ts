@@ -179,7 +179,7 @@ export class Operator {
         loggerFactory: LoggerFactory
     ): void {
         const contractInterface = new Interface(OperatorABI)
-        const stakeEventTransformation = (sponsorship: string) => ({
+        const stakeEventTransformation = ([sponsorship]: [string]) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
         initContractEventGateway({
@@ -204,13 +204,8 @@ export class Operator {
             transformation: stakeEventTransformation,
             loggerFactory
         })
-        const reviewRequestTransform = (
-            sponsorship: string,
-            targetOperator: string,
-            voteStartTimestampInSecs: bigint,
-            voteEndTimestampInSecs: bigint,
-            metadataAsString?: string
-        ) => {
+        const reviewRequestTransform = ([sponsorship, targetOperator, voteStartTimestampInSecs, 
+            voteEndTimestampInSecs, metadataAsString]: [string, string, bigint, bigint, string | undefined]) => {
             const partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
             return {
                 sponsorship: toEthereumAddress(sponsorship),
