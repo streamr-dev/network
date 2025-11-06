@@ -59,7 +59,7 @@
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.1.0",
-    "@types/heap": "^0.2.34",
+    "@types/heap": "^0.2.35",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.17.20",
     "@types/websocket": "^1.0.10",

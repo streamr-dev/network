@@ -56,7 +56,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
-            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+             
             if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
@@ -94,8 +94,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
     }
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || (this.peerConnection === undefined) ||
-            this.peerConnection.signalingState != 'stable')
+        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || this.peerConnection?.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering && offerCollision
         if (ignoreOffer) {
@@ -180,7 +179,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
             if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
-                this.dataChannel?.send(data as Buffer)
+                this.dataChannel?.send(data as ArrayBufferView<ArrayBuffer>)
             }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
@@ -213,7 +212,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
             logger.trace('dc.onBufferedAmountLow')
             while (this.messageQueue.length > 0 && this.dataChannel!.bufferedAmount < this.bufferThresholdHigh) {
                 const data = this.messageQueue.shift()!
-                this.dataChannel!.send(data as Buffer)
+                this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
             }
         }
     }
