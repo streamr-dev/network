@@ -46,5 +46,6 @@ describe('sponsorship created event', () => {
         expect(sponsorshipCreatedEvent.length).toEqual(1)
         expect(sponsorshipCreatedEvent[0].sponsorshipContractAddress).toEqual(expectedSponsorshipAddress)
         expect(sponsorshipCreatedEvent[0].streamId).toBe(testStream.id)
+        expect(sponsorshipCreatedEvent[0].blockNumber).toBeNumber()
     }, TEST_TIMEOUT)
 })
