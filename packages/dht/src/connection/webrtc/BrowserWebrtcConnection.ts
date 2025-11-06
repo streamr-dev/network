@@ -56,7 +56,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
-            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+             
             if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
@@ -94,8 +94,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
     }
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || (this.peerConnection === undefined) ||
-            this.peerConnection.signalingState != 'stable')
+        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || this.peerConnection?.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering && offerCollision
         if (ignoreOffer) {

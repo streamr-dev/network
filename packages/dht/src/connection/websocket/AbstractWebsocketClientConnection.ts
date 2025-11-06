@@ -40,7 +40,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
 
     public send(data: Uint8Array): void {
         if (!this.destroyed) {
-            if (this.socket && this.socket.readyState === OPEN) {
+            if (this.socket?.readyState === OPEN) {
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data)
             } else {
@@ -86,7 +86,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
     protected onOpen(): void {
         if (!this.destroyed) {
             logger.trace('WebSocket Client Connected')
-            if (this.socket && this.socket.readyState === OPEN) {
+            if (this.socket?.readyState === OPEN) {
                 this.emit('connected')
             }
         }
