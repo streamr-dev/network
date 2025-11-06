@@ -179,7 +179,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
             if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
-                this.dataChannel?.send(data as Buffer)
+                this.dataChannel?.send(data as ArrayBufferView<ArrayBuffer>)
             }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
@@ -212,7 +212,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
             logger.trace('dc.onBufferedAmountLow')
             while (this.messageQueue.length > 0 && this.dataChannel!.bufferedAmount < this.bufferThresholdHigh) {
                 const data = this.messageQueue.shift()!
-                this.dataChannel!.send(data as Buffer)
+                this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
             }
         }
     }
