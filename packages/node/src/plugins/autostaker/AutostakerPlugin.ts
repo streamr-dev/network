@@ -173,23 +173,31 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             }))
         })
         const signer = await streamrClient.getSigner()
-        for (const action of actions) {
-            logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-            await retry(async () => {
-                return getStakeOrUnstakeFunction(action)(signer,
-                    this.pluginConfig.operatorContractAddress,
-                    action.sponsorshipId,
-                    action.amount
+
+        // First execute all unstake actions in parallel, then all stake actions in parallel
+        const unstakeActions = actions.filter((a) => a.type === 'unstake')
+        const stakeActions = actions.filter((a) => a.type === 'stake')
+
+        const executeActions = async (actions: Action[]) => {
+            return Promise.all(actions.map((action) => {
+                return retry(async () => {
+                    return getStakeOrUnstakeFunction(action)(signer,
+                        this.pluginConfig.operatorContractAddress,
+                        action.sponsorshipId,
+                        action.amount
+                    )
+                },
+                (message, error) => {
+                    logger.error(message, { error })
+                }, 
+                'Execute action', 
+                5, // max retries
+                10000 // retry delay in ms
                 )
-            }, 
-            (message, error) => {
-                logger.error(message, { error })
-            }, 
-            'Execute action', 
-            5, // max retries
-            10000 // retry delay in ms
-            )
+            }))
         }
+        await executeActions(unstakeActions)
+        await executeActions(stakeActions)
     }
 
     private async getStakeableSponsorships(
