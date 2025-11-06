@@ -86,7 +86,7 @@ describe('ChainEventPoller', () => {
             fromBlock: INITIAL_BLOCK_NUMBER
         })
         expect(listener1).toHaveBeenCalledTimes(1)
-        expect(listener1).toHaveBeenCalledWith(...EVENT_ARGS, INITIAL_BLOCK_NUMBER)
+        expect(listener1).toHaveBeenCalledWith(EVENT_ARGS, INITIAL_BLOCK_NUMBER)
         await until(() => listener1.mock.calls.length === 2)
         expect(provider.getBlockNumber).toHaveBeenCalledTimes(1)
         expect(provider.getLogs).toHaveBeenCalledTimes(2)
@@ -99,7 +99,7 @@ describe('ChainEventPoller', () => {
             }
         )
         expect(listener1).toHaveBeenCalledTimes(2)
-        expect(listener1).toHaveBeenNthCalledWith(2, ...EVENT_ARGS, INITIAL_BLOCK_NUMBER + 1)
+        expect(listener1).toHaveBeenNthCalledWith(2, EVENT_ARGS, INITIAL_BLOCK_NUMBER + 1)
 
         poller.off({
             onEvent: listener1,
@@ -125,7 +125,7 @@ describe('ChainEventPoller', () => {
         expect(provider.getBlockNumber).toHaveBeenCalledTimes(2)
         expect(provider.getLogs).toHaveBeenCalledTimes(3)
         expect(listener2).toHaveBeenCalledTimes(1)
-        expect(listener2).toHaveBeenCalledWith(...EVENT_ARGS, INITIAL_BLOCK_NUMBER + 2)
+        expect(listener2).toHaveBeenCalledWith(EVENT_ARGS, INITIAL_BLOCK_NUMBER + 2)
 
         poller.off({
             onEvent: listener2,
@@ -191,12 +191,12 @@ describe('ChainEventPoller', () => {
             }
         )
         expect(listener1).toHaveBeenCalledTimes(2)
-        expect(listener1).toHaveBeenCalledWith('arg-foo1', '', 150)
-        expect(listener1).toHaveBeenCalledWith('arg-foo2', '', 155)
+        expect(listener1).toHaveBeenCalledWith(['arg-foo1', ''], 150)
+        expect(listener1).toHaveBeenCalledWith(['arg-foo2', ''], 155)
         expect(listener2).toHaveBeenCalledTimes(1)
-        expect(listener2).toHaveBeenCalledWith('arg-bar', '', 152)
+        expect(listener2).toHaveBeenCalledWith(['arg-bar', ''], 152)
         expect(listener3).toHaveBeenCalledTimes(1)
-        expect(listener3).toHaveBeenCalledWith('arg-bar', '', 152)
+        expect(listener3).toHaveBeenCalledWith(['arg-bar', ''], 152)
 
         await wait(1.5 * POLL_INTERVAL)
         expect(provider.getLogs).toHaveBeenNthCalledWith(

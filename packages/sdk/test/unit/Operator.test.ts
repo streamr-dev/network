@@ -46,10 +46,10 @@ const SPONSORSHIP_ADDRESS = randomEthereumAddress()
 
 const createOperator = (eventName: string, eventArgs: any[]): Operator => {
     const chainEventPoller = {
-        on: (definition: EventListenerDefinition) => {
+        on: (definition: EventListenerDefinition<any[]>) => {
             if (definition.contractInterfaceFragment.name === eventName) {
                 setTimeout(() => {
-                    definition.onEvent(...eventArgs)
+                    definition.onEvent(eventArgs, 0)
                 }, random(POLL_INTERVAL))
             }
         }
