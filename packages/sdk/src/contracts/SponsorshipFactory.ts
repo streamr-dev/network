@@ -11,6 +11,7 @@ import { initContractEventGateway } from './contract'
 export interface SponsorshipCreatedEvent {
     readonly sponsorshipContractAddress: EthereumAddress
     readonly streamId: StreamID
+    readonly blockNumber: number
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -32,9 +33,10 @@ export class SponsorshipFactory {
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
     ) {
-        const transformation = (sponsorshipContract: string, streamId: string) => ({
+        const transformation = (sponsorshipContract: string, streamId: string, blockNumber: number) => ({
             sponsorshipContractAddress: toEthereumAddress(sponsorshipContract),
-            streamId: toStreamID(streamId)
+            streamId: toStreamID(streamId),
+            blockNumber
         })
         const contractAddress = toEthereumAddress(this.config.contracts.sponsorshipFactoryChainAddress)
         const contractInterface = new Interface(SponsorshipFactoryABI)

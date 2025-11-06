@@ -1,4 +1,4 @@
-import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
+import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { formatEther, parseEther } from 'ethers'
@@ -119,7 +119,12 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         }
         logger.info(`First activation in approximately ${this.pluginConfig.runIntervalInMs / (1000 * 60) } minutes`)
         scheduleAtApproximateInterval(triggerRun, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
-        streamrClient.on('sponsorshipCreated', triggerRun)
+        streamrClient.on('sponsorshipCreated', (event: SponsorshipCreatedEvent) => {
+            // Make sure the The Graph is up-to-date before triggering the run
+            logger.info('Detected a new sponsorship at block number', { blockNumber: event.blockNumber })
+            streamrClient.getTheGraphClient().updateRequiredBlockNumber(event.blockNumber)
+            triggerRun()
+        })
         this.abortController.signal.addEventListener('abort', () => {
             streamrClient.off('sponsorshipCreated', triggerRun)
         })
