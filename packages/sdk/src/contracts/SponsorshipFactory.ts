@@ -33,11 +33,14 @@ export class SponsorshipFactory {
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
     ) {
-        const transformation = (sponsorshipContract: string, streamId: string, blockNumber: number) => ({
-            sponsorshipContractAddress: toEthereumAddress(sponsorshipContract),
-            streamId: toStreamID(streamId),
-            blockNumber
-        })
+        const transformation = (sponsorshipContract: string, streamId: string, ...rest: any[]) => {
+            const blockNumber = rest[rest.length -1] as number // TODO better checking
+            return {
+                sponsorshipContractAddress: toEthereumAddress(sponsorshipContract),
+                streamId: toStreamID(streamId),
+                blockNumber
+            }
+        }
         const contractAddress = toEthereumAddress(this.config.contracts.sponsorshipFactoryChainAddress)
         const contractInterface = new Interface(SponsorshipFactoryABI)
         initContractEventGateway({
