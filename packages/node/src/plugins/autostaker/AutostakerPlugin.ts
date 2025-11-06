@@ -220,6 +220,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         // Wait for all transactions to be mined (don't stop waiting if some of them fail)
         // Note that if the actual submitted transaction errors, it won't get retried
         await Promise.allSettled(allTxs.map((tx) => tx.wait()))
+        logger.info('All actions executed')
     }
 
     private async getStakeableSponsorships(
