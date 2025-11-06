@@ -3,6 +3,7 @@ import { promisify } from 'util'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
 import { utf8ToBinary, getSubtle } from '@streamr/utils'
+import type { webcrypto } from 'crypto'
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
@@ -31,7 +32,7 @@ function btoa(str: string | Uint8Array): string {
     return buffer.toString('base64')
 }
 
-async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Promise<string> {
+async function exportCryptoKey(key: webcrypto.CryptoKey, { isPrivate = false } = {}): Promise<string> {
     const keyType = isPrivate ? 'pkcs8' : 'spki'
     const exported = await getSubtle().exportKey(keyType, key)
     const exportedAsString = ab2str(exported)
