@@ -406,7 +406,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
 
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
-        return (streamPart !== undefined) && (streamPart.proxied === false)
+        return streamPart?.proxied === false
             ? streamPart.node.getNeighbors().map((n) => toNodeId(n))
             : []
     }
