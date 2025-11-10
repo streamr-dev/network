@@ -153,12 +153,10 @@ export const stake = async (
     // Gas limit needed for staking is a little unstable because others might 
     // be staking at the same time so we bump the gas limit to be safe
     const gasLimit = bumpGasLimit(await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount))
-    logger.debug('Stake: gas limit bumped', { gasLimit })
 
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
     logger.debug('Stake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
-    logger.debug('Stake: waiting for confirmation', { tx: tx.hash })
     const receipt = await tx.wait()
     logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
     return receipt
@@ -180,12 +178,10 @@ export const unstake = async (
     // Gas limit needed for unstaking is a little unstable because others might 
     // be unstaking at the same time so we bump the gas limit to be safe
     const gasLimit = bumpGasLimit(await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount))
-    logger.debug('Unstake: gas limit bumped', { gasLimit })
 
     const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
     logger.debug('Unstake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
-    logger.debug('Unstake: waiting for confirmation', { tx: tx.hash })
     const receipt = await tx.wait()
     logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
     return receipt

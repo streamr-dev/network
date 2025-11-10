@@ -131,9 +131,38 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
     }
 
+    // Broadcasts a transaction corresponding to the action without waiting for it to be mined
+    private async submitAction(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+        logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
+        const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
+        return new Promise((resolve, reject) => {
+            stakeOrUnstakeFunction(signer,
+                this.pluginConfig.operatorContractAddress,
+                action.sponsorshipId,
+                action.amount,
+                (tx) => resolve(tx) // resolve onSubmit
+            ).catch(reject)
+        })
+    }
+
+    // This will retry the transaction preflight checks, defends against various transient errors
+    private async submitActionWithRetry(action: Action, signer: SignerWithProvider, 
+        maxRetries: number = 5, retryDelay: number = 5000): Promise<ContractTransactionResponse> {
+        return await retry(
+            () => this.submitAction(action, signer),
+            (message, error) => {
+                logger.error(message, { error })
+            },
+            `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
+            maxRetries,
+            retryDelay,
+        )
+    }
+
     private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
         logger.info('Run analysis')
-        const provider = (await streamrClient.getSigner()).provider
+        const signer = await streamrClient.getSigner()
+        const provider = signer.provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
         const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
@@ -173,52 +202,22 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 amount: formatEther(a.amount)
             }))
         })
-        const signer = await streamrClient.getSigner()
 
-        // First execute all unstake actions in parallel, then all stake actions in parallel
-        const unstakeActions = actions.filter((a) => a.type === 'unstake')
-        const stakeActions = actions.filter((a) => a.type === 'stake')
+        // Ensure that all unstake actions are executed before any stake actions to ensure sufficient liquidity
+        const orderedActions = [
+            ...actions.filter((a) => a.type === 'unstake'), 
+            ...actions.filter((a) => a.type === 'stake')
+        ]
         const allTxs: ContractTransactionResponse[] = []
-        
-        // Broadcasts a transaction corresponding to the action without waiting for it to be mined
-        const submitAction = async (action: Action): Promise<ContractTransactionResponse> => {
-            logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-            const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
-            return new Promise((resolve, reject) => {
-                stakeOrUnstakeFunction(signer,
-                    this.pluginConfig.operatorContractAddress,
-                    action.sponsorshipId,
-                    action.amount,
-                    (tx) => resolve(tx) // resolve onSubmit
-                ).catch(reject)
-            })
-        }
 
-        // This will retry the transaction preflight checks, defends against various transient errors
-        const submitActionWithRetry = async (action: Action): Promise<ContractTransactionResponse> => {
-            return await retry(
-                () => submitAction(action),
-                (message, error) => {
-                    logger.error(message, { error })
-                },
-                `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
-                5,
-                5000
-            )
-        }
-
-        // Broadcast each unstake action, sequentially (to avoid nonce overlap) but without waiting for each one to be mined
-        for (const action of unstakeActions) {
-            const tx = await submitActionWithRetry(action)
+        // Broadcast each action sequentially (to avoid nonce overlap) but without waiting for each one to be mined
+        for (const action of orderedActions) {
+            const tx = await this.submitActionWithRetry(action, signer)
             allTxs.push(tx)
         }
-        // Broadcast each stake action, sequentially (to avoid nonce overlap) but without waiting for each one to be mined
-        for (const action of stakeActions) {
-            const tx = await submitActionWithRetry(action)
-            allTxs.push(tx)
-        }
+
         // Wait for all transactions to be mined (don't stop waiting if some of them fail)
-        // Note that if the actual submitted transaction errors, it won't get retried
+        // Note that if the actual submitted transaction errors, it won't get retried. This should be rare.
         await Promise.allSettled(allTxs.map((tx) => tx.wait()))
         logger.info('All actions executed')
     }
