@@ -26,7 +26,7 @@ program
                 process.exit(exitCode)
             }
             
-            const exitEvents = ['SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2', 'exit']
+            const exitEvents = ['SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2']
             exitEvents.forEach((event) => {
                 process.on(event, () => shutdown(0))
             })
