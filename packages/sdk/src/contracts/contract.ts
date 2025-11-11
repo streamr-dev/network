@@ -170,22 +170,22 @@ export const initContractEventGateway = <
     TTarget extends Events<TTarget>,
     TTargetName extends keyof TTarget
 >(opts: {
-    sourceDefinition: Omit<EventListenerDefinition, 'onEvent'>
+    sourceDefinition: Omit<EventListenerDefinition<TSourcePayloads>, 'onEvent'>
     targetName: TTargetName
     sourceEmitter: ChainEventPoller
     targetEmitter: ObservableEventEmitter<TTarget>
-    transformation: (...args: TSourcePayloads) => Parameters<TTarget[TTargetName]>[0]
+    transformation: (eventArgs: TSourcePayloads, blockNumber: number) => Parameters<TTarget[TTargetName]>[0]
     loggerFactory: LoggerFactory
 }): void => {
     const logger = opts.loggerFactory.createLogger(module)
-    type Listener = (...args: TSourcePayloads) => void
+    type Listener = (eventArgs: TSourcePayloads, blockNumber: number) => void
     initEventGateway(
         opts.targetName,
         (emit: (payload: Parameters<TTarget[TTargetName]>[0]) => void) => {
-            const listener = (...args: TSourcePayloads) => {
+            const listener = (eventArgs: TSourcePayloads, blockNumber: number) => {
                 let targetEvent
                 try {
-                    targetEvent = opts.transformation(...args)
+                    targetEvent = opts.transformation(eventArgs, blockNumber)
                 } catch (err) {
                     logger.error('Skip emit event', {
                         eventName: opts.targetName,

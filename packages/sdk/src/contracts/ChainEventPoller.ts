@@ -7,8 +7,8 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
 
-export interface EventListenerDefinition {
-    onEvent: (...args: any[]) => void
+export interface EventListenerDefinition<TEventArgs extends any[]> {
+    onEvent: (eventArgs: TEventArgs, blockNumber: number) => void
     contractInterfaceFragment: EventFragment
     contractAddress: EthereumAddress
 }
@@ -19,7 +19,7 @@ export const POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD = 30
 @scoped(Lifecycle.ContainerScoped)
 export class ChainEventPoller {
 
-    private listeners: EventListenerDefinition[] = []
+    private listeners: EventListenerDefinition<any[]>[] = []
     private providers: AbstractProvider[]
     private pollInterval: number
     private abortController?: AbortController
@@ -32,15 +32,15 @@ export class ChainEventPoller {
         this.pollInterval = config.contracts.pollInterval
     }
 
-    on(definition: EventListenerDefinition): void {
+    on<TEventArgs extends any[]>(definition: EventListenerDefinition<TEventArgs>): void {
         const started = this.listeners.length > 0
-        this.listeners.push(definition)
+        this.listeners.push(definition as EventListenerDefinition<any[]>)
         if (!started) {
             this.start()
         }
     }
 
-    off(definition: EventListenerDefinition): void {
+    off<TEventArgs extends any[]>(definition: EventListenerDefinition<TEventArgs>): void {
         const started = this.listeners.length > 0
         remove(this.listeners, (l) => {
             return (l.contractAddress === definition.contractAddress)
@@ -149,7 +149,7 @@ export class ChainEventPoller {
                             (l) => (l.contractAddress === event.contractAddress) && (l.contractInterfaceFragment.name === event.name)
                         )
                         for (const listener of listeners) {
-                            listener.onEvent(...event.args, event.blockNumber)
+                            listener.onEvent(event.args, event.blockNumber)
                         }
                     }
                     newFromBlock = Math.max(...events.map((e) => e.blockNumber)) + 1

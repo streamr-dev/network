@@ -12,7 +12,7 @@ import {
     SponsorshipFactory as SponsorshipFactoryContract
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
-import { Contract, EventLog, parseEther, ZeroAddress } from 'ethers'
+import { Contract, ContractTransactionReceipt, ContractTransactionResponse, EventLog, formatEther, parseEther, ZeroAddress } from 'ethers'
 import { EnvironmentId } from '../Config'
 import { SignerWithProvider } from '../identity/Identity'
 
@@ -144,25 +144,51 @@ export const stake = async (
     staker: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-): Promise<void> => {
-    logger.debug('Stake', { amount: amount.toString() })
-    const contract = getOperatorContract(operatorContractAddress).connect(staker)
-    await (await contract.stake(sponsorshipContractAddress, amount)).wait()
+    amount: WeiAmount,
+    bumpGasLimitPct: number = 0,
+    onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+): Promise<ContractTransactionReceipt | null> => {
+    logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
+    const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
+    
+    let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
+    if (bumpGasLimitPct > 0) {
+        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
+    }
+
+    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
+    logger.debug('Stake: transaction submitted', { tx: tx.hash })
+    onSubmit(tx)
+    const receipt = await tx.wait()
+    logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
+    return receipt
 }
 
 export const unstake = async (
     staker: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-): Promise<void> => {
-    logger.debug('Unstake')
+    amount: WeiAmount,
+    bumpGasLimitPct: number = 0,
+    onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+): Promise<ContractTransactionReceipt | null> => {
+    logger.debug('Unstake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
     const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(staker)
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
-    await (await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount)).wait()
+
+    let gasLimit = await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount)
+    if (bumpGasLimitPct > 0) {
+        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
+    }
+
+    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
+    logger.debug('Unstake: transaction submitted', { tx: tx.hash })
+    onSubmit(tx)
+    const receipt = await tx.wait()
+    logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
+    return receipt
 }
 
 export const sponsor = async (
@@ -192,4 +218,8 @@ export const getOperatorContract = (operatorAddress: string): OperatorContract =
 
 const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract => {
     return new Contract(sponsorshipAddress, SponsorshipABI) as unknown as SponsorshipContract
+}
+
+const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number): bigint => {
+    return gasEstimate * BigInt(100 + increasePercentage) / 100n
 }

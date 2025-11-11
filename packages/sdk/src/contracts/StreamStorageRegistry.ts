@@ -85,7 +85,7 @@ export class StreamStorageRegistry {
         chainEventPoller: ChainEventPoller,
         loggerFactory: LoggerFactory
     ) {
-        const transformation = (streamId: string, nodeAddress: string, blockNumber: number) => ({
+        const transformation = ([streamId, nodeAddress]: [string, string], blockNumber: number) => ({
             streamId: toStreamID(streamId),
             nodeAddress: toEthereumAddress(nodeAddress),
             blockNumber

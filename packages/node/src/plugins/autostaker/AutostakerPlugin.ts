@@ -1,7 +1,7 @@
-import { _operatorContractUtils, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { collect, Logger, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
+import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient } from '@streamr/sdk'
+import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { formatEther, parseEther } from 'ethers'
+import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
@@ -50,6 +50,9 @@ const logger = new Logger(module)
 
 // 1e12 wei, i.e. one millionth of one DATA token (we can tweak this later if needed)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
+const ACTION_SUBMIT_RETRY_COUNT = 5
+const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
+const ACTION_GAS_LIMIT_BUMP_PCT = 20
 
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
@@ -68,8 +71,10 @@ const getStakeOrUnstakeFunction = (action: Action): (
     operatorOwnerWallet: SignerWithProvider,
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
-) => Promise<void> => {
+    amount: WeiAmount,
+    bumpGasLimitPct: number,
+    onSubmit: (tx: ContractTransactionResponse) => void
+) => Promise<ContractTransactionReceipt | null> => {
     switch (action.type) {
         case 'stake':
             return _operatorContractUtils.stake
@@ -119,15 +124,52 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         }
         logger.info(`First activation in approximately ${this.pluginConfig.runIntervalInMs / (1000 * 60) } minutes`)
         scheduleAtApproximateInterval(triggerRun, this.pluginConfig.runIntervalInMs, 0.1, false, this.abortController.signal)
-        streamrClient.on('sponsorshipCreated', triggerRun)
+        streamrClient.on('sponsorshipCreated', (event: SponsorshipCreatedEvent) => {
+            // Make sure the The Graph is up-to-date before triggering the run
+            logger.info('Detected a new sponsorship at block number', { blockNumber: event.blockNumber })
+            streamrClient.getTheGraphClient().updateRequiredBlockNumber(event.blockNumber)
+            triggerRun()
+        })
         this.abortController.signal.addEventListener('abort', () => {
             streamrClient.off('sponsorshipCreated', triggerRun)
         })
     }
 
+    // Broadcasts a transaction corresponding to the action without waiting for it to be mined
+    private async submitAction(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+        logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
+        const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
+        return new Promise((resolve, reject) => {
+            stakeOrUnstakeFunction(signer,
+                this.pluginConfig.operatorContractAddress,
+                action.sponsorshipId,
+                action.amount,
+                // Gas limit needed for staking/unstaking is a little unstable because others might 
+                // be staking/unstaking at the same time, so we bump the gas limit to be safe
+                ACTION_GAS_LIMIT_BUMP_PCT,
+                // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
+                (tx) => resolve(tx) 
+            ).catch(reject)
+        })
+    }
+
+    // This will retry the transaction preflight checks, defends against various transient errors
+    private async submitActionWithRetry(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+        return await retry(
+            () => this.submitAction(action, signer),
+            (message, error) => {
+                logger.error(message, { error })
+            },
+            `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
+            ACTION_SUBMIT_RETRY_COUNT,
+            ACTION_SUBMIT_RETRY_DELAY_MS,
+        )
+    }
+
     private async runActions(streamrClient: StreamrClient, minStakePerSponsorship: bigint): Promise<void> {
         logger.info('Run analysis')
-        const provider = (await streamrClient.getSigner()).provider
+        const signer = await streamrClient.getSigner()
+        const provider = signer.provider
         const operatorContract = _operatorContractUtils.getOperatorContract(this.pluginConfig.operatorContractAddress)
             .connect(provider)
         const myCurrentStakes = await this.getMyCurrentStakes(streamrClient)
@@ -167,15 +209,24 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 amount: formatEther(a.amount)
             }))
         })
-        const signer = await streamrClient.getSigner()
-        for (const action of actions) {
-            logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-            await getStakeOrUnstakeFunction(action)(signer,
-                this.pluginConfig.operatorContractAddress,
-                action.sponsorshipId,
-                action.amount
-            )
+
+        // Ensure that all unstake actions are executed before any stake actions to ensure sufficient liquidity
+        const orderedActions = [
+            ...actions.filter((a) => a.type === 'unstake'), 
+            ...actions.filter((a) => a.type === 'stake')
+        ]
+        const allTxs: ContractTransactionResponse[] = []
+
+        // Broadcast each action sequentially (to avoid nonce overlap) but without waiting for each one to be mined
+        for (const action of orderedActions) {
+            const tx = await this.submitActionWithRetry(action, signer)
+            allTxs.push(tx)
         }
+
+        // Wait for all transactions to be mined (don't stop waiting if some of them fail)
+        // Note that if the actual submitted transaction errors, it won't get retried. This should be rare.
+        await Promise.allSettled(allTxs.map((tx) => tx.wait()))
+        logger.info('All actions executed')
     }
 
     private async getStakeableSponsorships(
