@@ -14,8 +14,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Update default list of JSON RPC urls for Polygon (replace a dead one with a working one)
-
 #### Deprecated
 
 #### Removed
@@ -29,11 +27,6 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 #### Changed
-
-- Autostaker: Bump gas limit on stake/unstake calls by 20% to defend against too low estimates in case contract change rapidly changes
-- Autostaker: Retry actions that fail in preflight check
-- Autostaker: Guard against subgraph not being up to date when a new sponsorship event is seen on chain
-- Autostaker: Broadcast autostaker stake/unstake transactions in parallel to speed up action execution
 
 #### Deprecated
 
@@ -56,6 +49,25 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [103.1.1] - 2025-11-11
+
+### @streamr/sdk
+
+#### Changed
+
+- Update default list of JSON RPC urls for Polygon (replace a dead one with a working one) (https://github.com/streamr-dev/network/pull/3227)
+
+### @streamr/node
+
+#### Changed
+
+- Autostaker changes: (https://github.com/streamr-dev/network/pull/3227)
+  - bump gas limit on stake/unstake calls by 20% to defend against too low estimates in case contract change rapidly changes
+  - retry actions that fail in preflight check
+  - guard against subgraph not being up to date when a new sponsorship event is seen on chain
+  - broadcast autostaker stake/unstake transactions in parallel to speed up action execution
 
 
 ## [103.1.0] - 2025-10-14
@@ -473,6 +485,7 @@ Changes before Tatum release are not documented in this file.
 
 
 [Unreleased]: https://github.com/streamr-dev/network/compare/v103.1.0...HEAD
+[103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1
 [103.1.0]: https://github.com/streamr-dev/network/compare/v103.0.0...v103.1.0
 [103.0.0]: https://github.com/streamr-dev/network/compare/v102.1.1...v103.0.0
 [102.1.1]: https://github.com/streamr-dev/network/compare/v102.1.0...v102.1.1
