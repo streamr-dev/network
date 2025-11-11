@@ -14,6 +14,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Update default list of JSON RPC urls for Polygon (replace a dead one with a working one)
+
 #### Deprecated
 
 #### Removed
@@ -28,6 +30,12 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Update default list of JSON RPC urls for Polygon (replace a dead one with a working one)
+- Autostaker: Bump gas limit on stake/unstake calls by 20% to defend against too low estimates in case contract change rapidly changes
+- Autostaker: Retry actions that fail in preflight check
+- Autostaker: Guard against subgraph not being up to date when a new sponsorship event is seen on chain
+- Autostaker: Broadcast autostaker stake/unstake transactions in parallel to speed up action execution
+
 #### Deprecated
 
 #### Removed
@@ -41,6 +49,8 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 #### Changed
+
+- Update default list of JSON RPC urls for Polygon (replace a dead one with a working one)
 
 #### Deprecated
 
