@@ -52,6 +52,7 @@ const logger = new Logger(module)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
 const ACTION_SUBMIT_RETRY_COUNT = 5
 const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
+const ACTION_GAS_LIMIT_BUMP_PCT = 20
 
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
@@ -71,6 +72,7 @@ const getStakeOrUnstakeFunction = (action: Action): (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
+    bumpGasLimitPct: number,
     onSubmit: (tx: ContractTransactionResponse) => void
 ) => Promise<ContractTransactionReceipt | null> => {
     switch (action.type) {
@@ -142,7 +144,11 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
                 action.amount,
-                (tx) => resolve(tx) // resolve onSubmit
+                // Gas limit needed for staking/unstaking is a little unstable because others might 
+                // be staking/unstaking at the same time, so we bump the gas limit to be safe
+                ACTION_GAS_LIMIT_BUMP_PCT,
+                // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
+                (tx) => resolve(tx) 
             ).catch(reject)
         })
     }

@@ -145,14 +145,16 @@ export const stake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
+    bumpGasLimitPct: number = 0,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
     
-    // Gas limit needed for staking is a little unstable because others might 
-    // be staking at the same time so we bump the gas limit to be safe
-    const gasLimit = bumpGasLimit(await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount))
+    let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
+    if (bumpGasLimitPct > 0) {
+        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
+    }
 
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
     logger.debug('Stake: transaction submitted', { tx: tx.hash })
@@ -167,6 +169,7 @@ export const unstake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
+    bumpGasLimitPct: number = 0,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Unstake', { amount: formatEther(amount), sponsorshipContractAddress })
@@ -175,9 +178,10 @@ export const unstake = async (
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
 
-    // Gas limit needed for unstaking is a little unstable because others might 
-    // be unstaking at the same time so we bump the gas limit to be safe
-    const gasLimit = bumpGasLimit(await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount))
+    let gasLimit = await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount)
+    if (bumpGasLimitPct > 0) {
+        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
+    }
 
     const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
     logger.debug('Unstake: transaction submitted', { tx: tx.hash })
@@ -216,6 +220,6 @@ const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract
     return new Contract(sponsorshipAddress, SponsorshipABI) as unknown as SponsorshipContract
 }
 
-const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number = 20): bigint => {
+const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number): bigint => {
     return gasEstimate * BigInt(100 + increasePercentage) / 100n
 }
