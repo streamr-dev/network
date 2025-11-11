@@ -50,6 +50,8 @@ const logger = new Logger(module)
 
 // 1e12 wei, i.e. one millionth of one DATA token (we can tweak this later if needed)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
+const ACTION_SUBMIT_RETRY_COUNT = 5
+const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
 
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
@@ -146,16 +148,15 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     // This will retry the transaction preflight checks, defends against various transient errors
-    private async submitActionWithRetry(action: Action, signer: SignerWithProvider, 
-        maxRetries: number = 5, retryDelay: number = 5000): Promise<ContractTransactionResponse> {
+    private async submitActionWithRetry(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
         return await retry(
             () => this.submitAction(action, signer),
             (message, error) => {
                 logger.error(message, { error })
             },
             `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
-            maxRetries,
-            retryDelay,
+            ACTION_SUBMIT_RETRY_COUNT,
+            ACTION_SUBMIT_RETRY_DELAY_MS,
         )
     }
 
