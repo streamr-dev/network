@@ -90,6 +90,7 @@ export interface DeploySponsorshipContractOpts {
     maxOperatorCount?: number
     minStakeDuration?: number
     environmentId: EnvironmentId
+    sponsorAmount?: WeiAmount
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
@@ -124,7 +125,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         .connect(opts.deployer)
         .transferAndCall(
             CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipFactory,
-            0n,
+            opts.sponsorAmount ?? 0n,
             sponsorshipContractParams,
         )
     const deployReceipt = await deployTx.wait()

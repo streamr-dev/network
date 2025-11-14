@@ -28,15 +28,17 @@ const queryTheGraphUntilSuccess = async (query: string): Promise<any> => {
 describe('operatorContractUtils', () => {
     it('deploySponsorshipContract', async () => {
         const stream = await createTestStream(createTestClient((await createTestWallet({ gas: true })).privateKey), module)
+        const deployer = await createTestWallet({ gas: true, tokens: true })
         const sponsorship = await _operatorContractUtils.deploySponsorshipContract({
             streamId: stream.id,
-            deployer: await createTestWallet({ gas: true }),
+            deployer,
             metadata: JSON.stringify({ foo: 'bar' }),
             earningsPerSecond: 123n,
             minOperatorCount: 1,
             maxOperatorCount: 2,
             minStakeDuration: 456,
-            environmentId: 'dev2'
+            environmentId: 'dev2',
+            sponsorAmount: 10000n
         })
         const contractAddress = await sponsorship.getAddress()
         const result = await queryTheGraphUntilSuccess(`{
@@ -49,6 +51,10 @@ describe('operatorContractUtils', () => {
                 minOperators
                 maxOperators
                 minimumStakingPeriodSeconds
+                sponsoringEvents {
+                    amount
+                    sponsor
+                }
             }
         }`)
         expect(result).toEqual({
@@ -59,7 +65,11 @@ describe('operatorContractUtils', () => {
             metadata: '{"foo":"bar"}',
             minOperators: 1,
             maxOperators: 2,
-            minimumStakingPeriodSeconds: '456'
+            minimumStakingPeriodSeconds: '456',
+            sponsoringEvents: [{
+                amount: '10000',
+                sponsor: (await deployer.getAddress()).toLowerCase()
+            }]
         })
     })
 })
