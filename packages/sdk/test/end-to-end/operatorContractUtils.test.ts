@@ -1,4 +1,4 @@
-import { createTestWallet } from '@streamr/test-utils'
+import { createTestWallet, describeOnlyInNodeJs } from '@streamr/test-utils'
 import { _operatorContractUtils } from '../../src'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 import { Logger, TheGraphClient, until } from '@streamr/utils'
@@ -25,7 +25,7 @@ const queryTheGraphUntilSuccess = async (query: string): Promise<any> => {
     return result
 }
 
-describe('operatorContractUtils', () => {
+describeOnlyInNodeJs('operatorContractUtils', () => {
     it('deploySponsorshipContract', async () => {
         const stream = await createTestStream(createTestClient((await createTestWallet({ gas: true })).privateKey), module)
         const deployer = await createTestWallet({ gas: true, tokens: true })
