@@ -8,11 +8,20 @@ import {
     OperatorFactory as OperatorFactoryContract,
     SponsorshipABI,
     Sponsorship as SponsorshipContract,
-    SponsorshipFactoryABI,
-    SponsorshipFactory as SponsorshipFactoryContract
+    SponsorshipFactoryABI
 } from '@streamr/network-contracts'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
-import { Contract, ContractTransactionReceipt, ContractTransactionResponse, EventLog, formatEther, parseEther, ZeroAddress } from 'ethers'
+import {
+    AbiCoder,
+    Contract,
+    ContractTransactionReceipt,
+    ContractTransactionResponse,
+    EventLog,
+    formatEther,
+    Interface,
+    parseEther,
+    ZeroAddress
+} from 'ethers'
 import { EnvironmentId } from '../Config'
 import { SignerWithProvider } from '../identity/Identity'
 
@@ -81,21 +90,17 @@ export interface DeploySponsorshipContractOpts {
     maxOperatorCount?: number
     minStakeDuration?: number
     environmentId: EnvironmentId
+    sponsorAmount?: WeiAmount
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
-    const sponsorshipFactory = new Contract(
-        CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipFactory,
-        SponsorshipFactoryABI,
-        opts.deployer
-    ) as unknown as SponsorshipFactoryContract
     const policies: { contractAddress: string, param: number | bigint }[] = [{
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipStakeWeightedAllocationPolicy,
         param: opts.earningsPerSecond
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
-        param: opts.minStakeDuration ?? 0,
+        param: opts.minStakeDuration ?? 0
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
         param: 0
@@ -106,19 +111,35 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             param: opts.maxOperatorCount
         })
     }
-    const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
-        (opts.minOperatorCount ?? 1).toString(),
-        opts.streamId,
-        opts.metadata ?? '{}',
-        policies.map((p) => p.contractAddress),
-        policies.map((p) => p.param)
+    const sponsorshipContractParams = AbiCoder.defaultAbiCoder().encode(
+        ['uint32', 'string', 'string', 'address[]', 'uint[]'],
+        [
+            (opts.minOperatorCount ?? 1).toString(),
+            opts.streamId,
+            opts.metadata ?? '{}',
+            policies.map((p) => p.contractAddress),
+            policies.map((p) => p.param),
+        ],
     )
-    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
-    const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
-    const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
-    const newSponsorship = new Contract(newSponsorshipAddress, SponsorshipABI, opts.deployer) as unknown as SponsorshipContract
-    logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
-    return newSponsorship
+    const deployTx = await getTokenContract(CHAIN_CONFIG[opts.environmentId].contracts.DATA)
+        .connect(opts.deployer)
+        .transferAndCall(
+            CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipFactory,
+            opts.sponsorAmount ?? 0n,
+            sponsorshipContractParams,
+        )
+    const deployReceipt = await deployTx.wait()
+    const factoryInterface = new Interface(SponsorshipFactoryABI)
+    const newSponsorshipEvent = deployReceipt!.logs
+        .map((log) => factoryInterface.parseLog(log))
+        .find((p) => p?.name === 'NewSponsorship')!
+    const sponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
+    logger.debug('Deployed SponsorshipContract', { address: sponsorshipAddress })
+    return new Contract(
+        sponsorshipAddress,
+        SponsorshipABI,
+        opts.deployer,
+    ) as unknown as SponsorshipContract
 }
 
 export const delegate = async (
@@ -135,7 +156,7 @@ export const undelegate = async (
     delegator: SignerWithProvider,
     operatorContractAddress: string,
     amount: WeiAmount
-): Promise<void> => {    
+): Promise<void> => {
     logger.debug('Undelegate', { amount: amount.toString() })
     await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait()
 }
@@ -150,7 +171,7 @@ export const stake = async (
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
-    
+
     let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
     if (bumpGasLimitPct > 0) {
         gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
@@ -207,7 +228,7 @@ export const transferTokens = async (
     amount: WeiAmount,
     tokenAddress: string
 ): Promise<void> => {
-    const token = new Contract(tokenAddress, DATATokenABI) as unknown as DATATokenContract
+    const token = getTokenContract(tokenAddress)
     const tx = await token.connect(from).transferAndCall(to, amount, '0x')
     await tx.wait()
 }
@@ -218,6 +239,10 @@ export const getOperatorContract = (operatorAddress: string): OperatorContract =
 
 const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract => {
     return new Contract(sponsorshipAddress, SponsorshipABI) as unknown as SponsorshipContract
+}
+
+const getTokenContract = (tokenAddress: string): DATATokenContract => {
+    return new Contract(tokenAddress, DATATokenABI) as unknown as DATATokenContract
 }
 
 const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number): bigint => {
