@@ -99,7 +99,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         param: opts.earningsPerSecond
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipDefaultLeavePolicy,
-        param: opts.minStakeDuration ?? 0,
+        param: opts.minStakeDuration ?? 0
     }, {
         contractAddress: CHAIN_CONFIG[opts.environmentId].contracts.SponsorshipVoteKickPolicy,
         param: 0
@@ -155,7 +155,7 @@ export const undelegate = async (
     delegator: SignerWithProvider,
     operatorContractAddress: string,
     amount: WeiAmount
-): Promise<void> => {    
+): Promise<void> => {
     logger.debug('Undelegate', { amount: amount.toString() })
     await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait()
 }
@@ -170,7 +170,7 @@ export const stake = async (
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
-    
+
     let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
     if (bumpGasLimitPct > 0) {
         gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
