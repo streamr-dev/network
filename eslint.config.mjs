@@ -1,13 +1,7 @@
-import tsParser from '@typescript-eslint/parser'
 import streamr from 'eslint-config-streamr-ts'
 import importPlugin from 'eslint-plugin-import'
 import jestPlugin from 'eslint-plugin-jest'
 import globals from 'globals'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename);
 
 export default [
     {
@@ -24,20 +18,11 @@ export default [
         name: 'streamr-network-typescript',
         languageOptions: {
             globals: globals.node,
-            parser: tsParser,
-            parserOptions: {
-                project: ['./tsconfig.jest.json'],
-                tsconfigRootDir: __dirname
-            }
         },
         settings: {
             'import/resolver': {
                 typescript: {
-                    alwaysTryTypes: true,
-                    project: [
-                        'packages/*/tsconfig.jest.json',
-                        'packages/browser-test-runner/tsconfig.node.json'
-                    ]
+                    alwaysTryTypes: true
                 },
                 node: true
             }
