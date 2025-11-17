@@ -17,7 +17,7 @@ export default [
     {
         name: 'streamr-network-typescript',
         languageOptions: {
-            globals: globals.node,
+            globals: globals.node
         },
         settings: {
             'import/resolver': {
