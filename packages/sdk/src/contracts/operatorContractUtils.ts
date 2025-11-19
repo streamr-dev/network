@@ -39,6 +39,7 @@ export interface DeployOperatorContractOpts {
     metadata?: string
     operatorTokenName?: string
     environmentId: EnvironmentId
+    transactionTimeout?: number
 }
 
 /**
@@ -69,7 +70,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
             0,
             0
         ]
-    )).wait()
+    )).wait(undefined, opts.transactionTimeout)
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
     const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, OperatorABI, opts.deployer) as unknown as OperatorContract
@@ -91,6 +92,7 @@ export interface DeploySponsorshipContractOpts {
     minStakeDuration?: number
     environmentId: EnvironmentId
     sponsorAmount?: WeiAmount
+    transactionTimeout?: number
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
@@ -128,7 +130,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             opts.sponsorAmount ?? 0n,
             sponsorshipContractParams,
         )
-    const deployReceipt = await deployTx.wait()
+    const deployReceipt = await deployTx.wait(undefined, opts.transactionTimeout)
     const factoryInterface = new Interface(SponsorshipFactoryABI)
     const newSponsorshipEvent = deployReceipt!.logs
         .map((log) => factoryInterface.parseLog(log))
@@ -145,20 +147,22 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 export const delegate = async (
     delegator: SignerWithProvider,
     operatorContractAddress: string,
-    amount: WeiAmount
+    amount: WeiAmount,
+    transactionTimeout?: number
 ): Promise<void> => {
     logger.debug('Delegate', { amount: amount.toString() })
     const tokenAddress = await getOperatorContract(operatorContractAddress).connect(delegator.provider).token()
-    await transferTokens(delegator, operatorContractAddress, amount, tokenAddress)
+    await transferTokens(delegator, operatorContractAddress, amount, tokenAddress, transactionTimeout)
 }
 
 export const undelegate = async (
     delegator: SignerWithProvider,
     operatorContractAddress: string,
-    amount: WeiAmount
+    amount: WeiAmount,
+    transactionTimeout?: number
 ): Promise<void> => {
     logger.debug('Undelegate', { amount: amount.toString() })
-    await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait()
+    await (await getOperatorContract(operatorContractAddress).connect(delegator).undelegate(amount)).wait(undefined, transactionTimeout)
 }
 
 export const stake = async (
@@ -168,6 +172,7 @@ export const stake = async (
     amount: WeiAmount,
     bumpGasLimitPct: number = 0,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+    transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
@@ -180,7 +185,7 @@ export const stake = async (
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
     logger.debug('Stake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
-    const receipt = await tx.wait()
+    const receipt = await tx.wait(undefined, transactionTimeout)
     logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
     return receipt
 }
@@ -192,6 +197,7 @@ export const unstake = async (
     amount: WeiAmount,
     bumpGasLimitPct: number = 0,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+    transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Unstake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
@@ -207,7 +213,7 @@ export const unstake = async (
     const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
     logger.debug('Unstake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
-    const receipt = await tx.wait()
+    const receipt = await tx.wait(undefined, transactionTimeout)
     logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
     return receipt
 }
@@ -215,22 +221,24 @@ export const unstake = async (
 export const sponsor = async (
     sponsorer: SignerWithProvider,
     sponsorshipContractAddress: string,
-    amount: WeiAmount
+    amount: WeiAmount,
+    transactionTimeout?: number
 ): Promise<void> => {
     logger.debug('Sponsor', { amount: amount.toString() })
     const tokenAddress = await getSponsorshipContract(sponsorshipContractAddress).connect(sponsorer.provider).token()
-    await transferTokens(sponsorer, sponsorshipContractAddress, amount, tokenAddress)
+    await transferTokens(sponsorer, sponsorshipContractAddress, amount, tokenAddress, transactionTimeout)
 }
 
 export const transferTokens = async (
     from: SignerWithProvider,
     to: string,
     amount: WeiAmount,
-    tokenAddress: string
+    tokenAddress: string,
+    transactionTimeout?: number
 ): Promise<void> => {
     const token = getTokenContract(tokenAddress)
     const tx = await token.connect(from).transferAndCall(to, amount, '0x')
-    await tx.wait()
+    await tx.wait(undefined, transactionTimeout)
 }
 
 export const getOperatorContract = (operatorAddress: string): OperatorContract => {

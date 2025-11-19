@@ -1,8 +1,9 @@
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import { createTestWallet, describeOnlyInNodeJs } from '@streamr/test-utils'
+import { Logger, TheGraphClient, until } from '@streamr/utils'
+import { parseEther } from 'ethers'
 import { _operatorContractUtils } from '../../src'
 import { createTestClient, createTestStream } from '../test-utils/utils'
-import { Logger, TheGraphClient, until } from '@streamr/utils'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
@@ -71,5 +72,37 @@ describeOnlyInNodeJs('operatorContractUtils', () => {
                 sponsor: (await deployer.getAddress()).toLowerCase()
             }]
         })
+    })
+
+    it('stake and unstake', async () => {
+        const operator = await createTestWallet({ gas: true, tokens: true })
+        const operatorContract = await _operatorContractUtils.deployOperatorContract({
+            deployer: operator,
+            environmentId: 'dev2'
+        })
+        const stream = await createTestStream(createTestClient((await createTestWallet({ gas: true })).privateKey), module)
+        const sponsorshipContract = await _operatorContractUtils.deploySponsorshipContract({
+            streamId: stream.id,
+            deployer: operator,
+            earningsPerSecond: 123n,
+            environmentId: 'dev2'
+        })
+        await _operatorContractUtils.delegate(operator, await operatorContract.getAddress(), parseEther('10000'))
+
+        await _operatorContractUtils.stake(
+            operator, 
+            await operatorContract.getAddress(), 
+            await sponsorshipContract.getAddress(),
+            parseEther('8000')
+        )
+        expect(await sponsorshipContract.stakedWei(operatorContract.getAddress())).toBe(parseEther('8000'))
+
+        await _operatorContractUtils.unstake(
+            operator,
+            await operatorContract.getAddress(),
+            await sponsorshipContract.getAddress(),
+            parseEther('1000')
+        )
+        expect(await sponsorshipContract.stakedWei(operatorContract.getAddress())).toBe(parseEther('7000'))
     })
 })
