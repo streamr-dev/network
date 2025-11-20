@@ -233,7 +233,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         stakes: Map<SponsorshipID, WeiAmount>,
         streamrClient: StreamrClient
     ): Promise<Map<SponsorshipID, SponsorshipConfig>> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number) => {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
             // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
             // payoutPropotionalStrategy so that we ensure that unstaking doesn't happen too soon)
             return {
@@ -248,6 +248,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
+                            block: { number_gte: ${requiredBlockNumber} }
                         ) {
                             id
                             totalPayoutWeiPerSec
@@ -276,7 +277,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async getMyCurrentStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, WeiAmount>> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number) => {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
             return {
                 query: `
                     {
@@ -286,6 +287,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
+                            block: { number_gte: ${requiredBlockNumber} }
                         ) {
                             id
                             sponsorship {
@@ -302,7 +304,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async getUndelegationQueueAmount(streamrClient: StreamrClient): Promise<WeiAmount> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number) => {
+        const queryResult = streamrClient.getTheGraphClient().queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
             return {
                 query: `
                     {
@@ -312,6 +314,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                                 id_gt: "${lastId}"
                             },
                             first: ${pageSize}
+                            block: { number_gte: ${requiredBlockNumber} }
                         ) {
                             id
                             amount
