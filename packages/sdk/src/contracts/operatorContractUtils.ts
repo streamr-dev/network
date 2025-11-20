@@ -44,6 +44,16 @@ export interface DeployOperatorContractOpts {
 }
 
 /**
+ * @deprecated
+ * @hidden
+ */
+export interface TransactionOpts {
+    gasLimit?: BigNumberish
+    gasPrice?: BigNumberish
+    nonce?: number
+}
+
+/**
  * @param opts.deployer should be the operator's Wallet
  * @returns Operator
  */
@@ -171,13 +181,13 @@ export const stake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    gasLimit: BigNumberish | undefined = undefined,
+    txOpts: TransactionOpts = {},
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
-    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
+    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, txOpts)
     logger.debug('Stake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
     logger.debug('Stake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
@@ -196,7 +206,7 @@ export const unstake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    gasLimit: BigNumberish | undefined = undefined,
+    txOpts: TransactionOpts = {},
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
@@ -206,7 +216,7 @@ export const unstake = async (
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
 
-    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
+    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, txOpts)
     logger.debug('Unstake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
     logger.debug('Unstake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
