@@ -180,9 +180,15 @@ export const stake = async (
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
     logger.debug('Stake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
-    const receipt = await tx.wait(undefined, transactionTimeout)
-    logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
-    return receipt
+    logger.debug('Stake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
+    try {
+        const receipt = await tx.wait(undefined, transactionTimeout)
+        logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
+        return receipt
+    } catch (error) {
+        logger.error(`Stake: error waiting for tx to be mined`, { tx: tx.hash, error })
+        throw error
+    }
 }
 
 export const unstake = async (
@@ -201,11 +207,17 @@ export const unstake = async (
     const targetAmount = currentAmount - amount
 
     const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
-    logger.debug('Unstake: transaction submitted', { tx: tx.hash })
+    logger.debug('Unstake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
-    const receipt = await tx.wait(undefined, transactionTimeout)
-    logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
-    return receipt
+    logger.debug('Unstake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
+    try {
+        const receipt = await tx.wait(undefined, transactionTimeout)
+        logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
+        return receipt
+    } catch (error) {
+        logger.error(`Unstake: error waiting for tx to be mined`, { tx: tx.hash, error })
+        throw error
+    }
 }
 
 export const sponsor = async (
