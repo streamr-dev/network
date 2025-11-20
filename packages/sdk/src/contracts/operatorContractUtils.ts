@@ -13,6 +13,7 @@ import {
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import {
     AbiCoder,
+    BigNumberish,
     Contract,
     ContractTransactionReceipt,
     ContractTransactionResponse,
@@ -170,18 +171,12 @@ export const stake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number = 0,
+    gasLimit: BigNumberish | undefined = undefined,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
-
-    let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
-    if (bumpGasLimitPct > 0) {
-        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
-    }
-
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
     logger.debug('Stake: transaction submitted', { tx: tx.hash })
     onSubmit(tx)
@@ -195,7 +190,7 @@ export const unstake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number = 0,
+    gasLimit: BigNumberish | undefined = undefined,
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
@@ -204,11 +199,6 @@ export const unstake = async (
     const sponsorshipContract = getSponsorshipContract(sponsorshipContractAddress).connect(staker)
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
-
-    let gasLimit = await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount)
-    if (bumpGasLimitPct > 0) {
-        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
-    }
 
     const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
     logger.debug('Unstake: transaction submitted', { tx: tx.hash })

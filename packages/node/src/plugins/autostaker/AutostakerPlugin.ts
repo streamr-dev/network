@@ -1,7 +1,7 @@
 import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient } from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
+import { BigNumberish, ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { adjustStakes } from './payoutProportionalStrategy'
@@ -52,7 +52,7 @@ const logger = new Logger(module)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
 const ACTION_SUBMIT_RETRY_COUNT = 5
 const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
-const ACTION_GAS_LIMIT_BUMP_PCT = 20
+const ACTION_GAS_LIMIT = 500000n
 const TRANSACTION_TIMEOUT = 60 * 1000
 
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
@@ -73,7 +73,7 @@ const getStakeOrUnstakeFunction = (action: Action): (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number,
+    gasLimit: BigNumberish,
     onSubmit: (tx: ContractTransactionResponse) => void,
     transactionTimeout?: number
 ) => Promise<ContractTransactionReceipt | null> => {
@@ -146,9 +146,9 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
                 action.amount,
-                // Gas limit needed for staking/unstaking is a little unstable because others might 
-                // be staking/unstaking at the same time, so we bump the gas limit to be safe
-                ACTION_GAS_LIMIT_BUMP_PCT,
+                // Use a fixed gas limit - gas estimation of stake transactions would fails 
+                // with "not enough balance", because we first need to unstake before we stake
+                ACTION_GAS_LIMIT,
                 // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
                 (tx) => resolve(tx),
                 TRANSACTION_TIMEOUT 
