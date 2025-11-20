@@ -55,6 +55,11 @@ const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
 const ACTION_GAS_LIMIT = 500000n
 const TRANSACTION_TIMEOUT = 60 * 1000
 
+interface SubmitActionResult {
+    txResponse: ContractTransactionResponse
+    txReceiptPromise: Promise<ContractTransactionReceipt | null>
+}
+
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
         query: `
@@ -138,11 +143,11 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     // Broadcasts a transaction corresponding to the action without waiting for it to be mined
-    private async submitAction(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+    private async submitAction(action: Action, signer: SignerWithProvider): Promise<SubmitActionResult> {
         logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
         const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
         return new Promise((resolve, reject) => {
-            stakeOrUnstakeFunction(signer,
+            const txReceiptPromise = stakeOrUnstakeFunction(signer,
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
                 action.amount,
@@ -150,14 +155,16 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
                 // with "not enough balance", because we first need to unstake before we stake
                 ACTION_GAS_LIMIT,
                 // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
-                (tx) => resolve(tx),
+                (txResponse) => resolve({ txResponse, txReceiptPromise }),
                 TRANSACTION_TIMEOUT 
-            ).catch(reject)
+            )
+            // Propagate errors that occur before onSubmit is called
+            txReceiptPromise.catch(reject)
         })
     }
 
     // This will retry the transaction preflight checks, defends against various transient errors
-    private async submitActionWithRetry(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+    private async submitActionWithRetry(action: Action, signer: SignerWithProvider): Promise<SubmitActionResult> {
         return await retry(
             () => this.submitAction(action, signer),
             (message, error) => {
@@ -218,18 +225,25 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             ...actions.filter((a) => a.type === 'unstake'), 
             ...actions.filter((a) => a.type === 'stake')
         ]
-        const allTxs: ContractTransactionResponse[] = []
+        const allReceiptPromises: Promise<ContractTransactionReceipt | null>[] = []
 
         // Broadcast each action sequentially (to avoid nonce overlap) but without waiting for each one to be mined
         for (const action of orderedActions) {
-            const tx = await this.submitActionWithRetry(action, signer)
-            allTxs.push(tx)
+            // submitActionWithRetry resolves on submit, not on receipt
+            // collect the receipt promises to wait for later
+            const { txReceiptPromise } = await this.submitActionWithRetry(action, signer)
+            allReceiptPromises.push(txReceiptPromise)
         }
 
         // Wait for all transactions to be mined (don't stop waiting if some of them fail)
         // Note that if the actual submitted transaction errors, it won't get retried. This should be rare.
-        await Promise.allSettled(allTxs.map((tx) => tx.wait()))
-        logger.info('All actions executed')
+        const settledResults = await Promise.allSettled(allReceiptPromises)
+        const successfulResults = settledResults.filter((r) => r.status === 'fulfilled')
+        const failedResults = settledResults.filter((r) => r.status === 'rejected')
+        logger.info(`All done. Successful results: ${successfulResults.length}, Failed results: ${failedResults.length}`)
+        if (failedResults.length > 0) {
+            logger.error('Failed to execute some actions:', { failedResults })
+        }
     }
 
     private async getStakeableSponsorships(
