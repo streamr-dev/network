@@ -242,7 +242,3 @@ const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract
 const getTokenContract = (tokenAddress: string): DATATokenContract => {
     return new Contract(tokenAddress, DATATokenABI) as unknown as DATATokenContract
 }
-
-const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number): bigint => {
-    return gasEstimate * BigInt(100 + increasePercentage) / 100n
-}
