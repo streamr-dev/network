@@ -51,7 +51,7 @@ export class TheGraphClient {
     }
 
     async* queryEntities<T extends { id: string }>(
-        createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
+        createQuery: (lastId: string, pageSize: number, requiredBlockNumber: number) => GraphQLQuery,
         /*
          * For simple queries there is one root level property, e.g. "streams" or "permissions"
          * which contain array of items. If the query contains more than one root level property
@@ -68,7 +68,7 @@ export class TheGraphClient {
         let lastResultSet: T[] | undefined
         do {
             const lastId = (lastResultSet !== undefined) ? lastResultSet[lastResultSet.length - 1].id : ''
-            const query = createQuery(lastId, pageSize)
+            const query = createQuery(lastId, pageSize, this.requiredBlockNumber)
             const response = await this.sendQuery(query)
             const items: T[] = parseItems(response)
             yield* items

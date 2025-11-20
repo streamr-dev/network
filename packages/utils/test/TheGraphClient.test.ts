@@ -36,6 +36,11 @@ class EmulatedTheGraphIndex {
     }
 }
 
+const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefined> => {
+    const item = source.next()
+    return (await item).value
+}
+
 describe('TheGraphClient', () => {
 
     let theGraphIndex: EmulatedTheGraphIndex
@@ -182,5 +187,17 @@ describe('TheGraphClient', () => {
         expect(await responsePromise2).toEqual({
             foo: 'result-7'
         })
+    })
+
+    it('required block number in callback', async () => {
+        theGraphIndex.start()
+        const callback1 = jest.fn().mockReturnValue(MOCK_QUERY)
+        await nextValue(client.queryEntities(callback1))
+        expect(callback1).toHaveBeenCalledWith('', expect.any(Number), 0)
+
+        client.updateRequiredBlockNumber(2)
+        const callback2 = jest.fn().mockReturnValue(MOCK_QUERY)
+        await nextValue(client.queryEntities(callback2))
+        expect(callback2).toHaveBeenCalledWith('', expect.any(Number), 2)
     })
 })
