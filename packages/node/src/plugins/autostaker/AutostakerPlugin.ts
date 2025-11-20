@@ -233,32 +233,33 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         stakes: Map<SponsorshipID, WeiAmount>,
         streamrClient: StreamrClient
     ): Promise<Map<SponsorshipID, SponsorshipConfig>> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
-            // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
-            // payoutPropotionalStrategy so that we ensure that unstaking doesn't happen too soon)
-            return {
-                query: `
-                    {
-                        sponsorships (
-                            where: {
-                                projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
-                                minimumStakingPeriodSeconds: "0"
-                                minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
-                                totalPayoutWeiPerSec_gte: "${MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND.toString()}"
-                                id_gt: "${lastId}"
-                            },
-                            first: ${pageSize}
-                            block: { number_gte: ${requiredBlockNumber} }
-                        ) {
-                            id
-                            totalPayoutWeiPerSec
-                            operatorCount
-                            maxOperators
+        const queryResult = streamrClient.getTheGraphClient()
+            .queryEntities<SponsorshipQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
+                // TODO add support spnsorships which have non-zero minimumStakingPeriodSeconds (i.e. implement some loggic in the 
+                // payoutPropotionalStrategy so that we ensure that unstaking doesn't happen too soon)
+                return {
+                    query: `
+                        {
+                            sponsorships (
+                                where: {
+                                    projectedInsolvency_gt: ${Math.floor(Date.now() / 1000)}
+                                    minimumStakingPeriodSeconds: "0"
+                                    minOperators_lte: ${this.pluginConfig.maxAcceptableMinOperatorCount}
+                                    totalPayoutWeiPerSec_gte: "${MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND.toString()}"
+                                    id_gt: "${lastId}"
+                                },
+                                first: ${pageSize}
+                                block: { number_gte: ${requiredBlockNumber} }
+                            ) {
+                                id
+                                totalPayoutWeiPerSec
+                                operatorCount
+                                maxOperators
+                            }
                         }
-                    }
-                `
-            }
-        })
+                    `
+                }
+            })
         const sponsorships = await collect(queryResult)
         const hasAcceptableOperatorCount = (item: SponsorshipQueryResultItem) => {
             if (stakes.has(item.id)) {
@@ -277,52 +278,54 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     private async getMyCurrentStakes(streamrClient: StreamrClient): Promise<Map<SponsorshipID, WeiAmount>> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
-            return {
-                query: `
-                    {
-                        stakes (
-                            where: {
-                                operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
-                                id_gt: "${lastId}"
-                            },
-                            first: ${pageSize}
-                            block: { number_gte: ${requiredBlockNumber} }
-                        ) {
-                            id
-                            sponsorship {
+        const queryResult = streamrClient.getTheGraphClient()
+            .queryEntities<StakeQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
+                return {
+                    query: `
+                        {
+                            stakes (
+                                where: {
+                                    operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
+                                    id_gt: "${lastId}"
+                                },
+                                first: ${pageSize}
+                                block: { number_gte: ${requiredBlockNumber} }
+                            ) {
                                 id
+                                sponsorship {
+                                    id
+                                }
+                                amountWei
                             }
-                            amountWei
                         }
-                    }
-                `
-            }
-        })
+                    `
+                }
+            })
         const stakes = await collect(queryResult)
         return new Map(stakes.map((stake) => [stake.sponsorship.id, BigInt(stake.amountWei) ]))
     }
 
     private async getUndelegationQueueAmount(streamrClient: StreamrClient): Promise<WeiAmount> {
-        const queryResult = streamrClient.getTheGraphClient().queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
-            return {
-                query: `
-                    {
-                        queueEntries (
-                             where:  {
-                                operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
-                                id_gt: "${lastId}"
-                            },
-                            first: ${pageSize}
-                            block: { number_gte: ${requiredBlockNumber} }
-                        ) {
-                            id
-                            amount
+        const queryResult = streamrClient.getTheGraphClient()
+            .queryEntities<UndelegationQueueQueryResultItem>((lastId: string, pageSize: number, requiredBlockNumber: number) => {
+                return {
+                    query: `
+                        {
+                            queueEntries (
+                                where:  {
+                                    operator: "${this.pluginConfig.operatorContractAddress.toLowerCase()}",
+                                    id_gt: "${lastId}"
+                                },
+                                first: ${pageSize}
+                                block: { number_gte: ${requiredBlockNumber} }
+                            ) {
+                                id
+                                amount
+                            }
                         }
-                    }
-                `
-            }
-        })
+                    `
+                }
+            })
         const entries = await collect(queryResult)
         return sum(entries.map((entry) => BigInt(entry.amount)))
     }
