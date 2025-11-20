@@ -178,7 +178,7 @@ export const stake = async (
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
     const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
-    logger.debug('Stake: transaction submitted', { tx: tx.hash })
+    logger.debug('Stake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
     logger.debug('Stake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
     try {
