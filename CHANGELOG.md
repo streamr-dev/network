@@ -12,7 +12,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Transaction timeouts in Autostaker (https://github.com/streamr-dev/network/pull/3236)
+Autostaker changes:
+- transaction timeouts (https://github.com/streamr-dev/network/pull/3236)
+- queries filter by required block number (https://github.com/streamr-dev/network/pull/3238)
 
 #### Changed
 
