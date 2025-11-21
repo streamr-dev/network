@@ -249,7 +249,7 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         const settledResults = await Promise.allSettled(allReceiptPromises)
         const successfulResults = settledResults.filter((r) => r.status === 'fulfilled')
         const failedResults = settledResults.filter((r) => r.status === 'rejected')
-        logger.info(`All done. Successful results: ${successfulResults.length}, Failed results: ${failedResults.length}`)
+        logger.info(`All actions finished. Successful actions: ${successfulResults.length}, Failed actions: ${failedResults.length}`)
         if (failedResults.length > 0) {
             logger.error('Failed to execute some actions:', { failedResults })
         }
