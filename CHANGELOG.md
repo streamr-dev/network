@@ -12,11 +12,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-Autostaker changes:
-- transaction timeouts (https://github.com/streamr-dev/network/pull/3236)
-- queries filter by required block number (https://github.com/streamr-dev/network/pull/3238)
-- autostaker fixes and optimizations (https://github.com/streamr-dev/network/pull/3237)
-
 #### Changed
 
 #### Deprecated
@@ -54,6 +49,24 @@ Autostaker changes:
 #### Fixed
 
 #### Security
+
+
+## [103.1.2] - 2025-11-21
+
+### @streamr/sdk
+
+#### Changed
+
+- Update default list of JSON RPC urls for Polygon (removed a dead one)
+
+### @streamr/node
+
+#### Changed
+
+Autostaker changes:
+- transaction timeouts (https://github.com/streamr-dev/network/pull/3236)
+- queries filter by required block number (https://github.com/streamr-dev/network/pull/3238)
+- autostaker fixes and optimizations (https://github.com/streamr-dev/network/pull/3237)
 
 
 ## [103.1.1] - 2025-11-11
@@ -489,7 +502,8 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.1.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.1.2...HEAD
+[103.1.2]: https://github.com/streamr-dev/network/compare/v103.1.1...v103.1.2
 [103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1
 [103.1.0]: https://github.com/streamr-dev/network/compare/v103.0.0...v103.1.0
 [103.0.0]: https://github.com/streamr-dev/network/compare/v102.1.1...v103.0.0
