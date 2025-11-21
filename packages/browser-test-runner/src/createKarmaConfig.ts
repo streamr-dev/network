@@ -13,6 +13,7 @@ export const createKarmaConfig = (
     const preprocessors: Record<string, string[]> = {}
     setupFiles.forEach((f) => preprocessors[f] = ['webpack'])
     testPaths.forEach((f) => preprocessors[f] = ['webpack', 'sourcemap'])
+    const baseWebpack = webpackConfig()
     return (config: any) => {
         config.set({
             plugins: [
@@ -38,7 +39,8 @@ export const createKarmaConfig = (
                             contextIsolation: false,
                             preload: __dirname + '/preload.js',
                             webSecurity: false,
-                            sandbox: false
+                            sandbox: false,
+                            nodeIntegration: true
                         },
                         show: DEBUG_MODE  // set to true to show the electron window
                     }
@@ -53,8 +55,15 @@ export const createKarmaConfig = (
             },
             singleRun: !DEBUG_MODE,  //set to false to leave electron window open
             webpack: {
-                ...webpackConfig(),
-                entry: {}
+                ...baseWebpack,
+                entry: {},
+                externals: {
+                    ...(baseWebpack.externals ?? {}),
+                    'expect': 'commonjs2 expect',
+                    '@jest/expect-utils': 'commonjs2 @jest/expect-utils',
+                    'pretty-format': 'commonjs2 pretty-format',
+                    'jest-diff': 'commonjs2 jest-diff',
+                },
             }
         })
     }
