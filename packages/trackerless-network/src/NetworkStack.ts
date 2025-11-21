@@ -8,7 +8,6 @@ import {
     toNodeId
 } from '@streamr/dht'
 import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, until } from '@streamr/utils'
-import pull from 'lodash/pull'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions, StreamPartDeliveryOptions } from './ContentDeliveryManager'
 import { ControlLayerNode } from './control-layer/ControlLayerNode'
@@ -24,20 +23,6 @@ export interface NetworkOptions {
 }
 
 const logger = new Logger(module)
-
-const instances: NetworkStack[] = []
-const stopInstances = async () => {
-    // make a clone so that it is ok for each instance.stop() to remove itself from the list (at line 139)
-    // while the map function is iterating the list
-    const clonedInstances = [...instances]
-    await Promise.all(clonedInstances.map((instance) => instance.stop()))
-}
-declare let window: any
-if (typeof window === 'object') {
-    window.addEventListener('unload', async () => {
-        await stopInstances()
-    })
-}
 
 export class NetworkStack {
 
@@ -61,7 +46,6 @@ export class NetworkStack {
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
-        instances.push(this)
     }
 
     async joinStreamPart(
@@ -179,7 +163,6 @@ export class NetworkStack {
     async stop(): Promise<void> {
         if (!this.stopped) {
             this.stopped = true
-            pull(instances, this)
             await this.contentDeliveryManager!.destroy()
             await this.controlLayerNode!.stop()
             this.contentDeliveryManager = undefined
