@@ -13,6 +13,7 @@ import {
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 import {
     AbiCoder,
+    BigNumberish,
     Contract,
     ContractTransactionReceipt,
     ContractTransactionResponse,
@@ -40,6 +41,16 @@ export interface DeployOperatorContractOpts {
     operatorTokenName?: string
     environmentId: EnvironmentId
     transactionTimeout?: number
+}
+
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface TransactionOpts {
+    gasLimit?: BigNumberish
+    gasPrice?: BigNumberish
+    nonce?: number
 }
 
 /**
@@ -170,24 +181,24 @@ export const stake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number = 0,
+    txOpts: TransactionOpts = {},
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
     logger.debug('Stake', { amount: formatEther(amount), sponsorshipContractAddress })
     const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
-
-    let gasLimit = await operatorContract.stake.estimateGas(sponsorshipContractAddress, amount)
-    if (bumpGasLimitPct > 0) {
-        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
-    }
-
-    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, { gasLimit })
-    logger.debug('Stake: transaction submitted', { tx: tx.hash })
+    const tx = await operatorContract.stake(sponsorshipContractAddress, amount, txOpts)
+    logger.debug('Stake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
-    const receipt = await tx.wait(undefined, transactionTimeout)
-    logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
-    return receipt
+    logger.debug('Stake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
+    try {
+        const receipt = await tx.wait(undefined, transactionTimeout)
+        logger.debug('Stake: confirmation received', { receipt: receipt?.hash })
+        return receipt
+    } catch (error) {
+        logger.error(`Stake: error waiting for tx to be mined`, { tx: tx.hash, error })
+        throw error
+    }
 }
 
 export const unstake = async (
@@ -195,7 +206,7 @@ export const unstake = async (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number = 0,
+    txOpts: TransactionOpts = {},
     onSubmit: (tx: ContractTransactionResponse) => void = () => {},
     transactionTimeout?: number
 ): Promise<ContractTransactionReceipt | null> => {
@@ -205,17 +216,18 @@ export const unstake = async (
     const currentAmount = await sponsorshipContract.stakedWei(operatorContractAddress)
     const targetAmount = currentAmount - amount
 
-    let gasLimit = await operatorContract.reduceStakeTo.estimateGas(sponsorshipContractAddress, targetAmount)
-    if (bumpGasLimitPct > 0) {
-        gasLimit = bumpGasLimit(gasLimit, bumpGasLimitPct)
-    }
-
-    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, { gasLimit })
-    logger.debug('Unstake: transaction submitted', { tx: tx.hash })
+    const tx = await operatorContract.reduceStakeTo(sponsorshipContractAddress, targetAmount, txOpts)
+    logger.debug('Unstake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
     onSubmit(tx)
-    const receipt = await tx.wait(undefined, transactionTimeout)
-    logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
-    return receipt
+    logger.debug('Unstake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
+    try {
+        const receipt = await tx.wait(undefined, transactionTimeout)
+        logger.debug('Unstake: confirmation received', { receipt: receipt?.hash })
+        return receipt
+    } catch (error) {
+        logger.error(`Unstake: error waiting for tx to be mined`, { tx: tx.hash, error })
+        throw error
+    }
 }
 
 export const sponsor = async (
@@ -251,8 +263,4 @@ const getSponsorshipContract = (sponsorshipAddress: string): SponsorshipContract
 
 const getTokenContract = (tokenAddress: string): DATATokenContract => {
     return new Contract(tokenAddress, DATATokenABI) as unknown as DATATokenContract
-}
-
-const bumpGasLimit = (gasEstimate: bigint, increasePercentage: number): bigint => {
-    return gasEstimate * BigInt(100 + increasePercentage) / 100n
 }

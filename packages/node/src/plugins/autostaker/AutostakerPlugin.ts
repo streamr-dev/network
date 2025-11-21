@@ -1,4 +1,4 @@
-import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient } from '@streamr/sdk'
+import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient, TransactionOpts } from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
@@ -52,8 +52,13 @@ const logger = new Logger(module)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
 const ACTION_SUBMIT_RETRY_COUNT = 5
 const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
-const ACTION_GAS_LIMIT_BUMP_PCT = 20
-const TRANSACTION_TIMEOUT = 60 * 1000
+const ACTION_GAS_LIMIT = 500000n
+const TRANSACTION_TIMEOUT = 180 * 1000
+
+interface SubmitActionResult {
+    txResponse: ContractTransactionResponse
+    txReceiptPromise: Promise<ContractTransactionReceipt | null>
+}
 
 const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Promise<bigint> => {
     const queryResult = await theGraphClient.queryEntity<{ network: { minimumStakeWei: string } }>({
@@ -73,7 +78,7 @@ const getStakeOrUnstakeFunction = (action: Action): (
     operatorContractAddress: string,
     sponsorshipContractAddress: string,
     amount: WeiAmount,
-    bumpGasLimitPct: number,
+    txOpts: TransactionOpts,
     onSubmit: (tx: ContractTransactionResponse) => void,
     transactionTimeout?: number
 ) => Promise<ContractTransactionReceipt | null> => {
@@ -138,28 +143,28 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     // Broadcasts a transaction corresponding to the action without waiting for it to be mined
-    private async submitAction(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+    private async submitAction(action: Action, signer: SignerWithProvider, txOpts: TransactionOpts): Promise<SubmitActionResult> {
         logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
         const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
         return new Promise((resolve, reject) => {
-            stakeOrUnstakeFunction(signer,
+            const txReceiptPromise = stakeOrUnstakeFunction(signer,
                 this.pluginConfig.operatorContractAddress,
                 action.sponsorshipId,
                 action.amount,
-                // Gas limit needed for staking/unstaking is a little unstable because others might 
-                // be staking/unstaking at the same time, so we bump the gas limit to be safe
-                ACTION_GAS_LIMIT_BUMP_PCT,
+                txOpts,
                 // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
-                (tx) => resolve(tx),
+                (txResponse) => resolve({ txResponse, txReceiptPromise }),
                 TRANSACTION_TIMEOUT 
-            ).catch(reject)
+            )
+            // Propagate errors that occur before onSubmit is called
+            txReceiptPromise.catch(reject)
         })
     }
 
     // This will retry the transaction preflight checks, defends against various transient errors
-    private async submitActionWithRetry(action: Action, signer: SignerWithProvider): Promise<ContractTransactionResponse> {
+    private async submitActionWithRetry(action: Action, signer: SignerWithProvider, txOpts: TransactionOpts): Promise<SubmitActionResult> {
         return await retry(
-            () => this.submitAction(action, signer),
+            () => this.submitAction(action, signer, txOpts),
             (message, error) => {
                 logger.error(message, { error })
             },
@@ -218,18 +223,36 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             ...actions.filter((a) => a.type === 'unstake'), 
             ...actions.filter((a) => a.type === 'stake')
         ]
-        const allTxs: ContractTransactionResponse[] = []
+        const allSubmitActionPromises: Promise<SubmitActionResult>[] = []
 
-        // Broadcast each action sequentially (to avoid nonce overlap) but without waiting for each one to be mined
+        // Set nonce explicitly, because ethers tends to mess up nonce if we submit 
+        // multiple transactions in quick succession
+        const address = await signer.getAddress()
+        let nonce = await signer.provider.getTransactionCount(address)
+
+        // Broadcast each action but don't wait for them to be mined
         for (const action of orderedActions) {
-            const tx = await this.submitActionWithRetry(action, signer)
-            allTxs.push(tx)
+            const submitActionPromise = this.submitActionWithRetry(action, signer, {
+                // Use a fixed gas limit - gas estimation of stake transactions would fails 
+                // with "not enough balance", because we first need to unstake before we stake
+                gasLimit: ACTION_GAS_LIMIT,
+                // Explicit nonce
+                nonce: nonce++,
+            })
+            allSubmitActionPromises.push(submitActionPromise)
         }
+
+        const allReceiptPromises = allSubmitActionPromises.map(async (p) => (await p).txReceiptPromise)
 
         // Wait for all transactions to be mined (don't stop waiting if some of them fail)
         // Note that if the actual submitted transaction errors, it won't get retried. This should be rare.
-        await Promise.allSettled(allTxs.map((tx) => tx.wait()))
-        logger.info('All actions executed')
+        const settledResults = await Promise.allSettled(allReceiptPromises)
+        const successfulResults = settledResults.filter((r) => r.status === 'fulfilled')
+        const failedResults = settledResults.filter((r) => r.status === 'rejected')
+        logger.info(`All actions finished. Successful actions: ${successfulResults.length}, Failed actions: ${failedResults.length}`)
+        if (failedResults.length > 0) {
+            logger.error('Failed to execute some actions:', { failedResults })
+        }
     }
 
     private async getStakeableSponsorships(
