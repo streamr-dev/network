@@ -118,6 +118,13 @@ streamr.resend(streamId, { last: 10 }, (msgs) => {
 });
 ```
 
+### Clean up
+After the StreamrClient is no longer used or the process is shutting down it is very important to call `destroy` on the StreamrClient. This ensures that the network node of the client will be shutdown gracefully. 
+
+```js
+await streamr.destroy()
+```
+
 ___
 
 **This Readme only scratches the surface of what's possible - be sure to [checkout our documentation](https://docs.streamr.network) for the full usage instructions.**
