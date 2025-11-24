@@ -62,7 +62,7 @@
     "@jest/globals": "^30.0.5",
     "@streamr/test-utils": "103.1.2",
     "@types/heap": "^0.2.35",
-    "@types/lodash": "^4.17.20",
+    "@types/lodash": "^4.17.21",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "babel-loader": "^10.0.0",
@@ -120,7 +120,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
