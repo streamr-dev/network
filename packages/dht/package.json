@@ -61,7 +61,7 @@
     "@streamr/test-utils": "103.1.2",
     "@types/heap": "^0.2.35",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.17.20",
+    "@types/lodash": "^4.17.21",
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.18.1",
     "jest-leak-detector": "^27.3.1",
