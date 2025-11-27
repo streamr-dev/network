@@ -29,6 +29,13 @@ If using Node.js you can import the library with:
 const { StreamrClient } = require('@streamr/sdk');
 ```
 
+After the StreamrClient is no longer needed or the process is shutting down it is very important to destroy the StreamrClient:
+
+```js
+const client = new StreamrClient()
+await client.destroy()
+```
+
 ### Environments and frameworks
 
 #### Node.js
