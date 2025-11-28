@@ -1,4 +1,4 @@
-import { BrandedString } from './types'
+import type { BrandedString } from './types'
 
 export function isENSNameFormatIgnoreCase(str: string): boolean {
     return str.indexOf('.') > 0

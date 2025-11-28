@@ -1,6 +1,6 @@
 import { binaryToHex, hexToBinary } from './binaryUtils'
 import { PREFIXED_STRING_LENGTH } from './EthereumAddress'
-import { BrandedString } from './types'
+import type { BrandedString } from './types'
 
 const REGEX = /^0x[a-fA-F0-9]+$/
 

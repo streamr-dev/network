@@ -5,9 +5,9 @@ import { ml_dsa87 } from '@noble/post-quantum/ml-dsa'
 import { randomBytes } from '@noble/post-quantum/utils'
 import { p256 } from '@noble/curves/p256'
 import { areEqualBinaries, binaryToHex } from './binaryUtils'
-import { UserIDRaw } from './UserID'
+import type { UserIDRaw } from './UserID'
 import { getSubtle } from './crossPlatformCrypto'
-import { webcrypto } from 'crypto'
+import type { webcrypto } from 'crypto'
 
 export const KEY_TYPES = [
     'ECDSA_SECP256K1_EVM', 

@@ -1,4 +1,4 @@
-import { asAbortable } from './asAbortable'
+import { AbortError, asAbortable } from './asAbortable'
 import { wait } from './wait'
 import { composeAbortSignals } from './composeAbortSignals'
 
@@ -47,7 +47,7 @@ export const until = async (
             await wait(retryInterval, composedSignal)
         }
     } catch (e) {
-        if (e.code === 'AbortError') {
+        if (e instanceof AbortError) {
             throwError(userAborted, conditionFn, onTimeoutContext)
         }
         throw e

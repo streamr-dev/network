@@ -2,7 +2,7 @@ import once from 'lodash/once'
 
 type ResolveFn<T> = (value: T | PromiseLike<T>) => void
 
-type RejectFn = (reason?: Error) => void
+type RejectFn = (reason?: unknown) => void
 
 const noopExecutor = () => {}
 
@@ -44,7 +44,7 @@ export class Defer<T> extends Promise<T> {
         }
     }
 
-    reject(error: Error): void {
+    reject(error: unknown): void {
         this.ensureNoopCatchAttached()
         if (!this.settled) {
             this.settled = true
