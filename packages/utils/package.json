@@ -9,13 +9,10 @@
     "directory": "packages/utils"
   },
   "exports": {
-    "browser": {
-      "import": "./dist/browser/src/exports.js",
-      "types": "./dist/browser/src/exports.d.ts"
-    },
-    "node": {
+    ".": {
+      "types": "./dist/node/src/exports.d.ts",
       "import": "./dist/node/src/exports.js",
-      "types": "./dist/node/src/exports.d.ts"
+      "browser": "./dist/browser/src/exports.js"
     }
   },
   "files": [
