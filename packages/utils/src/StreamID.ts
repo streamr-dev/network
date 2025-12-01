@@ -1,7 +1,7 @@
-import { ENSName } from './ENSName'
-import { EthereumAddress } from './EthereumAddress'
+import type { ENSName } from './ENSName'
+import type { EthereumAddress } from './EthereumAddress'
 import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
-import { BrandedString } from './types'
+import type { BrandedString } from './types'
 
 export type StreamID = BrandedString<'StreamID'>
 

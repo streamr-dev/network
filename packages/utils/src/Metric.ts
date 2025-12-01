@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import set from 'lodash/set'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 

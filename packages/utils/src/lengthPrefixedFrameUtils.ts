@@ -1,4 +1,4 @@
-import { Transform, TransformCallback } from 'stream'
+import { Transform, type TransformCallback } from 'stream'
 
 // If you change this you also need to change `writeUint32BE` and `readUInt32BE` in the code below
 const HEADER_LENGTH = 4

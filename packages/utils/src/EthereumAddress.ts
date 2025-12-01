@@ -1,4 +1,4 @@
-import { BrandedString } from './types'
+import type { BrandedString } from './types'
 
 const REGEX = /^0x[a-fA-F0-9]{40}$/
 export const PREFIXED_STRING_LENGTH = 42

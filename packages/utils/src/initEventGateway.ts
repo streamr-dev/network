@@ -1,4 +1,4 @@
-import { Events } from './types'
+import type { Events } from './types'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 
 /*

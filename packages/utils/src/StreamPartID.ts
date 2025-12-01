@@ -1,6 +1,6 @@
-import { StreamID, toStreamID } from './StreamID'
+import { type StreamID, toStreamID } from './StreamID'
 import { ensureValidStreamPartitionIndex } from './partition'
-import { BrandedString } from './types'
+import type { BrandedString } from './types'
 
 const DELIMITER = '#'
 

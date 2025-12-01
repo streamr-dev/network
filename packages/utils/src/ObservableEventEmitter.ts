@@ -1,5 +1,5 @@
-import EventEmitter3 from 'eventemitter3'
-import { Events } from './types'
+import { EventEmitter } from 'eventemitter3'
+import type { Events } from './types'
 
 interface ObserverEvents<E extends Events<E>> {
     addEventListener: (eventName: keyof E) => void
@@ -12,8 +12,8 @@ interface ObserverEvents<E extends Events<E>> {
  */
 export class ObservableEventEmitter<E extends Events<E>> {
 
-    private delegate: EventEmitter3<any> = new EventEmitter3()
-    private observer: EventEmitter3<ObserverEvents<E>> = new EventEmitter3()
+    private delegate: EventEmitter<any> = new EventEmitter()
+    private observer: EventEmitter<ObserverEvents<E>> = new EventEmitter()
 
     on<T extends keyof E>(eventName: T, listener: E[T]): void {
         this.delegate.on(eventName, listener)
@@ -50,7 +50,7 @@ export class ObservableEventEmitter<E extends Events<E>> {
         return this.delegate.listenerCount(eventName)
     }
 
-    getObserver(): EventEmitter3<ObserverEvents<E>, any> {
+    getObserver(): EventEmitter<ObserverEvents<E>> {
         return this.observer
     }
 }
