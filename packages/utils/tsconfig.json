@@ -6,6 +6,12 @@
         },
         {
             "path": "./tsconfig.browser.json"
+        },
+        {
+            "path": "./tsconfig.jest.json"
+        },
+        {
+            "path": "./tsconfig.rollup.json"
         }
     ]
 }

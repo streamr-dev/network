@@ -6,5 +6,5 @@
     "esModuleInterop": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/*.ts", "src/node", "test"]
+  "include": ["src", "test"],
 }
