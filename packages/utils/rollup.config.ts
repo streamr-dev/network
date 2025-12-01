@@ -65,6 +65,11 @@ function browser(): RollupOptions {
                 file: 'dist/browser/src/exports.js',
                 sourcemap: true,
             },
+            {
+                format: 'cjs',
+                file: 'dist/browser/src/exports.cjs',
+                sourcemap: true,
+            },
         ],
         plugins: [
             alias({
