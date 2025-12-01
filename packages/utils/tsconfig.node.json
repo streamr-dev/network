@@ -1,8 +1,33 @@
 {
-  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "preserve",
+    "types": [],
+    "skipLibCheck": true,
+    "outDir": "dist/node",
+    "baseUrl": ".",
+    "declaration": true,
+    "composite": true,
     "stripInternal": false,
-    "outDir": "dist"
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* Mapping */
+    "paths": {
+      "@crypto": ["src/node/crypto.ts"],
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/browser"]
 }

@@ -6,7 +6,7 @@ import { randomBytes } from '@noble/post-quantum/utils'
 import { p256 } from '@noble/curves/p256'
 import { areEqualBinaries, binaryToHex } from './binaryUtils'
 import type { UserIDRaw } from './UserID'
-import { getSubtle } from './crossPlatformCrypto'
+import { getSubtle } from '@crypto'
 import type { webcrypto } from 'crypto'
 
 export const KEY_TYPES = [
