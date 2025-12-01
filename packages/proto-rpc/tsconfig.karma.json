@@ -1,7 +1,13 @@
 {
   "extends": "./tsconfig.browser.json",
   "compilerOptions": {
-    "types": ["node", "jest", "jest-extended"]
+    "allowJs": true,
+    "types": ["node", "jest", "jest-extended"],
+    "paths": {
+      "@streamr/utils": [
+        "../utils/dist/browser/src/exports"
+      ]
+    }
   },
   "include": ["src", "test"]
 }
