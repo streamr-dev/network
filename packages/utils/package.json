@@ -8,11 +8,11 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
-  "main": "./dist/node/src/exports.js",
   "exports": {
     ".": {
       "types": "./dist/node/src/exports.d.ts",
       "import": "./dist/node/src/exports.js",
+      "require": "./dist/node/src/exports.cjs",
       "browser": "./dist/browser/src/exports.js"
     }
   },

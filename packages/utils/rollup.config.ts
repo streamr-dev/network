@@ -41,6 +41,11 @@ function nodejs(): RollupOptions {
                 file: 'dist/node/src/exports.js',
                 sourcemap: true,
             },
+            {
+                format: 'cjs',
+                file: 'dist/node/src/exports.cjs',
+                sourcemap: true,
+            },
         ],
         plugins: [
             alias({
