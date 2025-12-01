@@ -8,14 +8,17 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
+  "types": "./dist/node/src/exports.d.ts",
   "exports": {
-    "browser": {
-      "import": "./dist/browser/src/exports.js",
-      "types": "./dist/browser/src/exports.d.ts"
-    },
     "node": {
+      "types": "./dist/node/src/exports.d.ts",
       "import": "./dist/node/src/exports.js",
-      "types": "./dist/node/src/exports.d.ts"
+      "require": "./dist/node/src/exports.cjs"
+    },
+    "browser": {
+      "types": "./dist/browser/src/exports.d.ts",
+      "import": "./dist/browser/src/exports.js",
+      "require": "./dist/browser/src/exports.cjs"
     }
   },
   "files": [
