@@ -3,11 +3,55 @@
 The Broker ships with a number of plugins that add functionality or APIs.
 
 ## Table of Contents
+- [Configuration](#configuration)
 - [Authentication](#authentication)
 - [Ports](#ports)
 - [Websocket](#websocket)
 - [MQTT](#mqtt)
 - [HTTP](#http)
+
+## Configuration
+
+### Configuring plugins via environment variables
+
+In addition to using a configuration file, plugins can be configured using environment variables. This is particularly useful when running the Streamr node in containerized environments like Docker or on cloud platforms like FluxCloud.
+
+All plugin configuration environment variables follow the pattern:
+```
+STREAMR__BROKER__PLUGINS__<PLUGIN_NAME>__<PROPERTY_NAME> = 'value'
+```
+
+For example, to configure the autostaker plugin via environment variables:
+```bash
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__OPERATOR_CONTRACT_ADDRESS='0x1234567890abcdef1234567890abcdef12345678'
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__MAX_SPONSORSHIP_COUNT='25'
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__MIN_TRANSACTION_DATA_TOKEN_AMOUNT='1000'
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__MAX_ACCEPTABLE_MIN_OPERATOR_COUNT='50'
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__RUN_INTERVAL_IN_MS='3600000'
+```
+
+This is equivalent to the following configuration file:
+```json
+{
+    "plugins": {
+        "autostaker": {
+            "operatorContractAddress": "0x1234567890abcdef1234567890abcdef12345678",
+            "maxSponsorshipCount": 25,
+            "minTransactionDataTokenAmount": 1000,
+            "maxAcceptableMinOperatorCount": 50,
+            "runIntervalInMs": 3600000
+        }
+    }
+}
+```
+
+Nested configuration objects are also supported:
+```bash
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__FLEET_STATE__HEARTBEAT_UPDATE_INTERVAL_IN_MS='10000'
+export STREAMR__BROKER__PLUGINS__AUTOSTAKER__FLEET_STATE__PRUNE_AGE_IN_MS='180000'
+```
+
+For more details on environment variable configuration, see [configuration.md](configuration.md).
 
 ## Authentication
 

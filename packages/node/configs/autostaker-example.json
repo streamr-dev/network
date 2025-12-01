@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.streamr.network/config-v3.schema.json",
+    "client": {
+        "auth": {
+            "privateKey": "<YOUR_PRIVATE_KEY>"
+        },
+        "environment": "polygon"
+    },
+    "plugins": {
+        "autostaker": {
+            "operatorContractAddress": "<OPERATOR_CONTRACT_ADDRESS>",
+            "maxSponsorshipCount": 25,
+            "minTransactionDataTokenAmount": 1000,
+            "maxAcceptableMinOperatorCount": 50,
+            "runIntervalInMs": 3600000,
+            "fleetState": {
+                "heartbeatUpdateIntervalInMs": 10000,
+                "pruneAgeInMs": 180000,
+                "pruneIntervalInMs": 30000,
+                "latencyExtraInMs": 2000,
+                "warmupPeriodInMs": 10000
+            }
+        },
+        "operator": {
+            "operatorContractAddress": "<OPERATOR_CONTRACT_ADDRESS>"
+        }
+    }
+}
