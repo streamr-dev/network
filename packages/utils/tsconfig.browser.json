@@ -1,12 +1,36 @@
 {
-  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDirs": ["src", "test"],
-    "noImplicitOverride": false
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "types": [],
+    "skipLibCheck": true,
+    "outDir": "dist/browser",
+    "baseUrl": ".",
+    "declaration": true,
+    "composite": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noImplicitOverride": false,
+    "noImplicitAny": true,
+
+    /* Mapping */
+    "paths": {
+      "@crypto": ["src/browser/crypto.ts"],
+      "@os": ["src/browser/os.ts"],
+      "@path": ["path-browserify"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "test/**/*"
-  ]
+  "include": ["src/*.ts", "src/browser"],
 }
