@@ -56,7 +56,6 @@ export const createKarmaConfig = (
             singleRun: !DEBUG_MODE,  //set to false to leave electron window open
             webpack: {
                 ...baseWebpack,
-                entry: {},
                 externals: {
                     ...(baseWebpack.externals ?? {}),
                     'expect': 'commonjs2 expect',
