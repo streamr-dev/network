@@ -24,7 +24,7 @@ export const createKarmaConfig = (
                 'karma-sourcemap-loader'
             ],
             basePath: '.',
-            frameworks: ['jasmine'],
+            frameworks: ['webpack', 'jasmine'],
             reporters: ['spec'],
             files: [
                 ...setupFiles,
