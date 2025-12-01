@@ -28,7 +28,7 @@ export const createWebpackConfig = (
                         exclude: [/(node_modules|simulation)/, /\.d\.ts$/],
                         use: [{
                             loader: 'ts-loader',
-                            options: { configFile: 'tsconfig.browser.json' },
+                            options: { configFile: 'tsconfig.karma.json' },
                         }]
                     }
                 ],

@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.browser.json",
+  "compilerOptions": {
+    "types": ["node", "jest", "jest-extended"]
+  },
+  "include": ["src", "test"]
+}
