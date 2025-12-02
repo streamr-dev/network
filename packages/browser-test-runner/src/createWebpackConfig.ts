@@ -3,7 +3,6 @@ import webpack from 'webpack'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
 interface CreateWebpackConfigOptions {
-    entry: string
     libraryName: string
     alias?: Record<string, string>
     fallback?: Record<string, string>
@@ -11,7 +10,7 @@ interface CreateWebpackConfigOptions {
 }
 
 export const createWebpackConfig = (
-    { entry, libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
+    { libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
 ): Record<string, any> => {
     return () => {
         return {
@@ -19,7 +18,6 @@ export const createWebpackConfig = (
                 type: 'filesystem',
             },
             mode: 'development',
-            entry,
             devtool: 'eval-source-map',
             module: {
                 rules: [
