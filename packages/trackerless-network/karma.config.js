@@ -9,7 +9,6 @@ const TEST_PATHS = [
 ]
 
 module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
-    entry: './src/exports.ts',
     libraryName: 'trackerless-network',
     alias: {
         [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:

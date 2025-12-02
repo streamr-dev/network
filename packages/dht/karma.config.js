@@ -16,7 +16,6 @@ const BrowserWebsocketClientConnection = path.resolve(__dirname, 'src/connection
 module.exports = createKarmaConfig(
     TEST_PATHS,
     createWebpackConfig({
-        entry: './src/exports.ts',
         libraryName: 'dht',
         alias: {
             [NodeWebrtcConnection]: BrowserWebrtcConnection,

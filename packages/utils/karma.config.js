@@ -4,7 +4,6 @@ const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-tes
 const TEST_PATHS = ['test/**/*.ts']
 
 module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
-    entry: './src/exports.ts',
     libraryName: 'utils',
     fallback: {
         module: false
