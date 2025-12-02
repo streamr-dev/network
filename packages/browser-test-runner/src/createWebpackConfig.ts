@@ -45,7 +45,6 @@ export const createWebpackConfig = (
                 fallback,
             },
             output: {
-                filename: `${libraryName}.js`,
                 sourceMapFilename: `[name].[contenthash].js.map`,
                 chunkFilename: '[id].[contenthash].js',
                 path: path.resolve('.', 'dist'),
