@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node", "jest", "jest-extended"],
     "outDir": "dist/karma"
-  },
+  }
 }
