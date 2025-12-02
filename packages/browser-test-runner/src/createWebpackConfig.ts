@@ -3,7 +3,6 @@ import webpack from 'webpack'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
 interface CreateWebpackConfigOptions {
-    entry: string
     libraryName: string
     alias?: Record<string, string>
     fallback?: Record<string, string>
@@ -11,7 +10,7 @@ interface CreateWebpackConfigOptions {
 }
 
 export const createWebpackConfig = (
-    { entry, libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
+    { libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
 ): Record<string, any> => {
     return () => {
         return {
@@ -19,7 +18,6 @@ export const createWebpackConfig = (
                 type: 'filesystem',
             },
             mode: 'development',
-            entry,
             devtool: 'eval-source-map',
             module: {
                 rules: [
@@ -28,7 +26,7 @@ export const createWebpackConfig = (
                         exclude: [/(node_modules|simulation)/, /\.d\.ts$/],
                         use: [{
                             loader: 'ts-loader',
-                            options: { configFile: 'tsconfig.browser.json' },
+                            options: { configFile: 'tsconfig.karma.json' },
                         }]
                     }
                 ],
@@ -47,7 +45,6 @@ export const createWebpackConfig = (
                 fallback,
             },
             output: {
-                filename: `${libraryName}.js`,
                 sourceMapFilename: `[name].[contenthash].js.map`,
                 chunkFilename: '[id].[contenthash].js',
                 path: path.resolve('.', 'dist'),

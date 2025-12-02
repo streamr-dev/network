@@ -24,7 +24,7 @@ export const createKarmaConfig = (
                 'karma-sourcemap-loader'
             ],
             basePath: '.',
-            frameworks: ['jasmine'],
+            frameworks: ['webpack', 'jasmine'],
             reporters: ['spec'],
             files: [
                 ...setupFiles,
@@ -56,7 +56,6 @@ export const createKarmaConfig = (
             singleRun: !DEBUG_MODE,  //set to false to leave electron window open
             webpack: {
                 ...baseWebpack,
-                entry: {},
                 externals: {
                     ...(baseWebpack.externals ?? {}),
                     'expect': 'commonjs2 expect',

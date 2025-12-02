@@ -23,7 +23,7 @@
         "resolveJsonModule": true,
         "moduleResolution": "node",
         "isolatedModules": true,
-        "types": ["node", "jest"],
+        "types": [],
         "sourceMap": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
