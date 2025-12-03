@@ -8,7 +8,8 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection, StreamPartDeliveryOptions } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, 
+    TheGraphClient, toEthereumAddress, toStreamPartID, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -30,7 +31,7 @@ import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { RpcProviderSource } from './RpcProviderSource'
 import { Stream } from './Stream'
-import { StreamIDBuilder } from './StreamIDBuilder'
+import { DEFAULT_PARTITION, StreamIDBuilder } from './StreamIDBuilder'
 import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { ChainEventPoller } from './contracts/ChainEventPoller'
 import { ContractFactory } from './contracts/ContractFactory'
@@ -61,6 +62,8 @@ import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } fr
 import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
 import { SponsorshipFactory } from './contracts/SponsorshipFactory'
+import sampleSize from 'lodash/sampleSize'
+import sample from 'lodash/sample'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -799,20 +802,50 @@ export class StreamrClient {
         )
     }
 
-    /** 
-     * Discover operators that have been recently online on a given stream.
-     *
-     * The API may change soon (NET-1374).
-     * 
-     * @internal
-     */
-    findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
-        return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)
-    } 
+    async findProxyNodes(streamDefinition: StreamDefinition, 
+        minProxies: number = 1, 
+        maxProxies: number = 1,
+        maxQueryResults: number = 100,
+        maxHeartbeatAgeHours: number = 24
+    ): Promise<NetworkPeerDescriptor[]> {
+        const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
 
-    // --------------------------------------------------------------------------------------------
-    // Events
-    // --------------------------------------------------------------------------------------------
+        // Find active operators on the stream
+        const foundOperators = await this.operatorRegistry.findOperatorsOnStream(streamId, maxQueryResults, maxHeartbeatAgeHours)
+        logger.debug(`findProxyNodes: found ${foundOperators.length} operators on stream ${streamId}`)
+        
+        // Select a random subset of operators
+        const selectedOperators = sampleSize(foundOperators, maxProxies)
+
+        // Throw if it's below the minimum
+        if (selectedOperators.length < minProxies) {
+            throw new Error(`Not enough operators found for stream ${streamId}: found ${
+                selectedOperators.length} operators, but ${minProxies} are required`)
+        }
+
+        // For each operator, discover a node in their fleet that services the stream partition
+        const promiseSettledResults = await Promise.allSettled(
+            selectedOperators.map(async (operator) => {
+                const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
+                logger.debug(`findProxyNodes: discovering nodes for operator ${operator.operatorId} carrying streamPartId ${streamPartId}`)
+                const nodes = await this.node.discoverOperators(operator.peerDescriptor, streamPartId)
+                logger.debug(`findProxyNodes: discovered ${nodes.length} nodes for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
+
+                const randomNode = sample(nodes)
+                if (!randomNode) {
+                    throw new Error(`No nodes found for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
+                }
+                return randomNode
+            })
+        )
+        const successfulResults = promiseSettledResults.filter((result) => result.status === 'fulfilled')
+        if (successfulResults.length < minProxies) {
+            throw new Error(`Not enough proxy nodes were resolved for stream ${streamId}: found ${
+                successfulResults.length} nodes, but ${minProxies} are required`)
+        }
+        logger.debug(`findProxyNodes: successfully resolved ${successfulResults.length} proxy nodes for stream ${streamId}`)
+        return successfulResults.map((result) => result.value)
+    }
 
     /**
      * Adds an event listener to the client.
