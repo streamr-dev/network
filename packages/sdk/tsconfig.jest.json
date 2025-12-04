@@ -25,7 +25,7 @@
         "src/exports-esm.mjs"
     ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../test-utils" },
         { "path": "../dht" },
         { "path": "../trackerless-network/tsconfig.node.json" }
     ]

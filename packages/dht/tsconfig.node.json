@@ -7,7 +7,7 @@
   "include": ["src", "generated", "package.json", "scripts"],
   "references": [
     { "path": "../utils" },
-    { "path": "../test-utils/tsconfig.node.json" },
+    { "path": "../test-utils" },
     { "path": "../proto-rpc" },
     { "path": "../autocertifier-client" },
     { "path": "../cdn-location" },

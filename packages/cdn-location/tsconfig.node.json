@@ -7,6 +7,6 @@
     "include": ["src"],
     "references": [
         { "path": "../utils" },
-        { "path": "../test-utils/tsconfig.node.json" }
+        { "path": "../test-utils" }
     ]
 }

@@ -6,7 +6,7 @@
     "include": ["src", "bin"],
     "references": [
         { "path": "../utils" },
-        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../test-utils" },
         { "path": "../proto-rpc" },
         { "path": "../dht" }
     ]
