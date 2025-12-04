@@ -10,7 +10,7 @@
         "package.json"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../utils" },
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../sdk/tsconfig.node.json" }
     ]

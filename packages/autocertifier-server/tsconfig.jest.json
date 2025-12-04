@@ -3,9 +3,9 @@
     "include": ["test"],
     "references": [
         { "path": "./tsconfig.node.json" },
-        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../utils" },
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../autocertifier-client/tsconfig.json"}
+        { "path": "../autocertifier-client" }
     ]
 }

@@ -10,10 +10,10 @@
         "package.json"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../utils" },
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../autocertifier-client/tsconfig.json" },
+        { "path": "../autocertifier-client" },
         { "path": "../cdn-location/tsconfig.node.json" },
         { "path": "../geoip-location/tsconfig.node.json" }
     ]
