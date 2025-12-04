@@ -808,29 +808,53 @@ export class StreamrClient {
         maxHeartbeatAgeHours: number = 24
     ): Promise<NetworkPeerDescriptor[]> {
         const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
+        logger.debug(`findProxyNodes: trying to find ${numberOfProxies} proxy nodes for stream ${streamId} partition ${partition}`)
 
         // Find active operators on the stream
         const foundOperators = await this.operatorRegistry.findOperatorsOnStream(streamId, maxQueryResults, maxHeartbeatAgeHours)
         logger.debug(`findProxyNodes: found ${foundOperators.length} operators on stream ${streamId}`)
         
-        const selectedOperators = shuffle(foundOperators)
+        // Throw early if we don't even have a chance of finding enough proxies (we accept one per operator)
+        if (foundOperators.length < numberOfProxies) {
+            throw new Error(`Not enough operators found for stream ${streamId}: found ${
+                foundOperators.length} operators, but ${numberOfProxies} are required`)
+        }
+        
+        const shuffledOperators = shuffle(foundOperators)
         const foundProxies: NetworkPeerDescriptor[] = []
 
         // Try to find numOfProxies nodes from the shuffled operators
-        // If there's an error, just move on to the next operator
-        for (const operator of selectedOperators) {
-            const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
-            try {
-                const nodes = await this.node.discoverOperators(operator.peerDescriptor, streamPartId)
-                if (nodes.length > 0) {
-                    logger.debug(`findProxyNodes: found ${nodes.length} nodes for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
-                    foundProxies.push(sample(nodes)!)
+        // We search in parallel, with parallelism = numOfProxies
+        // If there's an error, try the next operator
+        let operatorIndex = 0
+        const startNodeDiscoveryWorker = async (workerIndex: number) => {
+            while (operatorIndex < shuffledOperators.length && foundProxies.length < numberOfProxies) {
+                const operator = shuffledOperators[operatorIndex]
+                operatorIndex++
+                const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
+                try {
+                    const nodes = await this.node.discoverOperators(operator.peerDescriptor, streamPartId)
+                    logger.debug(`findProxyNodes (worker ${workerIndex}): found ${nodes.length} nodes for operator ${
+                        operator.operatorId} and streamPartId ${streamPartId}`)
+
+                    if (nodes.length > 0) {
+                        // One more check to make sure the other racing threads didn't already find enough nodes
+                        if (foundProxies.length < numberOfProxies) {
+                            foundProxies.push(sample(nodes)!)
+                        } else {
+                            logger.debug(`findProxyNodes (worker ${workerIndex}): other workers already found enough nodes, dropping extra result`)
+                        }
+                    }
+                } catch (error) {
+                    logger.error(`findProxyNodes (worker ${workerIndex}): error discovering nodes for operator ${
+                        operator.operatorId}: ${(error as Error).message}`)
                 }
-            } catch (error) {
-                logger.error(`findProxyNodes: error discovering nodes for operator ${operator.operatorId}: ${(error as Error).message}`)
             }
         }
-        
+
+        // Start numberOfProxies searchWorkers in parallel
+        await Promise.all(Array.from({ length: numberOfProxies }, (_, index) => startNodeDiscoveryWorker(index)))
+
         if (foundProxies.length < numberOfProxies) {
             throw new Error(`Not enough proxy nodes were resolved for stream ${streamId}: found ${
                 foundProxies.length} nodes, but ${numberOfProxies} are required`)
