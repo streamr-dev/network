@@ -1,22 +1,9 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "noEmit": true,
-        "noImplicitOverride": false
-    },
-    "include": [
-        "src/**/*",
-        "generated/**/*",
-        "test/**/*",
-        "package.json",
-        "scripts"
-    ],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../autocertifier-client" },
-        { "path": "../cdn-location/tsconfig.node.json" },
-        { "path": "../geoip-location/tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noImplicitOverride": false
+  },
+  "include": ["test"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

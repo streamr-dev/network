@@ -12,6 +12,6 @@
         "package.json"
     ],
     "references": [
-        { "path": "../dht/tsconfig.node.json" }
+        { "path": "../dht" }
     ]
 }
