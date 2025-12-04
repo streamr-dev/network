@@ -1,14 +1,9 @@
 {
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
-        "composite": true,
         "outDir": "dist"
     },
-    "include": [
-        "package.json",
-        "src/**/*",
-        "bin/**/*"
-    ],
+    "include": ["package.json", "src", "bin"],
     "references": [
         { "path": "../utils" },
         { "path": "../sdk/tsconfig.node.json" }
