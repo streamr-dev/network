@@ -7,7 +7,7 @@
     "references": [
         { "path": "../utils" },
         { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" },
+        { "path": "../proto-rpc" },
         { "path": "../dht" }
     ]
 }
