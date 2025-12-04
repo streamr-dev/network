@@ -5,7 +5,7 @@
   },
   "references": [
     { "path": "./tsconfig.jest.json" },
-    { "path": "./tsconfig.karma.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.karma.json" }
   ]
 }

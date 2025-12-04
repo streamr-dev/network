@@ -5,7 +5,5 @@
     "noImplicitOverride": false,
     "types": ["jest", "jest-extended"]
   },
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "include": ["src"]
 }
