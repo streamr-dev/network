@@ -2,10 +2,6 @@
     "extends": "../../tsconfig.jest.json",
     "include": ["test"],
     "references": [
-        { "path": "./tsconfig.node.json" },
-        { "path": "../utils" },
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" },
-        { "path": "../autocertifier-client" }
+        { "path": "./tsconfig.node.json" }
     ]
 }
