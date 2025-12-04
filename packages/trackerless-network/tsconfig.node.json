@@ -2,16 +2,19 @@
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
         "outDir": "dist",
-        "noImplicitOverride": false
+        "noImplicitOverride": false,
+        "stripInternal": false
     },
     "include": [
-        "src/**/*",
-        "generated/**/*",
-        "test/benchmark/first-message.ts",
-        "test/utils/utils.ts",
+        "src",
+        "generated",
         "package.json"
     ],
     "references": [
-        { "path": "../dht" }
+        { "path": "../dht" },
+        { "path": "../proto-rpc" },
+        { "path": "../utils" },
+        { "path": "../browser-test-runner" },
+        { "path": "../test-utils" }
     ]
 }

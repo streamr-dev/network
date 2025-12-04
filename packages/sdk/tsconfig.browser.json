@@ -19,6 +19,6 @@
     "exclude": ["src/exports-esm.mjs"],
     "references": [
         { "path": "../test-utils" },
-        { "path": "../trackerless-network/tsconfig.browser.json" }
+        { "path": "../trackerless-network" }
     ]
 }

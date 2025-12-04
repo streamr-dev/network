@@ -27,6 +27,6 @@
     "references": [
         { "path": "../test-utils" },
         { "path": "../dht" },
-        { "path": "../trackerless-network/tsconfig.node.json" }
+        { "path": "../trackerless-network" }
     ]
 }
