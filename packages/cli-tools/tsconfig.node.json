@@ -6,6 +6,6 @@
     "include": ["package.json", "src", "bin"],
     "references": [
         { "path": "../utils" },
-        { "path": "../sdk/tsconfig.node.json" }
+        { "path": "../sdk" }
     ]
 }

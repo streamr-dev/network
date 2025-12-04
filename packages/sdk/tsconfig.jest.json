@@ -2,31 +2,18 @@
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
         "noEmit": true,
-        "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "resolveJsonModule": true,
         "noImplicitOverride": false
     },
     "include": [
-        "package.json",
-        "src/**/*",
-        "src/**/*.json",
-        "bin/generate-config-validator.js",
-        "src/config.schema.json",
-        "test/**/*",
-        "test/**/*.json",
-        "scripts"
+        "test",
+        "test/**/*.json"
     ],
     "exclude": [
-        "test/legacy/*",
-        "test/memory/*",
-        "test/exports/*",
-        "src/exports-esm.mjs"
+        "test/exports",
     ],
     "references": [
-        { "path": "../test-utils" },
-        { "path": "../dht" },
-        { "path": "../trackerless-network" }
+        { "path": "./tsconfig.node.json" }
     ]
 }
