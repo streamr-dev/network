@@ -823,6 +823,13 @@ export class StreamrClient {
         const shuffledOperators = shuffle(foundOperators)
         const foundProxies: NetworkPeerDescriptor[] = []
 
+        // This shared promise is used to signal that enough proxies have been found
+        // It's a speed optimization to avoid waiting for all workers to complete if we already have enough nodes
+        let signalEnoughProxiesFound: () => void = () => {}
+        const enoughProxiesFoundPromise = new Promise<void>((resolve) => {
+            signalEnoughProxiesFound = resolve
+        })
+
         // Try to find numOfProxies nodes from the shuffled operators
         // We search in parallel, with parallelism = numOfProxies
         // If there's an error, try the next operator
@@ -834,16 +841,26 @@ export class StreamrClient {
                 const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
                 try {
                     const nodes = await this.node.discoverOperators(operator.peerDescriptor, streamPartId)
-                    logger.debug(`findProxyNodes (worker ${workerIndex}): found ${nodes.length} nodes for operator ${
-                        operator.operatorId} and streamPartId ${streamPartId}`)
 
                     if (nodes.length > 0) {
                         // One more check to make sure the other racing threads didn't already find enough nodes
                         if (foundProxies.length < numberOfProxies) {
+                            logger.debug(`findProxyNodes (worker ${workerIndex}): found ${nodes.length} nodes for operator ${
+                                operator.operatorId} and streamPartId ${streamPartId}`)
+        
                             foundProxies.push(sample(nodes)!)
+
+                            if (foundProxies.length >= numberOfProxies) {
+                                // Signal that enough proxies have been found, this will resolve the race
+                                // and ignore any further results from the other workers
+                                signalEnoughProxiesFound()
+                            }
                         } else {
-                            logger.debug(`findProxyNodes (worker ${workerIndex}): other workers already found enough nodes, dropping extra result`)
+                            // silently drop the result, enough have been found already
                         }
+                    } else {
+                        logger.debug(`findProxyNodes (worker ${workerIndex}): no nodes found for operator ${
+                            operator.operatorId} and streamPartId ${streamPartId}`)
                     }
                 } catch (error) {
                     logger.error(`findProxyNodes (worker ${workerIndex}): error discovering nodes for operator ${
@@ -852,8 +869,13 @@ export class StreamrClient {
             }
         }
 
-        // Start numberOfProxies searchWorkers in parallel
-        await Promise.all(Array.from({ length: numberOfProxies }, (_, index) => startNodeDiscoveryWorker(index)))
+        // Start numberOfProxies discovery workers in parallel
+        // The race will resolve as soon as they signal that they 
+        // found enough nodes (success) or the workers complete (failure)
+        await Promise.race([
+            Promise.all(Array.from({ length: numberOfProxies }, (_, index) => startNodeDiscoveryWorker(index))),
+            enoughProxiesFoundPromise
+        ])
 
         if (foundProxies.length < numberOfProxies) {
             throw new Error(`Not enough proxy nodes were resolved for stream ${streamId}: found ${
