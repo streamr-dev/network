@@ -62,8 +62,8 @@ import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } fr
 import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
 import { SponsorshipFactory } from './contracts/SponsorshipFactory'
-import sampleSize from 'lodash/sampleSize'
 import sample from 'lodash/sample'
+import shuffle from 'lodash/shuffle'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -803,8 +803,7 @@ export class StreamrClient {
     }
 
     async findProxyNodes(streamDefinition: StreamDefinition, 
-        minProxies: number = 1, 
-        maxProxies: number = 1,
+        numberOfProxies: number = 1, 
         maxQueryResults: number = 100,
         maxHeartbeatAgeHours: number = 24
     ): Promise<NetworkPeerDescriptor[]> {
@@ -814,37 +813,29 @@ export class StreamrClient {
         const foundOperators = await this.operatorRegistry.findOperatorsOnStream(streamId, maxQueryResults, maxHeartbeatAgeHours)
         logger.debug(`findProxyNodes: found ${foundOperators.length} operators on stream ${streamId}`)
         
-        // Select a random subset of operators
-        const selectedOperators = sampleSize(foundOperators, maxProxies)
+        const selectedOperators = shuffle(foundOperators)
+        const foundProxies: NetworkPeerDescriptor[] = []
 
-        // Throw if it's below the minimum
-        if (selectedOperators.length < minProxies) {
-            throw new Error(`Not enough operators found for stream ${streamId}: found ${
-                selectedOperators.length} operators, but ${minProxies} are required`)
-        }
-
-        // For each operator, discover a node in their fleet that services the stream partition
-        const promiseSettledResults = await Promise.allSettled(
-            selectedOperators.map(async (operator) => {
-                const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
-                logger.debug(`findProxyNodes: discovering nodes for operator ${operator.operatorId} carrying streamPartId ${streamPartId}`)
+        // Try to find numOfProxies nodes from the shuffled operators
+        // If there's an error, just move on to the next operator
+        for (const operator of selectedOperators) {
+            const streamPartId = toStreamPartID(streamId, partition ?? DEFAULT_PARTITION)
+            try {
                 const nodes = await this.node.discoverOperators(operator.peerDescriptor, streamPartId)
-                logger.debug(`findProxyNodes: discovered ${nodes.length} nodes for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
-
-                const randomNode = sample(nodes)
-                if (!randomNode) {
-                    throw new Error(`No nodes found for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
+                if (nodes.length > 0) {
+                    logger.debug(`findProxyNodes: found ${nodes.length} nodes for operator ${operator.operatorId} and streamPartId ${streamPartId}`)
+                    foundProxies.push(sample(nodes)!)
                 }
-                return randomNode
-            })
-        )
-        const successfulResults = promiseSettledResults.filter((result) => result.status === 'fulfilled')
-        if (successfulResults.length < minProxies) {
-            throw new Error(`Not enough proxy nodes were resolved for stream ${streamId}: found ${
-                successfulResults.length} nodes, but ${minProxies} are required`)
+            } catch (error) {
+                logger.error(`findProxyNodes: error discovering nodes for operator ${operator.operatorId}: ${(error as Error).message}`)
+            }
         }
-        logger.debug(`findProxyNodes: successfully resolved ${successfulResults.length} proxy nodes for stream ${streamId}`)
-        return successfulResults.map((result) => result.value)
+        
+        if (foundProxies.length < numberOfProxies) {
+            throw new Error(`Not enough proxy nodes were resolved for stream ${streamId}: found ${
+                foundProxies.length} nodes, but ${numberOfProxies} are required`)
+        }
+        return foundProxies
     }
 
     /**
