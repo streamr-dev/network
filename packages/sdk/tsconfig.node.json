@@ -1,24 +1,21 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "declarationDir": "dist/types",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "noImplicitOverride": false,
-        "stripInternal": false
-    },
-    "include": [
-        "src",
-        "src/**/*.json"
-    ],
-    "exclude": [
-        "src/exports-esm.mjs"
-    ],
-    "references": [
-        { "path": "../test-utils" },
-        { "path": "../trackerless-network" },
-        { "path": "../dht" }
-
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitOverride": false,
+    "stripInternal": false
+  },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "exclude": ["src/exports-esm.mjs"],
+  "references": [
+    { "path": "../test-utils" },
+    { "path": "../trackerless-network" },
+    { "path": "../dht" }
+  ]
 }

@@ -1,13 +1,15 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "types": ["node", "jest", "@streamr/test-utils/customMatcherTypes"],
-        "noImplicitOverride": false
-    },
-    "include": [
-        "test"
+  "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "jest",
+      "@streamr/test-utils/customMatcherTypes"
     ],
-    "references": [
-        { "path": "./tsconfig.node.json" }
-    ]
+    "noImplicitOverride": false
+  },
+  "include": ["test"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

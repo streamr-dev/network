@@ -1,17 +1,17 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "bin",
-        "package.json"
-    ],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../test-utils" },
-        { "path": "../sdk" }
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "src/**/*.json",
+    "bin",
+    "package.json"
+  ],
+  "references": [
+    { "path": "../utils" },
+    { "path": "../test-utils" },
+    { "path": "../sdk" }
+  ]
 }

@@ -1,19 +1,17 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "compilerOptions": {
-        "noEmit": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "noImplicitOverride": false
-    },
-    "include": [
-        "test",
-        "test/**/*.json"
-    ],
-    "exclude": [
-        "test/exports",
-    ],
-    "references": [
-        { "path": "./tsconfig.node.json" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitOverride": false
+  },
+  "include": [
+    "test",
+    "test/**/*.json"
+  ],
+  "exclude": ["test/exports"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

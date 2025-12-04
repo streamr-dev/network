@@ -1,13 +1,16 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
-    "include": ["src", "bin"],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../test-utils" },
-        { "path": "../proto-rpc" },
-        { "path": "../dht" }
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "bin"
+  ],
+  "references": [
+    { "path": "../utils" },
+    { "path": "../test-utils" },
+    { "path": "../proto-rpc" },
+    { "path": "../dht" }
+  ]
 }

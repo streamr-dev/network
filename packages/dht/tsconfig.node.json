@@ -4,7 +4,12 @@
     "outDir": "dist",
     "noImplicitOverride": false
   },
-  "include": ["src", "generated", "package.json", "scripts"],
+  "include": [
+    "src",
+    "generated",
+    "package.json",
+    "scripts"
+  ],
   "references": [
     { "path": "../utils" },
     { "path": "../test-utils" },

@@ -1,20 +1,20 @@
 {
-    "extends": "../../tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "noImplicitOverride": false,
-        "stripInternal": false
-    },
-    "include": [
-        "src",
-        "generated",
-        "package.json"
-    ],
-    "references": [
-        { "path": "../dht" },
-        { "path": "../proto-rpc" },
-        { "path": "../utils" },
-        { "path": "../browser-test-runner" },
-        { "path": "../test-utils" }
-    ]
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitOverride": false,
+    "stripInternal": false
+  },
+  "include": [
+    "src",
+    "generated",
+    "package.json"
+  ],
+  "references": [
+    { "path": "../dht" },
+    { "path": "../proto-rpc" },
+    { "path": "../utils" },
+    { "path": "../browser-test-runner" },
+    { "path": "../test-utils" }
+  ]
 }
