@@ -172,6 +172,7 @@ message CloseTemporaryConnection {
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
+  BIDIRECTIONAL = 2;
 }
 
 message StreamPartitionInfo {

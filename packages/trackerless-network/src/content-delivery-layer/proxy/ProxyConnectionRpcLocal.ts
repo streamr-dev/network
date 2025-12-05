@@ -79,7 +79,10 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     private getSubscribers(): DhtAddress[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+        return Array.from(this.connections.keys()).filter((key) => {
+            const direction = this.connections.get(key)!.direction
+            return direction === ProxyDirection.SUBSCRIBE || direction === ProxyDirection.BIDIRECTIONAL
+        })
     }
 
     // IProxyConnectionRpc server method

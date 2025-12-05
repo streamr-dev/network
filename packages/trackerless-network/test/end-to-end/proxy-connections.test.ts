@@ -204,6 +204,36 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     }, 30000)
 
+    it('Bidirectional proxies can publish', async () => {
+        await proxiedNode.setProxies(
+            STREAM_PART_ID,
+            [proxyNode1.getPeerDescriptor()],
+            ProxyDirection.BIDIRECTIONAL,
+            PROXIED_NODE_USER_ID
+        )
+        expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
+
+        await Promise.all([
+            proxiedNode.broadcast(MESSAGE),
+            waitForEvent(proxyNode1.stack.getContentDeliveryManager(), 'newMessage'),
+        ])
+    })
+
+    it('Bidirectional proxies can subscribe', async () => {
+        await proxiedNode.setProxies(
+            STREAM_PART_ID,
+            [proxyNode1.getPeerDescriptor()],
+            ProxyDirection.BIDIRECTIONAL,
+            PROXIED_NODE_USER_ID
+        )
+        expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
+
+        await Promise.all([
+            proxyNode1.broadcast(MESSAGE),
+            waitForEvent(proxiedNode.stack.getContentDeliveryManager(), 'newMessage'),
+        ])
+    })
+
     it('can\'t join proxied stream part', async () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
