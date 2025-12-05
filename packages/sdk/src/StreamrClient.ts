@@ -8,7 +8,8 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection, StreamPartDeliveryOptions } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, 
+    TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -61,6 +62,7 @@ import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } fr
 import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
 import { SponsorshipFactory } from './contracts/SponsorshipFactory'
+import { ProxyNodeFinder } from './ProxyNodeFinder'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -112,6 +114,7 @@ export class StreamrClient {
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
+    private readonly proxyNodeFinder: ProxyNodeFinder
 
     constructor(
         config: StreamrClientConfig = {},
@@ -147,6 +150,7 @@ export class StreamrClient {
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
+        this.proxyNodeFinder = container.resolve<ProxyNodeFinder>(ProxyNodeFinder)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
         container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
         container.resolve<SponsorshipFactory>(SponsorshipFactory) // side effect: activates sponsorship event listeners
@@ -799,20 +803,13 @@ export class StreamrClient {
         )
     }
 
-    /** 
-     * Discover operators that have been recently online on a given stream.
-     *
-     * The API may change soon (NET-1374).
-     * 
-     * @internal
-     */
-    findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
-        return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)
-    } 
-
-    // --------------------------------------------------------------------------------------------
-    // Events
-    // --------------------------------------------------------------------------------------------
+    async findProxyNodes(streamDefinition: StreamDefinition, 
+        numberOfProxies: number = 1, 
+        maxQueryResults: number = 100,
+        maxHeartbeatAgeHours: number = 24
+    ): Promise<NetworkPeerDescriptor[]> {
+        return this.proxyNodeFinder.find(streamDefinition, numberOfProxies, maxQueryResults, maxHeartbeatAgeHours)
+    }
 
     /**
      * Adds an event listener to the client.

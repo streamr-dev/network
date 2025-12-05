@@ -12,11 +12,15 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Added `findProxyNodes` function to `StreamrClient` for discovering proxy nodes via Operator nodes.
+
 #### Changed
 
 #### Deprecated
 
 #### Removed
+
+- Removed `findOperators` function which was marked as internal.
 
 #### Fixed
 

@@ -1,4 +1,4 @@
-import { Logger, TheGraphClient, GraphQLQuery } from '@streamr/utils'
+import { Logger, TheGraphClient, GraphQLQuery, EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import shuffle from 'lodash/shuffle'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
@@ -10,6 +10,11 @@ import { StreamID } from '../exports'
 interface OperatorMetadata {
     id: string
     latestHeartbeatMetadata: string
+}
+
+export interface FindOperatorsOnStreamResult {
+    operatorId: EthereumAddress
+    peerDescriptor: NetworkPeerDescriptor
 }
 
 interface StreamOperators {
@@ -70,7 +75,8 @@ export class OperatorRegistry {
         return picked
     }
 
-    async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number, maxHeartbeatAgeHours: number): Promise<NetworkPeerDescriptor[]> {
+    async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number, maxHeartbeatAgeHours: number): 
+    Promise<FindOperatorsOnStreamResult[]> {
         const query: GraphQLQuery = { 
             query: `{
                 stream(id: "${streamId}") {
@@ -90,11 +96,14 @@ export class OperatorRegistry {
                 }
             }`
         }
-        const result = await this.theGraphClient.queryEntity<StreamOperators>(query)
-        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships
+        const queryResult = await this.theGraphClient.queryEntity<StreamOperators>(query)
+        const operatorPeerDescriptors: FindOperatorsOnStreamResult[] = queryResult.stream.sponsorships
             .flatMap((sponsorship: Sponsorship) => sponsorship.stakes
-                .map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata)))
-        return peerDescriptors
+                .map((stake: { operator: OperatorMetadata }) => ({
+                    operatorId: toEthereumAddress(stake.operator.id),
+                    peerDescriptor: JSON.parse(stake.operator.latestHeartbeatMetadata)
+                })))
+        return operatorPeerDescriptors
     }
 
 }

@@ -1,7 +1,8 @@
 import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../../../src/Config'
-import { OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
+import { FindOperatorsOnStreamResult, OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
+import { toEthereumAddress } from '@streamr/utils'
 
 export const fakeEntrypoint = {
     nodeId: 'dadc0ded',
@@ -21,8 +22,11 @@ export class FakeOperatorRegistry implements Methods<OperatorRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async findOperatorsOnStream(): Promise<NetworkPeerDescriptor[]> {
-        return [fakeEntrypoint]
+    async findOperatorsOnStream(): Promise<FindOperatorsOnStreamResult[]> {
+        return [{
+            operatorId: toEthereumAddress('0x1234567890123456789012345678901234567890'),
+            peerDescriptor: fakeEntrypoint
+        }]
     }
 
 }
