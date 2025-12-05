@@ -20,7 +20,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- Removed `findOperators` function which was marked as marked as internal.
+- Removed `findOperators` function which was marked as internal.
 
 #### Fixed
 
