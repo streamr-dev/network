@@ -18,7 +18,7 @@
   "license": "(Apache-2.0 AND BSD-3-Clause)",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "prebuild": "./proto.sh",
+    "prebuild": "./proto.sh && ./test-proto.sh",
     "build": "tsc -b",
     "build-browser": "webpack --mode=development --progress",
     "check": "./test-proto.sh && tsc -p ./tsconfig.jest.json",

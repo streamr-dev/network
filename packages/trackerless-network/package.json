@@ -18,9 +18,9 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "prebuild": "./proto.sh",
     "build": "tsc -b",
     "build-browser": "webpack --mode=development --progress",
-    "prebuild": "./proto.sh",
     "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
