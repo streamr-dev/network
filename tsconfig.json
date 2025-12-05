@@ -1,0 +1,18 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.configs.json" },
+    { "path": "./packages/autocertifier-client" },
+    { "path": "./packages/autocertifier-server" },
+    { "path": "./packages/browser-test-runner" },
+    { "path": "./packages/utils" },
+    { "path": "./packages/cdn-location" },
+    { "path": "./packages/cli-tools" },
+    { "path": "./packages/dht" },
+    { "path": "./packages/geoip-location" },
+    { "path": "./packages/node" },
+    { "path": "./packages/proto-rpc" },
+    { "path": "./packages/trackerless-network" },
+    { "path": "./packages/sdk" }
+  ]
+}

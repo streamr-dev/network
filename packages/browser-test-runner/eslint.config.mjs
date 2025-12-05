@@ -17,7 +17,7 @@ export default [
                     process: 'readonly'
                 },
                 parserOptions: {
-                    project: ['./tsconfig.node.json'],
+                    project: ['./tsconfig.json'],
                     tsconfigRootDir: __dirname
                 }
             }
