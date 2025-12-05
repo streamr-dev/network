@@ -9,6 +9,7 @@
     "stripInternal": false
   },
   "include": [
+    "bin",
     "src",
     "src/**/*.json"
   ],
