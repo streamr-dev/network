@@ -60,6 +60,35 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await proxy.destroy()
     }, TIMEOUT)
 
+    it('bidirectional publish', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        const subscription = await proxy.subscribe(stream)
+        await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.BIDIRECTIONAL)
+
+        await client.publish(stream, {
+            foo: 'bar'
+        })
+        const receivedMessages = await collect(subscription, 1)
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+        await proxy.destroy()
+    }, TIMEOUT)
+
+    it('bidirectional subscribe', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        await proxy.subscribe(stream)
+        await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.BIDIRECTIONAL)
+        const subscription = await client.subscribe(stream)
+
+        await proxy.publish(stream, {
+            foo: 'bar'
+        })
+        const receivedMessages = await collect(subscription, 1)
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+        await proxy.destroy()
+    }, TIMEOUT)
+
     it('proxy doesn\'t accept connections', async () => {
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, false)
         const subscription = await proxy.subscribe(stream)
