@@ -8,14 +8,6 @@ import { mock, MockProxy } from 'jest-mock-extended'
 import { toStreamID, toStreamPartID, Logger } from '@streamr/utils'
 import { NetworkPeerDescriptor } from '../../src/Config'
 
-jest.mock('lodash/shuffle', () => {
-    return jest.fn((arr) => arr)
-})
-
-jest.mock('lodash/sample', () => {
-    return jest.fn((arr) => arr[0])
-})
-
 describe('ProxyNodeFinder', () => {
 
     let proxyNodeFinder: ProxyNodeFinder
@@ -97,6 +89,19 @@ describe('ProxyNodeFinder', () => {
 
         const result = await proxyNodeFinder.find(streamDefinition, 1)
         expect(result).toEqual([node2])
+        // We can't strictly assert logger.error was called because shuffle might cause op2 (success) to be tried first
+        // avoiding op1 (error) entirely. But we know it succeeded.
+    })
+
+    it('logs error if operator discovery fails', async () => {
+        const op1 = createOperator('op1')
+        operatorRegistry.findOperatorsOnStream.mockResolvedValue([op1])
+        node.discoverOperators.calledWith(op1.peerDescriptor, streamPartId).mockRejectedValue(new Error('mock-error'))
+
+        await expect(proxyNodeFinder.find(streamDefinition, 1))
+            .rejects
+            .toThrow('Not enough proxy nodes were resolved')
+        
         expect(logger.error).toHaveBeenCalled()
     })
 })
