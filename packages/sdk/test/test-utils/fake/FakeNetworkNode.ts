@@ -112,8 +112,8 @@ export class FakeNetworkNode implements NetworkNodeStub {
     async setProxies(
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
-        _direction: ProxyDirection,
         _userId: UserID,
+        _direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))

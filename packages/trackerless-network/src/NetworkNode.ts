@@ -51,11 +51,11 @@ export class NetworkNode {
     async setProxies(
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
-        direction: ProxyDirection,
         userId: UserID,
+        direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)
+        await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, userId, direction, connectionCount)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID): boolean {

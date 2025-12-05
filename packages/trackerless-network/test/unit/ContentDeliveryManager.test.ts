@@ -1,7 +1,6 @@
 import { areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/ContentDeliveryManager'
-import { ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
@@ -63,9 +62,9 @@ describe('ContentDeliveryManager', () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomUserId()
-            await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [proxy], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(true)
-            await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
         })
 
@@ -73,11 +72,11 @@ describe('ContentDeliveryManager', () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomUserId()
-            await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
-            await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [proxy], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(true)
-            await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
         })
 
@@ -85,11 +84,11 @@ describe('ContentDeliveryManager', () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomUserId()
-            await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            await manager.setProxies(streamPartId, [proxy], userId, undefined, 0)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
-            await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await manager.setProxies(streamPartId, [proxy], userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(true)
-            await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            await manager.setProxies(streamPartId, [proxy], userId, undefined, 0)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
         })
     })

@@ -4,7 +4,6 @@ import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import {
     ContentType,
     EncryptionType,
-    ProxyDirection,
     SignatureType,
     StreamMessage
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
@@ -88,7 +87,7 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on another stream part', async () => {
-        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], PROXIED_NODE_USER_ID)
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
@@ -108,7 +107,7 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on multiple stream parts', async () => {
-        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], PROXIED_NODE_USER_ID)
         expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([

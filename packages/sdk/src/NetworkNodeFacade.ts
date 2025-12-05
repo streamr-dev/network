@@ -56,8 +56,8 @@ export interface NetworkNodeStub {
     setProxies: (
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
-        direction: ProxyDirection,
         userId: UserID,
+        direction?: ProxyDirection,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
@@ -295,7 +295,7 @@ export class NetworkNodeFacade {
     async setProxies(
         streamPartId: StreamPartID,
         nodes: NetworkPeerDescriptor[],
-        direction: ProxyDirection,
+        direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
@@ -305,8 +305,8 @@ export class NetworkNodeFacade {
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
-            direction,
             await this.identity.getUserId(),
+            direction,
             connectionCount
         )
     }

@@ -304,8 +304,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     async setProxies(
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
-        direction: ProxyDirection,
         userId: UserID,
+        direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required
@@ -335,7 +335,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 }
                 await client.start()
             }
-            await client.setProxies(nodes, direction, userId, connectionCount)
+            await client.setProxies(nodes, userId, direction, connectionCount)
         } else {
             await this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)

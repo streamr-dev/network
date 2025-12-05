@@ -22,7 +22,7 @@ describe('ProxyConnectionRpcRemote', () => {
         )
 
         const userId = randomUserId()
-        await rpcRemote.requestConnection(ProxyDirection.PUBLISH, userId)
+        await rpcRemote.requestConnection(userId, ProxyDirection.PUBLISH)
 
         const [rpcMessage, _, callContext] = onOutgoingMessage.mock.calls[0]
         const request = ProxyConnectionRequest.fromBinary(rpcMessage.body.value)

@@ -7,7 +7,7 @@ const logger = new Logger(module)
 
 export class ProxyConnectionRpcRemote extends RpcRemote<ProxyConnectionRpcClient> {
 
-    async requestConnection(direction: ProxyDirection, userId: UserID): Promise<boolean> {
+    async requestConnection(userId: UserID, direction?: ProxyDirection): Promise<boolean> {
         const request: ProxyConnectionRequest = {
             direction,
             userId: toUserIdRaw(userId)

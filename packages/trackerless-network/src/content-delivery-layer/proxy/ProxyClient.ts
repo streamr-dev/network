@@ -54,13 +54,13 @@ interface ProxyClientOptions {
 interface ProxyDefinition {
     nodes: Map<DhtAddress, PeerDescriptor>
     connectionCount: number
-    direction: ProxyDirection
     userId: UserID
+    direction?: ProxyDirection
 }
 
 interface ProxyConnection {
     peerDescriptor: PeerDescriptor
-    direction: ProxyDirection
+    direction?: ProxyDirection
 }
 
 interface Events {
@@ -129,8 +129,8 @@ export class ProxyClient extends EventEmitter<Events> {
 
     async setProxies(
         nodes: PeerDescriptor[],
-        direction: ProxyDirection,
         userId: UserID,
+        direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId: this.options.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
@@ -174,11 +174,11 @@ export class ProxyClient extends EventEmitter<Events> {
             !this.connections.has(id)
         ), connectionCount)
         await Promise.all(proxiesToAttempt.map((id) =>
-            this.attemptConnection(id, this.definition!.direction, this.definition!.userId)
+            this.attemptConnection(id, this.definition!.userId, this.definition!.direction)
         ))
     }
 
-    private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: UserID): Promise<void> {
+    private async attemptConnection(nodeId: DhtAddress, userId: UserID, direction?: ProxyDirection): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const rpcRemote = new ProxyConnectionRpcRemote(
             this.options.localPeerDescriptor,
@@ -186,7 +186,7 @@ export class ProxyClient extends EventEmitter<Events> {
             this.rpcCommunicator,
             ProxyConnectionRpcClient
         )
-        const accepted = await rpcRemote.requestConnection(direction, userId)
+        const accepted = await rpcRemote.requestConnection(userId, direction)
         if (accepted) {
             this.options.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, { peerDescriptor, direction })
@@ -241,11 +241,11 @@ export class ProxyClient extends EventEmitter<Events> {
         this.propagation.feedUnseenMessage(msg, this.neighbors.getIds(), previousNode ?? null)
     }
 
-    hasConnection(nodeId: DhtAddress, direction: ProxyDirection): boolean {
+    hasConnection(nodeId: DhtAddress, direction?: ProxyDirection): boolean {
         return this.connections.has(nodeId) && this.connections.get(nodeId)!.direction === direction
     }
 
-    getDirection(): ProxyDirection {
+    getDirection(): ProxyDirection | undefined {
         return this.definition!.direction
     }
 

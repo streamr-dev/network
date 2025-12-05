@@ -15,9 +15,9 @@ import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 const logger = new Logger(module)
 
 interface ProxyConnection {
-    direction: ProxyDirection // Direction is from the client's point of view
     userId: UserID
     remote: ContentDeliveryRpcRemote
+    direction?: ProxyDirection // Direction is from the client's point of view
 }
 
 interface ProxyConnectionRpcLocalOptions {
@@ -79,7 +79,10 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     private getSubscribers(): DhtAddress[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+        return Array.from(this.connections.keys()).filter((key) => {
+            const direction = this.connections.get(key)!.direction
+            return direction === undefined || direction === ProxyDirection.SUBSCRIBE
+        })
     }
 
     // IProxyConnectionRpc server method
