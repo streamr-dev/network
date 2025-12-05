@@ -31,7 +31,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await client.destroy()
     })
 
-    it('publish', async () => {
+    it('publish only proxy', async () => {
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         const subscription = await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
@@ -45,7 +45,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await proxy.destroy()
     }, TIMEOUT)
 
-    it('subscribe', async () => {
+    it('subscribe only proxy', async () => {
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
@@ -64,7 +64,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         const subscription = await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
-        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.BIDIRECTIONAL)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()])
 
         await client.publish(stream, {
             foo: 'bar'
@@ -78,7 +78,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
-        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.BIDIRECTIONAL)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()])
         const subscription = await client.subscribe(stream)
 
         await proxy.publish(stream, {

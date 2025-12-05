@@ -55,7 +55,7 @@ describe('Proxy connections', () => {
             : false
     }
     
-    const hasConnectionToProxy = (proxyNodeId: DhtAddress, direction: ProxyDirection): boolean => {
+    const hasConnectionToProxy = (proxyNodeId: DhtAddress, direction?: ProxyDirection): boolean => {
         const client = (proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(STREAM_PART_ID) as { client: ProxyClient }).client
         return client.hasConnection(proxyNodeId, direction)
     }
@@ -108,7 +108,7 @@ describe('Proxy connections', () => {
     })
 
     it('happy path publishing', async () => {
-        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], PROXIED_NODE_USER_ID, ProxyDirection.PUBLISH, 1)
         await Promise.all([
             waitForEvent(proxyNode1.stack.getContentDeliveryManager(), 'newMessage'),
             proxiedNode.broadcast(MESSAGE)
@@ -116,7 +116,7 @@ describe('Proxy connections', () => {
     })
 
     it('happy path subscribing', async () => {
-        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], PROXIED_NODE_USER_ID, ProxyDirection.SUBSCRIBE, 1)
         await Promise.all([
             waitForEvent(proxiedNode.stack.getContentDeliveryManager(), 'newMessage'),
             proxyNode1.broadcast(MESSAGE)
@@ -124,19 +124,19 @@ describe('Proxy connections', () => {
     })
 
     it('can leave proxy publish connection', async () => {
-        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], PROXIED_NODE_USER_ID, ProxyDirection.PUBLISH, 1)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
-        await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 0)
+        await proxiedNode.setProxies(STREAM_PART_ID, [], PROXIED_NODE_USER_ID, ProxyDirection.PUBLISH, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false) 
         await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
 
     it('can leave proxy subscribe connection', async () => {
-        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
+        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], PROXIED_NODE_USER_ID, ProxyDirection.SUBSCRIBE, 1)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
-        await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 0)
+        await proxiedNode.setProxies(STREAM_PART_ID, [], PROXIED_NODE_USER_ID, ProxyDirection.SUBSCRIBE, 0)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
         await until(() => hasConnectionFromProxy(proxyNode1) === false)
     })
@@ -145,7 +145,6 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor(), proxyNode2.getPeerDescriptor()],
-            ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
@@ -157,13 +156,12 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor(), proxyNode2.getPeerDescriptor()],
-            ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
-        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
+        await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         await until(() => hasConnectionFromProxy(proxyNode2) === false)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
@@ -173,14 +171,13 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor(), proxyNode2.getPeerDescriptor()],
-            ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
 
-        await proxiedNode.setProxies(STREAM_PART_ID, [], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
+        await proxiedNode.setProxies(STREAM_PART_ID, [], PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(false)
         await until(() => hasConnectionFromProxy(proxyNode1) === false)
         await until(() => hasConnectionFromProxy(proxyNode2) === false)
@@ -190,15 +187,14 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
-            ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
         await proxyNode1.leave(STREAM_PART_ID)
-        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId()))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
         proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
-        await until(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
+        await until(() => hasConnectionToProxy(proxyNode1.getNodeId()), 25000)
         // TODO why wait is needed?
         await wait(100)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
@@ -208,7 +204,6 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
-            ProxyDirection.BIDIRECTIONAL,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
@@ -223,7 +218,6 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
-            ProxyDirection.BIDIRECTIONAL,
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
@@ -238,8 +232,9 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
-            ProxyDirection.PUBLISH,
-            PROXIED_NODE_USER_ID
+            PROXIED_NODE_USER_ID,
+            ProxyDirection.PUBLISH
+
         )
         await expect(proxiedNode.join(STREAM_PART_ID)).rejects.toThrow('Cannot join')
     })
@@ -248,8 +243,8 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
-            ProxyDirection.SUBSCRIBE,
-            PROXIED_NODE_USER_ID
+            PROXIED_NODE_USER_ID,
+            ProxyDirection.SUBSCRIBE
         )
         await expect(proxiedNode.broadcast(MESSAGE)).rejects.toThrow('Cannot broadcast')
     })

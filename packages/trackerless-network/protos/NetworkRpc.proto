@@ -151,7 +151,7 @@ message NeighborUpdate {
 }
 
 message ProxyConnectionRequest {
-  ProxyDirection direction = 1;
+  optional ProxyDirection direction = 1;
   bytes userId = 2;
 }
 
@@ -172,7 +172,6 @@ message CloseTemporaryConnection {
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
-  BIDIRECTIONAL = 2;
 }
 
 message StreamPartitionInfo {
