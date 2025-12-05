@@ -52,6 +52,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+- Signature output in `subscribe --with-metadata` (https://github.com/streamr-dev/network/pull/3245)
+
 #### Security
 
 
