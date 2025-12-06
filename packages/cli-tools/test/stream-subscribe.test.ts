@@ -1,6 +1,6 @@
-import StreamrClient, { StreamPermission } from '@streamr/sdk'
+import StreamrClient, { convertBytesToStreamMessage, StreamPermission } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
-import { collect, StreamID } from '@streamr/utils'
+import { collect, Defer, LengthPrefixedFrameDecoder, StreamID } from '@streamr/utils'
 import { createTestClient, startCommand } from './utils'
 import { Wallet } from 'ethers'
 
@@ -108,5 +108,40 @@ describe('stream-subscribe', () => {
         })
         await publisher.destroy()
         subscriberAbortController.abort()
+    })
+
+    it('binary', async () => {
+        const CONTENT = new Uint8Array([1, 2, 3])
+        const subscriberAbortController = new AbortController()
+        const outputDecoder = startCommand(`stream subscribe ${streamId} --binary`, {
+            abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
+        }).stdout.pipe(new LengthPrefixedFrameDecoder())
+        const binaryOutputPromise = new Defer<Uint8Array>()
+        outputDecoder.on('data', (data: Uint8Array) => binaryOutputPromise.resolve(data))
+        const publisher = createTestClient(publisherPrivateKey)
+        await publisher.publish(streamId, CONTENT)
+        expect(await binaryOutputPromise).toEqualBinary(CONTENT)
+        subscriberAbortController.abort()
+        await publisher.destroy()
+    })
+
+    it('binary with metadata', async () => {
+        const CONTENT = new Uint8Array([4, 5, 6])
+        const TIMESTAMP = 123456789
+        const subscriberAbortController = new AbortController()
+        const outputDecoder = startCommand(`stream subscribe ${streamId} --binary --with-metadata`, {
+            abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
+        }).stdout.pipe(new LengthPrefixedFrameDecoder())
+        const binaryOutputPromise = new Defer<Uint8Array>()
+        outputDecoder.on('data', (data: Uint8Array) => binaryOutputPromise.resolve(data))
+        const publisher = createTestClient(publisherPrivateKey)
+        await publisher.publish(streamId, CONTENT, { timestamp: TIMESTAMP })
+        const receivedMessage = convertBytesToStreamMessage(await binaryOutputPromise)
+        expect(receivedMessage.content).toEqualBinary(CONTENT)
+        expect(receivedMessage.getTimestamp()).toBe(TIMESTAMP)
+        subscriberAbortController.abort()
+        await publisher.destroy()
     })
 })
