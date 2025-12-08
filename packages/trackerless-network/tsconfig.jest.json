@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["node", "jest", "@streamr/test-utils/customMatcherTypes"],
+    "types": [
+      "node",
+      "jest",
+      "@streamr/test-utils/customMatcherTypes"
+    ],
     "noImplicitOverride": false
   },
   "include": [
@@ -13,6 +17,6 @@
   ],
   "references": [
     { "path": "../proto-rpc/tsconfig.node.json" },
-    { "path": "../dht/tsconfig.node.json" }
+    { "path": "../dht" }
   ]
 }
