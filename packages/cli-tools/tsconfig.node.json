@@ -11,6 +11,6 @@
     ],
     "references": [
         { "path": "../utils/tsconfig.node.json" },
-        { "path": "../sdk/tsconfig.node.json" }
+        { "path": "../sdk" }
     ]
 }
