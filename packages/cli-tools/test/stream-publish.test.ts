@@ -93,4 +93,16 @@ describe('stream-publish', () => {
         expect(receivedMessage!.msgChainId).toEqual('testMsgChainId')
         await subscriber.destroy()
     })
+
+    it('with metadata, hex content', async () => {
+        const PARTITION = 5
+        const PAYLOAD = { content: binaryToHex(new Uint8Array([4, 5, 6]), false), metadata: { msgChainId: 'testMsgChainId' } }
+        const subscriber = createSubscriber()
+        const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
+        publishViaCliCommand(JSON.stringify(PAYLOAD), ['--with-metadata', `--partition ${PARTITION}`])
+        const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
+        expect(receivedMessage!.content).toEqual(new Uint8Array([4, 5, 6]))
+        expect(receivedMessage!.msgChainId).toEqual('testMsgChainId')
+        await subscriber.destroy()
+    })
 })

@@ -36,30 +36,22 @@ const publishStream = (
                 return
             }
             const trimmedData = String(data).trim()
-            if (isHexadecimal(trimmedData)) {
+            try {
                 if (withMetadata) {
-                    throw new Error('hex input is not supported when publishing with metadata')
-                }
-                content = hexToBinary(trimmedData)
-                metadata = {}
-            } else {
-                try {
                     const payload = JSON.parse(trimmedData)
-                    if (withMetadata) {
-                        content = payload.content
-                        if (content === undefined) {
-                            throw new Error('invalid input: no content')
-                        }
-                        metadata = payload.metadata ?? {}
-                    } else {
-                        content = payload
-                        metadata = {}
+                    if (payload.content === undefined) {
+                        throw new Error('invalid input: no content')
                     }
-                } catch (e) {
-                    console.error(data.toString())
-                    done(e)
-                    return
+                    content = isHexadecimal(payload.content) ? hexToBinary(payload.content) : payload.content
+                    metadata = payload.metadata ?? {}
+                } else {
+                    content = isHexadecimal(trimmedData) ? hexToBinary(trimmedData) : JSON.parse(trimmedData)
+                    metadata = {}
                 }
+            } catch (e) {
+                console.error(data.toString())
+                done(e)
+                return
             }
             const partitionKey = (partitionKeyField !== undefined && typeof content === 'object') ? content[partitionKeyField] : undefined
             client.publish({ streamId, partition }, content, merge(metadata, { partitionKey })).then(
