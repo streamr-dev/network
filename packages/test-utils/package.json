@@ -16,8 +16,8 @@
     "customMatcherTypes.d.ts"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json",
+    "build": "tsc -b",
+    "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"

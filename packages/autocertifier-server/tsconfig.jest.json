@@ -7,7 +7,7 @@
     ],
     "references": [
         { "path": "../utils/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../test-utils" },
         { "path": "../proto-rpc/tsconfig.node.json" },
         { "path": "../autocertifier-client/tsconfig.node.json"}
     ]

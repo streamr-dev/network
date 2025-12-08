@@ -1,3 +1,10 @@
 {
-  "extends": "./tsconfig.jest.json"
+  "files": [],
+  "compilerOptions": {
+    "composite": true
+  },
+  "references": [
+    { "path": "./tsconfig.jest.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }
