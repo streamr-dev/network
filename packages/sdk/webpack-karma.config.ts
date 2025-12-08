@@ -1,7 +1,8 @@
-const defaultConfig = require('./webpack.config')
-const path = require('path')
+import type { Configuration } from 'webpack'
+import defaultConfig from './webpack.config'
+import path from 'path'
 
-module.exports = (env, argv) => {
+const karmaWebpackConfig: (env?: Record<string, unknown>, argv?: Record<string, unknown>) => Configuration = (env = {}, argv = {}) => {
     const config = defaultConfig(env, argv)
 
     return {
@@ -17,6 +18,8 @@ module.exports = (env, argv) => {
                 v8: false,
                 'jest-leak-detector': false,
             }
-        }
-    }
+        },
+    } as Configuration
 }
+
+export default karmaWebpackConfig

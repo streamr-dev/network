@@ -3,5 +3,5 @@
  * package. See karma-config.js in that package for more details.
  */
 
-const { customMatchers } = require('@streamr/test-utils')
+import { customMatchers } from '@streamr/test-utils'
 expect.extend(customMatchers)

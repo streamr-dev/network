@@ -26,7 +26,7 @@
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
-    "test-browser": "karma start karma.config.js",
+    "test-browser": "karma start karma.config.ts",
     "test-unit": "jest test/unit",
     "test-integration": "jest --bail test/integration",
     "test-end-to-end": "jest --bail test/end-to-end",
