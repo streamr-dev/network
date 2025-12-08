@@ -96,3 +96,8 @@ export const deployTestOperatorContract = async (opts: Omit<DeployOperatorContra
 export const deployTestSponsorshipContract = async (opts: Omit<DeploySponsorshipContractOpts, 'environmentId'>): Promise<SponsorshipContract> => {
     return _operatorContractUtils.deploySponsorshipContract({ ...opts, 'environmentId': 'dev2' })
 }
+
+export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefined> => {
+    const item = source.next()
+    return (await item).value
+}
