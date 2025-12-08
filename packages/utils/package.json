@@ -28,8 +28,9 @@
     "LICENSE"
   ],
   "scripts": {
+    "prebuild": "npm run clean",
     "build": " tsc -b",
-    "prepack": "npm run clean && npm run build && tsc -p tsconfig.rollup.json && rollup -c dist/rollup.config.js",
+    "postbuild": "tsc -p tsconfig.rollup.json && rollup -c dist/rollup.config.js",
     "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
