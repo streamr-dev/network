@@ -44,7 +44,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
 })
     .arguments('<streamId>')
     .description('subscribe to a stream, prints JSON messages to stdout line-by-line')
-    .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)
+    .option('-p, --partition <partition>', 'partition', createFnParseInt('--partition'), 0)
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-r, --raw', 'subscribe raw', false)
     .option('-m, --with-metadata', 'print each message with its metadata included', false)
