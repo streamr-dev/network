@@ -1,74 +1,73 @@
-import { StreamPermission } from '@streamr/sdk'
+import StreamrClient, { StreamPermission } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, StreamID } from '@streamr/utils'
+import { createTestClient, startCommand } from './utils'
 import { Wallet } from 'ethers'
-import { createTestClient, runCommand, startCommand } from './utils'
 
-const TIMEOUT = 30 * 1000
+describe('stream-subscribe', () => {
 
-describe('publish and subscribe', () => {
-
+    let streamId: StreamID
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
-    let streamId: string
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         publisherPrivateKey = await createTestPrivateKey({ gas: true })
         subscriberPrivateKey = await createTestPrivateKey({ gas: true })
-        const client = createTestClient(publisherPrivateKey)
+        const client = createTestClient(await createTestPrivateKey({ gas: true }))
         const stream = await client.createStream(`/${Date.now()}`)
         await stream.grantPermissions({
+            userId: new Wallet(publisherPrivateKey).address,
+            permissions: [StreamPermission.PUBLISH]
+        }, {
             userId: new Wallet(subscriberPrivateKey).address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamId = stream.id
         await client.destroy()
-    }, TIMEOUT)
+    })
 
-    function publishViaCliCommand() {
-        setImmediate(async () => {
-            await runCommand(`stream publish ${streamId}`, {
-                inputLines: [JSON.stringify({ foo: 123 })],
-                privateKey: publisherPrivateKey
-            })
-        })
+    async function publishTestMesssage(): Promise<StreamrClient> {
+        const publisher = createTestClient(publisherPrivateKey)
+        await publisher.publish(streamId, { foo: 123 })
+        return publisher
     }
 
     it('happy path', async () => {
         const subscriberAbortController = new AbortController()
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId}`, {
-            privateKey: subscriberPrivateKey,
-            abortSignal: subscriberAbortController.signal
+            abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
         })
-        publishViaCliCommand()
+        const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
-        subscriberAbortController.abort()
         expect(JSON.parse(receivedMessage)).toEqual({
             foo: 123
         })
-    }, TIMEOUT)
+        await publisher.destroy()
+        subscriberAbortController.abort()
+    })
 
-    it('raw subscription', async () => {
+    it('raw', async () => {
         const subscriberAbortController = new AbortController()
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --raw`, {
-            privateKey: subscriberPrivateKey,
             abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
         })
-        publishViaCliCommand()
+        const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
-        subscriberAbortController.abort()
         expect(receivedMessage).toMatch(/^[0-9a-fA-F]+$/)
-    }, TIMEOUT)
+        await publisher.destroy()
+        subscriberAbortController.abort()
+    })
 
     it('with metadata', async () => {
         const subscriberAbortController = new AbortController()
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata`, {
-            privateKey: subscriberPrivateKey,
             abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
         })
-        publishViaCliCommand()
+        const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
-        subscriberAbortController.abort()
         expect(JSON.parse(receivedMessage)).toMatchObject({
             content: {
                 foo: 123
@@ -83,17 +82,18 @@ describe('publish and subscribe', () => {
                 msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
             }
         })
-    }, TIMEOUT)
+        await publisher.destroy()
+        subscriberAbortController.abort()
+    })
 
-    it('with metadata and raw', async () => {
+    it('with metadata, receive as raw', async () => {
         const subscriberAbortController = new AbortController()
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata --raw`, {
-            privateKey: subscriberPrivateKey,
             abortSignal: subscriberAbortController.signal,
+            privateKey: subscriberPrivateKey
         })
-        publishViaCliCommand()
+        const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
-        subscriberAbortController.abort()
         expect(JSON.parse(receivedMessage)).toMatchObject({
             content: expect.stringMatching(/^[0-9a-fA-F]+$/),
             metadata: {
@@ -106,5 +106,7 @@ describe('publish and subscribe', () => {
                 msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
             }
         })
-    }, TIMEOUT)
+        await publisher.destroy()
+        subscriberAbortController.abort()
+    })
 })
