@@ -32,6 +32,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Bump autostaker's fixed gas limit for actions from 500k gas to 750k gas
+
 #### Deprecated
 
 #### Removed
