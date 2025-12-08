@@ -6,8 +6,10 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src",
-    "bin",
     "test"
+  ],
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "../test-utils/tsconfig.node.json" }
   ]
 }

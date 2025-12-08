@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true,
     "outDir": "dist"
   },
   "include": [
@@ -11,6 +10,8 @@
   ],
   "references": [
     { "path": "../utils/tsconfig.node.json" },
-    { "path": "../sdk/tsconfig.node.json" }
+    { "path": "../sdk/tsconfig.node.json" },
+    { "path": "../dht/tsconfig.node.json" },
+    { "path": "../trackerless-network/tsconfig.node.json" }
   ]
 }
