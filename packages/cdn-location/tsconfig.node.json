@@ -8,7 +8,7 @@
         "src/**/*"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../utils" },
         { "path": "../test-utils/tsconfig.node.json" }
     ]
 }
