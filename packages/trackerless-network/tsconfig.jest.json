@@ -12,7 +12,7 @@
         "package.json"
     ],
     "references": [
-        { "path": "../proto-rpc/tsconfig.node.json" },
+        { "path": "../proto-rpc" },
         { "path": "../dht/tsconfig.node.json" }
     ]
 }
