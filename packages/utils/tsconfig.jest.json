@@ -1,5 +1,13 @@
 {
   "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@crypto": ["src/node/crypto.ts"]
+    }
+  },
   "include": ["test"],
   "references": [
     { "path": "./tsconfig.node.json" }

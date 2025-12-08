@@ -2,7 +2,6 @@
   "name": "@streamr/utils",
   "version": "103.2.0-rc.0",
   "description": "A collection of shared common utilities",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
@@ -30,7 +29,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": " tsc -b",
-    "postbuild": "tsc -p tsconfig.rollup.json && rollup -c dist/rollup.config.js",
+    "postbuild": "rollup -c dist/rollup.config.mjs",
     "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",

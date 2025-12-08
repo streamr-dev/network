@@ -1,7 +1,7 @@
 {
-  "extends": "../../tsconfig.browser.json",
+  "extends": "./tsconfig.browser.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/karma",
     "noImplicitOverride": false,
     "types": [
       "jest",
