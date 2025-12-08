@@ -26,7 +26,7 @@ const publishStream = (
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
-            let content = null
+            let content
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
                 done()
