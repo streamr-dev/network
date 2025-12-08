@@ -6,8 +6,10 @@ import { StreamrClient } from '@streamr/sdk'
 import { hexToBinary, wait } from '@streamr/utils'
 import es from 'event-stream'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
+import { createFnParseInt } from '../src/common'
 
 interface Options extends BaseOptions {
+    partition?: number
     partitionKeyField?: string
 }
 
@@ -16,7 +18,8 @@ const isHexadecimal = (str: string): boolean => {
 }
 
 const publishStream = (
-    stream: string,
+    streamId: string,
+    partition: number | undefined,
     partitionKeyField: string | undefined,
     client: StreamrClient
 ): Writable => {
@@ -42,7 +45,7 @@ const publishStream = (
                 }
             }
             const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
-            client.publish(stream, message, { partitionKey }).then(
+            client.publish({ id: streamId, partition }, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -52,7 +55,7 @@ const publishStream = (
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
-    const ps = publishStream(streamId, options.partitionKeyField, client)
+    const ps = publishStream(streamId, options.partition, options.partitionKeyField, client)
     return new Promise((resolve, reject) => {
         process.stdin
             .pipe(es.split())
@@ -73,6 +76,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
 })
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
+    .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), undefined)
     // eslint-disable-next-line max-len
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
     .parseAsync()
