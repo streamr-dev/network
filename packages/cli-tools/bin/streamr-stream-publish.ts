@@ -45,7 +45,7 @@ const publishStream = (
                 }
             }
             const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
-            client.publish({ id: streamId, partition }, message, { partitionKey }).then(
+            client.publish({ streamId, partition }, message, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
