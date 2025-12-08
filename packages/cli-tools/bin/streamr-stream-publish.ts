@@ -55,6 +55,10 @@ const publishStream = (
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
+    if ((options.partition !== undefined) && (options.partitionKeyField !== undefined)) {
+        console.error('Invalid combination of "partition" and "partition-key-field"')
+        process.exit(1)
+    }
     const ps = publishStream(streamId, options.partition, options.partitionKeyField, client)
     return new Promise((resolve, reject) => {
         process.stdin
