@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { Writable } from 'stream'
-import { StreamrClient } from '@streamr/sdk'
-import { hexToBinary, wait } from '@streamr/utils'
+import { PublishMetadata, StreamrClient } from '@streamr/sdk'
+import { hexToBinary, merge, wait } from '@streamr/utils'
 import es from 'event-stream'
-import { createClientCommand, Options as BaseOptions } from '../src/command'
+import { Writable } from 'stream'
+import { Options as BaseOptions, createClientCommand } from '../src/command'
 import { createFnParseInt } from '../src/common'
 
 interface Options extends BaseOptions {
     partition?: number
     partitionKeyField?: string
+    withMetadata: boolean
 }
 
 const isHexadecimal = (str: string): boolean => {
@@ -21,12 +22,14 @@ const publishStream = (
     streamId: string,
     partition: number | undefined,
     partitionKeyField: string | undefined,
+    withMetadata: boolean,
     client: StreamrClient
 ): Writable => {
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
             let content: any
+            let metadata: PublishMetadata
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
                 done()
@@ -34,10 +37,24 @@ const publishStream = (
             }
             const trimmedData = String(data).trim()
             if (isHexadecimal(trimmedData)) {
+                if (withMetadata) {
+                    throw new Error('hex input is not supported when publishing with metadata')
+                }
                 content = hexToBinary(trimmedData)
+                metadata = {}
             } else {
                 try {
-                    content = JSON.parse(trimmedData)
+                    const payload = JSON.parse(trimmedData)
+                    if (withMetadata) {
+                        content = payload.content
+                        if (content === undefined) {
+                            throw new Error('invalid input: no content')
+                        }
+                        metadata = payload.metadata ?? {}
+                    } else {
+                        content = payload
+                        metadata = {}
+                    }
                 } catch (e) {
                     console.error(data.toString())
                     done(e)
@@ -45,7 +62,7 @@ const publishStream = (
                 }
             }
             const partitionKey = (partitionKeyField !== undefined && typeof content === 'object') ? content[partitionKeyField] : undefined
-            client.publish({ streamId, partition }, content, { partitionKey }).then(
+            client.publish({ streamId, partition }, content, merge(metadata, { partitionKey })).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -59,7 +76,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         console.error('Invalid combination of "partition" and "partition-key-field"')
         process.exit(1)
     }
-    const ps = publishStream(streamId, options.partition, options.partitionKeyField, client)
+    const ps = publishStream(streamId, options.partition, options.partitionKeyField, options.withMetadata, client)
     return new Promise((resolve, reject) => {
         process.stdin
             .pipe(es.split())
@@ -83,4 +100,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .option('-p, --partition <partition>', 'partition', createFnParseInt('--partition'))
     // eslint-disable-next-line max-len
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
+    .option('-m, --with-metadata', 'each input contains both the content and the metadata', false)
     .parseAsync()
