@@ -1,8 +1,9 @@
 import type { Configuration } from 'webpack'
-import defaultConfig from './webpack.config'
-import path from 'path'
+import * as defaultConfig from './webpack.config'
+import { resolve } from 'path'
 
 const karmaWebpackConfig: (env?: Record<string, unknown>, argv?: Record<string, unknown>) => Configuration = (env = {}, argv = {}) => {
+    console.warn(defaultConfig)
     const config = defaultConfig(env, argv)
 
     return {
@@ -11,7 +12,7 @@ const karmaWebpackConfig: (env?: Record<string, unknown>, argv?: Record<string, 
             ...config.resolve,
             alias: {
                 ...config.resolve.alias,
-                '@jest/globals': path.resolve(__dirname, 'test/test-utils/jestGlobalsMock.ts')
+                '@jest/globals': resolve(__dirname, 'test/test-utils/jestGlobalsMock.ts')
             },
             fallback: {
                 ...config.resolve.fallback,
