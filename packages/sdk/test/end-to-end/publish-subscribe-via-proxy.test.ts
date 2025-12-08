@@ -31,7 +31,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await client.destroy()
     })
 
-    it('publish', async () => {
+    it('publish only proxy', async () => {
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         const subscription = await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
@@ -45,11 +45,40 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         await proxy.destroy()
     }, TIMEOUT)
 
-    it('subscribe', async () => {
+    it('subscribe only proxy', async () => {
         const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
         await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
         await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.SUBSCRIBE)
+        const subscription = await client.subscribe(stream)
+
+        await proxy.publish(stream, {
+            foo: 'bar'
+        })
+        const receivedMessages = await collect(subscription, 1)
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+        await proxy.destroy()
+    }, TIMEOUT)
+
+    it('bidirectional publish', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        const subscription = await proxy.subscribe(stream)
+        await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()])
+
+        await client.publish(stream, {
+            foo: 'bar'
+        })
+        const receivedMessages = await collect(subscription, 1)
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
+        await proxy.destroy()
+    }, TIMEOUT)
+
+    it('bidirectional subscribe', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        await proxy.subscribe(stream)
+        await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()])
         const subscription = await client.subscribe(stream)
 
         await proxy.publish(stream, {

@@ -63,8 +63,8 @@ describe('proxy group key exchange', () => {
     })
     
     it('happy path request', async () => {
-        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
-        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
+        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], publisherUserId, ProxyDirection.PUBLISH)
+        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], subscriberUserId, ProxyDirection.SUBSCRIBE)
 
         const request: StreamMessage = {
             messageId: {
@@ -96,8 +96,8 @@ describe('proxy group key exchange', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
-        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
+        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], publisherUserId, ProxyDirection.PUBLISH)
+        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], subscriberUserId, ProxyDirection.SUBSCRIBE)
 
         const response: StreamMessage = {
             messageId: {

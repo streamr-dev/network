@@ -680,7 +680,7 @@ export class StreamrClient {
     async setProxies(
         streamDefinition: StreamDefinition,
         nodes: NetworkPeerDescriptor[],
-        direction: ProxyDirection,
+        direction?: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
