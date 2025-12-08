@@ -33,11 +33,11 @@ describe('stream-publish', () => {
         await client.destroy()
     })
 
-    function publishViaCliCommand(additionalArgs: string[] = []) {
+    function publishViaCliCommand(payload: any, additionalArgs: string[] = []) {
         const args = [streamId, ...additionalArgs]
         setImmediate(async () => {
             await runCommand(`stream publish ${args.join(' ')}`, {
-                inputLines: [JSON.stringify({ foo: 123 })],
+                inputLines: [JSON.stringify(payload)],
                 privateKey: publisherPrivateKey
             })
         })
@@ -46,7 +46,7 @@ describe('stream-publish', () => {
     it('happy path', async () => {
         const subscriber = createSubscriber()
         const subscriptions = await Promise.all(range(PARTITION_COUNT).map((partition) => subscriber.subscribe({ id: streamId, partition })))
-        publishViaCliCommand()
+        publishViaCliCommand({ foo: 123 })
         const receivedMessage = await Promise.race(subscriptions.map((s) => nextValue(s[Symbol.asyncIterator]())))
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         await subscriber.destroy()
@@ -56,7 +56,7 @@ describe('stream-publish', () => {
         const PARTITION = 5
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
-        publishViaCliCommand([`--partition ${PARTITION}`])
+        publishViaCliCommand({ foo: 123 }, [`--partition ${PARTITION}`])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         await subscriber.destroy()
@@ -66,9 +66,21 @@ describe('stream-publish', () => {
         const partition = keyToArrayIndex(PARTITION_COUNT, 123)
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition })
-        publishViaCliCommand(['--partition-key-field foo'])
+        publishViaCliCommand({ foo: 123 }, ['--partition-key-field foo'])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         await subscriber.destroy()
-    })    
+    })
+
+    it('with metadata', async () => {
+        const PARTITION = 5
+        const CONTENT = { content: { foo: 123 }, metadata: { msgChainId: 'testMsgChainId' } }
+        const subscriber = createSubscriber()
+        const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
+        publishViaCliCommand(CONTENT, ['--with-metadata', `--partition ${PARTITION}`])
+        const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
+        expect(receivedMessage!.content).toEqual({ foo: 123 })
+        expect(receivedMessage!.msgChainId).toEqual('testMsgChainId')
+        await subscriber.destroy()
+    })
 })
