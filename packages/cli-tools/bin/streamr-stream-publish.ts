@@ -26,7 +26,7 @@ const publishStream = (
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
-            let message = null
+            let content = null
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
                 done()
@@ -34,18 +34,18 @@ const publishStream = (
             }
             const trimmedData = String(data).trim()
             if (isHexadecimal(trimmedData)) {
-                message = hexToBinary(trimmedData)
+                content = hexToBinary(trimmedData)
             } else {
                 try {
-                    message = JSON.parse(trimmedData)
+                    content = JSON.parse(trimmedData)
                 } catch (e) {
                     console.error(data.toString())
                     done(e)
                     return
                 }
             }
-            const partitionKey = (partitionKeyField !== undefined && typeof message === 'object') ? message[partitionKeyField] : undefined
-            client.publish({ streamId, partition }, message, { partitionKey }).then(
+            const partitionKey = (partitionKeyField !== undefined && typeof content === 'object') ? content[partitionKeyField] : undefined
+            client.publish({ streamId, partition }, content, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
