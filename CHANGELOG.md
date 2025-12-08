@@ -42,6 +42,8 @@ Changes before Tatum release are not documented in this file.
 
 ### @streamr/cli-tools
 
+- Add `--partition` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3262)
+
 #### Added
 
 #### Changed
