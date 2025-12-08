@@ -1,17 +1,19 @@
 import path from 'path'
-import webpack from 'webpack'
+import webpack, { type Configuration } from 'webpack'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
 interface CreateWebpackConfigOptions {
     libraryName: string
-    alias?: Record<string, string>
-    fallback?: Record<string, string>
-    externals?: Record<string, string>
+    alias?: webpack.ResolveOptions['alias']
+    fallback?: webpack.ResolveOptions['fallback']
+    externals?: webpack.Externals
 }
+
+type CreateWebpackConfigReturnType = () => Configuration
 
 export const createWebpackConfig = (
     { libraryName, alias = {}, fallback = {}, externals = {} }: CreateWebpackConfigOptions
-): Record<string, any> => {
+): CreateWebpackConfigReturnType => {
     return () => {
         return {
             cache: {
