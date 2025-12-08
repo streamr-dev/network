@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import omit from 'lodash/omit'
-import isString from 'lodash/isString'
+import { convertStreamMessageToBytes, MessageMetadata, StreamMessage, StreamrClient } from '@streamr/sdk'
+import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 import mapValues from 'lodash/mapValues'
-import { StreamrClient, MessageMetadata } from '@streamr/sdk'
-import { createClientCommand, Options as BaseOptions } from '../src/command'
+import isString from 'lodash/isString'
+import omit from 'lodash/omit'
+import { Options as BaseOptions, createClientCommand } from '../src/command'
 import { createFnParseInt } from '../src/common'
-import { binaryToHex } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     partition: number
     disableOrdering: boolean
     raw: boolean
     withMetadata: boolean
+    binary: boolean
 }
 
 const withBinaryFieldsAsHex = (metadata: Record<string, any>) => {
@@ -21,21 +22,31 @@ const withBinaryFieldsAsHex = (metadata: Record<string, any>) => {
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
-    const formContent = (content: unknown) => content instanceof Uint8Array ? binaryToHex(content) : content
-    const formMessage = options.withMetadata
-        ? (content: unknown, metadata: MessageMetadata) => ({ 
-            content: formContent(content),
-            metadata: withBinaryFieldsAsHex(omit(metadata, 'streamMessage'))
-        })
-        : (content: unknown) => formContent(content)
-    await client.subscribe({
+    const sub = await client.subscribe({
         streamId,
         partition: options.partition,
         raw: options.raw
-    }, (content, metadata) => {
-        const output = formMessage(content, metadata)
-        console.info(isString(output) ? output : JSON.stringify(output))
     })
+    for await (const msg of sub) {
+        if (options.binary) {
+            // @ts-expect-error private field
+            const streamMessage = msg.streamMessage as StreamMessage
+            const binaryData = options.withMetadata    
+                ? convertStreamMessageToBytes(streamMessage)
+                : streamMessage.content
+            process.stdout.write(toLengthPrefixedFrame(binaryData))
+        } else {
+            const formContent = (content: unknown) => content instanceof Uint8Array ? binaryToHex(content) : content
+            const formMessage = options.withMetadata
+                ? (content: unknown, metadata: MessageMetadata) => ({ 
+                    content: formContent(content), 
+                    metadata: withBinaryFieldsAsHex(omit(metadata, 'streamMessage'))
+                })
+                : (content: unknown) => formContent(content)
+            const output = formMessage(msg.content, omit(msg, 'content'))
+            console.info(isString(output) ? output : JSON.stringify(output))
+        }
+    }
 }, {
     autoDestroyClient: false,
     clientOptionsFactory: (options) => ({
@@ -48,4 +59,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-r, --raw', 'subscribe raw', false)
     .option('-m, --with-metadata', 'print each message with its metadata included', false)
+    .option('-b, --binary', 'binary output using length-prefixed frames')
     .parseAsync()
