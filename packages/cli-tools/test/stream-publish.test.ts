@@ -84,10 +84,10 @@ describe('stream-publish', () => {
 
     it('with metadata', async () => {
         const PARTITION = 5
-        const CONTENT = { content: { foo: 123 }, metadata: { msgChainId: 'testMsgChainId' } }
+        const PAYLOAD = { content: { foo: 123 }, metadata: { msgChainId: 'testMsgChainId' } }
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
-        publishViaCliCommand(JSON.stringify(CONTENT), ['--with-metadata', `--partition ${PARTITION}`])
+        publishViaCliCommand(JSON.stringify(PAYLOAD), ['--with-metadata', `--partition ${PARTITION}`])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         expect(receivedMessage!.msgChainId).toEqual('testMsgChainId')
