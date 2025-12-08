@@ -1,6 +1,6 @@
 import StreamrClient, { StreamPermission } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
-import { keyToArrayIndex, StreamID } from '@streamr/utils'
+import { binaryToHex, keyToArrayIndex, StreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { createTestClient, nextValue, runCommand } from './utils'
 import { Wallet } from 'ethers'
@@ -33,11 +33,11 @@ describe('stream-publish', () => {
         await client.destroy()
     })
 
-    function publishViaCliCommand(payload: any, additionalArgs: string[] = []) {
+    function publishViaCliCommand(inputLine: string, additionalArgs: string[] = []) {
         const args = [streamId, ...additionalArgs]
         setImmediate(async () => {
             await runCommand(`stream publish ${args.join(' ')}`, {
-                inputLines: [JSON.stringify(payload)],
+                inputLines: [inputLine],
                 privateKey: publisherPrivateKey
             })
         })
@@ -46,9 +46,19 @@ describe('stream-publish', () => {
     it('happy path', async () => {
         const subscriber = createSubscriber()
         const subscriptions = await Promise.all(range(PARTITION_COUNT).map((partition) => subscriber.subscribe({ id: streamId, partition })))
-        publishViaCliCommand({ foo: 123 })
+        publishViaCliCommand(JSON.stringify({ foo: 123 }))
         const receivedMessage = await Promise.race(subscriptions.map((s) => nextValue(s[Symbol.asyncIterator]())))
         expect(receivedMessage!.content).toEqual({ foo: 123 })
+        await subscriber.destroy()
+    })
+
+    it('hex content', async () => {
+        const PARTITION = 5
+        const subscriber = createSubscriber()
+        const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
+        publishViaCliCommand(binaryToHex(new Uint8Array([4, 5, 6]), false), [`--partition ${PARTITION}`])
+        const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
+        expect(receivedMessage!.content).toEqualBinary(new Uint8Array([4, 5, 6]))
         await subscriber.destroy()
     })
 
@@ -56,7 +66,7 @@ describe('stream-publish', () => {
         const PARTITION = 5
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
-        publishViaCliCommand({ foo: 123 }, [`--partition ${PARTITION}`])
+        publishViaCliCommand(JSON.stringify({ foo: 123 }), [`--partition ${PARTITION}`])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         await subscriber.destroy()
@@ -66,7 +76,7 @@ describe('stream-publish', () => {
         const partition = keyToArrayIndex(PARTITION_COUNT, 123)
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition })
-        publishViaCliCommand({ foo: 123 }, ['--partition-key-field foo'])
+        publishViaCliCommand(JSON.stringify({ foo: 123 }), ['--partition-key-field foo'])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         await subscriber.destroy()
@@ -77,7 +87,7 @@ describe('stream-publish', () => {
         const CONTENT = { content: { foo: 123 }, metadata: { msgChainId: 'testMsgChainId' } }
         const subscriber = createSubscriber()
         const subscription = await subscriber.subscribe({ id: streamId, partition: PARTITION })
-        publishViaCliCommand(CONTENT, ['--with-metadata', `--partition ${PARTITION}`])
+        publishViaCliCommand(JSON.stringify(CONTENT), ['--with-metadata', `--partition ${PARTITION}`])
         const receivedMessage = await nextValue(subscription[Symbol.asyncIterator]())
         expect(receivedMessage!.content).toEqual({ foo: 123 })
         expect(receivedMessage!.msgChainId).toEqual('testMsgChainId')
