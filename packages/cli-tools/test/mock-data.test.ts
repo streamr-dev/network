@@ -9,7 +9,7 @@ describe('mock-data', () => {
         const outputIterable = startCommand('mock-data generate', {
             abortSignal: abortController.signal,
             devEnvironment: false
-        })
+        }).asLines()
         const firstLine = (await collect(outputIterable, 1))[0]
         abortController.abort()
         const json = JSON.parse(firstLine)
@@ -21,7 +21,7 @@ describe('mock-data', () => {
         const outputIterable = startCommand('mock-data generate --binary --min-length 32 --max-length 64', {
             abortSignal: abortController.signal,
             devEnvironment: false
-        })
+        }).asLines()
         const firstLine = (await collect(outputIterable, 1))[0]
         abortController.abort()
         expect(firstLine).toMatch(/^[0-9a-f]+$/)

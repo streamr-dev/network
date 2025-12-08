@@ -37,7 +37,7 @@ describe('stream-subscribe', () => {
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId}`, {
             abortSignal: subscriberAbortController.signal,
             privateKey: subscriberPrivateKey
-        })
+        }).asLines()
         const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         expect(JSON.parse(receivedMessage)).toEqual({
@@ -52,7 +52,7 @@ describe('stream-subscribe', () => {
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --raw`, {
             abortSignal: subscriberAbortController.signal,
             privateKey: subscriberPrivateKey
-        })
+        }).asLines()
         const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         expect(receivedMessage).toMatch(/^[0-9a-fA-F]+$/)
@@ -65,7 +65,7 @@ describe('stream-subscribe', () => {
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata`, {
             abortSignal: subscriberAbortController.signal,
             privateKey: subscriberPrivateKey
-        })
+        }).asLines()
         const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         expect(JSON.parse(receivedMessage)).toMatchObject({
@@ -91,7 +91,7 @@ describe('stream-subscribe', () => {
         const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata --raw`, {
             abortSignal: subscriberAbortController.signal,
             privateKey: subscriberPrivateKey
-        })
+        }).asLines()
         const publisher = await publishTestMesssage()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         expect(JSON.parse(receivedMessage)).toMatchObject({
