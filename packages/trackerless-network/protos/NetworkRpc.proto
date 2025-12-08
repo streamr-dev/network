@@ -151,7 +151,7 @@ message NeighborUpdate {
 }
 
 message ProxyConnectionRequest {
-  ProxyDirection direction = 1;
+  optional ProxyDirection direction = 1;
   bytes userId = 2;
 }
 
