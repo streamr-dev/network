@@ -135,6 +135,6 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     // eslint-disable-next-line max-len
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
     .option('-r, --raw', 'publish raw', false)
-    .option('-m, --with-metadata', 'each input contains both the message and the metadata', false)
+    .option('-m, --with-metadata', 'each input contains both the content and the metadata', false)
     .option('-b, --binary', 'binary input using length-prefixed frames', false)
     .parseAsync()
