@@ -27,7 +27,6 @@
     "LICENSE"
   ],
   "scripts": {
-    "prebuild": "npm run clean",
     "build": " tsc -b",
     "postbuild": "rollup -c dist/rollup.config.mjs",
     "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
