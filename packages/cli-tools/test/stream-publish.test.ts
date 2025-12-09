@@ -29,7 +29,7 @@ describe('stream-publish', () => {
         return createTestClient(subscriberPrivateKey)
     }
 
-    const grantPublishPermission = async (publisherId: UserID) => {
+    async function grantPublishPermission(publisherId: UserID) {
         const client = createTestClient(streamCreatorPrivateKey)
         await client.grantPermissions(streamId, {
             userId: publisherId,
