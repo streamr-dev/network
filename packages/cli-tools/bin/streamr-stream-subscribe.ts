@@ -59,5 +59,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-r, --raw', 'subscribe raw', false)
     .option('-m, --with-metadata', 'print each message with its metadata included', false)
-    .option('-b, --binary', 'binary output using length-prefixed frames')
+    .option('-b, --binary', 'binary output using length-prefixed frames', false)
     .parseAsync()
