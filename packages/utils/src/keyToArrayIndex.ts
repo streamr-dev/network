@@ -1,4 +1,4 @@
-import { computeMd5 } from "@md5"
+import { computeMd5 } from '@md5'
 
 /**
  * Computes a deterministic index for a given string or number key.
