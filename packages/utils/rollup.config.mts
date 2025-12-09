@@ -8,6 +8,10 @@ const nodejsAliases: Alias[] = [
         find: '@crypto',
         replacement: './node/crypto.js',
     },
+    {
+        find: '@md5',
+        replacement: './node/md5.js',
+    },
 ]
 
 const browserAliases: Alias[] = [
@@ -16,12 +20,24 @@ const browserAliases: Alias[] = [
         replacement: './browser/crypto.js',
     },
     {
+        find: '@md5',
+        replacement: './browser/md5.js',
+    },
+    {
         find: 'os',
         replacement: './browser/os.js',
     },
     {
         find: 'path',
         replacement: 'path-browserify',
+    },
+    {
+        find: 'stream',
+        replacement: 'readable-stream',
+    },
+    {
+        find: 'pino',
+        replacement: 'pino/browser',
     },
 ]
 

@@ -1,3 +1,5 @@
+import 'buffer-shim'
+
 export { Cache } from './Cache'
 export { pTransaction } from './pTransaction'
 export { AbortError, asAbortable } from './asAbortable'

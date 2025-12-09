@@ -26,6 +26,7 @@
     /* Mapping */
     "paths": {
       "@crypto": ["src/node/crypto.ts"],
+      "@md5": ["src/node/md5.ts"]
     }
   },
   "include": ["src"],

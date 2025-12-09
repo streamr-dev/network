@@ -29,7 +29,8 @@
     "paths": {
       "@crypto": ["src/browser/crypto.ts"],
       "@os": ["src/browser/os.ts"],
-      "@path": ["path-browserify"]
+      "@path": ["path-browserify"],
+      "@md5": ["src/browser/md5.ts"]
     }
   },
   "include": ["src"],
