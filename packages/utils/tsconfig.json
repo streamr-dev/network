@@ -6,6 +6,8 @@
   "references": [
     { "path": "./tsconfig.jest.json" },
     { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.browser.json" },
+    { "path": "./tsconfig.rollup.json" },
     { "path": "./tsconfig.karma.json" }
   ]
 }

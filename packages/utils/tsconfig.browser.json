@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "preserve",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
     "types": [],
     "skipLibCheck": true,
-    "outDir": "dist/node",
+    "outDir": "dist/browser",
     "baseUrl": ".",
     "declaration": true,
     "composite": true,
-    "stripInternal": false,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
-
+    
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -22,13 +22,17 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "noImplicitOverride": false,
+    "noImplicitAny": true,
 
     /* Mapping */
     "paths": {
-      "@crypto": ["src/node/crypto.ts"],
-      "@md5": ["src/node/md5.ts"]
+      "@crypto": ["src/browser/crypto.ts"],
+      "@os": ["src/browser/os.ts"],
+      "@path": ["path-browserify"],
+      "@md5": ["src/browser/md5.ts"]
     }
   },
   "include": ["src"],
-  "exclude": ["src/browser"]
+  "exclude": ["src/node"]
 }
