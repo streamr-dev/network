@@ -10,6 +10,7 @@ export default createKarmaConfig(TEST_PATHS, createWebpackConfig({
     },
     alias: {
         '@crypto': resolve(__dirname, 'src/browser/crypto.ts'),
+        '@md5': resolve(__dirname, 'src/browser/md5.ts'),
         os: resolve(__dirname, 'src/browser/os.ts'),
         path: 'path-browserify',
     },
