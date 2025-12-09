@@ -131,7 +131,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
 })
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line or hexadecimal strings for binary data')
-    .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), undefined)
+    .option('-p, --partition <partition>', 'partition', createFnParseInt('--partition'))
     // eslint-disable-next-line max-len
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition (only for JSON data)')
     .option('-r, --raw', 'publish raw', false)
