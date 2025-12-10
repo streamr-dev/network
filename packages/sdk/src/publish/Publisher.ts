@@ -1,4 +1,4 @@
-import { hexToBinary, StreamID } from '@streamr/utils'
+import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { inject, Lifecycle, scoped } from 'tsyringe'
@@ -17,7 +17,6 @@ import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
 import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
-import { GroupKey } from '../encryption/GroupKey'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
