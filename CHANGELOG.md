@@ -12,8 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Proxy connections now support bidirectionality and it is the default behavior. (https://github.com/streamr-dev/network/pull/3260)
-- Added `findProxyNodes` function to `StreamrClient` for discovering proxy nodes via Operator nodes.
+- Proxy connections now support bidirectionality and it is the default behavior (https://github.com/streamr-dev/network/pull/3260)
+- Add `StreamrClient#findProxyNodes()` function for discovering proxy nodes via Operator nodes (https://github.com/streamr-dev/network/pull/3257)
 - Add `StreamrClient#publishRaw()` for publishing raw messages (https://github.com/streamr-dev/network/pull/3280)
 
 #### Changed
@@ -22,7 +22,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- Removed `findOperators` function which was marked as internal.
+- Remove `StreamrClient#findOperators()` function which was marked as internal (https://github.com/streamr-dev/network/pull/3257)
 
 #### Fixed
 
