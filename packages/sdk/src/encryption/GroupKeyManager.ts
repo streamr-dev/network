@@ -63,8 +63,6 @@ export class GroupKeyManager {
                 }
             })
         }
-
-        
     }
 
     async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserID): Promise<GroupKey> {
