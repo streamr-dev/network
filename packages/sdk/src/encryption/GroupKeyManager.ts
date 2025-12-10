@@ -12,6 +12,22 @@ import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { createLazyMap, Mapping } from '../utils/Mapping'
 
+/**
+ * Gets an explicit encryption key from config for a given stream.
+ * Returns undefined if no key is configured for the stream.
+ */
+export const getExplicitKey = async (
+    streamId: StreamID,
+    streamIdBuilder: StreamIDBuilder,
+    config: StrictStreamrClientConfig['encryption']
+): Promise<GroupKey | undefined> => {
+    for (const entry of Object.entries(config.keys)) {
+        if (await streamIdBuilder.toStreamID(entry[0]) === streamId) {
+            return new GroupKey(entry[1].id, Buffer.from(hexToBinary(entry[1].data)))
+        }
+    }
+    return undefined
+}
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
 
@@ -41,11 +57,7 @@ export class GroupKeyManager {
         if (config.encryption.keys !== undefined) {
             this.explicitKeys = createLazyMap({
                 valueFactory: async (streamId: StreamID) => {
-                    for (const entry of Object.entries(config.encryption.keys)) {
-                        if (await streamIdBuilder.toStreamID(entry[0]) === streamId) {
-                            return new GroupKey(entry[1].id, Buffer.from(hexToBinary(entry[1].data)))
-                        }
-                    }
+                    return getExplicitKey(streamId, streamIdBuilder, config.encryption)
                 }
             })
         }

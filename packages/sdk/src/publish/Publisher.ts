@@ -1,4 +1,4 @@
-import { StreamID } from '@streamr/utils'
+import { hexToBinary, StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { inject, Lifecycle, scoped } from 'tsyringe'
@@ -7,7 +7,7 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { getExplicitKey, GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -17,6 +17,7 @@ import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
 import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
+import { GroupKey } from '../encryption/GroupKey'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -80,7 +81,12 @@ export class Publisher {
         })
         this.groupKeyQueues = createLazyMap({
             valueFactory: async (streamId) => {
-                return GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
+                const queue = await GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
+                const explicitKey = await getExplicitKey(streamId, this.streamIdBuilder, this.config.encryption)
+                if (explicitKey !== undefined) {
+                    queue.rekey(explicitKey)
+                }
+                return queue
             }
         })
     }
