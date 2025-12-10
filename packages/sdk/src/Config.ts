@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { HexString, LogLevel, merge, KeyType } from '@streamr/utils'
+import { HexString, LogLevel, merge, KeyType, StreamID } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
@@ -10,6 +10,7 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { CONFIG_TEST } from './ConfigTest'
 import { Identity } from './identity/Identity'
+import { GroupKey } from './encryption/GroupKey'
 
 /**
  * For passing in an Ethereum provider (= wallet) for signing. Any {@link https://eips.ethereum.org/EIPS/eip-1193 EIP-1193}
@@ -390,6 +391,11 @@ export interface StreamrClientConfig {
          * Note that subscribers will still accept unencrypted (public) data despite this setting.
          */
         requireQuantumResistantEncryption?: boolean
+
+        /**
+         * If this is defined only these encryption keys will be used. This will disable the Streamr key-exchange
+         */
+        keys?: Record<string, { id: string, data: HexString }>
     }
 
     contracts?: {

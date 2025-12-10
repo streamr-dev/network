@@ -1,4 +1,4 @@
-import { StreamID, StreamPartID, UserID, waitForEvent } from '@streamr/utils'
+import { hexToBinary, StreamID, StreamPartID, StreamPartIDUtils, UserID, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
@@ -9,12 +9,15 @@ import { uuid } from '../utils/uuid'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { createLazyMap, Mapping } from '../utils/Mapping'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
 
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly explicitKeys?: Mapping<StreamID, GroupKey | undefined>
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
     private readonly identity: Identity
     private readonly eventEmitter: StreamrClientEventEmitter
@@ -23,6 +26,7 @@ export class GroupKeyManager {
     constructor(
         subscriberKeyExchange: SubscriberKeyExchange,
         localGroupKeyStore: LocalGroupKeyStore,
+        streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         @inject(IdentityInjectionToken) identity: Identity,
         eventEmitter: StreamrClientEventEmitter,
@@ -34,11 +38,28 @@ export class GroupKeyManager {
         this.identity = identity
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
+        if (config.encryption.keys !== undefined) {
+            this.explicitKeys = createLazyMap({
+                valueFactory: async (streamId: StreamID) => {
+                    for (const entry of Object.entries(config.encryption.keys)) {
+                        if (await streamIdBuilder.toStreamID(entry[0]) === streamId) {
+                            return new GroupKey(entry[1].id, Buffer.from(hexToBinary(entry[1].data)))
+                        }
+                    }
+                }
+            })
+        }
+        
     }
 
     async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserID): Promise<GroupKey> {
+        let groupKey = await this.explicitKeys?.get(StreamPartIDUtils.getStreamID(streamPartId))
+        if (groupKey !== undefined) {
+            return groupKey
+        }
+       
         // 1st try: local storage
-        let groupKey = await this.localGroupKeyStore.get(groupKeyId, publisherId)
+        groupKey = await this.localGroupKeyStore.get(groupKeyId, publisherId)
         if (groupKey !== undefined) {
             return groupKey
         }

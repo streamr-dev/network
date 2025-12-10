@@ -375,6 +375,21 @@
                 "requireQuantumResistantEncryption": {
                     "type": "boolean",
                     "default": false
+                },
+                "keys": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "data": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["id", "data"]
+                    }
                 }
             },
             "default": {}
