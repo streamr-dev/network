@@ -31,6 +31,8 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.ts",
+    "test-playwright": "playwright test --config playwright.config.ts",
+    "test-playwright-debug": "playwright test --config playwright.config.ts --debug",
     "test-unit": "jest test/unit",
     "test-integration": "jest --bail test/integration",
     "test-end-to-end": "jest --bail test/end-to-end",
@@ -57,6 +59,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.2.0-rc.0",
     "@types/heap": "^0.2.35",
