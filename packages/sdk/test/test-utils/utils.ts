@@ -233,7 +233,7 @@ export const createGroupKeyManager = async (
                 requireQuantumResistantKeyExchange: false,
                 requireQuantumResistantSignatures: false,
                 requireQuantumResistantEncryption: false,
-                keys: {}
+                keys: undefined as any
             }
         },
         usedIdentity,

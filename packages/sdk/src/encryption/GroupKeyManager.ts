@@ -21,9 +21,11 @@ export const getExplicitKey = async (
     streamIdBuilder: StreamIDBuilder,
     config: StrictStreamrClientConfig['encryption']
 ): Promise<GroupKey | undefined> => {
-    for (const entry of Object.entries(config.keys)) {
-        if (await streamIdBuilder.toStreamID(entry[0]) === streamId) {
-            return new GroupKey(entry[1].id, Buffer.from(hexToBinary(entry[1].data)))
+    if (config.keys !== undefined) {
+        for (const entry of Object.entries(config.keys)) {
+            if (await streamIdBuilder.toStreamID(entry[0]) === streamId) {
+                return new GroupKey(entry[1].id, Buffer.from(hexToBinary(entry[1].data)))
+            }
         }
     }
     return undefined
@@ -61,6 +63,7 @@ export class GroupKeyManager {
                 }
             })
         }
+
         
     }
 
