@@ -11,6 +11,7 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const STREAM_ID = toStreamID('test.eth/foobar')
 const GROUP_KEY = GroupKey.generate('groupKeyId-123')
@@ -29,6 +30,7 @@ describe('GroupKeyManager', () => {
         return new GroupKeyManager(
             subscriberKeyExchange,
             groupKeyStore,
+            new StreamIDBuilder(EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey)),
             {
                 encryption: {
                     maxKeyRequestsPerSecond: 10,

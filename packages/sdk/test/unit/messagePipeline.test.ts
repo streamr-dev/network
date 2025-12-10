@@ -22,6 +22,7 @@ import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const CONTENT = {
     foo: 'bar'
@@ -86,6 +87,7 @@ describe('messagePipeline', () => {
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
+                new StreamIDBuilder(EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey)),
                 config,
                 EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey),
                 new StreamrClientEventEmitter(),

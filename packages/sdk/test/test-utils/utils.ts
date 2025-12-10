@@ -56,6 +56,7 @@ import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const logger = new Logger(module)
 
@@ -219,9 +220,11 @@ export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
     identity?: Identity 
 ): Promise<GroupKeyManager> => {
+    const usedIdentity = identity ?? await createRandomIdentity()
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
         groupKeyStore,
+        new StreamIDBuilder(usedIdentity),
         {
             encryption: {
                 maxKeyRequestsPerSecond: 10,
@@ -230,11 +233,12 @@ export const createGroupKeyManager = async (
                 requireQuantumResistantKeyExchange: false,
                 requireQuantumResistantSignatures: false,
                 requireQuantumResistantEncryption: false,
+                keys: {}
             }
         },
-        identity ?? await createRandomIdentity(),
+        usedIdentity,
         new StreamrClientEventEmitter(),
-        new DestroySignal()
+        new DestroySignal(),
     )
 }
 
