@@ -19,7 +19,7 @@ describe('Publisher', () => {
         const publisher = new Publisher(
             undefined as any,
             streamRegistry as any,
-            await createGroupKeyManager(undefined, identity),
+            await createGroupKeyManager(identity),
             streamIdBuilder,
             identity,
             mock<SignatureValidator>(),

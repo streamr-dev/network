@@ -217,8 +217,8 @@ export const createStreamRegistry = (opts?: {
 }
 
 export const createGroupKeyManager = async (
-    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    identity: Identity 
+    identity: Identity,
+    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>()
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
@@ -245,7 +245,7 @@ export const createGroupKeyQueue = async (identity: Identity, current?: GroupKey
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
         identity,
-        await createGroupKeyManager(undefined, identity)
+        await createGroupKeyManager(identity)
     )
     if (current !== undefined) {
         await queue.rekey(current)
