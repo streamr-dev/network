@@ -1,9 +1,8 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
+    "stripInternal": false,
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src"]
 }

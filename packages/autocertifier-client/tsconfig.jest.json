@@ -6,6 +6,6 @@
         "test/**/*"
     ],
     "references": [
-        { "path": "../utils/tsconfig.node.json" }
+        { "path": "../utils" }
     ]
 }
