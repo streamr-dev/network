@@ -48,6 +48,8 @@ Changes before Tatum release are not documented in this file.
 
 - Add `--partition` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3262)
 - Add `--with-metadata` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3265)
+- Add `--binary` flag to `stream publish` and `stream subcribe` (https://github.com/streamr-dev/network/pull/3282)
+- Add `--raw` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3282)
 
 #### Added
 
