@@ -392,7 +392,7 @@ export interface StreamrClientConfig {
         requireQuantumResistantEncryption?: boolean
 
         /**
-         * If this is defined only these encryption keys will be used. This will disable the Streamr key-exchange
+         * If this is defined only these encryption keys will be used. This will disable the Streamr key-exchange.
          */
         keys?: Record<string, { id: string, data: HexString }>
     }

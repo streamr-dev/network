@@ -31,6 +31,7 @@ export const getExplicitKey = async (
     }
     return undefined
 }
+
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
 
