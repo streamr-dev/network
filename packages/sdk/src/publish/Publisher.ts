@@ -80,12 +80,8 @@ export class Publisher {
         })
         this.groupKeyQueues = createLazyMap({
             valueFactory: async (streamId) => {
-                const queue = await GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
                 const explicitKey = await getExplicitKey(streamId, this.streamIdBuilder, this.config.encryption)
-                if (explicitKey !== undefined) {
-                    queue.rekey(explicitKey)
-                }
-                return queue
+                return await GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager, explicitKey)
             }
         })
     }

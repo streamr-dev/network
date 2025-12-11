@@ -19,13 +19,14 @@ export class GroupKeyQueue {
     static async createInstance(
         streamId: StreamID,
         identity: Identity,
-        groupKeyManager: GroupKeyManager
+        groupKeyManager: GroupKeyManager,
+        currentGroupKey?: GroupKey
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, identity, groupKeyManager)
-        instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
+        instance.currentGroupKey = currentGroupKey ?? await instance.groupKeyManager.fetchLatestEncryptionKey(
             await identity.getUserId(),
             streamId,
-        )
+        ) ?? undefined
         return instance
     }
 
