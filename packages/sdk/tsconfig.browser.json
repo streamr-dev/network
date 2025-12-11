@@ -1,24 +1,24 @@
 {
-    "extends": "../../tsconfig.browser.json",
-    "compilerOptions": {
-        "composite": true,
-        "noEmit": true,
-        "declarationDir": "dist/types",
-        "outDir": "dist",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "strictBindCallApply": true,
-        "baseUrl": "."
-    },
-    "include": [
-        "package.json",
-        "src/**/*",
-        "src/**/*.json",
-        "src/config.schema.json"
-    ],
-    "exclude": ["src/exports-esm.mjs"],
-    "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../trackerless-network/tsconfig.browser.json" }
-    ]
+  "extends": "../../tsconfig.browser.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "declarationDir": "dist/types",
+    "outDir": "dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictBindCallApply": true,
+    "baseUrl": "."
+  },
+  "include": [
+    "package.json",
+    "src/**/*",
+    "src/**/*.json",
+    "src/config.schema.json"
+  ],
+  "exclude": ["src/exports-esm.mjs"],
+  "references": [
+    { "path": "../test-utils/tsconfig.node.json" },
+    { "path": "../trackerless-network/tsconfig.browser.json" }
+  ]
 }
