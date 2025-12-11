@@ -5,8 +5,8 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "bin/**/*",
+    "src",
+    "bin"
   ],
   "references": [
     { "path": "../utils/tsconfig.node.json" },

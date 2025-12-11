@@ -5,8 +5,8 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "generated/**/*",
+    "src",
+    "generated",
     "test/benchmark/first-message.ts",
     "test/utils/utils.ts",
     "package.json"

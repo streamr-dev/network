@@ -10,18 +10,15 @@
   },
   "include": [
     "package.json",
-    "src/**/*",
+    "src",
     "src/**/*.json",
-    "bin/generate-config-validator.js",
-    "src/config.schema.json",
-    "test/**/*",
+    "bin",
+    "test",
     "test/**/*.json",
     "scripts"
   ],
   "exclude": [
-    "test/legacy/*",
-    "test/memory/*",
-    "test/exports/*",
+    "test/exports",
     "src/exports-esm.mjs"
   ],
   "references": [

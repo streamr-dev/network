@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.jest.json",
   "include": [
-    "src/**/*",
-    "data-generation/**/*",
-    "test/**/*"
+    "src",
+    "data-generation",
+    "test"
   ],
   "references": [
     { "path": "../utils/tsconfig.node.json" },
