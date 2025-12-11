@@ -218,13 +218,12 @@ export const createStreamRegistry = (opts?: {
 
 export const createGroupKeyManager = async (
     groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    identity?: Identity 
+    identity: Identity 
 ): Promise<GroupKeyManager> => {
-    const usedIdentity = identity ?? await createRandomIdentity()
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
         groupKeyStore,
-        new StreamIDBuilder(usedIdentity),
+        new StreamIDBuilder(identity),
         {
             encryption: {
                 maxKeyRequestsPerSecond: 10,
@@ -236,7 +235,7 @@ export const createGroupKeyManager = async (
                 keys: undefined as any
             }
         },
-        usedIdentity,
+        identity,
         new StreamrClientEventEmitter(),
         new DestroySignal(),
     )
