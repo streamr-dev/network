@@ -11,6 +11,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { createLazyMap, Mapping } from '../utils/Mapping'
+import { StreamrClientError } from '../StreamrClientError'
 
 /**
  * Gets an explicit encryption key from config for a given stream.
@@ -66,18 +67,25 @@ export class GroupKeyManager {
     }
 
     async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserID): Promise<GroupKey> {
-        let groupKey = await this.explicitKeys?.get(StreamPartIDUtils.getStreamID(streamPartId))
-        if (groupKey !== undefined) {
-            return groupKey
+        // If explicit keys are defined only those keys are used.
+        if (this.explicitKeys !== undefined) {
+            const explicitKey = await this.explicitKeys.get(StreamPartIDUtils.getStreamID(streamPartId))
+            if (explicitKey !== undefined) {
+                return explicitKey
+            }
+            throw new StreamrClientError(
+                `No encryption key available for stream part ID: groupKeyId=${groupKeyId}, streamPartId=${streamPartId}`,
+                'UNEXPECTED_INPUT'
+            )
         }
-       
-        // 1st try: local storage
-        groupKey = await this.localGroupKeyStore.get(groupKeyId, publisherId)
+
+        // 2nd try: local storage
+        let groupKey = await this.localGroupKeyStore.get(groupKeyId, publisherId)
         if (groupKey !== undefined) {
             return groupKey
         }
 
-        // 2nd try: Streamr key-exchange
+        // 3rd try: Streamr key-exchange
         await this.subscriberKeyExchange.requestGroupKey(groupKeyId, publisherId, streamPartId)
         const groupKeyIds = await waitForEvent(
             // TODO remove "as any" type casing in NET-889
