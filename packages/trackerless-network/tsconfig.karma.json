@@ -1,6 +1,15 @@
 {
-  "extends": "./tsconfig.browser.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "types": ["jest", "@streamr/test-utils/customMatcherTypes"]
-  }
+    "outDir": "dist",
+    "noImplicitOverride": false,
+    "types": [
+      "jest",
+      "@streamr/test-utils/customMatcherTypes"
+    ]
+  },
+  "include": [
+    "src",
+    "generated"
+  ]
 }
