@@ -10,13 +10,11 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "src/**/*.json",
-    "src/config.schema.json"
+    "src",
+    "src/**/*.json"
   ],
   "exclude": [
-    "src/exports-esm.mjs",
-    "jest.config.ts"
+    "src/exports-esm.mjs"
   ],
   "references": [
     { "path": "../test-utils/tsconfig.node.json" },

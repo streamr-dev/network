@@ -5,8 +5,8 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "generated/**/*",
+    "src",
+    "generated",
     "package.json"
   ],
   "references": [

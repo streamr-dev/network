@@ -5,9 +5,9 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "generated/**/*",
-    "test/**/*",
+    "src",
+    "generated",
+    "test",
     "package.json",
     "scripts"
   ],

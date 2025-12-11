@@ -6,8 +6,8 @@
   },
   "include": [
     "package.json",
-    "src/**/*",
-    "bin/**/*"
+    "src",
+    "bin"
   ],
   "references": [
     { "path": "../utils/tsconfig.node.json" },

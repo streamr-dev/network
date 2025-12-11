@@ -5,7 +5,7 @@
     "types": ["node", "jest"]
   },
   "include": [
-    "src/**/*"
+    "src"
   ],
   "references": [
     { "path": "../utils/tsconfig.node.json" }

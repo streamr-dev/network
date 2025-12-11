@@ -4,9 +4,9 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*",
+    "src",
     "src/**/*.json",
-    "bin/*.ts",
+    "bin",
     "package.json"
   ],
   "references": [
