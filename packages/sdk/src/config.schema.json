@@ -378,17 +378,11 @@
                 },
                 "keys": {
                     "type": "object",
+                    "propertyNames": {
+                        "$ref": "#/definitions/streamIdOrPath"
+                    },
                     "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "data": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["id", "data"]
+                        "$ref": "#/definitions/encryptionKey"
                     }
                 }
             },
@@ -578,6 +572,25 @@
                     "type": "number"
                 }
             }
+        },
+        "streamIdOrPath": {
+            "type": "string"
+        },
+        "encryptionKey": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "string",
+                    "format": "hex-string"
+                }
+            },
+            "required": [
+                "id",
+                "data"
+            ]
         }
 
     }
