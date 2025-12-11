@@ -1,6 +1,9 @@
 {
-  "extends": "./tsconfig.browser.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitOverride": false,
     "types": ["jest", "jest-extended"]
-  }
+  },
+  "include": ["src"]
 }
