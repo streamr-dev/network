@@ -27,17 +27,18 @@ describe('GroupKeyManager', () => {
     const getUserId = () => toUserId(wallet.address)
 
     function createGroupKeyManager(): GroupKeyManager {
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey)
         return new GroupKeyManager(
             subscriberKeyExchange,
             groupKeyStore,
-            new StreamIDBuilder(EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey)),
+            new StreamIDBuilder(identity),
             {
                 encryption: {
                     maxKeyRequestsPerSecond: 10,
                     keyRequestTimeout: 100
                 } as any
             },
-            EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey),
+            identity,
             eventEmitter,
             new DestroySignal()
         )

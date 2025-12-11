@@ -78,6 +78,7 @@ describe('messagePipeline', () => {
             isStreamPublisher: async () => true,
             invalidatePermissionCaches: jest.fn()
         }
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey)
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
@@ -87,9 +88,9 @@ describe('messagePipeline', () => {
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
-                new StreamIDBuilder(EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey)),
+                new StreamIDBuilder(identity),
                 config,
-                EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey),
+                identity,
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),
