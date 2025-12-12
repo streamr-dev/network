@@ -30,7 +30,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     for await (const msg of sub) {
         if (options.binary) {
             // @ts-expect-error private field
-            const streamMessage = msg.streamMessage as StreamMessage
+            const streamMessage = msg.streamMessage
             const binaryData = options.withMetadata    
                 ? convertStreamMessageToBytes(streamMessage)
                 : streamMessage.content
