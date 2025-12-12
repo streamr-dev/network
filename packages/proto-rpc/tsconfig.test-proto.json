@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.proto.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": true
+  },
   "include": [
     "test/proto"
   ]
