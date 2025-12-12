@@ -15,10 +15,13 @@
     "scripts"
   ],
   "exclude": [
+    "src/generated/google",
+    "src/generated/packages",
     "test/exports",
     "src/exports-esm.mjs"
   ],
   "references": [
+    { "path": "./tsconfig.proto.json" },
     { "path": "../test-utils/tsconfig.node.json" },
     { "path": "../dht/tsconfig.node.json" },
     { "path": "../trackerless-network/tsconfig.node.json" }

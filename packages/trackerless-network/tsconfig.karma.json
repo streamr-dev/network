@@ -4,5 +4,5 @@
     "outDir": "dist",
     "types": ["jest", "@streamr/test-utils/customMatcherTypes"]
   },
-  "include": ["src", "generated"]
+  "include": ["src"]
 }

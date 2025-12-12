@@ -4,10 +4,10 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
-    "generated"
+    "src"
   ],
   "references": [
+    { "path": "./tsconfig.proto.json" },
     { "path": "../utils/tsconfig.node.json" }
   ]
 }
