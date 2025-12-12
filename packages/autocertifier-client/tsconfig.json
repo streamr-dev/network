@@ -1,3 +1,14 @@
 {
-  "extends": "./tsconfig.jest.json"
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitOverride": false
+  },
+  "include": [
+    "src",
+    "generated"
+  ],
+  "references": [
+    { "path": "../utils/tsconfig.node.json" }
+  ]
 }

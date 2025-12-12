@@ -72,6 +72,8 @@ function wrappedMethodCall(
     }
 }
 
+type LoggerModule = string | { id: string }
+
 export class Logger {
     static NAME_LENGTH = 25
 
@@ -84,13 +86,13 @@ export class Logger {
     trace: (msg: string, metadata?: Record<string, unknown>) => void
 
     constructor(
-        module: NodeJS.Module,
+        loggerModule: LoggerModule,
         contextBindings?: Record<string, unknown>,
         defaultLogLevel: LogLevel = 'info',
         parentLogger: pino.Logger = rootLogger
     ) {
         this.logger = parentLogger.child({
-            name: Logger.createName(module),
+            name: Logger.createName(loggerModule),
             ...contextBindings
         }, {
             level: process.env.LOG_LEVEL ?? defaultLogLevel
@@ -103,8 +105,9 @@ export class Logger {
         this.trace = wrappedMethodCall(this.logger.trace.bind(this.logger))
     }
 
-    static createName(module: NodeJS.Module): string {
-        const parsedPath = path.parse(String(module.id))
+    static createName(loggerModule: LoggerModule): string {
+        const loggerModuleId = typeof loggerModule === 'string' ? loggerModule : loggerModule.id
+        const parsedPath = path.parse(loggerModuleId)
         let fileId = parsedPath.name
         if (fileId === 'index') {
             // file with name "foobar/index.ts" -> "foobar"
