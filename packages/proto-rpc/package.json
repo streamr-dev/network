@@ -18,8 +18,8 @@
   "license": "(Apache-2.0 AND BSD-3-Clause)",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "prebuild": "./proto.sh",
-    "build": "tsc -b tsconfig.node.json",
+    "prebuild": "./proto.sh && ./test-proto.sh",
+    "build": "tsc -b tsconfig.node.json && tsc -b tsconfig.test-proto.json",
     "build-browser": "webpack --mode=development --progress",
     "check": "./test-proto.sh && tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",

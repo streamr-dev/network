@@ -4,8 +4,12 @@
     "src",
     "test"
   ],
+  "exclude": [
+    "test/proto"
+  ],
   "references": [
     { "path": "./tsconfig.proto.json" },
+    { "path": "./tsconfig.test-proto.json" },
     { "path": "../utils/tsconfig.node.json" },
     { "path": "../test-utils/tsconfig.node.json" }
   ]
