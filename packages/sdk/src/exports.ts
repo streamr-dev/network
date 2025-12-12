@@ -59,6 +59,7 @@ export { EthereumKeyPairIdentity } from './identity/EthereumKeyPairIdentity'
 export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
 export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
 export { ECDSAKeyPairIdentity } from './identity/ECDSAKeyPairIdentity'
+export { MessageSigner } from './signature/MessageSigner'
 export { RpcProviderSource } from './RpcProviderSource'
 
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'

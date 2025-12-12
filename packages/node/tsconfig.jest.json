@@ -1,15 +1,15 @@
 {
-    "extends": "../../tsconfig.jest.json",
-    "include": [
-        "src/**/*",
-        "src/**/*.json",
-        "bin/*.ts",
-        "package.json",
-        "test/**/*"
-    ],
-    "references": [
-        { "path": "../utils/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../sdk" }
-    ]
+  "extends": "../../tsconfig.jest.json",
+  "include": [
+    "src",
+    "src/**/*.json",
+    "bin",
+    "package.json",
+    "test"
+  ],
+  "references": [
+    { "path": "../utils/tsconfig.node.json" },
+    { "path": "../test-utils/tsconfig.node.json" },
+    { "path": "../sdk" }
+  ]
 }

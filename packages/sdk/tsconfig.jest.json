@@ -10,7 +10,9 @@
     "test",
     "test/**/*.json"
   ],
-  "exclude": ["test/exports"],
+  "exclude": [
+    "test/exports"
+  ],
   "references": [
     { "path": "./tsconfig.node.json" },
     { "path": "../test-utils/tsconfig.node.json" }

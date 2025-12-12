@@ -2,21 +2,22 @@
  * Importing 'timers' ensures `setImmediate` is available in browsers,
  * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
  */
-import 'timers'
 import 'reflect-metadata'
+import 'timers'
 import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection, StreamPartDeliveryOptions } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, 
-    TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import {
+    DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID,
+    TheGraphClient, toEthereumAddress, toUserId
+} from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
-import { Identity, IdentityInjectionToken, SignerWithProvider } from './identity/Identity'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -29,6 +30,7 @@ import { DestroySignal } from './DestroySignal'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
+import { ProxyNodeFinder } from './ProxyNodeFinder'
 import { RpcProviderSource } from './RpcProviderSource'
 import { Stream } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -37,6 +39,7 @@ import { ChainEventPoller } from './contracts/ChainEventPoller'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { SponsorshipFactory } from './contracts/SponsorshipFactory'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
@@ -46,7 +49,10 @@ import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/Loc
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { Identity, IdentityInjectionToken, SignerWithProvider } from './identity/Identity'
+import { createIdentityFromConfig } from './identity/IdentityMapping'
 import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
+import { StreamMessage } from './protocol/StreamMessage'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends, toInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -57,12 +63,9 @@ import { StreamDefinition } from './types'
 import { map } from './utils/GeneratorUtils'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
+import { assertCompliantIdentity } from './utils/encryptionCompliance'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { createIdentityFromConfig } from './identity/IdentityMapping'
-import { assertCompliantIdentity } from './utils/encryptionCompliance'
-import { SponsorshipFactory } from './contracts/SponsorshipFactory'
-import { ProxyNodeFinder } from './ProxyNodeFinder'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -179,6 +182,11 @@ export class StreamrClient {
         const result = await this.publisher.publish(streamDefinition, content, metadata, deliveryOptions)
         this.eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
+    }
+
+    async publishRaw(message: StreamMessage, deliveryOptions?: StreamPartDeliveryOptions): Promise<void> {
+        await this.node.broadcast(message, deliveryOptions)
+        this.eventEmitter.emit('messagePublished', message)
     }
 
     /**

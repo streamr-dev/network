@@ -3,7 +3,6 @@ import * as defaultConfig from './webpack.config'
 import { resolve } from 'path'
 
 const karmaWebpackConfig: (env?: Record<string, unknown>, argv?: Record<string, unknown>) => Configuration = (env = {}, argv = {}) => {
-    console.warn(defaultConfig)
     const config = defaultConfig(env, argv)
 
     return {

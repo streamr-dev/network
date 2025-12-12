@@ -5,15 +5,16 @@
     "declarationDir": "dist/types",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "noImplicitOverride": false,
-    "stripInternal": false
+    "noImplicitOverride": false
   },
   "include": [
     "bin",
     "src",
     "src/**/*.json"
   ],
-  "exclude": ["src/exports-esm.mjs"],
+  "exclude": [
+    "src/exports-esm.mjs"
+  ],
   "references": [
     { "path": "../trackerless-network/tsconfig.node.json" },
     { "path": "../dht/tsconfig.node.json" },
