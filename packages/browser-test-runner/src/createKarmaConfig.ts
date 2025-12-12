@@ -1,19 +1,40 @@
 import fs from 'fs'
+import type { Configuration, ExternalItem } from 'webpack'
 
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 
 export const createKarmaConfig = (
-    testPaths: string[], webpackConfig: () => Record<string, any>, localDirectory: string
+    testPaths: string[], webpackConfig: () => Configuration, localDirectory?: string
 ): (config: any) => any => {
     const setupFiles = [__dirname + '/karma-setup.js']
-    const localSetupFile = localDirectory + '/karma-setup.js'
-    if (fs.existsSync(localSetupFile)) {
-        setupFiles.push(localSetupFile)
+
+    if (localDirectory !== undefined) {
+        const localSetupFile = localDirectory + '/karma-setup.js'
+        if (fs.existsSync(localSetupFile)) {
+            setupFiles.push(localSetupFile)
+        }
     }
+
     const preprocessors: Record<string, string[]> = {}
     setupFiles.forEach((f) => preprocessors[f] = ['webpack'])
     testPaths.forEach((f) => preprocessors[f] = ['webpack', 'sourcemap'])
     const baseWebpack = webpackConfig()
+
+    const mergedExternals: ExternalItem[] = []
+    if (baseWebpack.externals !== undefined) {
+        if (Array.isArray(baseWebpack.externals)) {
+            mergedExternals.push(...baseWebpack.externals)
+        } else {
+            mergedExternals.push(baseWebpack.externals)
+        }
+    }
+    mergedExternals.push({
+        'expect': 'commonjs2 expect',
+        '@jest/expect-utils': 'commonjs2 @jest/expect-utils',
+        'pretty-format': 'commonjs2 pretty-format',
+        'jest-diff': 'commonjs2 jest-diff',
+    })
+
     return (config: any) => {
         config.set({
             plugins: [
@@ -56,13 +77,7 @@ export const createKarmaConfig = (
             singleRun: !DEBUG_MODE,  //set to false to leave electron window open
             webpack: {
                 ...baseWebpack,
-                externals: {
-                    ...(baseWebpack.externals ?? {}),
-                    'expect': 'commonjs2 expect',
-                    '@jest/expect-utils': 'commonjs2 @jest/expect-utils',
-                    'pretty-format': 'commonjs2 pretty-format',
-                    'jest-diff': 'commonjs2 jest-diff',
-                },
+                externals: mergedExternals,
             }
         })
     }

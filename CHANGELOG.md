@@ -12,8 +12,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Proxy connections now support bidirectionality and it is the default behavior. (https://github.com/streamr-dev/network/pull/3260)
-- Added `findProxyNodes` function to `StreamrClient` for discovering proxy nodes via Operator nodes.
+- Proxy connections now support bidirectionality and it is the default behavior (https://github.com/streamr-dev/network/pull/3260)
+- Add `StreamrClient#findProxyNodes()` function for discovering proxy nodes via Operator nodes (https://github.com/streamr-dev/network/pull/3257)
+- Add `StreamrClient#publishRaw()` for publishing raw messages (https://github.com/streamr-dev/network/pull/3280)
 
 #### Changed
 
@@ -21,7 +22,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- Removed `findOperators` function which was marked as internal.
+- Remove `StreamrClient#findOperators()` function which was marked as internal (https://github.com/streamr-dev/network/pull/3257)
 
 #### Fixed
 
@@ -45,6 +46,11 @@ Changes before Tatum release are not documented in this file.
 
 ### @streamr/cli-tools
 
+- Add `--partition` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3262)
+- Add `--with-metadata` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3265)
+- Add `--binary` flag to `stream publish` and `stream subcribe` (https://github.com/streamr-dev/network/pull/3282)
+- Add `--raw` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3282)
+
 #### Added
 
 #### Changed
@@ -56,6 +62,7 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 - Signature output in `subscribe --with-metadata` (https://github.com/streamr-dev/network/pull/3245)
+- Error handling of `--partition` flag in `subscribe` (https://github.com/streamr-dev/network/pull/3263)
 
 #### Security
 

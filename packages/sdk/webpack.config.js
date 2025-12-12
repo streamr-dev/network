@@ -52,6 +52,8 @@ module.exports = (env, argv) => {
             ]
         },
         resolve: {
+            alias: {},
+            fallback: {},
             modules: ['node_modules', ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts'],
         },

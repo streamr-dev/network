@@ -4,8 +4,10 @@
     "outDir": "dist",
     "noImplicitOverride": false
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../utils/tsconfig.node.json" }
+    { "path": "../utils/tsconfig.node.json" },
   ]
 }

@@ -3,8 +3,7 @@
  * package. See karma-config.js in that package for more details.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('./test/test-utils/customMatchers')
+import './test/test-utils/customMatchers'
+import { customMatchers } from '@streamr/test-utils'
 
-const { customMatchers } = require('@streamr/test-utils')
 expect.extend(customMatchers)
