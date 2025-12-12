@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { convertStreamMessageToBytes, MessageMetadata, StreamrClient } from '@streamr/sdk'
+import { convertStreamMessageToBytes, MessageMetadata, type StreamMessage, StreamrClient } from '@streamr/sdk'
 import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 import mapValues from 'lodash/mapValues'
 import isString from 'lodash/isString'
@@ -30,7 +30,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     for await (const msg of sub) {
         if (options.binary) {
             // @ts-expect-error private field
-            const streamMessage = msg.streamMessage
+            const streamMessage = msg.streamMessage as StreamMessage
             const binaryData = options.withMetadata    
                 ? convertStreamMessageToBytes(streamMessage)
                 : streamMessage.content
