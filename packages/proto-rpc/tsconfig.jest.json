@@ -1,9 +1,5 @@
 {
   "extends": "../../tsconfig.jest.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "noImplicitOverride": false
-  },
   "include": [
     "src",
     "generated",

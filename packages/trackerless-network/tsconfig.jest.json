@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
-    "noEmit": true,
-    "types": ["node", "jest", "@streamr/test-utils/customMatcherTypes"],
-    "noImplicitOverride": false
+    "types": ["node", "jest", "@streamr/test-utils/customMatcherTypes"]
   },
   "include": [
     "src",
