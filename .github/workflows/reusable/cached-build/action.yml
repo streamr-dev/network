@@ -29,6 +29,7 @@ runs:
           packages/sdk/src/generated
           packages/autocertifier-client/generated
           packages/proto-rpc/generated
+          packages/proto-rpc/test/proto
           packages/dht/generated
           packages/trackerless-network/generated
     - name: ci
