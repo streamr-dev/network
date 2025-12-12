@@ -390,6 +390,11 @@ export interface StreamrClientConfig {
          * Note that subscribers will still accept unencrypted (public) data despite this setting.
          */
         requireQuantumResistantEncryption?: boolean
+
+        /**
+         * If this is defined only these encryption keys will be used. This will disable the Streamr key-exchange.
+         */
+        keys?: Record<string, { id: string, data: HexString }>
     }
 
     contracts?: {

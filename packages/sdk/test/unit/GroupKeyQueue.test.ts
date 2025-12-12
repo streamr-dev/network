@@ -21,7 +21,7 @@ describe('GroupKeyQueue', () => {
     beforeEach(async () => {
         groupKeyStore = mock<LocalGroupKeyStore>()
         identity = await createRandomIdentity()
-        groupKeyManager = await createGroupKeyManager(groupKeyStore, identity)
+        groupKeyManager = await createGroupKeyManager(identity, groupKeyStore)
         queue = await GroupKeyQueue.createInstance(streamId, identity, groupKeyManager)
     })
 

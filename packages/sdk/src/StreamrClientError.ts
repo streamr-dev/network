@@ -19,7 +19,8 @@ export type StreamrClientErrorCode =
     'UNKNOWN_ERROR' |
     'ASSERTION_FAILED' |
     'SIGNATURE_POLICY_VIOLATION' |
-    'ENCRYPTION_POLICY_VIOLATION'
+    'ENCRYPTION_POLICY_VIOLATION' |
+    'UNEXPECTED_INPUT'
 
 export class StreamrClientError extends Error {
 

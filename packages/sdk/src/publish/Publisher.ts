@@ -7,7 +7,7 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { getExplicitKey, GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -80,7 +80,8 @@ export class Publisher {
         })
         this.groupKeyQueues = createLazyMap({
             valueFactory: async (streamId) => {
-                return GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager)
+                const explicitKey = await getExplicitKey(streamId, this.streamIdBuilder, this.config.encryption)
+                return await GroupKeyQueue.createInstance(streamId, this.identity, groupKeyManager, explicitKey)
             }
         })
     }

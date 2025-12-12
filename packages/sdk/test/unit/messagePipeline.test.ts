@@ -22,6 +22,7 @@ import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const CONTENT = {
     foo: 'bar'
@@ -77,6 +78,7 @@ describe('messagePipeline', () => {
             isStreamPublisher: async () => true,
             invalidatePermissionCaches: jest.fn()
         }
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey)
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
@@ -86,8 +88,9 @@ describe('messagePipeline', () => {
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,
+                new StreamIDBuilder(identity),
                 config,
-                EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey),
+                identity,
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),

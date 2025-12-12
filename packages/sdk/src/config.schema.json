@@ -375,6 +375,15 @@
                 "requireQuantumResistantEncryption": {
                     "type": "boolean",
                     "default": false
+                },
+                "keys": {
+                    "type": "object",
+                    "propertyNames": {
+                        "$ref": "#/definitions/streamIdOrPath"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/definitions/encryptionKey"
+                    }
                 }
             },
             "default": {}
@@ -563,6 +572,25 @@
                     "type": "number"
                 }
             }
+        },
+        "streamIdOrPath": {
+            "type": "string"
+        },
+        "encryptionKey": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "string",
+                    "format": "hex-string"
+                }
+            },
+            "required": [
+                "id",
+                "data"
+            ]
         }
 
     }

@@ -20,6 +20,7 @@ import { EncryptionUtil } from './EncryptionUtil'
 import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 import { createCompliantExchangeKeys } from '../utils/encryptionCompliance'
+import { StreamrClientError } from '../StreamrClientError'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -62,14 +63,24 @@ export class SubscriberKeyExchange {
         this.subscriber = subscriber
         this.identity = identity
         this.logger = loggerFactory.createLogger(module)
-        this.ensureStarted = pOnce(async () => {
-            this.keyPair = await createCompliantExchangeKeys(identity, config)
-            networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('Started')
-        })
-        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => {
-            return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
-        }, config.encryption.maxKeyRequestsPerSecond)
+        // Setting explicit keys disables the key-exchange
+        if (config.encryption.keys === undefined) {
+            this.ensureStarted = pOnce(async () => {
+                this.keyPair = await createCompliantExchangeKeys(identity, config)
+                networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+                this.logger.debug('Started')
+            })
+            this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => {
+                return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
+            }, config.encryption.maxKeyRequestsPerSecond)
+        } else {
+            this.ensureStarted = async () => {
+                throw new StreamrClientError('Assertion failed', 'ASSERTION_FAILED')
+            }
+            this.requestGroupKey = async () => {
+                throw new StreamrClientError('Assertion failed', 'ASSERTION_FAILED')
+            }
+        }
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID): Promise<void> {

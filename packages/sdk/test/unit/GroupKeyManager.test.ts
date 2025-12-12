@@ -11,6 +11,7 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const STREAM_ID = toStreamID('test.eth/foobar')
 const GROUP_KEY = GroupKey.generate('groupKeyId-123')
@@ -26,16 +27,18 @@ describe('GroupKeyManager', () => {
     const getUserId = () => toUserId(wallet.address)
 
     function createGroupKeyManager(): GroupKeyManager {
+        const identity = EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey)
         return new GroupKeyManager(
             subscriberKeyExchange,
             groupKeyStore,
+            new StreamIDBuilder(identity),
             {
                 encryption: {
                     maxKeyRequestsPerSecond: 10,
                     keyRequestTimeout: 100
                 } as any
             },
-            EthereumKeyPairIdentity.fromPrivateKey(wallet.privateKey),
+            identity,
             eventEmitter,
             new DestroySignal()
         )

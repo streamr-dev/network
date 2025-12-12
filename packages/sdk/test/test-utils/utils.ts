@@ -56,6 +56,7 @@ import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const logger = new Logger(module)
 
@@ -216,12 +217,13 @@ export const createStreamRegistry = (opts?: {
 }
 
 export const createGroupKeyManager = async (
-    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
-    identity?: Identity 
+    identity: Identity,
+    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>()
 ): Promise<GroupKeyManager> => {
     return new GroupKeyManager(
         mock<SubscriberKeyExchange>(),
         groupKeyStore,
+        new StreamIDBuilder(identity),
         {
             encryption: {
                 maxKeyRequestsPerSecond: 10,
@@ -230,11 +232,12 @@ export const createGroupKeyManager = async (
                 requireQuantumResistantKeyExchange: false,
                 requireQuantumResistantSignatures: false,
                 requireQuantumResistantEncryption: false,
+                keys: undefined as any
             }
         },
-        identity ?? await createRandomIdentity(),
+        identity,
         new StreamrClientEventEmitter(),
-        new DestroySignal()
+        new DestroySignal(),
     )
 }
 
@@ -242,7 +245,7 @@ export const createGroupKeyQueue = async (identity: Identity, current?: GroupKey
     const queue = await GroupKeyQueue.createInstance(
         undefined as any,
         identity,
-        await createGroupKeyManager(undefined, identity)
+        await createGroupKeyManager(identity)
     )
     if (current !== undefined) {
         await queue.rekey(current)
