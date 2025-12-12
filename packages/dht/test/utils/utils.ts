@@ -62,7 +62,7 @@ export const createMockRingNode = async (
         rpcRequestTimeout: 5000
     }
     const node = new class extends DhtNode {
-        async stop(): Promise<void> {
+        override async stop(): Promise<void> {
             await super.stop()
             await mockConnectionManager.stop()
         }
@@ -90,7 +90,7 @@ export const createMockConnectionDhtNode = async (
         rpcRequestTimeout: 5000
     }
     const node = new class extends DhtNode {
-        async stop(): Promise<void> {
+        override async stop(): Promise<void> {
             await super.stop()
             await mockConnectionManager.stop()
         }

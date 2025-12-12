@@ -5,8 +5,7 @@
       "node",
       "jest",
       "@streamr/test-utils/customMatcherTypes"
-    ],
-    "noImplicitOverride": false
+    ]
   },
   "include": [
     "package.json",
