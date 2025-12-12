@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const path = require('path')
-const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-test-runner')
+import { resolve } from 'path'
+import { createKarmaConfig, createWebpackConfig } from '@streamr/browser-test-runner'
 
 const TEST_PATHS = [
     'test/unit/**/!(connectivityRequestHandler*).ts',
@@ -8,12 +7,12 @@ const TEST_PATHS = [
     './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*|GeoIpLayer0*).ts'
 ]
 
-const NodeWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
-const BrowserWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
-const NodeWebsocketClientConnection = path.resolve(__dirname, 'src/connection/websocket/NodeWebsocketClientConnection.ts')
-const BrowserWebsocketClientConnection = path.resolve(__dirname, 'src/connection/websocket/BrowserWebsocketClientConnection.ts')
+const NodeWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
+const BrowserWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
+const NodeWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/NodeWebsocketClientConnection.ts')
+const BrowserWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/BrowserWebsocketClientConnection.ts')
 
-module.exports = createKarmaConfig(
+export default createKarmaConfig(
     TEST_PATHS,
     createWebpackConfig({
         libraryName: 'dht',

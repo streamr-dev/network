@@ -1,7 +1,7 @@
 import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
-import WebSocket from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
@@ -29,7 +29,7 @@ interface Events {
 export class WebsocketServer extends EventEmitter<Events> {
 
     private httpServer?: HttpServer | HttpsServer
-    private wsServer?: WebSocket.Server
+    private wsServer?: WebSocketServer
     private readonly abortController = new AbortController()
     private readonly options: WebsocketServerOptions
 
@@ -154,9 +154,9 @@ export class WebsocketServer extends EventEmitter<Events> {
         })
     }
 
-    private createWsServer(): WebSocket.Server {
+    private createWsServer(): WebSocketServer {
         const maxPayload = this.options.maxMessageSize ?? 1048576
-        return this.wsServer = new WebSocket.Server({
+        return this.wsServer = new WebSocketServer({
             noServer: true,
             maxPayload
         })
