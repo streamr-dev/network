@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
-    "noEmit": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitOverride": false
