@@ -6,6 +6,7 @@ import { _operatorContractUtils, DeployOperatorContractOpts, DeploySponsorshipCo
 import { collect, until } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
+import { Readable } from 'stream'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -13,15 +14,32 @@ export interface StartCommandOptions {
     privateKey?: string
     devEnvironment?: boolean
     inputLines?: string[]
+    inputBinary?: Uint8Array
     abortSignal?: AbortSignal
 }
 
 export const runCommand = async (commandLine: string, opts?: StartCommandOptions): Promise<string[]> => {
-    const lines = startCommand(commandLine, opts)
-    return await collect(lines)
+    const output = startCommand(commandLine, opts)
+    return await collect(output.asLines())
 }
 
-export async function* startCommand(commandLine: string, opts?: StartCommandOptions): AsyncGenerator<string> {
+class CommandOutput {
+
+    stdout: Readable
+    stderr: Readable
+
+    constructor(stdout: Readable, stderr: Readable) {
+        this.stdout = stdout
+        this.stderr = stderr
+    }
+
+    async* asLines(): AsyncGenerator<string> {
+        const outputs = merge2(this.stdout, this.stderr)
+        yield* lines(outputs[Symbol.asyncIterator]())
+    }
+}
+
+export function startCommand(commandLine: string, opts?: StartCommandOptions): CommandOutput {
     // TODO: --no-deprecation needed to get around deprecation warning for "punycode" in Node.js 22, remove when warning has gone away (NET-1409)
     const args: string[] = ['--no-deprecation', 'dist/bin/streamr.js']
     args.push(...commandLine.split(' '))
@@ -44,13 +62,17 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
             console.error(err)
         }
     })
-    const outputs = merge2(executable.stdout, executable.stderr)
     if (opts?.inputLines !== undefined) {
         setImmediate(() => {
             executable.stdin.write(opts.inputLines!.join('\n') + '\n')
         })
     }
-    yield* lines(outputs[Symbol.asyncIterator]())
+    if (opts?.inputBinary !== undefined) {
+        setImmediate(() => {
+            executable.stdin.write(opts.inputBinary)
+        })
+    }
+    return new CommandOutput(executable.stdout, executable.stderr)
 }
 
 async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, any> {

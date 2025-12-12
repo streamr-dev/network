@@ -6,8 +6,8 @@
     "noImplicitOverride": false
   },
   "include": [
-    "src/**/*",
-    "bin/**/*",
-    "test/**/*"
+    "src",
+    "bin",
+    "test"
   ]
 }

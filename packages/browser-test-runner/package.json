@@ -13,7 +13,8 @@
     "./dist/src/exports.js": false
   },
   "scripts": {
-    "build": "tsc -b tsconfig.node.json",
+    "build": "tsc -b",
+    "check": "tsc --noEmit",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",

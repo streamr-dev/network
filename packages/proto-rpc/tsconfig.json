@@ -4,8 +4,8 @@
     "composite": true
   },
   "references": [
-    { "path": "./tsconfig.jest.json" },
     { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.karma.json" }
+    { "path": "./tsconfig.karma.json" },
+    { "path": "./tsconfig.jest.json" }
   ]
 }

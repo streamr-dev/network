@@ -3,9 +3,11 @@
   "compilerOptions": {
     "noImplicitOverride": false
   },
-  "include": ["test"],
+  "include": [
+    "test"
+  ],
   "references": [
-    { "path": "./tsconfig.node.json" },
+    { "path": "../tsconfig.node.json" },
     { "path": "../browser-test-runner/tsconfig.node.json" },
     { "path": "../test-utils/tsconfig.node.json" }
   ]

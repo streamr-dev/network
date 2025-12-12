@@ -1,6 +1,0 @@
-{
-  "files": [],
-  "references": [
-    { "path": "./packages/proto-rpc" }
-  ]
-}
