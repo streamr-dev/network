@@ -72,19 +72,22 @@ export class PublisherKeyExchange {
         this.identity = identity
         this.logger = loggerFactory.createLogger(module)
         this.config = config
-        networkNodeFacade.once('start', async () => {
-            networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('Started')
-        })
-        eventEmitter.on('messagePublished', (msg) => {
-            if (msg.signatureType === SignatureType.ERC_1271) {
-                const publisherId = msg.getPublisherId()
-                if (!this.erc1271Publishers.has(publisherId)) {
-                    logger.debug('Add ERC-1271 publisher', { publisherId })
-                    this.erc1271Publishers.add(publisherId)
+        // Setting explicit keys disables the key-exchange
+        if (config.encryption.keys === undefined) {
+            networkNodeFacade.once('start', async () => {
+                networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+                this.logger.debug('Started')
+            })
+            eventEmitter.on('messagePublished', (msg) => {
+                if (msg.signatureType === SignatureType.ERC_1271) {
+                    const publisherId = msg.getPublisherId()
+                    if (!this.erc1271Publishers.has(publisherId)) {
+                        logger.debug('Add ERC-1271 publisher', { publisherId })
+                        this.erc1271Publishers.add(publisherId)
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {
