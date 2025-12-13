@@ -25,8 +25,8 @@
     "configuration.md"
   ],
   "scripts": {
-    "build": "tsc -b tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json",
+    "build": "tsc -b",
+    "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-sequential",
