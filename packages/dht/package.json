@@ -24,9 +24,9 @@
   "scripts": {
     "prebuild": "./proto.sh",
     "postbuild": "./scripts/postbuild.sh",
-    "build": "tsc -b tsconfig.node.json",
+    "build": "tsc -b",
     "build-browser": "webpack --mode=development --progress",
-    "check": "tsc -p ./tsconfig.jest.json",
+    "check": "tsc -p ./tsconfig.jest.json && tsc --noEmit -p ./tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
