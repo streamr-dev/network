@@ -10,8 +10,8 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
-    "dist/",
-    "!dist/tsconfig.node.tsbuildinfo",
+    "dist",
+    "!*.tsbuildinfo",
     "setupCustomMatchers.js",
     "customMatcherTypes.d.ts"
   ],

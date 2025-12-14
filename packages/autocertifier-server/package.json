@@ -16,8 +16,7 @@
   "files": [
     "dist",
     "!*.tsbuildinfo",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "browser": {
     "dist/src/exports.js": false
