@@ -1,12 +1,11 @@
 {
   "extends": "../../tsconfig.jest.json",
-  "compilerOptions": {
-    "noImplicitOverride": false
-  },
   "include": [
     "src",
-    "generated",
     "package.json",
     "test"
+  ],
+  "references": [
+    { "path": "./tsconfig.generated.json" }
   ]
 }

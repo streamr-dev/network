@@ -26,7 +26,7 @@ export class EthereumKeyPairIdentity extends KeyPairIdentity {
         return signingUtil.createSignature(payload, this.privateKey)
     }
 
-    async getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {
+    override async getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider> {
         const primaryProvider = rpcProviderSource.getProvider()
         return new Wallet(binaryToHex(this.privateKey), primaryProvider) as SignerWithProvider
     }

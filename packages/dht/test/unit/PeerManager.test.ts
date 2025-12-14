@@ -17,7 +17,7 @@ const createDhtNodeRpcRemote = (
 ) => {
     const remote = new class extends DhtNodeRpcRemote {
         // eslint-disable-next-line class-methods-use-this
-        async ping(): Promise<boolean> {
+        override async ping(): Promise<boolean> {
             return !pingFailures.has(toNodeId(peerDescriptor))
         }
     }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
