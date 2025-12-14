@@ -4,5 +4,8 @@
     "outDir": "dist",
     "types": ["jest", "jest-extended"]
   },
-  "include": ["src", "package.json"]
+  "include": [
+    "src",
+    "package.json"
+  ]
 }
