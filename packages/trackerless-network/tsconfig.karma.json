@@ -3,7 +3,13 @@
   "compilerOptions": {
     "outDir": "dist",
     "noImplicitOverride": false,
-    "types": ["jest", "@streamr/test-utils/customMatcherTypes"]
+    "types": [
+      "jest",
+      "@streamr/test-utils/customMatcherTypes"
+    ]
   },
-  "include": ["src", "generated"]
+  "include": [
+    "src",
+    "generated"
+  ]
 }
