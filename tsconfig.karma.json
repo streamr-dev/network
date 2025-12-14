@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Browser – Streamr",
+  "display": "Browser - Streamr",
   "compilerOptions": {
     "target": "ES2015",
     "module": "commonjs",
