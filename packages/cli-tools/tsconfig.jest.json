@@ -1,12 +1,5 @@
 {
   "extends": "../../tsconfig.jest.json",
-  "compilerOptions": {
-    "types": [
-      "node",
-      "jest",
-      "@streamr/test-utils/customMatcherTypes"
-    ]
-  },
   "include": [
     "package.json",
     "src",

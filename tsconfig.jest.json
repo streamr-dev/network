@@ -3,6 +3,11 @@
   "compilerOptions": {
     "noEmit": true,
     "isolatedModules": true,
-    "types": ["node", "jest", "jest-extended"]
+    "types": [
+      "node",
+      "jest",
+      "jest-extended",
+      "@streamr/test-utils/customMatcherTypes"
+    ]
   }
 }
