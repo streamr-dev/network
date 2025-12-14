@@ -14,8 +14,7 @@
     "sourceMap": true,
     "stripInternal": true,
     "useUnknownInCatchVariables": false,
-    "strictBindCallApply": true,
-    "disableSourceOfProjectReferenceRedirect": true
+    "strictBindCallApply": true
   }, 
   "lib": [
     "DOM"
