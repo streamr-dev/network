@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.karma.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "types": [
-      "jest",
-      "@streamr/test-utils/customMatcherTypes"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src",
