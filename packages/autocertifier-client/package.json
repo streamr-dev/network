@@ -11,9 +11,7 @@
   "types": "dist/src/exports.d.ts",
   "files": [
     "dist",
-    "!*.tsbuildinfo",
-    "README.md",
-    "LICENSE"
+    "!*.tsbuildinfo"
   ],
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",

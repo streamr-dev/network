@@ -12,8 +12,7 @@
   "files": [
     "dist",
     "!*.tsbuildinfo",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",

@@ -12,6 +12,11 @@
   "browser": {
     "./dist/src/exports.js": false
   },
+  "files": [
+    "dist",
+    "!*.tsbuildinfo",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -b",
     "check": "tsc --noEmit",
