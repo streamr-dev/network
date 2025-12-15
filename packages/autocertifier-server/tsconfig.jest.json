@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.jest.json",
   "include": [
+    "bin",
+    "src",
+    "jest.config.ts",
     "test"
-  ],
-  "references": [
-    { "path": "./tsconfig.node.json" }
   ]
 }

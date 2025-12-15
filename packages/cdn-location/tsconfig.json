@@ -1,11 +1,12 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true
+    "outDir": "dist"
   },
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.data-generation.json" },
-    { "path": "./tsconfig.jest.json" }
+    { "path": "../utils" }
   ]
 }

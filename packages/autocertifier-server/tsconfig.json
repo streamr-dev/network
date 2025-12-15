@@ -1,10 +1,16 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true
+    "outDir": "dist"
   },
+  "include": [
+    "src",
+    "bin"
+  ],
   "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.jest.json" }
+    { "path": "../autocertifier-client" },
+    { "path": "../dht" },
+    { "path": "../proto-rpc" },
+    { "path": "../utils" }
   ]
 }
