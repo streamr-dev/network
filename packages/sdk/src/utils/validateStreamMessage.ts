@@ -5,6 +5,7 @@ import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
+import { SANTERITEST123 } from '../StreamrClient'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -63,7 +64,7 @@ const validateMessage = async (
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
+    const streamMetadata = SANTERITEST123 ? { partitions: 100 } : await streamRegistry.getStreamMetadata(streamId)
     const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamrClientError(
@@ -73,7 +74,7 @@ const validateMessage = async (
         )
     }
     const sender = streamMessage.getPublisherId()
-    const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
+    const isPublisher = SANTERITEST123 ? true : await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
         throw new StreamrClientError(`${sender} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
@@ -86,11 +87,11 @@ const validateGroupKeyMessage = async (
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
+    const isPublisher = SANTERITEST123 ? true : await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
     if (!isPublisher) {
         throw new StreamrClientError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
-    const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
+    const isSubscriber = SANTERITEST123 ? true : await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
     if (!isSubscriber) {
         throw new StreamrClientError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }

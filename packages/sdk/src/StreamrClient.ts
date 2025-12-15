@@ -89,6 +89,8 @@ export interface ExtraSubscribeOptions {
     delivery?: StreamPartDeliveryOptions
 }
 
+export const SANTERITEST123 = true
+
 const logger = new Logger(module)
 
 /**
