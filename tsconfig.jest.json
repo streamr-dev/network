@@ -12,6 +12,6 @@
       "jest-extended",
       "@streamr/test-utils/customMatcherTypes"
     ],
-    "sourceMap": false,
+    "sourceMap": false
   }
 }
