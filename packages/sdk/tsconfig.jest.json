@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
+    "lib": ["es2021"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitOverride": false
