@@ -19,6 +19,6 @@
     "test/exports"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }
