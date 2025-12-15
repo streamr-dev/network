@@ -67,7 +67,7 @@ describe('Validator2', () => {
                 getStreamMetadata,
                 isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
                 isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
-            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
+            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()), {})
         }
     }
 

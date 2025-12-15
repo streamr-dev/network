@@ -45,7 +45,7 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
-    private readonly config: Pick<StreamrClientConfig, 'encryption'>
+    private readonly config: Pick<StreamrClientConfig, 'encryption' | 'validation'>
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
@@ -69,29 +69,35 @@ export class MessageFactory {
         explicitPartition?: number
     ): Promise<StreamMessage> {
         const publisherId = await this.getPublisherId(metadata)
-        const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
+        const isPublisher = this.config.validation?.permissions === false 
+            ? true : await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             this.streamRegistry.invalidatePermissionCaches(this.streamId)
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
-
-        const streamMetadata = await this.streamRegistry.getStreamMetadata(this.streamId)
-        const partitionCount = getPartitionCount(streamMetadata)
         let partition
-        if (explicitPartition !== undefined) {
-            if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
-                throw new Error(`Partition ${explicitPartition} is out of range (0..${partitionCount - 1})`)
-            }
-            if (metadata.partitionKey !== undefined) {
-                throw new Error('Invalid combination of "partition" and "partitionKey"')
+        if (this.config.validation?.partitions === false) {
+            if (explicitPartition === undefined) {
+                throw new Error(`Explicit partition must be set when partition validation is disabled`)
             }
             partition = explicitPartition
         } else {
-            partition = (metadata.partitionKey !== undefined)
-                ? keyToArrayIndex(partitionCount, metadata.partitionKey)
-                : this.getDefaultPartition(partitionCount)
+            const streamMetadata = await this.streamRegistry.getStreamMetadata(this.streamId)
+            const partitionCount = getPartitionCount(streamMetadata)
+            if (explicitPartition !== undefined) {
+                if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
+                    throw new Error(`Partition ${explicitPartition} is out of range (0..${partitionCount - 1})`)
+                }
+                if (metadata.partitionKey !== undefined) {
+                    throw new Error('Invalid combination of "partition" and "partitionKey"')
+                }
+                partition = explicitPartition
+            } else {
+                partition = (metadata.partitionKey !== undefined)
+                    ? keyToArrayIndex(partitionCount, metadata.partitionKey)
+                    : this.getDefaultPartition(partitionCount)
+            }
         }
-
         const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
         const msgChainKey = formLookupKey([partition, msgChainId])
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
@@ -99,7 +105,9 @@ export class MessageFactory {
         this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
-        const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        const hasPublicSubscribePermission = this.config.validation?.permissions === false 
+            ? false : await this.streamRegistry.hasPublicSubscribePermission(this.streamId)
+        const encryptionType = hasPublicSubscribePermission ? EncryptionType.NONE : EncryptionType.AES
         if (!isCompliantEncryptionType(encryptionType, this.config)) {
             throw new StreamrClientError(
                 `Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`,

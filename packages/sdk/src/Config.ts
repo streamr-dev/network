@@ -412,6 +412,11 @@ export interface StreamrClientConfig {
         pollInterval?: number
     }
 
+    validation?: {
+        permissions?: boolean
+        partitions?: boolean
+    }
+
     /**
      * Determines the telemetry metrics that are sent to the Streamr Network
      * at regular intervals.
