@@ -3,7 +3,6 @@
   "include": [
     "bin",
     "src",
-    "jest.config.ts",
     "test"
   ]
 }

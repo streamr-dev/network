@@ -3,7 +3,6 @@
   "include": [
     "src",
     "data-generation",
-    "jest.config.ts",
     "test"
   ]
 }
