@@ -20,7 +20,7 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { StreamrClientConfig } from '../Config'
+import { StrictStreamrClientConfig } from '../Config'
 import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessageFactoryOptions {
@@ -30,7 +30,7 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
-    config: Pick<StreamrClientConfig, 'encryption'>
+    config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
 }
 
 export class MessageFactory {
@@ -45,7 +45,7 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
-    private readonly config: Pick<StreamrClientConfig, 'encryption' | 'validation'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
@@ -69,14 +69,15 @@ export class MessageFactory {
         explicitPartition?: number
     ): Promise<StreamMessage> {
         const publisherId = await this.getPublisherId(metadata)
-        const isPublisher = this.config.validation?.permissions === false 
-            ? true : await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
+        const isPublisher = !this.config.validation.permissions
+            ? true 
+            : await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             this.streamRegistry.invalidatePermissionCaches(this.streamId)
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
         let partition
-        if (this.config.validation?.partitions === false) {
+        if (!this.config.validation.partitions) {
             if (explicitPartition === undefined) {
                 throw new Error(`Explicit partition must be set when partition validation is disabled`)
             }
@@ -105,8 +106,9 @@ export class MessageFactory {
         this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
-        const hasPublicSubscribePermission = this.config.validation?.permissions === false 
-            ? false : await this.streamRegistry.hasPublicSubscribePermission(this.streamId)
+        const hasPublicSubscribePermission = !this.config.validation.permissions
+            ? false
+            : await this.streamRegistry.hasPublicSubscribePermission(this.streamId)
         const encryptionType = hasPublicSubscribePermission ? EncryptionType.NONE : EncryptionType.AES
         if (!isCompliantEncryptionType(encryptionType, this.config)) {
             throw new StreamrClientError(

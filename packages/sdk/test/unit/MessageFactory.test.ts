@@ -15,6 +15,7 @@ import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { EncryptionType, SignatureType, ContentType } from '@streamr/trackerless-network'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
@@ -59,7 +60,12 @@ describe('MessageFactory', () => {
                     groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
                     signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
                     messageSigner: new MessageSigner(identity),
-                    config: {},
+                    config: {
+                        validation: {
+                            permissions: true,
+                            partitions: true
+                        }
+                    } as StrictStreamrClientConfig,
                 },
                 opts
             )

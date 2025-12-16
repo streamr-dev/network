@@ -14,6 +14,7 @@ import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { createGroupKeyQueue, createRandomIdentity, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { createStrictConfig } from '../../src/Config'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -61,7 +62,7 @@ describe('resend subscription', () => {
             groupKeyQueue: await createGroupKeyQueue(identity),
             signatureValidator: mock<SignatureValidator>(),
             messageSigner: new MessageSigner(identity),
-            config: {},
+            config: createStrictConfig(),
         })
     })
 
