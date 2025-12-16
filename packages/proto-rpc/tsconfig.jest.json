@@ -4,6 +4,9 @@
     "src",
     "test"
   ],
+  "exclude": [
+    "test/proto"
+  ],
   "references": [
     { "path": "./tsconfig.generated.json" }
   ]

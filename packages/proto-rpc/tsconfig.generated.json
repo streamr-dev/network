@@ -4,7 +4,8 @@
     "noImplicitOverride": false
   },
   "include": [
-    "generated"
+    "generated",
+    "test/proto"
   ],
   "exclude": []
 }
