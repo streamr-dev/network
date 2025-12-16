@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
-import { StreamPartIDUtils } from "@streamr/utils"
-import { FakeEnvironment } from "../test-utils/fake/FakeEnvironment"
-import { nextValue } from "../../src/utils/iterators"
+import { StreamPartIDUtils } from '@streamr/utils'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { nextValue } from '../../src/utils/iterators'
 
 describe('disable contract validations', () => {
 
