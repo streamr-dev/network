@@ -5,13 +5,13 @@ import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
-import { StreamrClientConfig } from '../Config'
+import { StrictStreamrClientConfig } from '../Config'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
     streamRegistry: StreamRegistry,
     signatureValidator: SignatureValidator,
-    config: Pick<StreamrClientConfig, 'validation'>
+    config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
     await doValidate(msg, streamRegistry, signatureValidator, config).catch((err: any) => {
         // all StreamMessageError already have this streamMessage, maybe this is
@@ -36,7 +36,7 @@ const doValidate = async (
     streamMessage: StreamMessage,
     streamRegistry: StreamRegistry,
     signatureValidator: SignatureValidator,
-    config: Pick<StreamrClientConfig, 'validation'>
+    config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
     await signatureValidator.assertSignatureIsValid(streamMessage)
     switch (streamMessage.messageType) {
@@ -66,10 +66,10 @@ const doValidate = async (
 const validateMessage = async (
     streamMessage: StreamMessage,
     streamRegistry: StreamRegistry,
-    config: Pick<StreamrClientConfig, 'validation'>
+    config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const streamMetadata = config.validation?.partitions === false ? { partitions: 100 } : await streamRegistry.getStreamMetadata(streamId)
+    const streamMetadata = !config.validation.partitions ? { partitions: 100 } : await streamRegistry.getStreamMetadata(streamId)
     const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamrClientError(
@@ -79,7 +79,7 @@ const validateMessage = async (
         )
     }
     const sender = streamMessage.getPublisherId()
-    const isPublisher = config.validation?.permissions === false ? true : await streamRegistry.isStreamPublisher(streamId, sender)
+    const isPublisher = !config.validation.permissions ? true : await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
         throw new StreamrClientError(`${sender} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
@@ -90,14 +90,14 @@ const validateGroupKeyMessage = async (
     expectedPublisherId: UserID,
     expectedSubscriberId: UserID,
     streamRegistry: StreamRegistry,
-    config: Pick<StreamrClientConfig, 'validation'>
+    config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const isPublisher = config.validation?.permissions === false ? true : await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
+    const isPublisher = !config.validation.permissions ? true : await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
     if (!isPublisher) {
         throw new StreamrClientError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
-    const isSubscriber = config.validation?.permissions === false ? true : await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
+    const isSubscriber = !config.validation.permissions ? true : await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
     if (!isSubscriber) {
         throw new StreamrClientError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
     }
