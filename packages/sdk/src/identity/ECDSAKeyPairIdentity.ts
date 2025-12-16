@@ -2,6 +2,7 @@ import { hexToBinary, EcdsaSecp256r1 } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
 import { StrictStreamrClientConfig } from '../Config'
+import type { webcrypto } from 'crypto'
 
 const signingUtil = new EcdsaSecp256r1()
 
@@ -10,7 +11,7 @@ const signingUtil = new EcdsaSecp256r1()
  */
 export class ECDSAKeyPairIdentity extends KeyPairIdentity {
 
-    private cachedJWK: JsonWebKey | undefined
+    private cachedJWK: webcrypto.JsonWebKey | undefined
 
     assertValidKeyPair(): void {
         signingUtil.assertValidKeyPair(this.publicKey, this.privateKey)
