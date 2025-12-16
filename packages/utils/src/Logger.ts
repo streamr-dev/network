@@ -2,6 +2,7 @@ import pino from 'pino'
 import path from 'path'
 import without from 'lodash/without'
 import padEnd from 'lodash/padEnd'
+import { env } from '@/env'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
@@ -18,23 +19,21 @@ const parseBoolean = (value: string | undefined) => {
     }
 }
 
-declare let window: any
-
 /**
- * Disabled when in browser or when environment variable DISABLE_PRETTY_LOG is set to true.
+ * Disabled when environment variable DISABLE_PRETTY_LOG is set to true.
  */
 function isPrettyPrintDisabled(): boolean {
-    return typeof window === 'object' || (parseBoolean(process.env.DISABLE_PRETTY_LOG) ?? false)
+    return parseBoolean(env.DISABLE_PRETTY_LOG) ?? false
 }
 
 function isJestRunning(): boolean {
-    return process.env.JEST_WORKER_ID !== undefined
+    return env.JEST_WORKER_ID !== undefined
 }
 
 const rootLogger = pino({
     name: 'rootLogger',
-    enabled: !process.env.NOLOG,
-    level: process.env.LOG_LEVEL ?? 'info',
+    enabled: !env.NOLOG,
+    level: env.LOG_LEVEL ?? 'info',
     formatters: {
         level: (label) => {
             return { level: label } // log level as string instead of number
@@ -43,7 +42,7 @@ const rootLogger = pino({
     transport: isPrettyPrintDisabled() ? undefined : {
         target: 'pino-pretty',
         options: {
-            colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+            colorize: parseBoolean(env.LOG_COLORS) ?? true,
             singleLine: true,
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
@@ -95,7 +94,7 @@ export class Logger {
             name: Logger.createName(loggerModule),
             ...contextBindings
         }, {
-            level: process.env.LOG_LEVEL ?? defaultLogLevel
+            level: env.LOG_LEVEL ?? defaultLogLevel
         })
         this.fatal = wrappedMethodCall(this.logger.fatal.bind(this.logger))
         this.error = wrappedMethodCall(this.logger.error.bind(this.logger))
@@ -114,7 +113,7 @@ export class Logger {
             const parts = parsedPath.dir.split(path.sep)
             fileId = parts[parts.length - 1]
         }
-        const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
+        const longName = without([env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
         return isPrettyPrintDisabled() ?
             longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }

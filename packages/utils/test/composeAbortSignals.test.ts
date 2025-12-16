@@ -1,4 +1,4 @@
-import { ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSignals'
+import { type ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSignals'
 import range from 'lodash/range'
 
 describe('composeAbortSignals', () => {

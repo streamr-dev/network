@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import { computeMd5 } from '@/crypto'
 
 /**
  * Computes a deterministic index for a given string or number key.
@@ -25,7 +25,6 @@ export function keyToArrayIndex(lengthOfArray: number, key: string | number): nu
     }
 
     // String key handling
-    const buffer = crypto.createHash('md5').update(key).digest()
-    const intHash = buffer.readInt32LE(0)
+    const intHash = computeMd5(key).readInt32LE(0)
     return Math.abs(intHash) % lengthOfArray
 }
