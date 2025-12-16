@@ -2,7 +2,16 @@
   "extends": "./tsconfig.node.json",
   "compilerOptions": {
     "noEmit": true,
+    "declaration": false,
+    "composite": false,
+    "incremental": false,
     "isolatedModules": true,
-    "types": ["node", "jest", "jest-extended"]
+    "types": [
+      "node",
+      "jest",
+      "jest-extended",
+      "@streamr/test-utils/customMatcherTypes"
+    ],
+    "sourceMap": false
   }
 }

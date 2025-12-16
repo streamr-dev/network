@@ -1,9 +1,9 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true
+    "outDir": "dist"
   },
-  "references": [
-    { "path": "./tsconfig.jest.json" }
+  "include": [
+    "src"
   ]
 }

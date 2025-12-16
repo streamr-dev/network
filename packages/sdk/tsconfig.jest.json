@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
-    "lib": ["es2021", "dom"],
+    "lib": ["es2021"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitOverride": false
@@ -16,12 +16,6 @@
     "scripts"
   ],
   "exclude": [
-    "test/exports",
-    "src/exports-esm.mjs"
-  ],
-  "references": [
-    { "path": "../test-utils/tsconfig.node.json" },
-    { "path": "../dht/tsconfig.node.json" },
-    { "path": "../trackerless-network/tsconfig.node.json" }
+    "test/exports"
   ]
 }

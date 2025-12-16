@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.karma.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "noImplicitOverride": false,
-    "types": ["jest"]
+    "outDir": "dist"
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

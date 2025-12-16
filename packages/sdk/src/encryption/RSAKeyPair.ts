@@ -1,3 +1,10 @@
+/**
+ * @todo This file contains code for both browser and Node.js environments. Consider
+ * making it environment-specific (using separate files or conditional exports), and
+ * remove the following "dom" lib reference when done.
+ */
+/// <reference lib="dom" />
+
 import crypto from 'crypto'
 import { promisify } from 'util'
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'

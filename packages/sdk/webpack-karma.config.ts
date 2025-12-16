@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack'
-import * as defaultConfig from './webpack.config'
+import defaultConfig from './webpack.config'
 import { resolve } from 'path'
 
 const karmaWebpackConfig: (env?: Record<string, unknown>, argv?: Record<string, unknown>) => Configuration = (env = {}, argv = {}) => {
