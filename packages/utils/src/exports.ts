@@ -53,5 +53,5 @@ export { type UserID, type UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEt
 export type { HexString } from './HexString'
 export type { ChangeFieldType, MapKey } from './types'
 export { type WeiAmount, multiplyWeiAmount } from './WeiAmount'
-export { getSubtle } from './crossPlatformCrypto'
+export { getSubtle } from '@/crypto'
 export { SigningUtil, EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, type KeyType, KEY_TYPES } from './SigningUtil'
