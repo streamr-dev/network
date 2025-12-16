@@ -1,10 +1,18 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true
+    "outDir": "dist",
+    "disableSourceOfProjectReferenceRedirect": true
   },
+  "include": [
+    "package.json",
+    "src",
+    "bin"
+  ],
   "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.jest.json" }
+    { "path": "../dht" },
+    { "path": "../sdk" },
+    { "path": "../trackerless-network" },
+    { "path": "../utils" }
   ]
 }

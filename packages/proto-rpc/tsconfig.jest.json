@@ -7,9 +7,5 @@
     "src",
     "generated",
     "test"
-  ],
-  "references": [
-    { "path": "../utils/tsconfig.node.json" },
-    { "path": "../test-utils/tsconfig.node.json" }
   ]
 }
