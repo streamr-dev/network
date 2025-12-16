@@ -8,11 +8,11 @@
     "package.json"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" },
-    { "path": "../autocertifier-client" },
+    { "path": "../utils" },
+    { "path": "../proto-rpc" },
     { "path": "../cdn-location" },
     { "path": "../geoip-location" },
-    { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "../autocertifier-client" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }

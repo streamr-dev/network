@@ -16,10 +16,10 @@
     "src/exports-esm.mjs"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" },
-    { "path": "../dht" },
+    { "path": "../utils" },
     { "path": "../proto-rpc" },
+    { "path": "../dht" },
     { "path": "../trackerless-network" },
-    { "path": "../utils" }
+    { "path": "./tsconfig.generated.json" }
   ]
 }

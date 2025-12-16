@@ -7,7 +7,7 @@
     "src"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" },
-    { "path": "../utils" }
+    { "path": "../utils" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }

@@ -8,9 +8,9 @@
     "package.json"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" },
-    { "path": "../dht" },
+    { "path": "../utils" },
     { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "../dht" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }
