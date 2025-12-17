@@ -6,11 +6,7 @@
   "include": [
     "src",
     "generated",
-    "test",
-    "package.json"
-  ],
-  "references": [
-    { "path": "../proto-rpc/tsconfig.node.json" },
-    { "path": "../dht/tsconfig.node.json" }
+    "package.json",
+    "test"
   ]
 }

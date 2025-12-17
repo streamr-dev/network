@@ -1,10 +1,8 @@
 {
   "extends": "../../tsconfig.jest.json",
   "include": [
+    "src",
+    "data-generation",
     "test"
-  ],
-  "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "../test-utils/tsconfig.node.json" }
   ]
 }

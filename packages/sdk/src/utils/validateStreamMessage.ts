@@ -69,19 +69,23 @@ const validateMessage = async (
     config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const streamMetadata = !config.validation.partitions ? { partitions: 100 } : await streamRegistry.getStreamMetadata(streamId)
-    const partitionCount = getPartitionCount(streamMetadata)
-    if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
-        throw new StreamrClientError(
-            `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
-            'INVALID_PARTITION', 
-            streamMessage
-        )
+    if (config.validation.partitions) {
+        const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
+        const partitionCount = getPartitionCount(streamMetadata)
+        if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
+            throw new StreamrClientError(
+                `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
+                'INVALID_PARTITION', 
+                streamMessage
+            )
+        }
     }
-    const sender = streamMessage.getPublisherId()
-    const isPublisher = !config.validation.permissions ? true : await streamRegistry.isStreamPublisher(streamId, sender)
-    if (!isPublisher) {
-        throw new StreamrClientError(`${sender} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
+    if (config.validation.permissions) {
+        const sender = streamMessage.getPublisherId()
+        const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
+        if (!isPublisher) {
+            throw new StreamrClientError(`${sender} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
+        }
     }
 }
 
@@ -92,13 +96,15 @@ const validateGroupKeyMessage = async (
     streamRegistry: StreamRegistry,
     config: Pick<StrictStreamrClientConfig, 'validation'>
 ): Promise<void> => {
-    const streamId = streamMessage.getStreamId()
-    const isPublisher = !config.validation.permissions ? true : await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
-    if (!isPublisher) {
-        throw new StreamrClientError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
-    }
-    const isSubscriber = !config.validation.permissions ? true : await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
-    if (!isSubscriber) {
-        throw new StreamrClientError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
+    if (config.validation.permissions) {
+        const streamId = streamMessage.getStreamId()
+        const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
+        if (!isPublisher) {
+            throw new StreamrClientError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
+        }
+        const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
+        if (!isSubscriber) {
+            throw new StreamrClientError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, 'MISSING_PERMISSION', streamMessage)
+        }
     }
 }

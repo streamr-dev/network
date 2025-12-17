@@ -1,9 +1,24 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "lib": ["es2021"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitOverride": false
   },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "src/exports-esm.mjs"
+  ],
   "references": [
-    { "path": "./tsconfig.jest.json" }
+    { "path": "../dht" },
+    { "path": "../proto-rpc" },
+    { "path": "../trackerless-network" },
+    { "path": "../utils" }
   ]
 }
