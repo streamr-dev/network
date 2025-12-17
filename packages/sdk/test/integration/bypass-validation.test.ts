@@ -4,7 +4,7 @@ import { StreamPartIDUtils } from '@streamr/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { nextValue } from '../../src/utils/iterators'
 
-describe('disable contract validations', () => {
+describe('bypass validation', () => {
 
     it('happy path', async () => {
         const environment = new FakeEnvironment()
@@ -25,8 +25,6 @@ describe('disable contract validations', () => {
         expect(message!.content).toEqual({
             message: 'hello'
         })
-        await publisher.destroy()
-        await subscriber.destroy()
         await environment.destroy()
     })
 })
