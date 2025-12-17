@@ -523,7 +523,7 @@ describe('ConnectionManager', () => {
  
     })
 
-    it('send bufferWhileConnecting', async () => {
+    it('send bufferWhileConnecting as false', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
