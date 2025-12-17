@@ -523,7 +523,7 @@ describe('ConnectionManager', () => {
  
     })
 
-    it('send doNotBufferWhileConnecting', async () => {
+    it('send bufferWhileConnecting as false', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
@@ -572,7 +572,7 @@ describe('ConnectionManager', () => {
         const sendOptions = {
             connect: true,
             sendIfStopped: false,
-            doNotBufferWhileConnecting: true
+            bufferWhileConnecting: false
         }
         await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg, sendOptions)])
         await wait(1000)

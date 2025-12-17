@@ -184,6 +184,16 @@ export interface NetworkNodeConfig {
     streamPartitionMinPropagationTargets?: number
 
     /**
+     * The maximum number of messages that can be buffered in the propagation buffer.
+     */
+    streamPartitionMaxPropagationBufferSize?: number
+
+    /**
+     * Whether to buffer while connecting in the content delivery layer.
+     */
+    contentDeliveryBufferWhileConnecting?: boolean
+
+    /**
      * Whether to accept proxy connections. Enabling this option allows
      * this network node to act as proxy on behalf of other nodes / clients.
      * When enabling this option, a WebSocket server should be configured for the client
