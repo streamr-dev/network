@@ -47,11 +47,11 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
                     // TODO maybe this options could be removed?
                     sendIfStopped: true,
                     // Responses should be buffered if necessary
-                    doNotBufferWhileConnecting: false
+                    bufferWhileConnecting: true
                 } : {
                     connect: callContext?.connect ?? DEFAULT_SEND_OPTIONS.connect,
                     sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped,
-                    doNotBufferWhileConnecting: callContext?.doNotBufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.doNotBufferWhileConnecting
+                    bufferWhileConnecting: callContext?.bufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.bufferWhileConnecting
                 }
             return sendFn(message, sendOpts)
         })

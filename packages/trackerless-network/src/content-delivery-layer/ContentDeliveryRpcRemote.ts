@@ -12,10 +12,10 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
 
     private rtt?: number
 
-    async sendStreamMessage(msg: StreamMessage, doNotBufferWhileConnecting?: boolean): Promise<void> {
+    async sendStreamMessage(msg: StreamMessage, bufferWhileConnecting?: boolean): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true,
-            doNotBufferWhileConnecting
+            bufferWhileConnecting
         })
         this.getClient().sendStreamMessage(msg, options).catch(() => {
             logger.trace('Failed to sendStreamMessage')

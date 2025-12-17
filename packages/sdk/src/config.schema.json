@@ -279,9 +279,9 @@
                             "type": "number",
                             "default": 150
                         },
-                        "doNotBufferWhileConnecting": {
+                        "bufferWhileConnecting": {
                             "type": "boolean",
-                            "default": false
+                            "default": true
                         },
                         "acceptProxyConnections": {
                             "type": "boolean",

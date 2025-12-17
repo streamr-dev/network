@@ -191,7 +191,7 @@ export interface NetworkNodeConfig {
     /**
      * Whether to not buffer while connecting.
      */
-    doNotBufferWhileConnecting?: boolean
+    bufferWhileConnecting?: boolean
 
     /**
      * Whether to accept proxy connections. Enabling this option allows
