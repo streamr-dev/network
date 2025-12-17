@@ -275,6 +275,14 @@
                             "type": "number",
                             "default": 2
                         },
+                        "streamPartitionMaxPropagationBufferSize": {
+                            "type": "number",
+                            "default": 150
+                        },
+                        "doNotBufferWhileConnecting": {
+                            "type": "boolean",
+                            "default": false
+                        },
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false
