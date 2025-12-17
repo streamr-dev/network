@@ -69,12 +69,14 @@ export class MessageFactory {
         explicitPartition?: number
     ): Promise<StreamMessage> {
         const publisherId = await this.getPublisherId(metadata)
-        const isPublisher = !this.config.validation.permissions
-            ? true 
-            : await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
-        if (!isPublisher) {
-            this.streamRegistry.invalidatePermissionCaches(this.streamId)
-            throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
+        if (this.config.validation.permissions) {
+            const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
+            if (!isPublisher) {
+                this.streamRegistry.invalidatePermissionCaches(this.streamId)
+                throw new StreamrClientError(
+                    `You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION'
+                )
+            }
         }
         let partition
         if (!this.config.validation.partitions) {
@@ -105,11 +107,11 @@ export class MessageFactory {
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
-
-        const hasPublicSubscribePermission = !this.config.validation.permissions
-            ? false
-            : await this.streamRegistry.hasPublicSubscribePermission(this.streamId)
-        const encryptionType = hasPublicSubscribePermission ? EncryptionType.NONE : EncryptionType.AES
+        const encryptionType = this.config.validation.permissions
+            ? await this.streamRegistry.hasPublicSubscribePermission(this.streamId)
+                ? EncryptionType.NONE
+                : EncryptionType.AES
+            : EncryptionType.AES
         if (!isCompliantEncryptionType(encryptionType, this.config)) {
             throw new StreamrClientError(
                 `Publishing to stream ${this.streamId} was prevented because configuration requires encryption!`,
