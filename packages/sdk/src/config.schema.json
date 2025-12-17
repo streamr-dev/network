@@ -279,7 +279,7 @@
                             "type": "number",
                             "default": 150
                         },
-                        "bufferWhileConnecting": {
+                        "contentDeliveryBufferWhileConnecting": {
                             "type": "boolean",
                             "default": true
                         },
