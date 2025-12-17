@@ -29,7 +29,7 @@ export interface MessagePipelineOptions {
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
-    config: Pick<StrictStreamrClientConfig, 'encryption' | 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+    config: Pick<StrictStreamrClientConfig, 'encryption' | 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy' | 'validation'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }
@@ -52,7 +52,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
+        await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator, opts.config)
 
         if (msg.encryptionType !== EncryptionType.NONE && !isCompliantEncryptionType(msg.encryptionType, opts.config)) {
             throw new StreamrClientError(`A message in stream ${

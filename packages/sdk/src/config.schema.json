@@ -388,6 +388,21 @@
             },
             "default": {}
         },
+        "validation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "permissions": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "partitions": {
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "default": {}
+        },
         "metrics": {
             "anyOf": [
                 {

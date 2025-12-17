@@ -16,6 +16,7 @@ Changes before Tatum release are not documented in this file.
 - Add `StreamrClient#findProxyNodes()` function for discovering proxy nodes via Operator nodes (https://github.com/streamr-dev/network/pull/3257)
 - Add `StreamrClient#publishRaw()` for publishing raw messages (https://github.com/streamr-dev/network/pull/3280)
 - Add new `keys` configuration to the `encryption` section (https://github.com/streamr-dev/network/pull/3284)
+- Add new `validation` configuration section (https://github.com/streamr-dev/network/pull/3302)
 
 #### Changed
 

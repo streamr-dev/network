@@ -51,7 +51,7 @@ export class PublisherKeyExchange {
     private readonly identity: Identity
     private readonly logger: Logger
     private readonly erc1271Publishers = new Set<UserID>()
-    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -60,7 +60,7 @@ export class PublisherKeyExchange {
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
         @inject(IdentityInjectionToken) identity: Identity,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -110,7 +110,7 @@ export class PublisherKeyExchange {
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', 
                         { requestId, responseType, keyEncryptionType: AsymmetricEncryptionType[keyEncryptionType] })
-                    await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
+                    await validateStreamMessage(request, this.streamRegistry, this.signatureValidator, this.config)
                     const authenticatedUser = await this.identity.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),

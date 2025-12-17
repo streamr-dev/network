@@ -42,6 +42,7 @@ export class SubscriberKeyExchange {
     private readonly identity: Identity
     private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
     requestGroupKey: (groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => Promise<void>
 
     constructor(
@@ -51,7 +52,7 @@ export class SubscriberKeyExchange {
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
         subscriber: Subscriber,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>,
         @inject(IdentityInjectionToken) identity: Identity,
         loggerFactory: LoggerFactory
     ) {
@@ -63,6 +64,7 @@ export class SubscriberKeyExchange {
         this.subscriber = subscriber
         this.identity = identity
         this.logger = loggerFactory.createLogger(module)
+        this.config = config
         // Setting explicit keys disables the key-exchange
         if (config.encryption.keys === undefined) {
             this.ensureStarted = pOnce(async () => {
@@ -142,7 +144,7 @@ export class SubscriberKeyExchange {
                 if (await this.isAssignedToMe(msg.getStreamPartID(), recipientUserId, requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
+                    await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator, this.config)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = await EncryptionUtil.decryptWithPrivateKey(encryptedKey.data, this.keyPair!.getPrivateKey(), encryptionType)
                         await this.store.set(encryptedKey.id, msg.getPublisherId(), key)
