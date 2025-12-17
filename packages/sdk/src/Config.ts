@@ -189,7 +189,7 @@ export interface NetworkNodeConfig {
     streamPartitionMaxPropagationBufferSize?: number
 
     /**
-     * Whether to not buffer while connecting.
+     * Whether to buffer while connecting in the content delivery layer.
      */
     contentDeliveryBufferWhileConnecting?: boolean
 
