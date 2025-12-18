@@ -14,23 +14,24 @@ const main = async () => {
     })
 
     const streamParts = [
-        StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#0'),
-        StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#1'),
-        StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#2'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/blocks#0'),
-        StreamPartIDUtils.parse('0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle#0'),
-        StreamPartIDUtils.parse('streamr.eth/demos/helsinki-trams#0'),
-        StreamPartIDUtils.parse('0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0#0'),
-        StreamPartIDUtils.parse('streamr.eth/demos/video#0'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#0'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#1'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#2'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#3'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#4'),
-        StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/trades#0'),
-        StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/ticker#0'),
-        StreamPartIDUtils.parse('0xd37dc4d7e2c1bdf3edd89db0e505394ea69af43d/gas-station/polygon#0'),
-        StreamPartIDUtils.parse('minimaglobal.eth/minima#0')
+        StreamPartIDUtils.parse('tv.streamr.eth/act85u268pm#0'),
+        // StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#0'),
+        // StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#1'),
+        // StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#2'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/blocks#0'),
+        // StreamPartIDUtils.parse('0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle#0'),
+        // StreamPartIDUtils.parse('streamr.eth/demos/helsinki-trams#0'),
+        // StreamPartIDUtils.parse('0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0#0'),
+        // StreamPartIDUtils.parse('streamr.eth/demos/video#0'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#0'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#1'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#2'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#3'),
+        // StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#4'),
+        // StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/trades#0'),
+        // StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/ticker#0'),
+        // StreamPartIDUtils.parse('0xd37dc4d7e2c1bdf3edd89db0e505394ea69af43d/gas-station/polygon#0'),
+        // StreamPartIDUtils.parse('minimaglobal.eth/minima#0')
     ]
 
     setInterval(() => {
@@ -76,7 +77,7 @@ const main = async () => {
             )
         })
 
-    }, 5000)
+    }, 30000)
 
     for (const streamPart of streamParts) {
         const sub = await client.subscribe(streamPart, () => {
