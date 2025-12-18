@@ -19,7 +19,7 @@
     "prebuild": "./proto.sh",
     "build": "tsc -b",
     "check": "tsc --noEmit",
-    "clean": "rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "clean": "rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },
   "dependencies": {
