@@ -67,12 +67,16 @@ describe('messagePipeline', () => {
             get: async () => undefined
         } as any
         const destroySignal = new DestroySignal()
-        const config: Pick<StrictStreamrClientConfig, 'encryption'> = {
+        const config = {
             encryption: {
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
-            } as any
-        }
+            },
+            validation: {
+                permissions: true,
+                partitions: true
+            }
+        } as StrictStreamrClientConfig
         streamRegistry = {
             getStreamMetadata: async () => ({ partitions: 1 }),
             isStreamPublisher: async () => true,
@@ -94,7 +98,7 @@ describe('messagePipeline', () => {
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),
-            config: config as any,
+            config,
             destroySignal,
             loggerFactory: mockLoggerFactory(),
         })

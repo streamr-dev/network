@@ -29,4 +29,5 @@ ajv.addFormat('ethereum-address', /^0x[a-fA-F0-9]{40}$/)
 
 const validate = ajv.compile(CONFIG_SCHEMA)
 const moduleCode = standaloneCode(ajv, validate)
+fs.mkdirSync(path.join(__dirname, '../src/generated'), { recursive: true })
 fs.writeFileSync(path.join(__dirname, '../src/generated/validateConfig.js'), moduleCode)

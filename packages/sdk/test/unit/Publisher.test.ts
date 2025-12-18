@@ -24,7 +24,13 @@ describe('Publisher', () => {
             identity,
             mock<SignatureValidator>(),
             mock<MessageSigner>(),
-            mock<StrictStreamrClientConfig>(),
+            {
+                encryption: {},
+                validation: {
+                    permissions: true,
+                    partitions: true,
+                }
+            } as StrictStreamrClientConfig,
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {

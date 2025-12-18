@@ -16,6 +16,7 @@ import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { createStrictConfig } from '../../src/Config'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -75,7 +76,7 @@ describe('parallel key exchange', () => {
                 groupKeyQueue: await createGroupKeyQueue(identity, publisher.groupKey),
                 signatureValidator: mock<SignatureValidator>(),
                 messageSigner: new MessageSigner(identity),
-                config: {},
+                config: createStrictConfig()
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

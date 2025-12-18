@@ -11,6 +11,7 @@ import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 const PARTITION_COUNT = 3
 
@@ -43,7 +44,17 @@ describe('Validator', () => {
                 return userId === publisherWallet.address.toLowerCase()
             }
         }
-        await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
+        await validateStreamMessage(
+            msg,
+            streamRegistry as any,
+            new SignatureValidator(mock<ERC1271ContractFacade>()),
+            {
+                validation: {
+                    permissions: true,
+                    partitions: true
+                }
+            } as StrictStreamrClientConfig
+        )
     }
 
     beforeAll(async () => {

@@ -27,7 +27,7 @@ import path from 'path'
 import { DependencyContainer } from 'tsyringe'
 import { Identity } from '../../src/identity/Identity'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
-import { StreamrClientConfig } from '../../src/Config'
+import { createStrictConfig, StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
@@ -144,7 +144,7 @@ export const createMockMessage = async (
     const identity = EthereumKeyPairIdentity.fromPrivateKey(opts.publisher.privateKey)
     const factory = new MessageFactory({
         identity,
-        config: CONFIG_TEST,
+        config: createStrictConfig(CONFIG_TEST),
         streamId,
         streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,

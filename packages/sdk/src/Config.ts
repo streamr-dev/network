@@ -184,6 +184,16 @@ export interface NetworkNodeConfig {
     streamPartitionMinPropagationTargets?: number
 
     /**
+     * The maximum number of messages that can be buffered in the propagation buffer.
+     */
+    streamPartitionMaxPropagationBufferSize?: number
+
+    /**
+     * Whether to buffer while connecting in the content delivery layer.
+     */
+    contentDeliveryBufferWhileConnecting?: boolean
+
+    /**
      * Whether to accept proxy connections. Enabling this option allows
      * this network node to act as proxy on behalf of other nodes / clients.
      * When enabling this option, a WebSocket server should be configured for the client
@@ -412,6 +422,11 @@ export interface StreamrClientConfig {
         pollInterval?: number
     }
 
+    validation?: {
+        permissions?: boolean
+        partitions?: boolean
+    }
+
     /**
      * Determines the telemetry metrics that are sent to the Streamr Network
      * at regular intervals.
@@ -457,6 +472,7 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
+    validation: Exclude<Required<StreamrClientConfig['validation']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
     /** @internal */
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
