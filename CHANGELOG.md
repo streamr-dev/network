@@ -12,20 +12,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Proxy connections now support bidirectionality and it is the default behavior (https://github.com/streamr-dev/network/pull/3260)
-- Add `StreamrClient#findProxyNodes()` function for discovering proxy nodes via Operator nodes (https://github.com/streamr-dev/network/pull/3257)
-- Add `StreamrClient#publishRaw()` for publishing raw messages (https://github.com/streamr-dev/network/pull/3280)
-- Add new `keys` configuration to the `encryption` section (https://github.com/streamr-dev/network/pull/3284)
-- Add new `validation` configuration section (https://github.com/streamr-dev/network/pull/3302)
-- Add new configuration options for controlling content delivery buffering (https://github.com/streamr-dev/network/pull/3305)
-
 #### Changed
 
 #### Deprecated
 
 #### Removed
-
-- Remove `StreamrClient#findOperators()` function which was marked as internal (https://github.com/streamr-dev/network/pull/3257)
 
 #### Fixed
 
@@ -37,8 +28,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Bump autostaker's fixed gas limit for actions from 500k gas to 750k gas
-
 #### Deprecated
 
 #### Removed
@@ -48,11 +37,6 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 ### @streamr/cli-tools
-
-- Add `--partition` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3262)
-- Add `--with-metadata` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3265)
-- Add `--binary` flag to `stream publish` and `stream subcribe` (https://github.com/streamr-dev/network/pull/3282)
-- Add `--raw` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3282)
 
 #### Added
 
@@ -64,10 +48,45 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+#### Security
+
+
+## [103.2.0] - 2025-12-18
+
+### @streamr/sdk
+
+#### Added
+
+- Proxy connections now support bidirectionality and it is the default behavior (https://github.com/streamr-dev/network/pull/3260)
+- Add `StreamrClient#findProxyNodes()` function for discovering proxy nodes via Operator nodes (https://github.com/streamr-dev/network/pull/3257)
+- Add `StreamrClient#publishRaw()` for publishing raw messages (https://github.com/streamr-dev/network/pull/3280)
+- Add new `keys` configuration to the `encryption` section (https://github.com/streamr-dev/network/pull/3284)
+- Add new `validation` configuration section (https://github.com/streamr-dev/network/pull/3302)
+- Add new configuration options for controlling content delivery buffering (https://github.com/streamr-dev/network/pull/3305)
+
+#### Removed
+
+- Remove `StreamrClient#findOperators()` function which was marked as internal (https://github.com/streamr-dev/network/pull/3257)
+
+### @streamr/node
+
+#### Changed
+
+- Bump autostaker's fixed gas limit for actions from 500k gas to 750k gas
+
+### @streamr/cli-tools
+
+#### Added
+
+- Add `--partition` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3262)
+- Add `--with-metadata` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3265)
+- Add `--binary` flag to `stream publish` and `stream subcribe` (https://github.com/streamr-dev/network/pull/3282)
+- Add `--raw` flag to `stream publish` (https://github.com/streamr-dev/network/pull/3282)
+
+#### Fixed
+
 - Signature output in `subscribe --with-metadata` (https://github.com/streamr-dev/network/pull/3245)
 - Error handling of `--partition` flag in `subscribe` (https://github.com/streamr-dev/network/pull/3263)
-
-#### Security
 
 
 ## [103.1.2] - 2025-11-21
@@ -521,7 +540,8 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0...HEAD
+[103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
 [103.1.2]: https://github.com/streamr-dev/network/compare/v103.1.1...v103.1.2
 [103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1
 [103.1.0]: https://github.com/streamr-dev/network/compare/v103.0.0...v103.1.0
