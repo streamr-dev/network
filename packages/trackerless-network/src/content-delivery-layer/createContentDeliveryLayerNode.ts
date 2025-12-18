@@ -34,7 +34,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
         maxPropagationBufferSize?: number
-        doNotBufferWhileConnecting?: boolean
+        bufferWhileConnecting?: boolean
         plumtreeOptimization?: boolean
         plumtreeMaxPausedNeighbors?: number
     }
@@ -83,7 +83,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
             const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
-                await remote.sendStreamMessage(msg, options.doNotBufferWhileConnecting)
+                await remote.sendStreamMessage(msg, options.bufferWhileConnecting)
             } else if (proxyConnection) {
                 await proxyConnection.remote.sendStreamMessage(msg)
             } else {

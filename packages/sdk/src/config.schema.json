@@ -275,6 +275,14 @@
                             "type": "number",
                             "default": 2
                         },
+                        "streamPartitionMaxPropagationBufferSize": {
+                            "type": "number",
+                            "default": 150
+                        },
+                        "contentDeliveryBufferWhileConnecting": {
+                            "type": "boolean",
+                            "default": true
+                        },
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false
@@ -384,6 +392,21 @@
                     "additionalProperties": {
                         "$ref": "#/definitions/encryptionKey"
                     }
+                }
+            },
+            "default": {}
+        },
+        "validation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "permissions": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "partitions": {
+                    "type": "boolean",
+                    "default": true
                 }
             },
             "default": {}

@@ -13,6 +13,7 @@ import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFaili
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { createStrictConfig } from '../../src/Config'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -47,7 +48,7 @@ describe('gap fill', () => {
             groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
             signatureValidator: mock<SignatureValidator>(),
             messageSigner: new MessageSigner(identity),
-            config: {},
+            config: createStrictConfig()
         })
     })
 

@@ -17,6 +17,7 @@ import {
 import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import pull from 'lodash/pull'
+import omit from 'lodash/omit'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
@@ -140,7 +141,10 @@ export class NetworkNodeFacade {
                     ? this.config.network.controlLayer.websocketPortRange
                     : undefined
             },
-            networkNode: this.config.network.node,
+            networkNode: {
+                ...omit(this.config.network.node, 'contentDeliveryBufferWhileConnecting'),
+                bufferWhileConnecting: this.config.network.node.contentDeliveryBufferWhileConnecting
+            },
             metricsContext: new MetricsContext()
         }
     }

@@ -13,6 +13,7 @@ import { MOCK_CONTENT, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
@@ -63,11 +64,21 @@ describe('Validator2', () => {
 
     const getValidator = () => {
         return {
-            validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
-                getStreamMetadata,
-                isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
-                isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
-            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
+            validate: (msg: StreamMessage) => validateStreamMessage(
+                msg,
+                { 
+                    getStreamMetadata,
+                    isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
+                    isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
+                } as any,
+                new SignatureValidator(mock<ERC1271ContractFacade>()),
+                {
+                    validation: {
+                        permissions: true,
+                        partitions: true
+                    }
+                } as StrictStreamrClientConfig
+            )
         }
     }
 

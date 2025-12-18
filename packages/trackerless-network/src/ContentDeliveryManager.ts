@@ -71,7 +71,7 @@ export interface ContentDeliveryManagerOptions {
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
-    doNotBufferWhileConnecting?: boolean
+    bufferWhileConnecting?: boolean
 }
 
 type PlumtreeOptions = {
@@ -293,7 +293,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
-            doNotBufferWhileConnecting: this.options.doNotBufferWhileConnecting,
+            bufferWhileConnecting: this.options.bufferWhileConnecting,
             plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization?.enabled,
             plumtreeMaxPausedNeighbors: 
                 streamPartDeliveryOptions?.plumtreeOptimization?.enabled === true ? 
