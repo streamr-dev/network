@@ -10,9 +10,9 @@
     "bin"
   ],
   "references": [
+    { "path": "../utils" },
     { "path": "../dht" },
-    { "path": "../sdk" },
     { "path": "../trackerless-network" },
-    { "path": "../utils" }
+    { "path": "../sdk" }
   ]
 }

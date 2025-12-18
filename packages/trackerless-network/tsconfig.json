@@ -1,17 +1,16 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "noImplicitOverride": false
+    "outDir": "dist"
   },
   "include": [
     "src",
-    "generated",
     "package.json"
   ],
   "references": [
-    { "path": "../dht" },
+    { "path": "../utils" },
     { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "../dht" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }

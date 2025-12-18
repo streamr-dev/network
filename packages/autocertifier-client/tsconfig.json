@@ -1,14 +1,13 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "noImplicitOverride": false
+    "outDir": "dist"
   },
   "include": [
-    "src",
-    "generated"
+    "src"
   ],
   "references": [
-    { "path": "../utils" }
+    { "path": "../utils" },
+    { "path": "./tsconfig.generated.json" }
   ]
 }
