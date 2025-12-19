@@ -7,15 +7,17 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/geoip-location"
   },
-  "main": "dist/src/exports.js",
-  "browser": {
-    "dist/src/exports.js": false,
-    "dist/src/GeoIpLocator.js": false,
-    "dist/src/downloadGeoIpDatabase.js": false
+  "exports": {
+    ".": {
+      "default": {
+        "types": "./dist/src/exports.d.ts",
+        "import": "./dist/src/exports.js",
+        "require": "./dist/src/exports.cjs"
+      }
+    }
   },
-  "types": "dist/src/exports.d.ts",
   "files": [
-    "dist",
+    "dist/src/exports.*",
     "!*.tsbuildinfo",
     "README.md",
     "LICENSE"
@@ -23,8 +25,11 @@
   "license": "Apache-2.0",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "prebuild": "npm run reset-self",
     "build": "tsc -b",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -p tsconfig.jest.json",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest test/unit",
@@ -39,8 +44,13 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/long-timeout": "^0.1.2",
     "@types/tar": "^6.1.11",
-    "express": "^5.2.0"
+    "express": "^5.2.0",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.53.5",
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }
