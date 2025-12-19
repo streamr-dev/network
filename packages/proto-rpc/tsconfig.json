@@ -2,7 +2,12 @@
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
     "outDir": "dist",
-    "noImplicitOverride": false
+    "noImplicitOverride": false,
+
+    /* Resolution */
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": "."
   },
   "include": [
     "src",
