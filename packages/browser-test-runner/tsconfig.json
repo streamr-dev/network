@@ -1,7 +1,12 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+
+    /* Resolution */
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": "."
   },
   "include": [
     "src"
