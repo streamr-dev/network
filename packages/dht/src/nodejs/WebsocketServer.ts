@@ -1,32 +1,20 @@
 import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import WebSocket, { WebSocketServer } from 'ws'
-import { WebsocketServerConnection } from './WebsocketServerConnection'
+import { WebsocketServerConnection } from '../connection/websocket/WebsocketServerConnection'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
-import { WebsocketServerStartError } from '../../helpers/errors'
-import { PortRange, TlsCertificate } from '../ConnectionManager'
+import { WebsocketServerStartError } from '../helpers/errors'
 import range from 'lodash/range'
 import fs from 'fs'
 import { v4 as uuid } from 'uuid'
 import { parse } from 'url'
-import { IConnection } from '../IConnection'
+import type { IWebsocketServer, WebsocketServerEvents, WebsocketServerOptions } from '../connection/websocket/types'
 
-const logger = new Logger('WebsocketServer')
+const logger = new Logger('WebsocketServer (Node)')
 
-interface WebsocketServerOptions {
-    portRange: PortRange
-    enableTls: boolean
-    tlsCertificate?: TlsCertificate
-    maxMessageSize?: number
-}
-
-interface Events {
-    connected: ((connection: IConnection) => void) 
-}
-
-export class WebsocketServer extends EventEmitter<Events> {
+export class WebsocketServer extends EventEmitter<WebsocketServerEvents> implements IWebsocketServer {
 
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WebSocketServer

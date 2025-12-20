@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "noImplicitOverride": false
+  },
+  "include": [
+    "generated"
+  ],
+  "exclude": []
+}

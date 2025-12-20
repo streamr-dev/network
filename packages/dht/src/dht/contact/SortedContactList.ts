@@ -1,7 +1,7 @@
 import { Events } from './ContactList'
 import sortedIndexBy from 'lodash/sortedIndexBy'
-import EventEmitter from 'eventemitter3'
-import { getDistance } from '../PeerManager'
+import { EventEmitter } from 'eventemitter3'
+import { getPeerDistance } from '../helpers/getPeerDistance'
 import { DhtAddress, toDhtAddressRaw } from '../../identifiers'
 
 // add other getters in the future if needed
@@ -120,7 +120,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     // TODO inline this method?
     private distanceToReferenceId(id: DhtAddress): number {
         // TODO maybe this class should store the referenceId also as DhtAddressRaw so that we don't need to convert it here?
-        return getDistance(toDhtAddressRaw(this.options.referenceId), toDhtAddressRaw(id))
+        return getPeerDistance(toDhtAddressRaw(this.options.referenceId), toDhtAddressRaw(id))
     }
 
     public removeContact(id: DhtAddress): boolean {

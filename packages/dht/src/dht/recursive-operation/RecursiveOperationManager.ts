@@ -24,8 +24,8 @@ import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
-import { getDistance } from '../PeerManager'
-import { ConnectionsView } from '../../exports'
+import { getPeerDistance } from '../helpers/getPeerDistance'
+import { ConnectionsView } from '../../connection/ConnectionsView'
 
 interface RecursiveOperationManagerOptions {
     rpcCommunicator: RoutingRpcCommunicator
@@ -233,8 +233,8 @@ export class RecursiveOperationManager {
 
     private isPeerCloserToIdThanSelf(peer: PeerDescriptor, nodeIdOrDataKey: DhtAddress): boolean {
         const nodeIdOrDataKeyRaw = toDhtAddressRaw(nodeIdOrDataKey)
-        const distance1 = getDistance(peer.nodeId, nodeIdOrDataKeyRaw)
-        const distance2 = getDistance(this.options.localPeerDescriptor.nodeId, nodeIdOrDataKeyRaw)
+        const distance1 = getPeerDistance(peer.nodeId, nodeIdOrDataKeyRaw)
+        const distance2 = getPeerDistance(this.options.localPeerDescriptor.nodeId, nodeIdOrDataKeyRaw)
         return distance1 < distance2
     }
 

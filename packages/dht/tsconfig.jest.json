@@ -1,10 +1,20 @@
 {
   "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/nodejs/*"
+      ]
+    }
+  },
   "include": [
     "src",
     "test",
-    "package.json",
-    "scripts"
+    "package.json"
+  ],
+  "exclude": [
+    "src/browser"
   ],
   "references": [
     { "path": "./tsconfig.generated.json" }

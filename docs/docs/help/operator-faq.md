@@ -179,10 +179,10 @@ Recheck operator address from the hub & reconfigure your node to use the correct
 I’m receiving the following warning message.
 
 ```JSON
-WARN [2023-11-10T10:01:42.418] (NodeWebRtcConnection): Failed to set remote descriptor for peer 0a3849076d8a43b19b876fbc6eba935f
-WARN [2023-11-10T10:01:42.421] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
-WARN [2023-11-10T10:01:42.622] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
-WARN [2023-11-10T10:01:42.867] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.418] (WebRtcConnection): Failed to set remote descriptor for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.421] (WebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.622] (WebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.867] (WebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
 ```
 
 **Explanation:**
