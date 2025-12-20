@@ -7,7 +7,7 @@ import {
 } from '../../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { NodeWebrtcConnection } from './NodeWebrtcConnection'
+import { WebrtcConnection } from '@/WebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -20,8 +20,9 @@ import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 import { isMaybeSupportedProtocolVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
+import type { IceServer } from './types'
 
-const logger = new Logger(module)
+const logger = new Logger('WebrtcConnector')
 
 export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): string => {
     const parsed = candidate.split(' ')
@@ -31,8 +32,6 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     }
     return parsed.join(' ')
 }
-
-export const EARLY_TIMEOUT = 5000
 
 export interface WebrtcConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
@@ -46,17 +45,9 @@ export interface WebrtcConnectorOptions {
     portRange?: PortRange
 }
 
-export interface IceServer {
-    url: string
-    port: number
-    username?: string
-    password?: string
-    tcp?: boolean
-}
-
 export interface ConnectingConnection {
     managedConnection: PendingConnection
-    connection: NodeWebrtcConnection
+    connection: WebrtcConnection
 }
 
 export class WebrtcConnector {
@@ -204,8 +195,8 @@ export class WebrtcConnector {
         return pendingConnection
     }
 
-    private createConnection(targetPeerDescriptor: PeerDescriptor): NodeWebrtcConnection {
-        return new NodeWebrtcConnection({
+    private createConnection(targetPeerDescriptor: PeerDescriptor): WebrtcConnection {
+        return new WebrtcConnection({
             remotePeerDescriptor: targetPeerDescriptor,
             iceServers: this.options.iceServers,
             bufferThresholdLow: this.options.bufferThresholdLow,

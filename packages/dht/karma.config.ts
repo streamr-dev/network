@@ -7,18 +7,12 @@ const TEST_PATHS = [
     './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*|GeoIpLayer0*).ts'
 ]
 
-const NodeWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
-const BrowserWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
-const NodeWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/NodeWebsocketClientConnection.ts')
-const BrowserWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/BrowserWebsocketClientConnection.ts')
-
 export default createKarmaConfig(
     TEST_PATHS,
     createWebpackConfig({
         libraryName: 'dht',
         alias: {
-            [NodeWebrtcConnection]: BrowserWebrtcConnection,
-            [NodeWebsocketClientConnection]: BrowserWebsocketClientConnection
+            '@': resolve(__dirname, 'src/browser'),
         },
         fallback: {
             module: false

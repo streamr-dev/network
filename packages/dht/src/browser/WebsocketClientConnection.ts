@@ -1,8 +1,8 @@
 import { Logger } from '@streamr/utils'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
-import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
+import { AbstractWebsocketClientConnection } from '../connection/websocket/AbstractWebsocketClientConnection'
 
-const logger = new Logger('BrowserWebsocketClientConnection')
+const logger = new Logger('WebsocketClientConnection (browser)')
 
 const BINARY_TYPE = 'arraybuffer'
 

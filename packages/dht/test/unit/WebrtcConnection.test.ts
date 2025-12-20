@@ -1,14 +1,14 @@
 import { waitForEvent } from '@streamr/utils'
-import { NodeWebrtcConnection } from '../../src/connection/webrtc/NodeWebrtcConnection'
+import { WebrtcConnection } from '@/WebrtcConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('WebrtcConnection', () => {
 
-    let connection: NodeWebrtcConnection
+    let connection: WebrtcConnection
 
     beforeEach(() => {
         const peerDescriptor = createMockPeerDescriptor()
-        connection = new NodeWebrtcConnection({
+        connection = new WebrtcConnection({
             remotePeerDescriptor: peerDescriptor
         })
     })

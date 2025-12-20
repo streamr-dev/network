@@ -1,5 +1,4 @@
 import { IMessageType } from '@protobuf-ts/runtime'
-
 import { protoClasses } from './protoClasses'
 import { protoClasses as rpcProtoClasses } from '@streamr/proto-rpc'
 

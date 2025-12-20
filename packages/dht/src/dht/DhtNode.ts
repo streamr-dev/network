@@ -13,8 +13,7 @@ import type { MarkRequired } from 'ts-essentials'
 import { ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ConnectionsView } from '../connection/ConnectionsView'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../connection/ConnectorFacade'
-import { IceServer } from '../connection/webrtc/WebrtcConnector'
-import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import type { IceServer } from '../connection/webrtc/types'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, toNodeId } from '../identifiers'
 import { Any } from '../../generated/google/protobuf/any'
@@ -54,6 +53,8 @@ import { LocalDataStore } from './store/LocalDataStore'
 import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
+import { isBrowserEnvironment } from '@/isBrowserEnvironment'
+import { CONTROL_LAYER_NODE_SERVICE_ID } from './consts'
 
 export interface DhtNodeEvents extends TransportEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -132,9 +133,6 @@ const logger = new Logger('DhtNode')
 export const NUMBER_OF_NODES_PER_KBUCKET_DEFAULT = 8
 const PERIODICAL_PING_INTERVAL = 60 * 1000
 
-// TODO move this to trackerless-network package and change serviceId to be a required paramater
-export const CONTROL_LAYER_NODE_SERVICE_ID = 'layer0'
-
 export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     private readonly options: StrictDhtNodeOptions
@@ -200,7 +198,7 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.options.serviceId}`)
         this.started = true
 
-        if (isBrowserEnvironment()) {
+        if (isBrowserEnvironment) {
             this.options.websocketPortRange = undefined
             if (this.options.peerDescriptor) {
                 this.options.peerDescriptor.websocket = undefined

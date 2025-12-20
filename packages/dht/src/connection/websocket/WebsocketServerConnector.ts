@@ -1,7 +1,8 @@
-import { GeoIpLocator } from '@streamr/geoip-location'
+import type { GeoIpLocator } from '@streamr/geoip-location'
+import { createGeoipLocator } from '@/createGeoipLocator'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Action, connectivityMethodToWebsocketUrl } from './WebsocketClientConnector'
-import { WebsocketServer } from './WebsocketServer'
+import { WebsocketServer } from '@/WebsocketServer'
 import { areEqualPeerDescriptors, DhtAddress, toNodeId } from '../../identifiers'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { ConnectivityResponse, HandshakeError, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
@@ -96,10 +97,8 @@ export class WebsocketServerConnector {
             })
             
             if (this.options.geoIpDatabaseFolder) {
-                const geoIpLocator = new GeoIpLocator(this.options.geoIpDatabaseFolder)
                 try {
-                    await geoIpLocator.start()
-                    this.geoIpLocator = geoIpLocator
+                    this.geoIpLocator = await createGeoipLocator(this.options.geoIpDatabaseFolder)
                 } catch (err) {
                     logger.error('Failed to start GeoIpLocator', { err })
                 }

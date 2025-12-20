@@ -1,19 +1,10 @@
 {
-  "extends": "../../tsconfig.node.json",
+  "files": [],
   "compilerOptions": {
-    "outDir": "dist",
-    "noImplicitOverride": false
+    "composite": true
   },
-  "include": [
-    "src",
-    "generated",
-    "package.json"
-  ],
   "references": [
-    { "path": "../autocertifier-client" },
-    { "path": "../cdn-location" },
-    { "path": "../geoip-location" },
-    { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.browser.json" }
   ]
 }

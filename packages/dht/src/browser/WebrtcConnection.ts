@@ -1,11 +1,13 @@
 /// <reference lib="dom" />
 
-import EventEmitter from 'eventemitter3'
-import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
-import { IConnection, ConnectionID, ConnectionType } from '../IConnection'
+import { EventEmitter } from 'eventemitter3'
+import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from '../connection/webrtc/IWebrtcConnection'
+import { IConnection, ConnectionID, ConnectionType } from '../connection/IConnection'
 import { Logger } from '@streamr/utils'
-import { EARLY_TIMEOUT, IceServer } from './WebrtcConnector'
-import { createRandomConnectionId } from '../Connection'
+import { IceServer } from '../connection/webrtc/types'
+import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import { createRandomConnectionId } from '../connection/Connection'
+import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
 
 enum DisconnectedRtcPeerConnectionStateEnum {
     DISCONNECTED = 'disconnected',
@@ -13,13 +15,9 @@ enum DisconnectedRtcPeerConnectionStateEnum {
     CLOSED = 'closed',
 }
 
-const logger = new Logger('BrowserWebrtcConnection')
+const logger = new Logger('WebrtcConnection (browser)')
 
-interface Params {
-    iceServers?: IceServer[]
-}
-
-export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IWebrtcConnection, IConnection {
+export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IWebrtcConnection, IConnection {
 
     public connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
@@ -37,7 +35,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
 
-    constructor(params: Params) {
+    constructor(params: WebrtcConnectionParams) {
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []

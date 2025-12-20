@@ -1,13 +1,20 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
-    "noImplicitOverride": false
+    "noImplicitOverride": false,
+
+    /* Mapping */
+    "paths": {
+      "@/*": ["src/nodejs/*"]
+    }
   },
   "include": [
     "src",
     "generated",
     "test",
-    "package.json",
-    "scripts"
+    "package.json"
+  ],
+  "exclude": [
+    "src/browser"
   ]
 }

@@ -12,7 +12,7 @@ import {
 } from '../../generated/packages/dht/protos/DhtRpc'
 import { IConnectionLockRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 import { LockID } from './ConnectionLockStates'
 import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../identifiers'
 

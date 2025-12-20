@@ -28,6 +28,7 @@ import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
 import { IConnection } from './IConnection'
 import { PendingConnection } from './PendingConnection'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 
 export interface ConnectionManagerOptions {
     maxConnections?: number
@@ -98,23 +99,6 @@ interface ConnectedEndpoint {
 type Endpoint = ConnectedEndpoint | ConnectingEndpoint
 
 const INTERNAL_SERVICE_ID = 'system/connection-manager'
-
-// Form an string representation from a peer description which can be undefined. This output 
-// should only be used only for log output. TODO remove this method if we no longer use
-// peerDescriptors which can be undefined, e.g.
-// - if we refactor ConnectionManager so that it doesn't process handshake requests too early 
-//   and therefore this.localPeerDescriptor can't be undefine (NET-1129)
-// - if the peerDescriptor of ManagedConnection is always available
-// - if we create stricter types for incoming messages (message.sourceDescriptor or
-//   disconnectNotice.peerDescriptor)
-// - if ManagedConnection#peerDescriptor is never undefined
-export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => {
-    if (peerDescriptor !== undefined) {
-        return toNodeId(peerDescriptor)
-    } else {
-        return 'unknown'
-    }
-}
 
 export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
 

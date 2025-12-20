@@ -1,4 +1,4 @@
-import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
+import { WebsocketClientConnection } from '@/WebsocketClientConnection'
 import { ConnectionType } from '../IConnection'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
@@ -7,13 +7,13 @@ import {
     PeerDescriptor,
     WebsocketConnectionRequest
 } from '../../../generated/packages/dht/protos/DhtRpc'
-import { WebsocketServer } from './WebsocketServer'
+import type { IWebsocketServer } from './types'
 import { createOutgoingHandshaker } from '../Handshaker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { DhtAddress, toNodeId } from '../../identifiers'
-import { GeoIpLocator } from '@streamr/geoip-location'
+import type { GeoIpLocator } from '@streamr/geoip-location'
 import { PendingConnection } from '../PendingConnection'
 
 export type Action = 'connectivityRequest' | 'connectivityProbe'
@@ -31,7 +31,7 @@ export interface WebsocketClientConnectorOptions {
 export class WebsocketClientConnector {
 
     public static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
-    private readonly websocketServer?: WebsocketServer
+    private readonly websocketServer?: IWebsocketServer
     private geoIpLocator?: GeoIpLocator
 
     private localPeerDescriptor?: PeerDescriptor

@@ -7,26 +7,34 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/dht"
   },
-  "main": "./dist/src/exports.js",
-  "types": "./dist/src/exports.d.ts",
-  "browser": {
-    "./dist/src/connection/webrtc/NodeWebrtcConnection.js": "./dist/src/connection/webrtc/BrowserWebrtcConnection.js",
-    "./dist/src/connection/websocket/NodeWebsocketClientConnection.js": "./dist/src/connection/websocket/BrowserWebsocketClientConnection.js",
-    "./dist/src/helpers/browser/isBrowserEnvironment.js": "./dist/src/helpers/browser/isBrowserEnvironment_override.js"
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./dist/browser/src/exports.d.ts",
+        "import": "./dist/browser/src/exports.js",
+        "require": "./dist/browser/src/exports.cjs"
+      },
+      "default": {
+        "types": "./dist/nodejs/src/exports.d.ts",
+        "import": "./dist/nodejs/src/exports.js",
+        "require": "./dist/nodejs/src/exports.cjs"
+      }
+    }
   },
-  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
-  "author": "Streamr Network AG <contact@streamr.network>",
   "files": [
-    "dist",
+    "dist/nodejs/src/exports.*",
+    "dist/browser/src/exports.*",
     "!*.tsbuildinfo",
     "README.md"
   ],
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "prebuild": "./proto.sh",
-    "postbuild": "./scripts/postbuild.sh",
+    "prebuild": "npm run reset-self && ./proto.sh",
     "build": "tsc -b",
-    "build-browser": "webpack --mode=development --progress",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -p tsconfig.jest.json",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
@@ -57,6 +65,8 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^6.0.0",
+    "@rollup/plugin-json": "^6.1.0",
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.2.0",
     "@types/heap": "^0.2.35",
@@ -66,8 +76,9 @@
     "@types/ws": "^8.18.1",
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^30.0.5",
+    "rimraf": "^6.1.2",
     "ts-essentials": "^10.1.1",
-    "ts-node": "^10.9.2"
+    "tsx": "^4.21.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",

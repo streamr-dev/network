@@ -1,7 +1,12 @@
 {
   "extends": "../../tsconfig.karma.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+
+    /* Mapping */
+    "paths": {
+      "@/*": ["src/browser/*"]
+    }
   },
   "include": [
     "src",
