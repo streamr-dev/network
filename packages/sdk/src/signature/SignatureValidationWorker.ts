@@ -6,10 +6,12 @@ import * as Comlink from 'comlink'
 import { validateSignatureData, SignatureValidationResult } from './signatureValidation'
 import { StreamMessage } from '../protocol/StreamMessage'
 
-export class SignatureValidationWorkerApi {
-    async validateSignature(data: StreamMessage): Promise<SignatureValidationResult> {
+const workerApi = {
+    validateSignature: async (data: StreamMessage): Promise<SignatureValidationResult> => {
         return validateSignatureData(data)
     }
 }
 
-Comlink.expose(SignatureValidationWorkerApi)
+export type SignatureValidationWorkerApi = typeof workerApi
+
+Comlink.expose(workerApi)
