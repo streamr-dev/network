@@ -13,7 +13,9 @@
   "script": "./dist/streamr-sdk.web.min.js",
   "browser": {
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
-    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs",
+    "./src/signature/ServerSignatureValidation.ts": "./src/signature/BrowserSignatureValidation.mts",
+    "./dist/src/signature/ServerSignatureValidation.js": "./dist/src/signature/BrowserSignatureValidation.mjs"
   },
   "exports": {
     "default": {
@@ -93,6 +95,7 @@
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
     "@babel/runtime": "^7.28.4",
+    "comlink": "^4.4.2",
     "@babel/runtime-corejs3": "^7.28.4",
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",

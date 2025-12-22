@@ -67,7 +67,8 @@ module.exports = (env, argv) => {
                 GIT_BRANCH: gitRevisionPlugin.branch(),
             }),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: 1
+                // Allow 2 chunks: main bundle + signature validation worker
+                maxChunks: 2
             })
         ],
         performance: {
