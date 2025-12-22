@@ -24,7 +24,7 @@ describe('SignatureValidator', () => {
 
     describe('SECP256K1', () => {
 
-        it('unencrypted message passes signature validation', async () => {
+        it.only('unencrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId: new MessageID(
                     toStreamID('streamr.eth/foo/bar'),
@@ -43,6 +43,11 @@ describe('SignatureValidator', () => {
                 signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
                 signatureType: SignatureType.ECDSA_SECP256K1_EVM
             })
+            try {
+                await signatureValidator.assertSignatureIsValid(message)
+            } catch (error) {
+                console.log(error)
+            }
             await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
 

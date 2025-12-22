@@ -10,4 +10,15 @@ const workerApi = {
 
 export type SignatureValidationWorkerApi = typeof workerApi
 
-Comlink.expose(workerApi)
+// Detect environment and expose accordingly
+if (typeof self !== 'undefined') {
+    // Browser Web Worker
+    Comlink.expose(workerApi)
+} else {
+    // Node.js Worker Thread
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { parentPort } = require('worker_threads')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodeEndpoint = require('comlink/dist/umd/node-adapter')
+    Comlink.expose(workerApi, nodeEndpoint(parentPort))
+}
