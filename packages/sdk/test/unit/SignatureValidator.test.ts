@@ -24,7 +24,7 @@ describe('SignatureValidator', () => {
 
     describe('SECP256K1', () => {
 
-        it.only('unencrypted message passes signature validation', async () => {
+        it('unencrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId: new MessageID(
                     toStreamID('streamr.eth/foo/bar'),
