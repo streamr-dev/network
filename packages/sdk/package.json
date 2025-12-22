@@ -95,7 +95,6 @@
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
     "@babel/runtime": "^7.28.4",
-    "comlink": "^4.4.2",
     "@babel/runtime-corejs3": "^7.28.4",
     "@noble/post-quantum": "^0.4.1",
     "@protobuf-ts/runtime": "^2.8.2",
@@ -106,6 +105,7 @@
     "@streamr/proto-rpc": "103.2.0",
     "@streamr/trackerless-network": "103.2.0",
     "@streamr/utils": "103.2.0",
+    "comlink": "^4.4.2",
     "core-js": "^3.47.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
