@@ -9,30 +9,25 @@ import type { SignatureValidationWorkerApi } from './SignatureValidationWorker.j
 import { StreamMessage } from '../protocol/StreamMessage.js'
 
 export default class BrowserSignatureValidation implements SignatureValidationContext {
-    private worker: Worker | null = null
-    private workerApi: Comlink.Remote<SignatureValidationWorkerApi> | null = null
+    private worker: Worker
+    private workerApi: Comlink.Remote<SignatureValidationWorkerApi> 
 
-    private ensureWorker(): Comlink.Remote<SignatureValidationWorkerApi> {
-        if (!this.workerApi) {
-            // Webpack 5 handles this pattern automatically, creating a separate chunk for the worker
-            this.worker = new Worker(
-                /* webpackChunkName: "signature-worker" */
-                new URL('./SignatureValidationWorker.js', import.meta.url)
-            )
-            this.workerApi = Comlink.wrap<SignatureValidationWorkerApi>(this.worker)
-        }
-        return this.workerApi
+    constructor() {
+        // Webpack 5 handles this pattern automatically, creating a separate chunk for the worker
+        this.worker = new Worker(
+            /* webpackChunkName: "signature-worker" */
+            new URL('./SignatureValidationWorker.js', import.meta.url)
+        )
+        this.workerApi = Comlink.wrap<SignatureValidationWorkerApi>(this.worker)
     }
 
     async validateSignature(message: StreamMessage): Promise<SignatureValidationResult> {
-        return this.ensureWorker().validateSignature(message)
+        return this.workerApi.validateSignature(message)
     }
 
     destroy(): void {
         if (this.worker) {
             this.worker.terminate()
-            this.worker = null
         }
-        this.workerApi = null
     }
 }
