@@ -22,8 +22,7 @@ const evmSigner = SigningUtil.getInstance('ECDSA_SECP256K1_EVM')
 export type SignatureValidationResult = 
     | { type: 'valid' }
     | { type: 'invalid' }
-    | { type: 'requires_erc1271' }
-    | { type: 'error'; message: string }
+    | { type: 'error', message: string }
 
 /**
  * Validate signature using extracted data.

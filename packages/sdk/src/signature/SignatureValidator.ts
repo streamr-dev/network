@@ -24,10 +24,7 @@ export class SignatureValidator {
     }
 
     private getValidationContext(): SignatureValidationContext {
-        if (!this.validationContext) {
-            this.validationContext = new SignatureValidation()
-        }
-        return this.validationContext
+        return this.validationContext ??= new SignatureValidation()
     }
 
     /**
@@ -64,7 +61,7 @@ export class SignatureValidator {
             case 'error':
                 throw new Error(result.message)
             default:
-                throw new Error(`Unknown signature validation result type: ${result.type}`)
+                throw new Error(`Unknown signature validation result type '${result}'`)
         }
     }
 

@@ -8,6 +8,7 @@ import { SignatureValidationResult, validateSignatureData } from './signatureVal
 
 export default class ServerSignatureValidation implements SignatureValidationContext {
 
+    // eslint-disable-next-line class-methods-use-this
     async validateSignature(message: StreamMessage): Promise<SignatureValidationResult> {
         return validateSignatureData(message)
     }
