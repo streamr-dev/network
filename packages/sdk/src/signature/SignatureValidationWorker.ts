@@ -1,9 +1,8 @@
 import * as Comlink from 'comlink'
-import { validateSignatureData, SignatureValidationResult } from './signatureValidation'
-import { StreamMessage } from '../protocol/StreamMessage'
+import { validateSignatureData, SignatureValidationResult, SignatureValidationData } from './signatureValidation'
 
 const workerApi = {
-    validateSignature: async (data: StreamMessage): Promise<SignatureValidationResult> => {
+    validateSignature: async (data: SignatureValidationData): Promise<SignatureValidationResult> => {
         return validateSignatureData(data)
     }
 }

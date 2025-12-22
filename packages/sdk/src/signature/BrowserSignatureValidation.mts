@@ -4,7 +4,7 @@
  */
 import * as Comlink from 'comlink'
 import { SignatureValidationContext } from './SignatureValidationContext.js'
-import { SignatureValidationResult } from './signatureValidation.js'
+import { SignatureValidationResult, toSignatureValidationData } from './signatureValidation.js'
 import type { SignatureValidationWorkerApi } from './SignatureValidationWorker.js'
 import { StreamMessage } from '../protocol/StreamMessage.js'
 
@@ -22,7 +22,9 @@ export default class BrowserSignatureValidation implements SignatureValidationCo
     }
 
     async validateSignature(message: StreamMessage): Promise<SignatureValidationResult> {
-        return this.workerApi.validateSignature(message)
+        // Convert class instance to plain serializable data before sending to worker
+        const data = toSignatureValidationData(message)
+        return this.workerApi.validateSignature(data)
     }
 
     destroy(): void {

@@ -2,12 +2,12 @@
  * Core signature validation logic - shared between worker and main thread implementations.
  * This file contains pure cryptographic validation functions without any network dependencies.
  */
-import { SigningUtil, toUserIdRaw } from '@streamr/utils'
-import { SignatureType } from '@streamr/trackerless-network'
+import { SigningUtil, StreamID, toUserIdRaw, UserID } from '@streamr/utils'
+import { EncryptedGroupKey, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 import { IDENTITY_MAPPING } from '../identity/IdentityMapping'
-import { createSignaturePayload } from './createSignaturePayload'
+import { createSignaturePayload, MessageIdLike, MessageRefLike } from './createSignaturePayload'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
-import { StreamMessage } from '../protocol/StreamMessage'
+import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
@@ -25,45 +25,86 @@ export type SignatureValidationResult =
     | { type: 'error', message: string }
 
 /**
+ * Plain data type for signature validation that can be serialized to a worker.
+ * This contains only primitive values and simple objects (no class instances).
+ */
+export interface SignatureValidationData {
+    messageId: MessageIdLike
+    prevMsgRef?: MessageRefLike
+    messageType: StreamMessageType
+    content: Uint8Array
+    signature: Uint8Array
+    signatureType: SignatureType
+    encryptionType: EncryptionType
+    newGroupKey?: EncryptedGroupKey
+}
+
+/**
+ * Extract plain serializable data from a StreamMessage for worker communication.
+ */
+export function toSignatureValidationData(message: StreamMessage): SignatureValidationData {
+    return {
+        messageId: {
+            streamId: message.messageId.streamId,
+            streamPartition: message.messageId.streamPartition,
+            timestamp: message.messageId.timestamp,
+            sequenceNumber: message.messageId.sequenceNumber,
+            publisherId: message.messageId.publisherId,
+            msgChainId: message.messageId.msgChainId,
+        },
+        prevMsgRef: message.prevMsgRef ? {
+            timestamp: message.prevMsgRef.timestamp,
+            sequenceNumber: message.prevMsgRef.sequenceNumber,
+        } : undefined,
+        messageType: message.messageType,
+        content: message.content,
+        signature: message.signature,
+        signatureType: message.signatureType,
+        encryptionType: message.encryptionType,
+        newGroupKey: message.newGroupKey,
+    }
+}
+
+/**
  * Validate signature using extracted data.
  * This is the core validation logic that can be run in a worker.
  */
-export async function validateSignatureData(message: StreamMessage): Promise<SignatureValidationResult> {
+export async function validateSignatureData(data: SignatureValidationData): Promise<SignatureValidationResult> {
     try {
-        const signingUtil = signingUtilBySignatureType[message.signatureType]
+        const signingUtil = signingUtilBySignatureType[data.signatureType]
         // Common case: standard signature types
         if (signingUtil) {
             const payload = createSignaturePayload({
-                messageId: message.messageId,
-                content: message.content,
-                messageType: message.messageType,
-                prevMsgRef: message.prevMsgRef,
-                newGroupKey: message.newGroupKey,
+                messageId: data.messageId,
+                content: data.content,
+                messageType: data.messageType,
+                prevMsgRef: data.prevMsgRef,
+                newGroupKey: data.newGroupKey,
             })
             const isValid = await signingUtil.verifySignature(
-                toUserIdRaw(message.messageId.publisherId),
+                toUserIdRaw(data.messageId.publisherId),
                 payload,
-                message.signature
+                data.signature
             )
             return isValid ? { type: 'valid' } : { type: 'invalid' }
         }
         // Special handling: legacy signature type
-        if (message.signatureType === SignatureType.ECDSA_SECP256K1_LEGACY) {
+        if (data.signatureType === SignatureType.ECDSA_SECP256K1_LEGACY) {
             const payload = createLegacySignaturePayload({
-                messageId: message.messageId,
-                content: message.content,
-                encryptionType: message.encryptionType,
-                prevMsgRef: message.prevMsgRef,
-                newGroupKey: message.newGroupKey,
+                messageId: data.messageId,
+                content: data.content,
+                encryptionType: data.encryptionType,
+                prevMsgRef: data.prevMsgRef,
+                newGroupKey: data.newGroupKey,
             })
             const isValid = await evmSigner.verifySignature(
-                toUserIdRaw(message.messageId.publisherId),
+                toUserIdRaw(data.messageId.publisherId),
                 payload,
-                message.signature
+                data.signature
             )
             return isValid ? { type: 'valid' } : { type: 'invalid' }
         }
-        return { type: 'error', message: `Unsupported signatureType: "${message.signatureType}"` }
+        return { type: 'error', message: `Unsupported signatureType: "${data.signatureType}"` }
     } catch (err) {
         return { type: 'error', message: String(err) }
     }

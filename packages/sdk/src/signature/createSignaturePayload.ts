@@ -3,16 +3,34 @@ import {
     GroupKeyRequest as NewGroupKeyRequest,
     GroupKeyResponse as NewGroupKeyResponse
 } from '@streamr/trackerless-network'
-import { utf8ToBinary } from '@streamr/utils'
-import { MessageID } from '../protocol/MessageID'
-import { MessageRef } from '../protocol/MessageRef'
+import { StreamID, UserID, utf8ToBinary } from '@streamr/utils'
 import { StreamMessageType } from '../protocol/StreamMessage'
 
+/**
+ * Plain data for message ID - accepts class instances or plain objects with the same properties.
+ */
+export interface MessageIdLike {
+    streamId: StreamID
+    streamPartition: number
+    timestamp: number
+    sequenceNumber: number
+    publisherId: UserID
+    msgChainId: string
+}
+
+/**
+ * Plain data for message reference - accepts class instances or plain objects with the same properties.
+ */
+export interface MessageRefLike {
+    timestamp: number
+    sequenceNumber: number
+}
+
 export const createSignaturePayload = (opts: {
-    messageId: MessageID
+    messageId: MessageIdLike
     content: Uint8Array
     messageType: StreamMessageType
-    prevMsgRef?: MessageRef
+    prevMsgRef?: MessageRefLike
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array | never => {
     const header = Buffer.concat([

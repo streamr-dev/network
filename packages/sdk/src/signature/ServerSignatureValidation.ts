@@ -4,7 +4,7 @@ import { Worker } from "worker_threads"
 import { StreamMessage } from '../protocol/StreamMessage'
 import { SignatureValidationContext } from './SignatureValidationContext'
 import { SignatureValidationWorkerApi } from './SignatureValidationWorker'
-import { SignatureValidationResult } from './signatureValidation'
+import { SignatureValidationResult, toSignatureValidationData } from './signatureValidation'
 import { join } from 'path'
 
 export default class ServerSignatureValidation implements SignatureValidationContext {
@@ -21,8 +21,9 @@ export default class ServerSignatureValidation implements SignatureValidationCon
     }
 
     async validateSignature(message: StreamMessage): Promise<SignatureValidationResult> {
-        console.log('validateSignature', message)
-        return this.workerApi.validateSignature(message)
+        // Convert class instance to plain serializable data before sending to worker
+        const data = toSignatureValidationData(message)
+        return this.workerApi.validateSignature(data)
     }
 
     // eslint-disable-next-line class-methods-use-this
