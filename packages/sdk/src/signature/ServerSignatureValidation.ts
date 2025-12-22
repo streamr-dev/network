@@ -1,6 +1,7 @@
 import * as Comlink from 'comlink'
+// eslint-disable-next-line no-restricted-imports
 import nodeEndpoint from 'comlink/dist/umd/node-adapter'
-import { Worker } from "worker_threads"
+import { Worker } from 'worker_threads'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { SignatureValidationContext } from './SignatureValidationContext'
 import { SignatureValidationWorkerApi } from './SignatureValidationWorker'

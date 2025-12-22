@@ -2,7 +2,7 @@
  * Core signature validation logic - shared between worker and main thread implementations.
  * This file contains pure cryptographic validation functions without any network dependencies.
  */
-import { SigningUtil, StreamID, toUserIdRaw, UserID } from '@streamr/utils'
+import { SigningUtil, toUserIdRaw } from '@streamr/utils'
 import { EncryptedGroupKey, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 import { IDENTITY_MAPPING } from '../identity/IdentityMapping'
 import { createSignaturePayload, MessageIdLike, MessageRefLike } from './createSignaturePayload'
