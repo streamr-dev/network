@@ -43,6 +43,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.4.1",
     "buffer": "^6.0.3",
     "buffer-shim": "^1.0.1",

@@ -7,20 +7,28 @@
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
     "directory": "packages/trackerless-network"
   },
-  "main": "dist/src/exports.js",
-  "types": "dist/src/exports.d.ts",
+  "exports": {
+    ".": {
+      "default": {
+        "types": "./dist/src/exports.d.ts",
+        "import": "./dist/src/exports.js",
+        "require": "./dist/src/exports.cjs"
+      }
+    }
+  },
   "files": [
-    "dist",
+    "dist/src/exports.*",
     "!*.tsbuildinfo",
     "README.md"
   ],
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "prebuild": "npm run reset-self && ./proto.sh",
     "build": "tsc -b",
-    "build-browser": "webpack --mode=development --progress",
-    "prebuild": "./proto.sh",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -p tsconfig.jest.json",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -45,11 +53,17 @@
     "yallist": "^5.0.0"
   },
   "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.2.0",
     "@types/lodash": "^4.17.21",
     "@types/yallist": "^5.0.0",
     "expect": "^30.0.5",
-    "ts-node": "^10.9.2"
+    "rimraf": "^6.1.2",
+    "rollup": "^4.54.0",
+    "rollup-plugin-dts": "^6.3.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0"
   }
 }

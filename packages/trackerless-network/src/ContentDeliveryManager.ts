@@ -10,6 +10,7 @@ import {
     toNodeId
 } from '@streamr/dht'
 import {
+    computeSha1,
     Logger,
     Metric,
     MetricsContext,
@@ -18,7 +19,6 @@ import {
     UserID,
     toStreamPartID
 } from '@streamr/utils'
-import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import sampleSize from 'lodash/sampleSize'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
@@ -85,7 +85,7 @@ export interface StreamPartDeliveryOptions {
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return toDhtAddress(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
+    return toDhtAddress(computeSha1(streamPartId))
 }
 
 export class ContentDeliveryManager extends EventEmitter<Events> {

@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
     "outDir": "dist",
-    "noImplicitOverride": false
+    "noImplicitOverride": false,
+
+    /* Resolution */
+    "moduleResolution": "bundler",
+    "module": "preserve"
   },
   "include": [
     "src",
@@ -10,8 +14,8 @@
     "package.json"
   ],
   "references": [
-    { "path": "../dht" },
+    { "path": "../utils" },
     { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "../dht" }
   ]
 }

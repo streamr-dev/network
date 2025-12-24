@@ -21,3 +21,7 @@ export type CryptoKey = webcrypto.CryptoKey
 export function computeMd5(input: string): Buffer {
     return crypto.createHash('md5').update(input).digest()
 }
+
+export function computeSha1(input: string): Buffer {
+    return crypto.createHash('sha1').update(input).digest()
+}
