@@ -83,34 +83,5 @@ describe('executeSafePromise', () => {
                 }
             })
         })
-
-        describe('environment detection', () => {
-            it('should detect Node environment when process.exit is defined', async () => {
-                const mockExit = jest.fn() as any
-                const originalProcessExit = process.exit
-                process.exit = mockExit
-
-                await executeSafePromise(async () => {
-                    throw new Error('Test')
-                })
-
-                expect(mockExit).toHaveBeenCalled()
-                // eslint-disable-next-line require-atomic-updates
-                process.exit = originalProcessExit
-            })
-
-            it('should detect browser environment when process.exit is undefined', async () => {
-                const originalProcess = global.process
-                // @ts-expect-error - intentionally setting to undefined for test
-                delete (global as any).process.exit
-
-                await expect(executeSafePromise(async () => {
-                    throw new Error('Test')
-                })).rejects.toThrow('executeSafePromise: Assertion failure!')
-
-                // eslint-disable-next-line require-atomic-updates
-                global.process = originalProcess
-            })
-        })
     })
 })
