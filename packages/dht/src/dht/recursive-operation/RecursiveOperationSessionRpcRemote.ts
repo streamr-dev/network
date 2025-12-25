@@ -7,7 +7,7 @@ import {
 import { RecursiveOperationSessionRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 
-const logger = new Logger(module)
+const logger = new Logger('RecursiveOperationSessionRpcRemote')
 
 export class RecursiveOperationSessionRpcRemote extends RpcRemote<RecursiveOperationSessionRpcClient> {
 

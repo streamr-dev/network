@@ -3,7 +3,7 @@ import pLimit, { Limit } from 'p-limit'
 import { StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('DeleteExpiredCmd')
 
 const totalSizeOfBuckets = (buckets: BucketInfo[]) => buckets.reduce((mem, { size }) => mem + size, 0) / (1024 * 1024)
 

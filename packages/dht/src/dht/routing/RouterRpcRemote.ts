@@ -6,7 +6,7 @@ import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RouterRpcRemote')
 
 // default timeout
 export const ROUTING_TIMEOUT = 2000

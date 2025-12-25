@@ -64,7 +64,7 @@ export class StreamStorageRegistry {
         this.theGraphClient = theGraphClient
         this.config = config
         this.identity = identity
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('StreamStorageRegistry')
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
             StreamStorageRegistryABI,

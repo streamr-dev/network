@@ -36,7 +36,7 @@ export interface MessagePipelineOptions {
 
 export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipeline<StreamMessage, StreamMessage> => {
 
-    const logger = opts.loggerFactory.createLogger(module)
+    const logger = opts.loggerFactory.createLogger('messagePipeline')
 
     const onError = (error: Error | StreamrClientError, streamMessage?: StreamMessage) => {
         if (streamMessage) {

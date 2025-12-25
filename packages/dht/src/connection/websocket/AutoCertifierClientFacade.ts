@@ -50,7 +50,7 @@ interface AutoCertifierClientFacadeOptions {
     createClientFactory?: () => IAutoCertifierClient
 }
 
-const logger = new Logger(module)
+const logger = new Logger('AutoCertifierClientFacade')
 
 export class AutoCertifierClientFacade {
 

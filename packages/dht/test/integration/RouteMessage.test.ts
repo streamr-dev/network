@@ -9,7 +9,7 @@ import { Any } from '../../generated/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
 import { DhtAddress, randomDhtAddress } from '../../src/identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RouteMessage.test')
 
 const NUM_NODES = 30
 

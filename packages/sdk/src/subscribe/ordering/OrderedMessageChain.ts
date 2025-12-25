@@ -24,7 +24,7 @@ export interface Events {
     unfillableGap: (gap: Gap) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('OrderedMessageChain')
 
 const areEqualRefs = (ref1: MessageRef, ref2: MessageRef) => {
     return ref1.compareTo(ref2) === 0

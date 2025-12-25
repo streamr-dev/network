@@ -5,7 +5,7 @@ import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/Dht
 import { LockID } from './ConnectionLockStates'
 import { toNodeId } from '../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('ConnectionLockRpcRemote')
 
 export class ConnectionLockRpcRemote extends RpcRemote<ConnectionLockRpcClient> {
 

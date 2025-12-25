@@ -26,7 +26,7 @@ export class ProxyNodeFinder {
         this.streamIdBuilder = streamIdBuilder
         this.operatorRegistry = operatorRegistry
         this.node = node
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('ProxyNodeFinder')
     }
 
     async find(streamDefinition: StreamDefinition, 

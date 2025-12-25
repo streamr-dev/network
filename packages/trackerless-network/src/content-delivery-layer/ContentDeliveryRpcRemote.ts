@@ -6,7 +6,7 @@ import {
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
-const logger = new Logger(module)
+const logger = new Logger('ContentDeliveryRpcRemote')
 
 export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 

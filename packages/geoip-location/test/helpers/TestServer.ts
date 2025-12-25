@@ -7,7 +7,7 @@ import { v4 } from 'uuid'
 import EventEmitter from 'eventemitter3'
 import { Duplex, pipeline } from 'stream'
 
-const logger = new Logger(module)
+const logger = new Logger('TestServer')
 
 type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>

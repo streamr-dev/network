@@ -7,7 +7,7 @@ import { ConsistentHashRing } from './ConsistentHashRing'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
 import { OperatorFleetState } from './OperatorFleetState'
 
-const logger = new Logger(module)
+const logger = new Logger('StreamPartAssignments')
 
 export interface StreamPartAssignmentEvents {
     assigned(streamPartId: StreamPartID): void

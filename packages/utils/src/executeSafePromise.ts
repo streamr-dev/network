@@ -1,6 +1,6 @@
 import { Logger } from './Logger'
 
-const logger = new Logger(module)
+const logger = new Logger('executeSafePromise')
 
 /**
  * Execute a promise that should never reject. If it does, log the error and exit the process.

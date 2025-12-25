@@ -92,7 +92,7 @@ export class NetworkNodeFactory {
     }
 }
 
-const logger = new Logger(module)
+const logger = new Logger('NetworkNodeFacade')
 
 /**
  * Wrap a network node.

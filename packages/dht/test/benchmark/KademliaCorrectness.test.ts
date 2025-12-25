@@ -7,7 +7,7 @@ import fs from 'fs'
 import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('KademliaCorrectness.test')
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode

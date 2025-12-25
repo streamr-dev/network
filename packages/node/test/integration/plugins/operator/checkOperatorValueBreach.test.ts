@@ -13,7 +13,7 @@ const {
     getOperatorContract
 } = _operatorContractUtils
 
-const logger = new Logger(module)
+const logger = new Logger('checkOperatorValueBreach.test')
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 const ONE_ETHER = BigInt(1e18)

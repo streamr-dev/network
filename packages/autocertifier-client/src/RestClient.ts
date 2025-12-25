@@ -5,7 +5,7 @@ import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomain
 import { Logger } from '@streamr/utils'
 import { makeHttpRequest } from './makeHttpRequest'
 
-const logger = new Logger(module)
+const logger = new Logger('RestClient')
 
 export class RestClient {
 

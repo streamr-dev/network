@@ -6,7 +6,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../PeerManager'
 import { getClosestNodes } from '../contact/getClosestNodes'
 
-const logger = new Logger(module)
+const logger = new Logger('DiscoverySession')
 
 interface DiscoverySessionOptions {
     targetId: DhtAddress

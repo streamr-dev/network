@@ -2,7 +2,7 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { Logger, wait } from '@streamr/utils'
 import { CounterId, instanceId } from '../../src/utils/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('LeaksDetector')
 
 export class LeaksDetector {
     private leakDetectors: Map<string, LeakDetector> = new Map()

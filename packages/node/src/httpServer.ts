@@ -8,7 +8,7 @@ import { once } from 'events'
 import { StrictConfig } from './config/config'
 import { ApiAuthentication, isValidAuthentication } from './apiAuthentication'
 
-const logger = new Logger(module)
+const logger = new Logger('httpServer')
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403

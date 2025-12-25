@@ -8,7 +8,7 @@ import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
 import { version as applicationVersion } from '../../package.json'
 
-const logger = new Logger(module)
+const logger = new Logger('Handshaker')
 
 interface HandshakerEvents {
     handshakeRequest: (source: PeerDescriptor, protocolVersion: string, target?: PeerDescriptor) => void

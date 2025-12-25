@@ -12,7 +12,7 @@ import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddre
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import { createPlugin } from './pluginRegistry'
 
-const logger = new Logger(module)
+const logger = new Logger('broker')
 
 export interface Broker {
     getStreamrClient: () => StreamrClient

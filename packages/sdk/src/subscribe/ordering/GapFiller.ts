@@ -3,7 +3,7 @@ import sample from 'lodash/sample'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Gap, OrderedMessageChain } from './OrderedMessageChain'
 
-const logger = new Logger(module)
+const logger = new Logger('GapFiller')
 
 export type GapFillStrategy = 'light' | 'full'
 

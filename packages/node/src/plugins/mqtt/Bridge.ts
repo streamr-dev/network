@@ -8,7 +8,7 @@ import { MqttServer, MqttServerListener } from './MqttServer'
 
 const DEFAULT_PARTITION = 0
 
-const logger = new Logger(module)
+const logger = new Logger('Bridge')
 
 interface StreamSubscription {
     streamrClientSubscription: Subscription

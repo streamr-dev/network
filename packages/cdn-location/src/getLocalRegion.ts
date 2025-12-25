@@ -5,7 +5,7 @@ import haversine from 'haversine'
 
 const DEFAULT_MAX_CACHE_AGE = 1000 * 60 * 60 // 1 hour
 
-const logger = new Logger(module)
+const logger = new Logger('getLocalRegion')
 
 let cachedLocalRegion: number | undefined = undefined
 let cachedLocalRegionFetchTime: number | undefined = undefined

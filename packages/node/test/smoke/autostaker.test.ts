@@ -66,7 +66,7 @@ const SPONSORSHIP_3_EARNINGS_PER_SECOND = parseEther('40')
 const SPONSORSHIP_3_SPONSOR_AMOUNT = parseEther('90000')
 const RUN_INTERVAL = 10 * 1000
 
-const logger = new Logger(module)
+const logger = new Logger('autostaker.test')
 
 const createStream = async (): Promise<StreamID> => {
     const creator = createClient(await createTestPrivateKey({ gas: true }))

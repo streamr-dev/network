@@ -127,7 +127,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'storageRedundancyFactor' |
     'metricsContext'>
 
-const logger = new Logger(module)
+const logger = new Logger('DhtNode')
 
 export const NUMBER_OF_NODES_PER_KBUCKET_DEFAULT = 8
 const PERIODICAL_PING_INTERVAL = 60 * 1000

@@ -30,7 +30,7 @@ export interface ResultParts {
     messageParser: (bytes: Uint8Array) => object
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ClientTransport')
 
 export class ClientTransport extends EventEmitter<ClientTransportEvents> implements RpcTransport {
     private static objectCount = 0

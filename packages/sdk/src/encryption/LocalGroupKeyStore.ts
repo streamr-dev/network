@@ -60,7 +60,7 @@ export class LocalGroupKeyStore {
     ) {
         this.persistenceManager = persistenceManager
         this.eventEmitter = eventEmitter
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('LocalGroupKeyStore')
     }
 
     async get(keyId: string, publisherId: UserID): Promise<GroupKey | undefined> {

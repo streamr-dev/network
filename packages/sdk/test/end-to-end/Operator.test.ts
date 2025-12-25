@@ -34,7 +34,7 @@ const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
         serverUrl: CHAIN_CONFIG.dev2.theGraphUrl,
         fetch: (...params: Parameters<typeof fetch>) => fetch(...params),
-        logger: new Logger(module)
+        logger: new Logger('Operator.test')
     })
 }
 

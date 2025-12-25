@@ -89,7 +89,7 @@ export interface ExtraSubscribeOptions {
     delivery?: StreamPartDeliveryOptions
 }
 
-const logger = new Logger(module)
+const logger = new Logger('StreamrClient')
 
 /**
  * The main API used to interact with Streamr.

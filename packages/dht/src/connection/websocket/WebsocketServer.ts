@@ -13,7 +13,7 @@ import { v4 as uuid } from 'uuid'
 import { parse } from 'url'
 import { IConnection } from '../IConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('WebsocketServer')
 
 interface WebsocketServerOptions {
     portRange: PortRange

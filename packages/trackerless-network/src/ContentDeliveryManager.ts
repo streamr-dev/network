@@ -56,7 +56,7 @@ export interface Events {
     newMessage: (msg: StreamMessage) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ContentDeliveryManager')
 
 interface Metrics extends MetricsDefinition {
     broadcastMessagesPerSecond: Metric

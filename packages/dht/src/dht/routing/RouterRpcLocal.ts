@@ -14,7 +14,7 @@ interface RouterRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
 }
 
-const logger = new Logger(module)
+const logger = new Logger('RouterRpcLocal')
 
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: RouteMessageError): RouteMessageAck => {
     const ack: RouteMessageAck = {

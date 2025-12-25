@@ -41,7 +41,7 @@ interface RecursiveOperationManagerOptions {
 
 export interface RecursiveOperationResult { closestNodes: PeerDescriptor[], dataEntries?: DataEntry[] }
 
-const logger = new Logger(module)
+const logger = new Logger('RecursiveOperationManager')
 
 export class RecursiveOperationManager {
 

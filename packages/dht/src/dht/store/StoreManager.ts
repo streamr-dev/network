@@ -36,7 +36,7 @@ interface StoreManagerOptions {
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
-const logger = new Logger(module)
+const logger = new Logger('StoreManager')
 
 export class StoreManager {
 

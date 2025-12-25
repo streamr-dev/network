@@ -38,7 +38,7 @@ enum ResponseType {
     ERC_1271
 }
 
-const logger = new Logger(module)
+const logger = new Logger('PublisherKeyExchange')
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
@@ -70,7 +70,7 @@ export class PublisherKeyExchange {
         this.messageSigner = messageSigner
         this.store = store
         this.identity = identity
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('PublisherKeyExchange')
         this.config = config
         // Setting explicit keys disables the key-exchange
         if (config.encryption.keys === undefined) {

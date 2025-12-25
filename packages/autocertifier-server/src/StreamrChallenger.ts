@@ -15,7 +15,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, SERVICE_ID } from '@streamr/autocertifier-client'
 
-const logger = new Logger(module)
+const logger = new Logger('StreamrChallenger')
 
 // This is a dummy peer descriptor that is used to connect to the streamr websocket
 // To ensure that the autocertified subdomain is used for the Streamr Network

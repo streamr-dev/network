@@ -1,7 +1,7 @@
 import { GetOperatorSponsorshipsResult, Operator } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('closeExpiredFlags')
 
 export const closeExpiredFlags = async (
     maxAgeInMs: number,

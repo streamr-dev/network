@@ -3,7 +3,7 @@ import { IConnection } from '../../src/connection/IConnection'
 import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('Websocket.test')
 
 describe('Websocket', () => {
 

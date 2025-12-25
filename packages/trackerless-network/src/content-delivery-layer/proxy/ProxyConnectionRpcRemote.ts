@@ -3,7 +3,7 @@ import { Logger, UserID, toUserIdRaw } from '@streamr/utils'
 import { ProxyConnectionRequest, ProxyDirection } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ProxyConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
-const logger = new Logger(module)
+const logger = new Logger('ProxyConnectionRpcRemote')
 
 export class ProxyConnectionRpcRemote extends RpcRemote<ProxyConnectionRpcClient> {
 

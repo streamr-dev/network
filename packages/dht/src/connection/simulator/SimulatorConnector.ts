@@ -11,7 +11,7 @@ import { DhtAddress, toNodeId } from '../../identifiers'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 import { PendingConnection } from '../PendingConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('SimulatorConnector')
 
 export class SimulatorConnector {
 

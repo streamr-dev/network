@@ -4,7 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { randomDhtAddress } from '../../src/identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('Mock-Layer1-Layer0.test')
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
 
