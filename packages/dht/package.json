@@ -47,10 +47,10 @@
     "@streamr/utils": "103.2.0",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
-    "ipaddr.js": "^2.0.1",
+    "ipaddr.js": "^2.3.0",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "lru-cache": "^11.2.2",
+    "lru-cache": "^11.2.4",
     "node-datachannel": "^0.27.0",
     "uuid": "^11.1.0",
     "websocket": "^1.0.34",
@@ -70,7 +70,7 @@
     "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.9",
-    "utf-8-validate": "^6.0.5"
+    "bufferutil": "^4.1.0",
+    "utf-8-validate": "^6.0.6"
   }
 }
