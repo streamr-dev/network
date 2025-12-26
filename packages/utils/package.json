@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc -b",
     "check": "tsc -p tsconfig.jest.json",
-    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-browser": "karma start karma.config.ts"
