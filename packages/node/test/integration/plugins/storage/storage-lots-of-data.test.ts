@@ -14,7 +14,7 @@ const MAX_BUCKET_MESSAGE_COUNT = 20
 const NUM_MESSAGES = 1000
 const MESSAGE_SIZE = 1e3 // 1k
 
-const logger = new Logger(module)
+const logger = new Logger('storage-lots-of-data.test')
 
 function retryFlakyTest(fn: () => Promise<unknown>, isFlakyError: (e: Error) => boolean, maxRuns: number): () => Promise<void> {
     return async () => {

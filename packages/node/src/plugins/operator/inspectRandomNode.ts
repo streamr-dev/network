@@ -18,7 +18,7 @@ export async function inspectRandomNode(
     findTargetFn = findTarget,
 ): Promise<void> {
     const traceId = randomString(6)
-    const logger = new Logger(module, { traceId })
+    const logger = new Logger('inspectRandomNode', { traceId })
     logger.info('Select a random operator to inspect')
 
     const target = await findTargetFn(operatorContractAddress, myOperator, assignments, streamrClient, logger)

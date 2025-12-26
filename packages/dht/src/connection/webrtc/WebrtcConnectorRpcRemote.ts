@@ -8,7 +8,7 @@ import {
 } from '../../../generated/packages/dht/protos/DhtRpc'
 import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 
-const logger = new Logger(module)
+const logger = new Logger('WebrtcConnectorRpcRemote')
 
 export class WebrtcConnectorRpcRemote extends RpcRemote<WebrtcConnectorRpcClient> {
 

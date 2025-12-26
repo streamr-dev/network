@@ -24,7 +24,7 @@ export class SubscribeConnection implements Connection {
         streamrClient: StreamrClient,
         payloadFormat: PayloadFormat
     ): Promise<void> {
-        const logger = new Logger(module, { socketId })
+        const logger = new Logger('SubscribeConnection', { socketId })
         const streamPartDefinitions = (this.partitions !== undefined)
             ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
             : [{ id: this.streamId }]

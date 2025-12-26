@@ -71,7 +71,7 @@ export const DEFAULT_NODE_VIEW_SIZE = 20
 export const DEFAULT_NEIGHBOR_TARGET_COUNT = 4
 export const DEFAULT_ACCEPT_PROXY_CONNECTIONS = false
 
-const logger = new Logger(module)
+const logger = new Logger('ContentDeliveryLayerNode')
 
 export class ContentDeliveryLayerNode extends EventEmitter<Events> {
 

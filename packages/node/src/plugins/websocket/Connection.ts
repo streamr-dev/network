@@ -3,7 +3,7 @@ import { StreamrClient } from '@streamr/sdk'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('Connection')
 
 export const PING_PAYLOAD = 'ping'
 const PONG_PAYLOAD = 'pong'

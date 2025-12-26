@@ -10,7 +10,7 @@ import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnec
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedProtocolVersion } from '../helpers/version'
 
-const logger = new Logger(module)
+const logger = new Logger('connectivityChecker')
 
 // TODO use options option or named constant?
 export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs = 1000 }:

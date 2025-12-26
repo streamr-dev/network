@@ -4,7 +4,7 @@ import { createHeartbeatMessage } from './heartbeatUtils'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { StrictConfig } from '../../config/config'
 
-const logger = new Logger(module)
+const logger = new Logger('announceNodeToStream')
 
 export const announceNodeToStream = async (
     operatorContractAddress: EthereumAddress,

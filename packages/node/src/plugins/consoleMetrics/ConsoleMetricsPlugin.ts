@@ -5,7 +5,7 @@ import { StreamrClient } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
-const logger = new Logger(module)
+const logger = new Logger('ConsoleMetricsPlugin')
 
 function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : String(Math.round(n))

@@ -6,7 +6,7 @@ import { RpcRemote } from '../../dht/contact/RpcRemote'
 import { WebsocketClientConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('WebsocketClientConnectorRpcRemote')
 
 export class WebsocketClientConnectorRpcRemote extends RpcRemote<WebsocketClientConnectorRpcClient> {
 

@@ -1,7 +1,7 @@
 import { JsonRpcApiProviderOptions, JsonRpcProvider, Networkish, FetchRequest } from 'ethers'
 import { Logger, randomString } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('LoggingJsonRpcProvider')
 
 export class LoggingJsonRpcProvider extends JsonRpcProvider {
     private readonly urlConfig: FetchRequest

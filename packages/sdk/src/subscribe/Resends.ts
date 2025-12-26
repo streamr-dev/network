@@ -137,7 +137,7 @@ export class Resends {
         this.storageNodeRegistry = storageNodeRegistry
         this.messagePipelineFactory = messagePipelineFactory
         this.config = config
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('Resends')
     }
 
     async resend(

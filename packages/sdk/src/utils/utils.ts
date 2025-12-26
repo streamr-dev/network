@@ -12,7 +12,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 
-const logger = new Logger(module)
+const logger = new Logger('sdk-utils')
 
 /**
  * Generates counter-based ids.

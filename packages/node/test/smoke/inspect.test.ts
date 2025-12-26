@@ -78,7 +78,7 @@ const PRE_BAKED_OPERATORS = [{
 
 const DEV_CHAIN_DEFAULT_MINING_INTERVAL = 1000  // hardhat config option in dev-chain
 
-const logger = new Logger(module)
+const logger = new Logger('inspect.test')
 
 const createStream = async (): Promise<StreamID> => {
     const creator = createClient(await createTestPrivateKey({ gas: true }))
@@ -132,7 +132,7 @@ const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
         serverUrl: CHAIN_CONFIG.dev2.theGraphUrl,
         fetch,
-        logger: new Logger(module)
+        logger
     })
 }
 

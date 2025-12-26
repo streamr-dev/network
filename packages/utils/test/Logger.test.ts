@@ -17,7 +17,7 @@ describe('Logger', () => {
                 logs.push(pick(JSON.parse(data), ['level', 'msg']))
             }
         }
-        logger = new Logger(module, undefined, 'trace', pino({
+        logger = new Logger('Logger', undefined, 'trace', pino({
             level: 'trace',
             browser: {
                 write: (o) => {

@@ -6,7 +6,7 @@ import { DiscoveryLayerNode } from '../../src/discovery-layer/DiscoveryLayerNode
 import { createContentDeliveryLayerNode } from '../../src/content-delivery-layer/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('ContentDeliveryLayerNode-Layer1Node.test')
 
 describe('ContentDeliveryLayerNode-DhtNode', () => {
     const otherNodeCount = 64

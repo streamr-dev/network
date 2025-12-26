@@ -105,7 +105,7 @@ const compareBigInts = (a: bigint, b: bigint) => {
     }
 }
 
-const logger = new Logger(module)
+const logger = new Logger('Operator')
 
 /**
  * @deprecated

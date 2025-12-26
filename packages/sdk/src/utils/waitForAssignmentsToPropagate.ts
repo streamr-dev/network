@@ -23,7 +23,7 @@ export async function waitForAssignmentsToPropagate(
                 }
             }
         } catch {
-            loggerFactory.createLogger(module).debug('Ignore malformed content')
+            loggerFactory.createLogger('waitForAssignmentsToPropagate').debug('Ignore malformed content')
         }
     }
 }

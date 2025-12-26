@@ -4,7 +4,7 @@ import { v4 } from 'uuid'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
-const logger = new Logger(module)
+const logger = new Logger('HandshakeRpcRemote')
 
 interface HandshakeResponse {
     accepted: boolean

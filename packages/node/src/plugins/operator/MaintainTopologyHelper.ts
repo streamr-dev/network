@@ -2,7 +2,7 @@ import { Operator, StakeEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger, StreamID, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 
-const logger = new Logger(module)
+const logger = new Logger('MaintainTopologyHelper')
 
 export interface MaintainTopologyHelperEvents {
     /**

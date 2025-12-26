@@ -22,7 +22,7 @@ import * as Err from '../../helpers/errors'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { PendingConnection } from '../PendingConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('WebsocketServerConnector')
 
 export interface WebsocketServerConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean

@@ -8,7 +8,7 @@ import { binaryToHex, ChangeFieldType, Logger } from '@streamr/utils'
 import { createClientCommand } from '../src/command'
 import semver from 'semver'
 
-const logger = new Logger(module)
+const logger = new Logger('streamr-internal-node-info')
 
 export type NormalizedNodeInfo = ChangeFieldType<
     NodeInfo,

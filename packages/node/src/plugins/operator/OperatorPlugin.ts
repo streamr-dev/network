@@ -65,7 +65,7 @@ export interface OperatorPluginConfig {
 
 const STAKED_OPERATORS_CACHE_MAX_AGE = 2 * 24 * 60 * 60 * 1000
 
-const logger = new Logger(module)
+const logger = new Logger('OperatorPlugin')
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly abortController: AbortController = new AbortController()

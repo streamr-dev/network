@@ -6,7 +6,7 @@ import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './AbstractWebsocketClientConnection'
 import { createRandomConnectionId } from '../Connection'
 
-const logger = new Logger(module)
+const logger = new Logger('WebsocketServerConnection')
 
 export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 

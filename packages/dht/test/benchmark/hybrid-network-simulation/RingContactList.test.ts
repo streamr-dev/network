@@ -6,7 +6,7 @@ import { RingContactList } from '../../../src/dht/contact/RingContactList'
 import { getRingIdRawFromPeerDescriptor } from '../../../src/dht/contact/ringIdentifiers'
 import { getRandomRegion } from '../../../src/connection/simulator/pings'
 
-const logger = new Logger(module)
+const logger = new Logger('RingContactList.test')
 
 function ipv4ToString(ip: number): string {
     return [

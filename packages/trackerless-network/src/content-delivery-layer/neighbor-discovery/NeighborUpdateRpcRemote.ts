@@ -3,7 +3,7 @@ import { Logger, StreamPartID } from '@streamr/utils'
 import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { NeighborUpdateRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
-const logger = new Logger(module)
+const logger = new Logger('NeighborUpdateRpcRemote')
 
 interface UpdateNeighborsResponse {
     peerDescriptors: PeerDescriptor[]

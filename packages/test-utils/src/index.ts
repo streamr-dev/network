@@ -12,7 +12,7 @@ import { Readable } from 'stream'
 
 export type Event = string
 
-const logger = new Logger(module)
+const logger = new Logger('test-utils')
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a

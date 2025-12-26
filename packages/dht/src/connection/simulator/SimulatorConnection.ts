@@ -6,7 +6,7 @@ import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'
 import { toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('SimulatorConnection')
 
 export class SimulatorConnection extends Connection implements IConnection {
 

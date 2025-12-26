@@ -5,7 +5,7 @@ import path from 'path'
 import { ChallengeManager } from './ChallengeManager'
 import { Challenge } from 'acme-client/types/rfc8555'
 
-const logger = new Logger(module)
+const logger = new Logger('CertificateCreator')
 
 // https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
 const DNS_01_CHALLENGE = 'dns-01'

@@ -9,7 +9,7 @@ import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
 import { createDataQueryEndpoint } from './dataQueryEndpoint'
 import { createStorageConfigEndpoint } from './storageConfigEndpoint'
 
-const logger = new Logger(module)
+const logger = new Logger('StoragePlugin')
 
 export interface StoragePluginConfig extends ApiPluginConfig {
     cassandra: {

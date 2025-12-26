@@ -8,7 +8,7 @@ type AsyncDnsHandler = (
     ...args: Parameters<DnsHandler>
 ) => Promise<void>
 
-const logger = new Logger(module)
+const logger = new Logger('DnsServer')
 
 // https://help.dnsfilter.com/hc/en-us/articles/4408415850003-DNS-Return-Codes
 // DNS Query Format Error

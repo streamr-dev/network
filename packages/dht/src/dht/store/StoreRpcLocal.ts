@@ -20,7 +20,7 @@ interface StoreRpcLocalOptions {
     getStorers: (key: DhtAddress) => readonly PeerDescriptor[]
 }
 
-const logger = new Logger(module)
+const logger = new Logger('StoreRpcLocal')
 
 export class StoreRpcLocal implements IStoreRpc {
 

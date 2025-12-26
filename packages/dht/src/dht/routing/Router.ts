@@ -20,7 +20,7 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-const logger = new Logger(module)
+const logger = new Logger('Router')
 
 export class Router {
 

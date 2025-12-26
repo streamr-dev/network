@@ -35,7 +35,7 @@ const isTransactionResponse = (returnValue: any): returnValue is ContractTransac
 }
 
 const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
-    const logger = loggerFactory.createLogger(module)
+    const logger = loggerFactory.createLogger('contract')
     eventEmitter.on('onMethodExecute', (methodName: string) => {
         logger.debug('Execute method', { methodName })
     })
@@ -177,7 +177,7 @@ export const initContractEventGateway = <
     transformation: (eventArgs: TSourcePayloads, blockNumber: number) => Parameters<TTarget[TTargetName]>[0]
     loggerFactory: LoggerFactory
 }): void => {
-    const logger = opts.loggerFactory.createLogger(module)
+    const logger = opts.loggerFactory.createLogger('contract')
     type Listener = (eventArgs: TSourcePayloads, blockNumber: number) => void
     initEventGateway(
         opts.targetName,

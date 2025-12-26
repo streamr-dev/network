@@ -23,7 +23,7 @@ export interface NetworkOptions {
     metricsContext?: MetricsContext
 }
 
-const logger = new Logger(module)
+const logger = new Logger('NetworkStack')
 
 const instances: NetworkStack[] = []
 const stopInstances = async () => {

@@ -4,7 +4,7 @@ import random from 'lodash/random'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { inspectOverTime } from './inspectOverTime'
 
-const logger = new Logger(module)
+const logger = new Logger('reviewSuspectNode')
 
 export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress

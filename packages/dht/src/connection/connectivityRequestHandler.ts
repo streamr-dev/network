@@ -15,7 +15,7 @@ import { GeoIpLocator } from '@streamr/geoip-location'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 
-const logger = new Logger(module)
+const logger = new Logger('connectivityRequestHandler')
 
 export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection, geoIpLocator?: GeoIpLocator): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {

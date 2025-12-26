@@ -3,7 +3,7 @@ import { CityResponse, Reader } from 'mmdb-lib'
 import LongTimeout from 'long-timeout'
 import { downloadGeoIpDatabase } from './downloadGeoIpDatabase'
 
-const logger = new Logger(module)
+const logger = new Logger('GeoIpLocator')
 
 interface GeoIpLookupResult {
     latitude: number

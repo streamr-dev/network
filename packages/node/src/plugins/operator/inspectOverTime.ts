@@ -84,7 +84,7 @@ class InspectionOverTimeTask {
         this.abortSignal = composeAbortSignals(userAbortSignal, this.abortController.signal)
         this.findNodesForTargetGivenFleetStateFn = findNodesForTargetGivenFleetStateFn
         this.inspectTargetFn = inspectTargetFn
-        this.logger = new Logger(module, { traceId })
+        this.logger = new Logger('InspectionOverTimeTask', { traceId })
         this.abortSignal.addEventListener('abort', async () => {
             await this.fleetState?.destroy()
         })
