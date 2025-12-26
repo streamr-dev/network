@@ -38,8 +38,6 @@ enum ResponseType {
     ERC_1271
 }
 
-const logger = new Logger('PublisherKeyExchange')
-
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
 
@@ -82,7 +80,7 @@ export class PublisherKeyExchange {
                 if (msg.signatureType === SignatureType.ERC_1271) {
                     const publisherId = msg.getPublisherId()
                     if (!this.erc1271Publishers.has(publisherId)) {
-                        logger.debug('Add ERC-1271 publisher', { publisherId })
+                        this.logger.debug('Add ERC-1271 publisher', { publisherId })
                         this.erc1271Publishers.add(publisherId)
                     }
                 }
