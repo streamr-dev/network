@@ -52,7 +52,6 @@ describe('executeSafePromise', () => {
 
             beforeEach(() => {
                 // Simulate browser environment by removing process.exit
-                // @ts-expect-error - intentionally deleting for test
                 delete (global as any).process.exit
             })
 
