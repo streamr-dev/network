@@ -21,7 +21,7 @@ import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, re
 import { isMaybeSupportedProtocolVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('WebrtcConnector')
 
 export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): string => {
     const parsed = candidate.split(' ')
