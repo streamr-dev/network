@@ -90,7 +90,7 @@ describe('Logger', () => {
                 ? 'APP:Logger.test          '
                 : 'APP:Logger.test'
             process.env.STREAMR_APPLICATION_ID = 'APP'
-            expect(Logger.createName(module)).toBe(expected)
+            expect(Logger.createName('Logger.test')).toBe(expected)
             delete process.env.STREAMR_APPLICATION_ID
         })
         it('index', () => {
