@@ -13,7 +13,9 @@
   "script": "./dist/streamr-sdk.web.min.js",
   "browser": {
     "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
-    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
+    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs",
+    "./src/signature/ServerSignatureValidation.ts": "./src/signature/BrowserSignatureValidation.mts",
+    "./dist/src/signature/ServerSignatureValidation.js": "./dist/src/signature/BrowserSignatureValidation.mjs"
   },
   "exports": {
     "default": {
@@ -103,6 +105,7 @@
     "@streamr/proto-rpc": "103.2.0",
     "@streamr/trackerless-network": "103.2.0",
     "@streamr/utils": "103.2.0",
+    "comlink": "^4.4.2",
     "core-js": "^3.47.0",
     "env-paths": "^2.2.1",
     "ethers": "^6.13.0",
