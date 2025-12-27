@@ -18,10 +18,6 @@ export type KeyType = typeof KEY_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 
-function getKeccakInstance(): Keccak {
-    return new Keccak(256)
-}
-
 export interface KeyPair {
     publicKey: Uint8Array
     privateKey: Uint8Array
@@ -58,7 +54,7 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
     }
 
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
-        const keccak = getKeccakInstance()
+        const keccak = new Keccak(256)
         keccak.update(useEthereumMagic ? Buffer.concat([
             Buffer.from(ECDSA_SECP256K1_EVM_SIGN_MAGIC + message.length), 
             message
@@ -91,7 +87,7 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
             throw new Error(`Expected 65 bytes (an ECDSA uncompressed public key with header byte). Got length: ${publicKey.length}`)
         }
         const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
-        const keccak = getKeccakInstance()
+        const keccak = new Keccak(256)
         keccak.update(Buffer.from(pubKeyWithoutFirstByte))
         const hashOfPubKey = keccak.digest('binary')
         return hashOfPubKey.subarray(12, hashOfPubKey.length)
