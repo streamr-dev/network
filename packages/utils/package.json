@@ -15,9 +15,11 @@
         "import": "./dist/browser/src/exports.js",
         "require": "./dist/browser/src/exports.cjs"
       },
-      "types": "./dist/node/src/exports.d.ts",
-      "import": "./dist/node/src/exports.js",
-      "require": "./dist/node/src/exports.cjs"
+      "default": {
+        "types": "./dist/node/src/exports.d.ts",
+        "import": "./dist/node/src/exports.js",
+        "require": "./dist/node/src/exports.cjs"
+      }
     }
   },
   "files": [
