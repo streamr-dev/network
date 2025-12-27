@@ -17,16 +17,9 @@ export const KEY_TYPES = [
 export type KeyType = typeof KEY_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
-let keccak: Keccak | undefined
 
 function getKeccakInstance(): Keccak {
-    if (!keccak) {
-        keccak = new Keccak(256)
-    } else {
-        keccak.reset()
-    }
-
-    return keccak
+    return new Keccak(256)
 }
 
 export interface KeyPair {
