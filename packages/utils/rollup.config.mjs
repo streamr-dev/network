@@ -1,10 +1,10 @@
-import { defineConfig, type RollupOptions } from 'rollup'
+import { defineConfig } from 'rollup'
 import { dts } from 'rollup-plugin-dts'
-import alias, { type Alias } from '@rollup/plugin-alias'
+import alias from '@rollup/plugin-alias'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import { fileURLToPath } from 'node:url'
 
-const nodejsAliases: Alias[] = [
+const nodejsAliases = [
     {
         find: /^@\//,
         replacement: fileURLToPath(
@@ -13,7 +13,7 @@ const nodejsAliases: Alias[] = [
     },
 ]
 
-const browserAliases: Alias[] = [
+const browserAliases = [
     {
         find: /^@\//,
         replacement: fileURLToPath(
@@ -47,7 +47,7 @@ export default defineConfig([
     browserTypes(),
 ])
 
-function nodejs(): RollupOptions {
+function nodejs() {
     return {
         input: 'dist/node/src/exports.js',
         output: [
@@ -76,7 +76,7 @@ function nodejs(): RollupOptions {
     }
 }
 
-function browser(): RollupOptions {
+function browser() {
     return {
         input: 'dist/browser/src/exports-browser.js',
         output: [
@@ -103,7 +103,7 @@ function browser(): RollupOptions {
     }
 }
 
-function nodejsTypes(): RollupOptions {
+function nodejsTypes() {
     return {
         input: 'dist/node/src/exports.d.ts',
         output: [
@@ -121,7 +121,7 @@ function nodejsTypes(): RollupOptions {
     }
 }
 
-function browserTypes(): RollupOptions {
+function browserTypes() {
     return {
         input: 'dist/browser/src/exports-browser.d.ts',
         output: [

@@ -30,7 +30,7 @@
   "scripts": {
     "prebuild": "npm run reset-self",
     "build": "tsc -b",
-    "postbuild": "rollup -c dist/rollup.config.mjs",
+    "postbuild": "rollup -c rollup.config.mjs",
     "check": "tsc -b tsconfig.jest.json",
     "reset-self": "find . -name \"*.tsbuildinfo\" -delete || true",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
