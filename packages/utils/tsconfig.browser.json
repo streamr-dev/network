@@ -1,7 +1,7 @@
 {
-  "extends": "../../tsconfig.karma.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/browser",
     "baseUrl": ".",
 
     /* Mapping */
@@ -13,5 +13,8 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/node"
   ]
 }
