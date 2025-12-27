@@ -1,5 +1,4 @@
 import md5 from 'md5'
-import { hexToBinary } from '../binaryUtils'
 
 export function getSubtle(): SubtleCrypto {
     const { crypto } = globalThis
@@ -16,7 +15,7 @@ export function getSubtle(): SubtleCrypto {
 }
 
 export function computeMd5(input: string): Buffer {
-    return Buffer.from(hexToBinary(md5(input)))
+    return Buffer.from(md5(input), 'hex')
 }
 
 export type Jwk = JsonWebKey
