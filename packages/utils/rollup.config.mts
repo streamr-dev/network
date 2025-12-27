@@ -8,7 +8,7 @@ const nodejsAliases: Alias[] = [
     {
         find: /^@\//,
         replacement: fileURLToPath(
-            new URL('./node/src/node/', import.meta.url)
+            new URL('./dist/node/src/node/', import.meta.url)
         ),
     },
 ]
@@ -17,13 +17,13 @@ const browserAliases: Alias[] = [
     {
         find: /^@\//,
         replacement: fileURLToPath(
-            new URL('./browser/src/browser/', import.meta.url)
+            new URL('./dist/browser/src/browser/', import.meta.url)
         ),
     },
     {
         find: 'os',
         replacement: fileURLToPath(
-            new URL('./browser/src/browser/os.js', import.meta.url)
+            new URL('./dist/browser/src/browser/os.js', import.meta.url)
         ),
     },
     {
@@ -49,16 +49,16 @@ export default defineConfig([
 
 function nodejs(): RollupOptions {
     return {
-        input: 'dist/node/src/exports.js',
+        input: './dist/node/src/exports.js',
         output: [
             {
                 format: 'es',
-                file: 'dist/node/src/exports.js',
+                file: './dist/node/src/exports.js',
                 sourcemap: true,
             },
             {
                 format: 'cjs',
-                file: 'dist/node/src/exports.cjs',
+                file: './dist/node/src/exports.cjs',
                 sourcemap: true,
             },
         ],
@@ -78,16 +78,16 @@ function nodejs(): RollupOptions {
 
 function browser(): RollupOptions {
     return {
-        input: 'dist/browser/src/exports-browser.js',
+        input: './dist/browser/src/exports-browser.js',
         output: [
             {
                 format: 'es',
-                file: 'dist/browser/src/exports.js',
+                file: './dist/browser/src/exports.js',
                 sourcemap: true,
             },
             {
                 format: 'cjs',
-                file: 'dist/browser/src/exports.cjs',
+                file: './dist/browser/src/exports.cjs',
                 sourcemap: true,
             },
         ],
@@ -105,10 +105,10 @@ function browser(): RollupOptions {
 
 function nodejsTypes(): RollupOptions {
     return {
-        input: 'dist/node/src/exports.d.ts',
+        input: './dist/node/src/exports.d.ts',
         output: [
             {
-                file: 'dist/node/src/exports.d.ts',
+                file: './dist/node/src/exports.d.ts',
             },
         ],
         plugins: [
@@ -123,10 +123,10 @@ function nodejsTypes(): RollupOptions {
 
 function browserTypes(): RollupOptions {
     return {
-        input: 'dist/browser/src/exports-browser.d.ts',
+        input: './dist/browser/src/exports-browser.d.ts',
         output: [
             {
-                file: 'dist/browser/src/exports.d.ts',
+                file: './dist/browser/src/exports.d.ts',
             },
         ],
         plugins: [

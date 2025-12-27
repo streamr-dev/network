@@ -30,7 +30,7 @@
   "scripts": {
     "prebuild": "npm run reset-self",
     "build": "tsc -b",
-    "postbuild": "rollup -c dist/rollup.config.mjs",
+    "postbuild": "NODE_OPTIONS=\"--import tsx\" rollup -c rollup.config.mts",
     "check": "tsc -b tsconfig.jest.json",
     "reset-self": "find . -name \"*.tsbuildinfo\" -delete || true",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
@@ -63,6 +63,7 @@
     "@types/md5": "^2.3.6",
     "@types/secp256k1": "^4.0.7",
     "rollup": "^4.53.3",
-    "rollup-plugin-dts": "^6.3.0"
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }
