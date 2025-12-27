@@ -7,7 +7,6 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
-  "types": "./dist/node/src/exports.d.ts",
   "exports": {
     ".": {
       "browser": {
