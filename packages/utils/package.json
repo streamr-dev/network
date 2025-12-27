@@ -34,7 +34,7 @@
     "build": "tsc -b",
     "postbuild": "NODE_OPTIONS=\"--import tsx\" rollup -c rollup.config.mts",
     "check": "tsc -b tsconfig.jest.json",
-    "reset-self": "find . -name \"*.tsbuildinfo\" -delete || true",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
@@ -64,6 +64,7 @@
     "@types/lodash": "^4.17.21",
     "@types/md5": "^2.3.6",
     "@types/secp256k1": "^4.0.7",
+    "rimraf": "^6.1.2",
     "rollup": "^4.53.3",
     "rollup-plugin-dts": "^6.3.0",
     "tsx": "^4.21.0"
