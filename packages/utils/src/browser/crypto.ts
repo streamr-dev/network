@@ -2,7 +2,9 @@ import md5 from 'md5'
 import { hexToBinary } from '../binaryUtils'
 
 export function getSubtle(): SubtleCrypto {
-    if (!crypto.subtle) {
+    const { crypto } = globalThis
+
+    if (!crypto?.subtle) {
         const url =
             'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
         throw new Error(
