@@ -30,31 +30,6 @@ function isJestRunning(): boolean {
     return env.JEST_WORKER_ID !== undefined
 }
 
-const rootLogger = pino({
-    name: 'rootLogger',
-    enabled: !env.NOLOG,
-    level: env.LOG_LEVEL ?? 'info',
-    formatters: {
-        level: (label) => {
-            return { level: label } // log level as string instead of number
-        }
-    },
-    transport: isPrettyPrintDisabled() ? undefined : {
-        target: 'pino-pretty',
-        options: {
-            colorize: parseBoolean(env.LOG_COLORS) ?? true,
-            singleLine: true,
-            translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
-            ignore: 'pid,hostname',
-            levelFirst: true,
-            sync: isJestRunning(),
-        },
-    },
-    browser: {
-        asObject: true
-    }
-})
-
 /**
  * This whole monstrosity exists only because pino in browser environment will not print a log message
  * when invoking `logger.info(undefined, 'msg') instead you need to call `logger.info(msg)`.
@@ -76,6 +51,39 @@ export type LoggerModule = string | { id: string }
 export class Logger {
     static NAME_LENGTH = 25
 
+    private static rootLogger: pino.Logger | undefined
+
+    private static getRootLogger(): pino.Logger {
+        Logger.rootLogger ??= pino({
+            name: 'rootLogger',
+            enabled: !env.NOLOG,
+            level: env.LOG_LEVEL ?? 'info',
+            formatters: {
+                level: (label) => {
+                    return { level: label } // log level as string instead of number
+                },
+            },
+            transport: isPrettyPrintDisabled()
+                ? undefined
+                : {
+                    target: 'pino-pretty',
+                    options: {
+                        colorize: parseBoolean(env.LOG_COLORS) ?? true,
+                        singleLine: true,
+                        translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+                        ignore: 'pid,hostname',
+                        levelFirst: true,
+                        sync: isJestRunning(),
+                    },
+                },
+            browser: {
+                asObject: true,
+            },
+        })
+
+        return Logger.rootLogger
+    }
+
     private readonly logger: pino.Logger
     fatal: (msg: string, metadata?: Record<string, unknown>) => void
     error: (msg: string, metadata?: Record<string, unknown>) => void
@@ -88,7 +96,7 @@ export class Logger {
         loggerModule: LoggerModule,
         contextBindings?: Record<string, unknown>,
         defaultLogLevel: LogLevel = 'info',
-        parentLogger: pino.Logger = rootLogger
+        parentLogger: pino.Logger = Logger.getRootLogger()
     ) {
         this.logger = parentLogger.child({
             name: Logger.createName(loggerModule),
