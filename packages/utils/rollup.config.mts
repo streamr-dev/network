@@ -95,7 +95,10 @@ function browser(): RollupOptions {
             alias({
                 entries: browserAliases,
             }),
-            nodeResolve({ browser: true }),
+            nodeResolve({
+                browser: true,
+                preferBuiltins: false,
+            }),
         ],
         external: [
             /node_modules/
@@ -133,7 +136,10 @@ function browserTypes(): RollupOptions {
             alias({
                 entries: browserAliases,
             }),
-            nodeResolve({ browser: true }),
+            nodeResolve({
+                browser: true,
+                preferBuiltins: false,
+            }),
             dts(),
         ],
     }
