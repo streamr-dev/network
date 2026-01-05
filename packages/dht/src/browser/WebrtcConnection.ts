@@ -1,5 +1,3 @@
-/// <reference lib="dom" />
-
 import { EventEmitter } from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from '../connection/webrtc/IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionType } from '../connection/IConnection'
