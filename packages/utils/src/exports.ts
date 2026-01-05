@@ -7,7 +7,7 @@ export { type ENSName, toENSName } from './ENSName'
 export { type EthereumAddress, toEthereumAddress } from './EthereumAddress'
 export { isENSName } from './isENSName'
 export { keyToArrayIndex } from './keyToArrayIndex'
-export { Logger, type LogLevel } from './Logger'
+export { Logger, type LogLevel, type LoggerModule } from './Logger'
 export {
     CountMetric,
     Metric,

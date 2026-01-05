@@ -15,7 +15,7 @@ interface AutoCertifierClientEvents {
 
 export type HasSession = (request: HasSessionRequest, context: ServerCallContext) => Promise<HasSessionResponse>
 
-const logger = new Logger(module)
+const logger = new Logger('AutoCertifierClient')
 
 const ensureConfigFileWritable = (directory: string): void => {
     const baseDirectory = getBaseDirectory(directory)

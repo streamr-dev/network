@@ -63,7 +63,7 @@ export class SubscriberKeyExchange {
         this.store = store
         this.subscriber = subscriber
         this.identity = identity
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('SubscriberKeyExchange')
         this.config = config
         // Setting explicit keys disables the key-exchange
         if (config.encryption.keys === undefined) {

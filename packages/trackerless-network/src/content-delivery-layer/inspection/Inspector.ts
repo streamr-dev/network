@@ -15,7 +15,7 @@ interface InspectorOptions {
     closeInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
-const logger = new Logger(module)
+const logger = new Logger('Inspector')
 const DEFAULT_TIMEOUT = 60 * 1000
 
 export class Inspector {

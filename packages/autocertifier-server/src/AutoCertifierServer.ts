@@ -12,7 +12,7 @@ import { ChallengeManager } from './ChallengeManager'
 import { RRType } from '@aws-sdk/client-route-53'
 import { Route53Api } from './Route53Api'
 
-const logger = new Logger(module)
+const logger = new Logger('AutoCertifierServer')
 
 export const validateEnvironmentVariable = (name: string): string | never => {
     const value = process.env[name]

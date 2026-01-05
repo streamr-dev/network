@@ -5,7 +5,7 @@ import { Bucket, BucketId } from './Bucket'
 
 const { TimeUuid } = cassandraTypes
 
-const logger = new Logger(module)
+const logger = new Logger('BucketManager')
 
 type StreamPartKey = string
 

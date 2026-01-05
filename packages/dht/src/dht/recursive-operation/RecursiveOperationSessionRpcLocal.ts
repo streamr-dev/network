@@ -6,7 +6,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { DhtAddress, toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RecursiveOperationSessionRpcLocal')
 
 interface RecursiveOperationSessionRpcLocalOptions {
     onResponseReceived: (

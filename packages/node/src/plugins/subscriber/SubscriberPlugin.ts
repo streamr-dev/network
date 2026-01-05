@@ -11,7 +11,7 @@ export interface SubscriberPluginConfig {
     streams: ConfigStream[]
 }
 
-const logger = new Logger(module)
+const logger = new Logger('SubscriberPlugin')
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
 

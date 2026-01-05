@@ -30,7 +30,7 @@ interface HandshakeRpcLocalOptions {
     handshakeWithInterleaving: (target: PeerDescriptor, remoteNodeId: DhtAddress) => Promise<boolean>
 }
 
-const logger = new Logger(module)
+const logger = new Logger('HandshakeRpcLocal')
 
 export class HandshakeRpcLocal implements IHandshakeRpc {
 

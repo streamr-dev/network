@@ -41,7 +41,7 @@ export default class ServerPersistence implements PersistenceContext {
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('ServerPersistence')
         const paths = envPaths('streamr-sdk')
         // ownerId could be too long for the FS, but unlikely to collide locally - concatenate to first 50 chars
         this.dbFilePath = resolve(paths.data, join('./', ownerId.substring(0, 50), `GroupKeys.db`))

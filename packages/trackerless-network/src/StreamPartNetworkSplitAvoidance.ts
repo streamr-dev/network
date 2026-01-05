@@ -10,7 +10,7 @@ import { DiscoveryLayerNode } from './discovery-layer/DiscoveryLayerNode'
  * networks.
  */
 
-const logger = new Logger(module)
+const logger = new Logger('StreamPartNetworkSplitAvoidance')
 
 const exponentialRunOff = async (
     task: () => Promise<void>,

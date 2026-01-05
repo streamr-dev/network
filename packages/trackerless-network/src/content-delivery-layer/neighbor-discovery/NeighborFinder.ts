@@ -15,7 +15,7 @@ interface FindNeighborsSessionOptions {
 const INITIAL_WAIT = 100
 const INTERVAL = 250
 
-const logger = new Logger(module)
+const logger = new Logger('NeighborFinder')
 
 export class NeighborFinder {
     private readonly abortController: AbortController

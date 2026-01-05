@@ -12,7 +12,7 @@ export interface ManagedConnectionEvents {
     disconnected: (gracefulLeave: boolean) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ManagedConnection')
 
 // ManagedConnection is a component used as a wrapper for IConnection after they have been successfully handshaked.
 // Should only be used in the ConnectionManager.

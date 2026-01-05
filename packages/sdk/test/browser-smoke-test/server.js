@@ -3,7 +3,7 @@ const path = require('path')
 const express = require('express')
 const { Logger } = require('@streamr/utils')
 
-const logger = new Logger(module)
+const logger = new Logger('browser-smoke-test/server')
 const app = express()
 
 app.use('/static', express.static(path.join(__dirname, '/../../dist')))

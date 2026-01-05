@@ -108,7 +108,7 @@ class OngoingRequest<T extends ProtoCallContext> {
     } 
 }
 
-const logger = new Logger(module)
+const logger = new Logger('RpcCommunicator')
 
 interface RpcResponseParams {
     request: RpcMessage

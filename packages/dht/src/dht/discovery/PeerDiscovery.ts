@@ -36,7 +36,7 @@ export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
     return toDhtAddress(flipped)
 }
 
-const logger = new Logger(module)
+const logger = new Logger('PeerDiscovery')
 
 export class PeerDiscovery {
 

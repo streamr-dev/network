@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
 import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('BrowserWebsocketClientConnection')
 
 const BINARY_TYPE = 'arraybuffer'
 

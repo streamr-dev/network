@@ -21,7 +21,7 @@
     "build-browser": "webpack --mode=development --progress",
     "prebuild": "./proto.sh",
     "check": "tsc -b tsconfig.jest.json",
-    "clean": "jest --clearCache || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
+    "clean": "jest --clearCache --config '{}' || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",

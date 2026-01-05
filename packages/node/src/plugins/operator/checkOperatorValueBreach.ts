@@ -3,7 +3,7 @@ import { EthereumAddress, Logger, WeiAmount } from '@streamr/utils'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
 
-const logger = new Logger(module)
+const logger = new Logger('checkOperatorValueBreach')
 
 export const checkOperatorValueBreach = async (
     myOperator: Operator,

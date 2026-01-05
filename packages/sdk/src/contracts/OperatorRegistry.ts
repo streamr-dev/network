@@ -39,7 +39,7 @@ export class OperatorRegistry {
         loggerFactory: LoggerFactory
     ) {
         this.theGraphClient = theGraphClient
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('OperatorRegistry')
     }
 
     async findRandomNetworkEntrypoints(

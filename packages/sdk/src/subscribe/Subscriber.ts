@@ -21,7 +21,7 @@ export class Subscriber {
     ) {
         this.node = node
         this.messagePipelineFactory = messagePipelineFactory
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('Subscriber')
     }
 
     getOrCreateSubscriptionSession(streamPartId: StreamPartID): SubscriptionSession {

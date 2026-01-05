@@ -136,7 +136,7 @@ export class StreamRegistry {
         this.streamIdBuilder = streamIdBuilder
         this.config = config
         this.identity = identity
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('StreamRegistry')
         this.streamRegistryContractReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
             toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
             StreamRegistryABI,

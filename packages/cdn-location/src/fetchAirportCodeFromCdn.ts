@@ -1,6 +1,6 @@
 import { Logger, withTimeout } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('fetchAirportCodeFromCdn')
 
 const fetchHeader: (url: string, header: string, timeout: number) => Promise<string | null> = async (
     url: string,

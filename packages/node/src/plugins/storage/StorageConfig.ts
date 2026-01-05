@@ -4,7 +4,7 @@ import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
 import { StorageEventListener } from './StorageEventListener'
 import { StoragePoller } from './StoragePoller'
 
-const logger = new Logger(module)
+const logger = new Logger('StorageConfig')
 
 export interface StorageConfigListener {
     onStreamPartAdded: (streamPart: StreamPartID) => void

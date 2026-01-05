@@ -9,7 +9,7 @@ export interface PendingConnectionEvents {
     disconnected: (gracefulLeave: boolean) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('PendingConnection')
 
 // PendingConnection is used as a reference to a connection that should be opened and handshaked to a given PeerDescriptor
 // It does not hold a connection internally. The public method onHandshakedCompleted should be called once a connection for the 

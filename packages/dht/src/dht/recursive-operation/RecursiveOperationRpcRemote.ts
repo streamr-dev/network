@@ -6,7 +6,7 @@ import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RecursiveOperationRpcRemote')
 
 export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpcClient> {
 

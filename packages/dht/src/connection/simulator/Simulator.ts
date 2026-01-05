@@ -9,7 +9,7 @@ import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
 import { DhtAddress, toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('Simulator')
 
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL', FIXED = 'FIXED' }
 

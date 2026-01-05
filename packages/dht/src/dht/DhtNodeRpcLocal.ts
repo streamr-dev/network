@@ -25,7 +25,7 @@ interface DhtNodeRpcLocalOptions {
     removeContact: (nodeId: DhtAddress) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('DhtNodeRpcLocal')
 
 export class DhtNodeRpcLocal implements IDhtNodeRpc {
 

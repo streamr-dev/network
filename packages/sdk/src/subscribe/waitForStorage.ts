@@ -5,7 +5,7 @@ import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { Resends } from './Resends'
 
-const logger = new Logger(module)
+const logger = new Logger('waitForStorage')
 
 export const waitForStorage = async (
     message: Message,

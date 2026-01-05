@@ -11,7 +11,7 @@ import { PortRange } from '../ConnectionManager'
 import { toNodeId } from '../../identifiers'
 import { createRandomConnectionId } from '../Connection'
 
-const logger = new Logger(module)
+const logger = new Logger('NodeWebrtcConnection')
 
 export interface Params {
     remotePeerDescriptor: PeerDescriptor
