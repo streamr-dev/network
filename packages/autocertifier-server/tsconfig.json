@@ -8,9 +8,9 @@
     "bin"
   ],
   "references": [
+    { "path": "../utils" },
     { "path": "../autocertifier-client" },
-    { "path": "../dht" },
     { "path": "../proto-rpc" },
-    { "path": "../utils" }
+    { "path": "../dht" }
   ]
 }

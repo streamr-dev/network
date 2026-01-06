@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist/node",
+    "outDir": "dist/nodejs",
 
     /* Resolution */
     "moduleResolution": "bundler",
@@ -11,7 +11,7 @@
     /* Mapping */
     "paths": {
       "@/*": [
-        "src/node/*"
+        "src/nodejs/*"
       ]
     }
   },

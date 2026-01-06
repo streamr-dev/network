@@ -5,7 +5,7 @@
       "jest",
       "jest-extended"
     ],
-    "outDir": "dist",
+    "outDir": "dist/karma",
     "baseUrl": ".",
 
     /* Mapping */

@@ -7,23 +7,26 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
+  "main": "./dist/exports-nodejs.cjs",
+  "module": "./dist/exports-nodejs.mjs",
+  "types": "./dist/exports-nodejs.d.ts",
   "exports": {
     ".": {
       "browser": {
-        "types": "./dist/browser/src/exports.d.ts",
-        "import": "./dist/browser/src/exports.js",
-        "require": "./dist/browser/src/exports.cjs"
+        "types": "./dist/exports-browser.d.ts",
+        "import": "./dist/exports-browser.mjs",
+        "require": "./dist/exports-browser.cjs"
       },
       "default": {
-        "types": "./dist/node/src/exports.d.ts",
-        "import": "./dist/node/src/exports.js",
-        "require": "./dist/node/src/exports.cjs"
+        "types": "./dist/exports-nodejs.d.ts",
+        "import": "./dist/exports-nodejs.mjs",
+        "require": "./dist/exports-nodejs.cjs"
       }
     }
   },
   "files": [
-    "dist/node/src/exports.*",
-    "dist/browser/src/exports.*",
+    "dist/exports-nodejs.*",
+    "dist/exports-browser.*",
     "!*.tsbuildinfo",
     "README.md",
     "LICENSE"
