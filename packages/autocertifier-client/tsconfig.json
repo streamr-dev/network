@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist/js",
-    "declarationDir": "dist/types",
+    "outDir": "dist",
 
     /* Resolution */
     "module": "preserve",

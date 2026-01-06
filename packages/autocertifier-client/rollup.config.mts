@@ -9,7 +9,7 @@ export default defineConfig([
 
 function nodejs(): RollupOptions {
     return {
-        input: './dist/js/src/exports.js',
+        input: './dist/src/exports.js',
         output: [
             {
                 format: 'es',
@@ -36,7 +36,7 @@ function nodejs(): RollupOptions {
 
 function nodejsTypes(): RollupOptions {
     return {
-        input: './dist/types/src/exports.d.ts',
+        input: './dist/src/exports.d.ts',
         output: [
             {
                 file: './dist/exports.d.ts',
