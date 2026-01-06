@@ -1,5 +1,5 @@
 import { wait } from '../src/wait'
-import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
+import { AverageMetric, CountMetric, LevelMetric, MetricsContext, type MetricsReport, RateMetric } from '../src/Metric'
 import { until } from '../src/until'
 
 const REPORT_INTERVAL = 100

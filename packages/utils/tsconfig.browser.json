@@ -1,11 +1,7 @@
 {
-  "extends": "../../tsconfig.karma.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "types": [
-      "jest",
-      "jest-extended"
-    ],
-    "outDir": "dist/karma",
+    "outDir": "dist/browser",
     "baseUrl": ".",
 
     /* Mapping */
@@ -17,5 +13,8 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/nodejs"
   ]
 }

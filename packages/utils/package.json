@@ -7,17 +7,36 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/utils"
   },
-  "main": "./dist/src/exports.js",
-  "types": "./dist/src/exports.d.ts",
+  "main": "./dist/exports-nodejs.cjs",
+  "module": "./dist/exports-nodejs.mjs",
+  "types": "./dist/exports-nodejs.d.ts",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./dist/exports-browser.d.ts",
+        "import": "./dist/exports-browser.mjs",
+        "require": "./dist/exports-browser.cjs"
+      },
+      "default": {
+        "types": "./dist/exports-nodejs.d.ts",
+        "import": "./dist/exports-nodejs.mjs",
+        "require": "./dist/exports-nodejs.cjs"
+      }
+    }
+  },
   "files": [
-    "dist",
+    "dist/exports-nodejs.*",
+    "dist/exports-browser.*",
     "!*.tsbuildinfo",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
+    "prebuild": "npm run reset-self",
     "build": "tsc -b",
-    "check": "tsc -p tsconfig.jest.json",
+    "postbuild": "NODE_OPTIONS=\"--import tsx\" rollup -c rollup.config.mts",
+    "check": "tsc -b tsconfig.jest.json",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
@@ -28,16 +47,28 @@
   "dependencies": {
     "@noble/curves": "^1.9.7",
     "@noble/post-quantum": "^0.4.1",
+    "buffer": "^6.0.3",
+    "buffer-shim": "^1.0.1",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
+    "md5": "^2.3.0",
+    "path-browserify": "^1.0.1",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
+    "readable-stream": "^4.7.0",
     "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@streamr/browser-test-runner": "^0.0.1",
     "@types/lodash": "^4.17.21",
-    "@types/secp256k1": "^4.0.7"
+    "@types/md5": "^2.3.6",
+    "@types/secp256k1": "^4.0.7",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.53.3",
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }

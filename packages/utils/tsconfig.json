@@ -1,9 +1,10 @@
 {
-  "extends": "../../tsconfig.node.json",
+  "files": [],
   "compilerOptions": {
-    "outDir": "dist"
+    "composite": true
   },
-  "include": [
-    "src"
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.browser.json" }
   ]
 }

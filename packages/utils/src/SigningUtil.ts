@@ -6,8 +6,7 @@ import { randomBytes } from '@noble/post-quantum/utils'
 import { p256 } from '@noble/curves/p256'
 import { areEqualBinaries, binaryToHex } from './binaryUtils'
 import type { UserIDRaw } from './UserID'
-import { getSubtle } from './crossPlatformCrypto'
-import type { webcrypto } from 'crypto'
+import { type CryptoKey, getSubtle, type Jwk } from '@/crypto'
 
 export const KEY_TYPES = [
     'ECDSA_SECP256K1_EVM', 
@@ -18,9 +17,6 @@ export const KEY_TYPES = [
 export type KeyType = typeof KEY_TYPES[number]
 
 const ECDSA_SECP256K1_EVM_SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
-const keccak = new Keccak(256)
-
-const subtleCrypto = getSubtle()
 
 export interface KeyPair {
     publicKey: Uint8Array
@@ -58,7 +54,7 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
     }
 
     keccakHash(message: Uint8Array, useEthereumMagic: boolean = true): Buffer {
-        keccak.reset()
+        const keccak = new Keccak(256)
         keccak.update(useEthereumMagic ? Buffer.concat([
             Buffer.from(ECDSA_SECP256K1_EVM_SIGN_MAGIC + message.length), 
             message
@@ -91,7 +87,7 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
             throw new Error(`Expected 65 bytes (an ECDSA uncompressed public key with header byte). Got length: ${publicKey.length}`)
         }
         const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
-        keccak.reset()
+        const keccak = new Keccak(256)
         keccak.update(Buffer.from(pubKeyWithoutFirstByte))
         const hashOfPubKey = keccak.digest('binary')
         return hashOfPubKey.subarray(12, hashOfPubKey.length)
@@ -167,7 +163,7 @@ export class EcdsaSecp256r1 extends SigningUtil {
         throw new Error(`Unexpected public key length: ${publicKey.length}`)
     }
 
-    privateKeyToJWK(privateKey: Uint8Array): webcrypto.JsonWebKey {
+    privateKeyToJWK(privateKey: Uint8Array): Jwk {
         const publicKey = this.getPublicKeyFromPrivateKey(privateKey, false)
         // uncompressed publicKey = [header (1 byte), x (32 bytes), y (32 bytes)
         const x = publicKey.subarray(1, 33)
@@ -199,7 +195,9 @@ export class EcdsaSecp256r1 extends SigningUtil {
      * Pass the privateKey in JsonWebKey format for a slight performance gain.
      * You can convert raw keys to JWK using the privateKeyToJWK function.
      */
-    async createSignature(payload: Uint8Array, privateKey: Uint8Array | webcrypto.JsonWebKey): Promise<Uint8Array> {
+    async createSignature(payload: Uint8Array, privateKey: Uint8Array | Jwk): Promise<Uint8Array> {
+        const subtleCrypto = getSubtle()
+
         const jwk = privateKey instanceof Uint8Array ? this.privateKeyToJWK(privateKey) : privateKey
 
         /**
@@ -229,8 +227,8 @@ export class EcdsaSecp256r1 extends SigningUtil {
         return new Uint8Array(signature)
     }
 
-    private async publicKeyToCryptoKey(publicKey: Uint8Array): Promise<webcrypto.CryptoKey> {
-        return subtleCrypto.importKey(
+    private async publicKeyToCryptoKey(publicKey: Uint8Array): Promise<CryptoKey> {
+        return getSubtle().importKey(
             'raw',
             publicKey,
             {
@@ -243,7 +241,7 @@ export class EcdsaSecp256r1 extends SigningUtil {
     }
 
     async verifySignature(publicKey: UserIDRaw, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        let key: webcrypto.CryptoKey
+        let key: CryptoKey | undefined
 
         try {
             key = await this.publicKeyToCryptoKey(publicKey)
@@ -257,7 +255,7 @@ export class EcdsaSecp256r1 extends SigningUtil {
             }
         }
 
-        const isValid = await subtleCrypto.verify(
+        const isValid = await getSubtle().verify(
             {
                 name: 'ECDSA',
                 hash: { name: 'SHA-256' }

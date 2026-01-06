@@ -3,6 +3,7 @@ FROM node:${NODE_VERSION}-bullseye AS build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
+	npm run bootstrap-pkg --package=@streamr/utils && \
 	npm run bootstrap-pkg --package=@streamr/proto-rpc && \
 	npm run bootstrap-pkg --package=@streamr/autocertifier-client && \
 	npm run bootstrap-pkg --package=@streamr/dht && \
