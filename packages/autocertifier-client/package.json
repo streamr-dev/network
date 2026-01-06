@@ -7,18 +7,21 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/autocertifier-client"
   },
-  "main": "dist/src/exports.js",
-  "types": "dist/src/exports.d.ts",
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "files": [
-    "dist",
+    "dist/exports.*",
     "!*.tsbuildinfo"
   ],
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "prebuild": "./proto.sh",
+    "prebuild": "npm run reset-self && ./proto.sh",
     "build": "tsc -b",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc --noEmit",
+    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
     "clean": "rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },
@@ -29,6 +32,11 @@
     "node-forge": "^1.3.2"
   },
   "devDependencies": {
-    "@types/node-forge": "^1.3.14"
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@types/node-forge": "^1.3.14",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }

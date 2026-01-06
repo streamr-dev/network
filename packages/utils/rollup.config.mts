@@ -53,7 +53,7 @@ function nodejs(): RollupOptions {
         output: [
             {
                 format: 'es',
-                file: './dist/exports-nodejs.mjs',
+                file: './dist/exports-nodejs.js',
                 sourcemap: true,
             },
             {
@@ -83,7 +83,7 @@ function browser(): RollupOptions {
         output: [
             {
                 format: 'es',
-                file: './dist/exports-browser.mjs',
+                file: './dist/exports-browser.js',
                 sourcemap: true,
             },
             {
