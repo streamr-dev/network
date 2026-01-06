@@ -1,7 +1,5 @@
 import { Logger } from './Logger'
 
-const logger = new Logger('executeSafePromise')
-
 /**
  * Execute a promise that should never reject. If it does, log the error and exit the process
  * (in Node/Electron) or throw an unhandled error (in browsers).
@@ -9,9 +7,11 @@ const logger = new Logger('executeSafePromise')
  * to reject (unless something is really wrong).
  */
 export const executeSafePromise = async <T>(createPromise: () => Promise<T>): Promise<T> => {
+    
     try {
         return await createPromise()
     } catch (err: any) {
+        const logger = new Logger('executeSafePromise')
         logger.fatal('Assertion failure!', { message: err?.message, err })
         
         // Check if we're in a Node/Electron environment

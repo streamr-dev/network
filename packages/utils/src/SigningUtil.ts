@@ -31,11 +31,16 @@ export abstract class SigningUtil {
     abstract assertValidKeyPair(publicKey: UserIDRaw, privateKey: Uint8Array): void
 
     static getInstance(type: KeyType): SigningUtil {
-        const util = keyTypeToInstance[type]
-        if (!util) {
-            throw new Error(`Unknown key pair type: ${type}`)
+        switch (type) {
+            case 'ECDSA_SECP256K1_EVM':
+                return new EcdsaSecp256k1Evm()
+            case 'ECDSA_SECP256R1':
+                return new EcdsaSecp256r1()
+            case 'ML_DSA_87':
+                return new MlDsa87()
+            default:
+                throw new Error(`Unknown key pair type: ${type}`)
         }
-        return util
     }
 }
 
@@ -315,13 +320,4 @@ export class MlDsa87 extends SigningUtil {
             throw new Error(`The given ML-DSA public key and private key don't match!`)
         }
     }
-
-}
-
-// Declared at the bottom of the file because the classes need to be
-// declared first. TS makes sure all KeyPairTypes are present.
-const keyTypeToInstance: Record<KeyType, SigningUtil> = {
-    ECDSA_SECP256K1_EVM: new EcdsaSecp256k1Evm(),
-    ECDSA_SECP256R1: new EcdsaSecp256r1(),
-    ML_DSA_87: new MlDsa87()
 }
