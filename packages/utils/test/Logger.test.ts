@@ -17,7 +17,7 @@ describe('Logger', () => {
                 logs.push(pick(JSON.parse(data), ['level', 'msg']))
             }
         }
-        logger = new Logger('Logger', undefined, 'trace', pino({
+        logger = new Logger('Logger.test', undefined, 'trace', pino({
             level: 'trace',
             browser: {
                 write: (o) => {
@@ -83,14 +83,14 @@ describe('Logger', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
                 ? 'Logger.test              '
                 : 'Logger.test'
-            expect(Logger.createName(module)).toBe(expected)
+            expect(Logger.createName('Logger.test.ts')).toBe(expected)
         })
         it('application id', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
                 ? 'APP:Logger.test          '
                 : 'APP:Logger.test'
             process.env.STREAMR_APPLICATION_ID = 'APP'
-            expect(Logger.createName(module)).toBe(expected)
+            expect(Logger.createName('Logger.test.ts')).toBe(expected)
             delete process.env.STREAMR_APPLICATION_ID
         })
         it('index', () => {
