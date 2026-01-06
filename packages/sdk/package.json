@@ -36,7 +36,7 @@
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
     "build-browser-production": "NODE_ENV=production webpack --mode=production --progress",
-    "check": "tsc -p tsconfig.jest.json",
+    "check": "tsc -b tsconfig.jest.json",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist src/generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts,mts}'",
     "generate-protoc-code": "./proto.sh",

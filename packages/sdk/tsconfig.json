@@ -5,20 +5,21 @@
     "declarationDir": "dist/types",
     "lib": ["es2021"],
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "noImplicitOverride": false
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src",
     "src/**/*.json"
   ],
   "exclude": [
+    "src/generated",
     "src/exports-esm.mjs"
   ],
   "references": [
-    { "path": "../dht" },
+    { "path": "../utils" },
     { "path": "../proto-rpc" },
+    { "path": "../dht" },
     { "path": "../trackerless-network" },
-    { "path": "../utils" }
+    { "path": "./tsconfig.generated.json" }
   ]
 }
