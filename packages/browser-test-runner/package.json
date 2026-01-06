@@ -27,7 +27,6 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.1",
     "@jest/fake-timers": "^30.0.5",
-    "baseline-browser-mapping": "^2.9.11",
     "buffer": "^6.0.3",
     "electron": "^34.0.0",
     "expect": "^30.0.5",
