@@ -9,16 +9,16 @@ export default defineConfig([
 
 function nodejs(): RollupOptions {
     return {
-        input: './dist/src/exports.js',
+        input: './dist/js/src/exports.js',
         output: [
             {
                 format: 'es',
-                file: './dist/src/exports.mjs',
+                file: './dist/exports.mjs',
                 sourcemap: true,
             },
             {
                 format: 'cjs',
-                file: './dist/src/exports.cjs',
+                file: './dist/exports.cjs',
                 sourcemap: true,
             },
         ],
@@ -36,10 +36,10 @@ function nodejs(): RollupOptions {
 
 function nodejsTypes(): RollupOptions {
     return {
-        input: './dist/src/exports.d.ts',
+        input: './dist/types/src/exports.d.ts',
         output: [
             {
-                file: './dist/src/exports.d.ts',
+                file: './dist/exports.d.ts',
             },
         ],
         plugins: [

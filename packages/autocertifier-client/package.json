@@ -7,11 +7,11 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/autocertifier-client"
   },
-  "main": "./dist/src/exports.cjs",
-  "module": "./dist/src/exports.mjs",
-  "types": "./dist/src/exports.d.ts",
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.mjs",
+  "types": "./dist/exports.d.ts",
   "files": [
-    "dist/src/exports.*",
+    "dist/exports.*",
     "!*.tsbuildinfo"
   ],
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
