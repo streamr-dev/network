@@ -15,7 +15,11 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "isolatedModules": true,
-    "types": [],
+    "types": [
+      "jest",
+      "jest-extended",
+      "@streamr/test-utils/customMatcherTypes"
+    ],
     "sourceMap": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
