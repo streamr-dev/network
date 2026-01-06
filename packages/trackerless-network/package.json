@@ -20,7 +20,7 @@
     "build": "tsc -b",
     "build-browser": "webpack --mode=development --progress",
     "prebuild": "./proto.sh",
-    "check": "tsc -p tsconfig.jest.json",
+    "check": "tsc -b tsconfig.jest.json",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
