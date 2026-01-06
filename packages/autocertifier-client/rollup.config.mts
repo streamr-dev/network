@@ -13,7 +13,7 @@ function nodejs(): RollupOptions {
         output: [
             {
                 format: 'es',
-                file: './dist/exports.mjs',
+                file: './dist/exports.js',
                 sourcemap: true,
             },
             {

@@ -8,18 +8,18 @@
     "directory": "packages/utils"
   },
   "main": "./dist/exports-nodejs.cjs",
-  "module": "./dist/exports-nodejs.mjs",
+  "module": "./dist/exports-nodejs.js",
   "types": "./dist/exports-nodejs.d.ts",
   "exports": {
     ".": {
       "browser": {
         "types": "./dist/exports-browser.d.ts",
-        "import": "./dist/exports-browser.mjs",
+        "import": "./dist/exports-browser.js",
         "require": "./dist/exports-browser.cjs"
       },
       "default": {
         "types": "./dist/exports-nodejs.d.ts",
-        "import": "./dist/exports-nodejs.mjs",
+        "import": "./dist/exports-nodejs.js",
         "require": "./dist/exports-nodejs.cjs"
       }
     }

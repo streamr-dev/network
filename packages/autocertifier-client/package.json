@@ -8,7 +8,7 @@
     "directory": "packages/autocertifier-client"
   },
   "main": "./dist/exports.cjs",
-  "module": "./dist/exports.mjs",
+  "module": "./dist/exports.js",
   "types": "./dist/exports.d.ts",
   "files": [
     "dist/exports.*",
