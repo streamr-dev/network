@@ -13,12 +13,12 @@ function nodejs(): RollupOptions {
         output: [
             {
                 format: 'es',
-                file: './dist/src/exports.js',
+                file: './dist/exports.js',
                 sourcemap: true,
             },
             {
                 format: 'cjs',
-                file: './dist/src/exports.cjs',
+                file: './dist/exports.cjs',
                 sourcemap: true,
             },
         ],
@@ -38,7 +38,7 @@ function nodejsTypes(): RollupOptions {
     return {
         input: './dist/src/exports.d.ts',
         output: [
-            { file: './dist/src/exports.d.ts' },
+            { file: './dist/exports.d.ts' },
         ],
         plugins: [
             nodeResolve(),

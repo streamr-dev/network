@@ -7,17 +7,11 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/geoip-location"
   },
-  "exports": {
-    ".": {
-      "default": {
-        "types": "./dist/src/exports.d.ts",
-        "import": "./dist/src/exports.js",
-        "require": "./dist/src/exports.cjs"
-      }
-    }
-  },
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "files": [
-    "dist/src/exports.*",
+    "dist/exports.*",
     "!*.tsbuildinfo",
     "README.md",
     "LICENSE"
