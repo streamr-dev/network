@@ -67,7 +67,7 @@
     "@types/md5": "^2.3.6",
     "@types/secp256k1": "^4.0.7",
     "rimraf": "^6.1.2",
-    "rollup": "^4.53.3",
+    "rollup": "^4.55.1",
     "rollup-plugin-dts": "^6.3.0",
     "tsx": "^4.21.0"
   }
