@@ -4,7 +4,7 @@ import defaultConfig from "../../jest.config"
 const config: Config.InitialOptions = {
     ...defaultConfig,
     moduleNameMapper: {
-        "^@/(.*)$": "<rootDir>/src/node/$1",
+        "^@/(.*)$": "<rootDir>/src/nodejs/$1",
     },
 }
 
