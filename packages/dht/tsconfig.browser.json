@@ -13,7 +13,7 @@
 
     /* @todo Make verbatimModuleSyntax (true) work. */
     "verbatimModuleSyntax": false,
-    
+
     /* @todo Make useUnknownInCatchVariables (true) work. */
     "useUnknownInCatchVariables": false,
 
