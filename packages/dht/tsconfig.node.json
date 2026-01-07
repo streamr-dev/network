@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist/nodejs",
+
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/nodejs/*"
+      ]
+    },
+
+    /* Resolution */
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": "."
+  },
+  "include": [
+    "src",
+    "package.json"
+  ],
+  "exclude": [
+    "src/browser"
+  ],
+  "references": [
+    { "path": "../utils" },
+    { "path": "../proto-rpc" },
+    { "path": "../cdn-location" },
+    { "path": "../geoip-location" },
+    { "path": "../autocertifier-client" },
+    { "path": "./tsconfig.node-generated.json" }
+  ]
+}

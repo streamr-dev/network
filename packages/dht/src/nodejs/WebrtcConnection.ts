@@ -1,26 +1,19 @@
-import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
-import { ConnectionType, IConnection, ConnectionID } from '../IConnection'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
-import EventEmitter from 'eventemitter3'
+import { IWebrtcConnection, WebrtcConnectionEvents } from '../connection/webrtc/IWebrtcConnection'
+import { ConnectionType, IConnection, ConnectionID } from '../connection/IConnection'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { EventEmitter } from 'eventemitter3'
 import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
-import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
-import { iceServerAsString } from './iceServerAsString'
-import { IceServer, EARLY_TIMEOUT } from './WebrtcConnector'
-import { PortRange } from '../ConnectionManager'
-import { toNodeId } from '../../identifiers'
-import { createRandomConnectionId } from '../Connection'
+import { IllegalRtcPeerConnectionState } from '../helpers/errors'
+import { iceServerAsString } from '../connection/webrtc/iceServerAsString'
+import { IceServer } from '../connection/webrtc/types'
+import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import { PortRange } from '../connection/ConnectionManager'
+import { toNodeId } from '../identifiers'
+import { createRandomConnectionId } from '../connection/Connection'
+import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
 
-const logger = new Logger('NodeWebrtcConnection')
-
-export interface Params {
-    remotePeerDescriptor: PeerDescriptor
-    bufferThresholdHigh?: number
-    bufferThresholdLow?: number
-    maxMessageSize?: number
-    iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
-    portRange?: PortRange
-}
+const logger = new Logger('WebrtcConnection (Node)')
 
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
 // because importing single dom definitions in not possible
@@ -38,7 +31,7 @@ initLogger('Fatal')
 
 type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 
-export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IConnection, IWebrtcConnection {
+export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> implements IConnection, IWebrtcConnection {
 
     public connectionId: ConnectionID
     private connection?: PeerConnection
@@ -57,7 +50,7 @@ export class NodeWebrtcConnection extends EventEmitter<WebrtcConnectionEvents> i
     private offering?: boolean
     private readonly earlyTimeout: NodeJS.Timeout
 
-    constructor(params: Params) {
+    constructor(params: WebrtcConnectionParams) {
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []

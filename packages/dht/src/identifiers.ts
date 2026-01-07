@@ -1,5 +1,4 @@
-import { BrandedString, areEqualBinaries, binaryToHex, hexToBinary } from '@streamr/utils'
-import crypto from 'crypto'
+import { BrandedString, areEqualBinaries, binaryToHex, hexToBinary, randomBytes } from '@streamr/utils'
 import { PeerDescriptor } from '../generated/packages/dht/protos/DhtRpc'
 
 // https://www.scs.stanford.edu/~dm/home/papers/kpos.pdf
@@ -25,5 +24,5 @@ export const areEqualPeerDescriptors = (peerDescriptor1: PeerDescriptor, peerDes
 }
 
 export const randomDhtAddress = (): DhtAddress => {
-    return toDhtAddress(crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
+    return toDhtAddress(randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
 }

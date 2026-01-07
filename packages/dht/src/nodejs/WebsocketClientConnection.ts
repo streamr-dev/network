@@ -1,8 +1,8 @@
 import { Logger, binaryToUtf8 } from '@streamr/utils'
 import { WebSocket } from 'ws'
-import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
+import { AbstractWebsocketClientConnection } from '../connection/websocket/AbstractWebsocketClientConnection'
 
-const logger = new Logger('NodeWebsocketClientConnection')
+const logger = new Logger('WebsocketClientConnection (Node)')
 
 const BINARY_TYPE = 'nodebuffer'
 

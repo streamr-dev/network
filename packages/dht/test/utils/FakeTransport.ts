@@ -2,7 +2,7 @@ import { EventEmitter } from 'eventemitter3'
 import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
-import { ConnectionsView } from '../../src/exports'
+import { ConnectionsView } from '../../src/connection/ConnectionsView'
 
 // TODO extract ConnectionsView functionality to FakeConnectionsView
 class FakeTransport extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView {

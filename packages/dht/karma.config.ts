@@ -7,18 +7,22 @@ const TEST_PATHS = [
     './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*|GeoIpLayer0*).ts'
 ]
 
-const NodeWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
-const BrowserWebrtcConnection = resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
-const NodeWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/NodeWebsocketClientConnection.ts')
-const BrowserWebsocketClientConnection = resolve(__dirname, 'src/connection/websocket/BrowserWebsocketClientConnection.ts')
-
 export default createKarmaConfig(
     TEST_PATHS,
     createWebpackConfig({
         libraryName: 'dht',
         alias: {
-            [NodeWebrtcConnection]: BrowserWebrtcConnection,
-            [NodeWebsocketClientConnection]: BrowserWebsocketClientConnection
+            /**
+             * Selectively alias only browser-specific implementations here. The rest stays in `nodejs/`
+             * because these (like WebsocketServer) are needed for testing and running WebSocket-based
+             * code in Electron environment.
+             *
+             * This also proves that the "browser" test are really nodejs-flavoured browser tests where
+             * we still depend on NodeJS elements.
+             */
+            '@/WebrtcConnection': resolve(__dirname, 'src/browser/WebrtcConnection.ts'),
+            '@/WebsocketClientConnection': resolve(__dirname, 'src/browser/WebsocketClientConnection.ts'),
+            '@': resolve(__dirname, 'src/nodejs'),
         },
         fallback: {
             module: false

@@ -1,6 +1,6 @@
-import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
+import { WebsocketServer } from '@/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
+import { WebsocketClientConnection } from '@/WebsocketClientConnection'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger('Websocket.test')
