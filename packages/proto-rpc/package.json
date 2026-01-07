@@ -7,9 +7,9 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/proto-rpc"
   },
-  "main": "./dist/src/exports.cjs",
-  "module": "./dist/src/exports.js",
-  "types": "./dist/src/exports.d.ts",
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "files": [
     "dist/exports.*",
     "!*.tsbuildinfo",
