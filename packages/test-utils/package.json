@@ -2,7 +2,6 @@
   "name": "@streamr/test-utils",
   "version": "103.2.0",
   "description": "A collection of shared test utilities",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
@@ -13,25 +12,27 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "default": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     },
     "./setupCustomMatchers": {
-      "default": {
-        "types": "./dist/setupCustomMatchers.d.ts",
-        "import": "./dist/setupCustomMatchers.js",
-        "require": "./dist/setupCustomMatchers.cjs"
-      }
+      "types": "./dist/setupCustomMatchers.d.ts",
+      "import": "./dist/setupCustomMatchers.js",
+      "require": "./dist/setupCustomMatchers.cjs",
+      "default": "./dist/setupCustomMatchers.js"
     },
-    "./customMatcherTypes": {
-      "default": {
-        "types": "./dist/customMatchers.d.ts",
-        "import": "./dist/customMatchers.js",
-        "require": "./dist/customMatchers.cjs"
-      }
+    "./customMatchers": {
+      "types": "./dist/customMatchers.d.ts",
+      "import": "./dist/customMatchers.js",
+      "require": "./dist/customMatchers.cjs",
+      "default": "./dist/customMatchers.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "customMatchers": ["dist/customMatchers.d.ts"]
     }
   },
   "files": [

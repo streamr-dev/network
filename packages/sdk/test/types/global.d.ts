@@ -1,2 +1,2 @@
 import 'jest-extended'
-import '@streamr/test-utils/customMatcherTypes'
+import '@streamr/test-utils/customMatchers'
