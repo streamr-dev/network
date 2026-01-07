@@ -34,6 +34,9 @@
     "*": {
       "customMatchers": [
         "dist/customMatchers.d.ts"
+      ],
+      "setupCustomMatchers": [
+        "dist/setupCustomMatchers.d.ts"
       ]
     }
   },
