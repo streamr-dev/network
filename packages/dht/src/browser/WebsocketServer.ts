@@ -15,15 +15,15 @@ export class WebsocketServer extends EventEmitter<WebsocketServerEvents> impleme
     }
 
     public async start(): Promise<number> {
-        return 0
+        throw new Error('WebsocketServer is not supported in browser environment')
     }
 
     public async stop(): Promise<void> {
-        // do nothing
+        throw new Error('WebsocketServer is not supported in browser environment')
     }
 
     public updateCertificate(_cert: string, _key: string): void {
-        // do nothing
+        throw new Error('WebsocketServer is not supported in browser environment')
     }
 }
 
