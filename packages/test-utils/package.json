@@ -7,17 +7,52 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/test-utils"
   },
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./setupCustomMatchers": {
+      "types": "./dist/setupCustomMatchers.d.ts",
+      "import": "./dist/setupCustomMatchers.js",
+      "require": "./dist/setupCustomMatchers.cjs",
+      "default": "./dist/setupCustomMatchers.js"
+    },
+    "./customMatchers": {
+      "types": "./dist/customMatchers.d.ts",
+      "import": "./dist/customMatchers.js",
+      "require": "./dist/customMatchers.cjs",
+      "default": "./dist/customMatchers.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "customMatchers": [
+        "dist/customMatchers.d.ts"
+      ],
+      "setupCustomMatchers": [
+        "dist/setupCustomMatchers.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
+    "!dist/src",
     "!*.tsbuildinfo",
-    "setupCustomMatchers.js",
-    "customMatcherTypes.d.ts"
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
+    "prebuild": "npm run reset-self",
     "build": "tsc -b",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -p tsconfig.jest.json",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
@@ -36,7 +71,12 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.1"
+    "@types/express": "^5.0.1",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }
