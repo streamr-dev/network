@@ -45,6 +45,10 @@ function nodejs(): RollupOptions[] {
                     sourcemap: true,
                 },
             ],
+            external: [
+                /node_modules/,
+                /@streamr\//,
+            ],
         },
         {
             /**
