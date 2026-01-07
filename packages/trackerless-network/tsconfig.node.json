@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+
+    /* Resolution */
+    "moduleResolution": "bundler",
+    "module": "preserve"
+  },
+  "include": [
+    "src",
+    "package.json"
+  ],
+  "references": [
+    { "path": "../utils" },
+    { "path": "../proto-rpc" },
+    { "path": "../dht" },
+    { "path": "./tsconfig.generated.json" }
+  ]
+}
