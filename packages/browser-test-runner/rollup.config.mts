@@ -42,6 +42,7 @@ function nodejs(): RollupOptions[] {
                 {
                     format: 'cjs',
                     file: './dist/preload.cjs',
+                    sourcemap: true,
                 },
             ],
         },
@@ -54,6 +55,7 @@ function nodejs(): RollupOptions[] {
                 {
                     format: 'es',
                     file: './dist/karma-setup.js',
+                    sourcemap: true,
                 },
             ],
             plugins: [
