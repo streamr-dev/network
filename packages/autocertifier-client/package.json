@@ -21,7 +21,7 @@
     "build": "tsc -b",
     "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc --noEmit",
-    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "clean": "rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },

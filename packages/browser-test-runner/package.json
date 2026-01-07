@@ -22,7 +22,7 @@
     "build": "tsc -b",
     "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc --noEmit",
-    "reset-self": "rimraf --glob '**/*.tsbuildinfo'",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
