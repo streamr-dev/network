@@ -41,9 +41,8 @@
     }
   },
   "files": [
-    "dist/index.*",
-    "dist/customMatchers.*",
-    "dist/setupCustomMatchers.*",
+    "dist",
+    "!dist/src",
     "!*.tsbuildinfo",
     "LICENSE",
     "README.md"
