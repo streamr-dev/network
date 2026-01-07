@@ -14,6 +14,7 @@
   "files": [
     "dist/exports.*",
     "dist/preload.cjs",
+    "dist/karma-setup.js",
     "!*.tsbuildinfo",
     "LICENSE"
   ],
