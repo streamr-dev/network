@@ -20,7 +20,7 @@ export function computeMd5(input: string): Buffer {
 }
 
 export function computeSha1(input: string): Buffer {
-    return sha1(new TextEncoder().encode(input)) as Buffer
+    return Buffer.from(sha1(new TextEncoder().encode(input)))
 }
 
 export type Jwk = JsonWebKey
