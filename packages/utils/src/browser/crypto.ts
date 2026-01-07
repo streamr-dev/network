@@ -1,4 +1,5 @@
 import md5 from 'md5'
+import { sha1 } from '@noble/hashes/legacy.js'
 
 export function getSubtle(): SubtleCrypto {
     const { crypto } = globalThis
@@ -16,6 +17,10 @@ export function getSubtle(): SubtleCrypto {
 
 export function computeMd5(input: string): Buffer {
     return Buffer.from(md5(input), 'hex')
+}
+
+export function computeSha1(input: string): Buffer {
+    return Buffer.from(sha1(new TextEncoder().encode(input)))
 }
 
 export type Jwk = JsonWebKey
