@@ -13,7 +13,7 @@ export default createKarmaConfig(
         libraryName: 'dht',
         alias: {
             /**
-             * Selectively alias only browser-specific implementations here. The rest says in `nodejs/`
+             * Selectively alias only browser-specific implementations here. The rest stays in `nodejs/`
              * because these (like WebsocketServer) are needed for testing and running WebSocket-based
              * code in Electron environment.
              *
