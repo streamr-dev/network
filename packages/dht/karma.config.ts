@@ -17,7 +17,7 @@ export default createKarmaConfig(
              * because these (like WebsocketServer) are needed for testing and running WebSocket-based
              * code in Electron environment.
              *
-             * This also prooves that the "browser" test are really nodejs-flavoured browser tests where
+             * This also proves that the "browser" test are really nodejs-flavoured browser tests where
              * we still depend on NodeJS elements.
              */
             '@/WebrtcConnection': resolve(__dirname, 'src/browser/WebrtcConnection.ts'),
