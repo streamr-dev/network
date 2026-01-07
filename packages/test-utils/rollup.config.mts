@@ -4,7 +4,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 export default defineConfig([
     nodejs(),
-    nodejsTypes(),
+    ...nodejsTypes(),
 ])
 
 function nodejs(): RollupOptions {
@@ -42,22 +42,58 @@ function nodejs(): RollupOptions {
     }
 }
 
-function nodejsTypes(): RollupOptions {
-    return {
-        input: [
-            './dist/src/index.d.ts',
-            './dist/src/customMatchers.d.ts',
-        ],
-        output: [
-            { dir: './dist' },
-        ],
-        plugins: [
-            nodeResolve(),
-            dts(),
-        ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
-    }
+function nodejsTypes(): RollupOptions[] {
+    return [
+        {
+            input: './dist/src/index.d.ts',
+            output: [
+                { file: './dist/index.d.ts' },
+            ],
+            plugins: [
+                nodeResolve(),
+                dts(),
+            ],
+            external: [
+                /node_modules/,
+                /@streamr\//,
+            ],
+        },
+        {
+            input: './dist/src/customMatchers.d.ts',
+            output: [
+                { file: './dist/customMatchers.d.ts' },
+            ],
+            plugins: [
+                nodeResolve(),
+                dts(),
+            ],
+            external: [
+                /node_modules/,
+                /@streamr\//,
+            ],
+        },
+        {
+            input: './dist/src/setupCustomMatchers.d.ts',
+            output: [
+                { file: './dist/setupCustomMatchers.d.ts' },
+            ],
+            plugins: [
+                nodeResolve(),
+                dts(),
+            ],
+            external: [
+                /node_modules/,
+                /@streamr\//,
+            ],
+            onwarn(warning, rollupWarn) {
+                /**
+                 * setupCustomMatchers.d.ts is an empty file, so rollup dts plugin
+                 * generates an EMPTY_BUNDLE warning. We can safely ignore it.
+                 */
+                if (warning.code !== 'EMPTY_BUNDLE') {
+                    rollupWarn(warning)
+                }
+            }
+        }
+    ]
 }
