@@ -10,6 +10,9 @@
   "main": "./dist/exports.cjs",
   "module": "./dist/exports.js",
   "types": "./dist/exports.d.ts",
+  "browser": {
+    "dist/exports.js": false
+  },
   "files": [
     "dist",
     "!dist/src",
