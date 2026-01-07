@@ -44,7 +44,10 @@ export const createWebpackConfig = (
             resolve: {
                 extensions: ['.ts', '.js'],
                 alias,
-                fallback,
+                fallback: {
+                    timers: false,
+                    ...fallback
+                },
             },
             output: {
                 sourceMapFilename: `[name].[contenthash].js.map`,
