@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.jest.json",
   "compilerOptions": {
+    "baseUrl": ".",
+
     /* Mapping */
     "paths": {
       "@/*": [
@@ -17,6 +19,6 @@
     "src/browser"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" }
+    { "path": "./tsconfig.node-generated.json" }
   ]
 }
