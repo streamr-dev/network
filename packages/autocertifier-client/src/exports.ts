@@ -1,4 +1,5 @@
-export { AutoCertifierClient, SERVICE_ID, type HasSession } from './AutoCertifierClient'
+export { AutoCertifierClient, type HasSession } from './AutoCertifierClient'
+export { SERVICE_ID } from './consts' 
 export type { CertifiedSubdomain } from './data/CertifiedSubdomain'
 export type { Session } from './data/Session'
 export type { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
