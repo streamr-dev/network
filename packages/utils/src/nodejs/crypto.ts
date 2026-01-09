@@ -25,3 +25,19 @@ export function computeMd5(input: string): Buffer {
 export function computeSha1(input: string): Buffer {
     return crypto.createHash('sha1').update(input).digest()
 }
+
+export function createCipheriv(
+    algorithm: string,
+    key: Buffer | Uint8Array,
+    iv: Buffer | Uint8Array | null
+): crypto.Cipheriv {
+    return crypto.createCipheriv(algorithm, key, iv)
+}
+
+export function createDecipheriv(
+    algorithm: string,
+    key: Buffer | Uint8Array,
+    iv: Buffer | Uint8Array | null
+): crypto.Decipheriv {
+    return crypto.createDecipheriv(algorithm, key, iv)
+}
