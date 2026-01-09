@@ -44,7 +44,7 @@ export function createCipheriv(
         return createCipherivUtil(suite, key, iv)
     }
 
-    throw new TypeError('Invalid suite type. In browser only AES is supported')
+    throw new TypeError(`Invalid suite type.  In browser only AES is supported but got ${algorithm}.`)
 }
 
 export function createDecipheriv(
@@ -53,10 +53,10 @@ export function createDecipheriv(
     iv: Buffer | Uint8Array | null
 ): Transform {
     const suite = algorithm.toLowerCase()
-    
+
     if (aesModes[suite]) {
         return createDecipherivUtil(suite, key, iv)
     }
 
-    throw new TypeError('Invalid suite type. In browser only AES is supported')
+    throw new TypeError(`Invalid suite type.  In browser only AES is supported but got ${algorithm}.`)
 }
