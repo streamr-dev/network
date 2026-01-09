@@ -13,6 +13,12 @@ export default createKarmaConfig(
         libraryName: 'dht',
         alias: {
             /**
+             * Our "browser" tests use the Node.js build of `autocertifier-client` package – needed
+             * for certifications stuff, but still, very confusing.
+             */
+            '@streamr/autocertifier-client': resolve(__dirname, '../autocertifier-client/dist/exports-nodejs.cjs'),
+
+            /**
              * Selectively alias only browser-specific implementations here. The rest stays in `nodejs/`
              * because these (like WebsocketServer) are needed for testing and running WebSocket-based
              * code in Electron environment.

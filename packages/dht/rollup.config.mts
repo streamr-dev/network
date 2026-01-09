@@ -114,7 +114,6 @@ function browser(): RollupOptions {
             /node_modules/,
             /@streamr\//,
         ],
-
     }
 }
 
