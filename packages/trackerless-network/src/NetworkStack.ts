@@ -32,17 +32,25 @@ const stopInstances = async () => {
     const clonedInstances = [...instances]
     await Promise.all(clonedInstances.map((instance) => instance.stop()))
 }
-const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
-EXIT_EVENTS.forEach((event) => {
-    process.on(event, async (eventArg) => {
-        const isError = (event === 'uncaughtException') || (event === 'unhandledRejection')
-        if (isError) {
-            logger.error(`exit event: ${event}`, eventArg)
-        }
-        await stopInstances()
-        process.exit(isError ? 1 : 0)
+
+/**
+ * @todo The following cleanups should ideally be handled outside of this module. Separately for
+ * Node.js and browser environments.
+ */
+if (typeof process === 'object' && process?.on) {
+    const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
+    EXIT_EVENTS.forEach((event) => {
+        process.on(event, async (eventArg) => {
+            const isError = (event === 'uncaughtException') || (event === 'unhandledRejection')
+            if (isError) {
+                logger.error(`exit event: ${event}`, eventArg)
+            }
+            await stopInstances()
+            process.exit(isError ? 1 : 0)
+        })
     })
-})
+}
+
 declare let window: any
 if (typeof window === 'object') {
     window.addEventListener('unload', async () => {
