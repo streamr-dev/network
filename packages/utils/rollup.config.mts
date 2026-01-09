@@ -2,6 +2,8 @@ import { defineConfig, type RollupOptions } from 'rollup'
 import { dts } from 'rollup-plugin-dts'
 import alias, { type Alias } from '@rollup/plugin-alias'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import cjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
 import { fileURLToPath } from 'node:url'
 
 const nodejsAliases: Alias[] = [
@@ -96,13 +98,20 @@ function browser(): RollupOptions {
             alias({
                 entries: browserAliases,
             }),
+            cjs(),
+            json(),
             nodeResolve({
                 browser: true,
                 preferBuiltins: false,
             }),
         ],
         external: [
-            /node_modules/,
+            /**
+             * We need to bundle some dependencies in. This will make sure we use the local `md5.js`
+             * and not the one shipped with `create-hash` (which is outdated and has issues with
+             * modern bundlers).
+             */
+            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base)/,
             /@streamr\//,
         ],
     }
