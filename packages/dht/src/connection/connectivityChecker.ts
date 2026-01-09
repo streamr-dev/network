@@ -6,7 +6,7 @@ import {
     Message, PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
-import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
+import { WebsocketClientConnection } from '@/WebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedProtocolVersion } from '../helpers/version'
 

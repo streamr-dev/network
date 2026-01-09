@@ -1,4 +1,4 @@
-import {} from '../src/customMatcherTypes'
+import '../src/customMatchers'
 
 describe('custom matchers', () => {
     it('happy path', () => {

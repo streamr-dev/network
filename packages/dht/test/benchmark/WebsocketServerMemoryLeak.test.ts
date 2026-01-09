@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
 import { wait } from '@streamr/utils'
-import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
-import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
+import { WebsocketServer } from '@/WebsocketServer'
+import { WebsocketClientConnection } from '@/WebsocketClientConnection'
 
 // This 'test' is meant to be run manually using the following command:
 // node --inspect ../../../../node_modules/.bin/jest WebsocketServerMemoryLeak.test.ts

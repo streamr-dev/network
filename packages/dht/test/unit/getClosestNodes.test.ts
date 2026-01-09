@@ -1,11 +1,11 @@
 import range from 'lodash/range'
 import sampleSize from 'lodash/sampleSize'
 import sortBy from 'lodash/sortBy'
-import { getDistance } from '../../src/dht/PeerManager'
+import { getPeerDistance } from '../../src/dht/helpers/getPeerDistance'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { DhtAddress, randomDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { PeerDescriptor } from '../../src/exports'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
 describe('getClosestNodes', () => {
 
@@ -25,7 +25,7 @@ describe('getClosestNodes', () => {
 
         const expected = sortBy(
             peerDescriptors.filter((n) => !excluded.has(toNodeId(n))),
-            (peerDescriptor: PeerDescriptor) => getDistance(peerDescriptor.nodeId, toDhtAddressRaw(referenceId))
+            (peerDescriptor: PeerDescriptor) => getPeerDistance(peerDescriptor.nodeId, toDhtAddressRaw(referenceId))
         ).slice(0, 5)
         expect(actual).toEqual(expected)
     })

@@ -47,4 +47,22 @@ const toEqualBinary = (
     }
 }
 
-export { toEqualBinary }
+export const customMatchers = {
+    toEqualBinary
+}
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace jest {
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        interface Matchers<R> extends CustomMatchers<R> {}
+    }
+}
+
+declare module 'expect' {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface AsymmetricMatchers extends CustomMatchers<void> {}
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface Matchers<R> extends CustomMatchers<R> {}
+}

@@ -1,35 +1,13 @@
 import {
-    AutoCertifierClient,
-    HasSessionRequest,
-    HasSessionResponse, 
-    CertifiedSubdomain,
+    type CertifiedSubdomain,
     SERVICE_ID as AUTO_CERTIFIER_SERVICE_ID,
-    HasSession
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Logger, waitForEvent } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
+import { defaultAutoCertifierClientFactory } from '@/defaultAutoCertifierClientFactory'
 
 const START_TIMEOUT = 60 * 1000
-
-const defaultAutoCertifierClientFactory = (
-    configFile: string,
-    autoCertifierUrl: string,
-    autoCertifierRpcCommunicator: ListeningRpcCommunicator,
-    wsServerPort: number
-) => new AutoCertifierClient(
-    configFile,
-    wsServerPort,
-    autoCertifierUrl, 
-    (_serviceId: string, rpcMethodName: string, method: HasSession) => {
-        autoCertifierRpcCommunicator.registerRpcMethod(
-            HasSessionRequest,
-            HasSessionResponse,
-            rpcMethodName,
-            method
-        )                       
-    }
-)
 
 export interface IAutoCertifierClient {
     start(): Promise<void>

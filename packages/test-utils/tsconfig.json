@@ -5,7 +5,11 @@
     "types": [
       "node",
       "jest"
-    ]
+    ],
+
+    /* Resolution */
+    "moduleResolution": "bundler",
+    "module": "preserve"
   },
   "include": [
     "src"

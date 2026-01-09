@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import WebSocket from 'ws'
 import { Logger } from '@streamr/utils'

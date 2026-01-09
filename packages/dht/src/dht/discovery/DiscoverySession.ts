@@ -3,7 +3,8 @@ import { v4 } from 'uuid'
 import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { PeerManager, getDistance } from '../PeerManager'
+import { PeerManager } from '../PeerManager'
+import { getPeerDistance } from '../helpers/getPeerDistance'
 import { getClosestNodes } from '../contact/getClosestNodes'
 
 const logger = new Logger('DiscoverySession')
@@ -60,10 +61,10 @@ export class DiscoverySession {
         this.ongoingRequests.delete(nodeId)
         const targetId = toDhtAddressRaw(this.options.targetId)
         const oldClosestNeighbor = this.getClosestNeighbor()
-        const oldClosestDistance = getDistance(targetId, oldClosestNeighbor.nodeId)
+        const oldClosestDistance = getPeerDistance(targetId, oldClosestNeighbor.nodeId)
         this.addContacts(contacts)
         const newClosestNeighbor = this.getClosestNeighbor()
-        const newClosestDistance = getDistance(targetId, newClosestNeighbor.nodeId)
+        const newClosestDistance = getPeerDistance(targetId, newClosestNeighbor.nodeId)
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }

@@ -1,4 +1,4 @@
-import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
+import { WebsocketServer } from '@/WebsocketServer'
 
 describe('WebsocketServer', () => {
 

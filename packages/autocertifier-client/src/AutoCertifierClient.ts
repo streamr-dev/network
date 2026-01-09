@@ -8,6 +8,7 @@ import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
 import path from 'path'
 import * as forge from 'node-forge'
+import { SERVICE_ID } from './consts'
 
 interface AutoCertifierClientEvents {
     updatedCertificate: (domain: CertifiedSubdomain) => void
@@ -35,7 +36,6 @@ const getBaseDirectory = (directory: string): string => {
     return path.sep
 }
 
-export const SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
 const MAX_INT_32 = 2147483647
 

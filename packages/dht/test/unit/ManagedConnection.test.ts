@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { ManagedConnection } from '../../src/exports'
+import { ManagedConnection } from '../../src/connection/ManagedConnection'
 import { MockConnection } from '../utils/mock/MockConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 

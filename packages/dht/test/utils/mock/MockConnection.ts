@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { ConnectionEvents, IConnection } from '../../../src/connection/IConnection'
 
 export class MockConnection extends EventEmitter<ConnectionEvents> implements IConnection {

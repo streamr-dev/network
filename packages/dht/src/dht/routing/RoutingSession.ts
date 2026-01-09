@@ -1,6 +1,6 @@
 import { SortedContactList } from '../contact/SortedContactList'
 import { Logger } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote, ROUTING_TIMEOUT } from './RouterRpcRemote'

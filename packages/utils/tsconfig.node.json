@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist/nodejs",
+
+    /* Resolution */
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "baseUrl": ".",
+
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/nodejs/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/browser"
+  ]
+}
