@@ -68,6 +68,7 @@
     "@streamr/browser-test-runner": "^0.0.1",
     "@types/lodash": "^4.17.21",
     "@types/md5": "^2.3.6",
+    "@types/readable-stream": "^4.0.23",
     "@types/secp256k1": "^4.0.7",
     "rimraf": "^6.1.2",
     "rollup": "^4.55.1",
