@@ -16,7 +16,8 @@
       "browser": {
         "types": "./dist/exports-browser.d.ts",
         "import": "./dist/exports-browser.js",
-        "require": "./dist/exports-browser.cjs"
+        "require": "./dist/exports-browser.cjs",
+        "default": "./dist/exports-browser.js"
       },
       "node": "./dist/exports-nodejs.cjs",
       "import": "./dist/exports-nodejs.js",
