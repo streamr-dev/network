@@ -14,6 +14,7 @@ on:
           - alpha
           - internal
           - testnet-three
+          - experiment
 jobs:
   publish:
     runs-on: ubuntu-latest
