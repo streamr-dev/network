@@ -6,6 +6,7 @@ import {
 import aesModes from 'browserify-aes/modes'
 import { sha1 } from '@noble/hashes/legacy.js'
 import type { Transform } from 'readable-stream'
+import { utf8ToBinary } from 'src/binaryUtils'
 
 export function getSubtle(): SubtleCrypto {
     const { crypto } = globalThis
@@ -26,7 +27,7 @@ export function computeMd5(input: string): Buffer {
 }
 
 export function computeSha1(input: string): Buffer {
-    return Buffer.from(sha1(new TextEncoder().encode(input)))
+    return Buffer.from(sha1(utf8ToBinary(input)))
 }
 
 export type Jwk = JsonWebKey
