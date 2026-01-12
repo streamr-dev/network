@@ -13,18 +13,21 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "node": "./dist/index.cjs",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
     "./setupCustomMatchers": {
       "types": "./dist/setupCustomMatchers.d.ts",
+      "node": "./dist/setupCustomMatchers.cjs",
       "import": "./dist/setupCustomMatchers.js",
       "require": "./dist/setupCustomMatchers.cjs",
       "default": "./dist/setupCustomMatchers.js"
     },
     "./customMatchers": {
       "types": "./dist/customMatchers.d.ts",
+      "node": "./dist/customMatchers.cjs",
       "import": "./dist/customMatchers.js",
       "require": "./dist/customMatchers.cjs",
       "default": "./dist/customMatchers.js"

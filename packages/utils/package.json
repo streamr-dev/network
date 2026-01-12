@@ -18,8 +18,10 @@
         "import": "./dist/exports-browser.js",
         "require": "./dist/exports-browser.cjs"
       },
+      "node": "./dist/exports-nodejs.cjs",
       "import": "./dist/exports-nodejs.js",
-      "require": "./dist/exports-nodejs.cjs"
+      "require": "./dist/exports-nodejs.cjs",
+      "default": "./dist/exports-nodejs.js"
     }
   },
   "files": [
