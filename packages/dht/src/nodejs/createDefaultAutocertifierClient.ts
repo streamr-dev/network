@@ -6,7 +6,7 @@ import {
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
 
-export const defaultAutoCertifierClientFactory = (
+export const createDefaultAutocertifierClient = (
     configFile: string,
     autoCertifierUrl: string,
     autoCertifierRpcCommunicator: ListeningRpcCommunicator,

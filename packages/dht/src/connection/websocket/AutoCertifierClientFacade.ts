@@ -5,7 +5,7 @@ import {
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Logger, waitForEvent } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
-import { defaultAutoCertifierClientFactory } from '@/defaultAutoCertifierClientFactory'
+import { createDefaultAutocertifierClient } from '@/createDefaultAutocertifierClient'
 
 const START_TIMEOUT = 60 * 1000
 
@@ -40,7 +40,7 @@ export class AutoCertifierClientFacade {
         this.options = options
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, options.transport)
         this.autoCertifierClient = options.createClientFactory ? options.createClientFactory() 
-            : defaultAutoCertifierClientFactory(
+            : createDefaultAutocertifierClient(
                 options.configFile,
                 options.url,
                 this.rpcCommunicator,
