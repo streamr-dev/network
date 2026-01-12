@@ -6,7 +6,7 @@ import {
 import aesModes from 'browserify-aes/modes'
 import { sha1 } from '@noble/hashes/legacy.js'
 import type { Transform } from 'readable-stream'
-import { utf8ToBinary } from 'src/binaryUtils'
+import { utf8ToBinary } from '../binaryUtils'
 
 export function getSubtle(): SubtleCrypto {
     const { crypto } = globalThis
