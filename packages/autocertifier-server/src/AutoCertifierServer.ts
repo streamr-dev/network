@@ -141,7 +141,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                 privateKey: certificate.privateKey
             }
         } catch (e) {
-            logger.error('Failed to create certificate for ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + e);
+            logger.warn('Failed to create certificate for ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + e);
             throw e;
         }
     }
