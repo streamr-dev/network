@@ -128,7 +128,12 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                 )
             ))
             logger.info('Upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress);
-            await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+            try {
+                await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+            } catch (e) {
+                logger.warn('Failed to upsert record to route53: ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + e);
+                throw e;
+            }
         }
         logger.info('Creating certificate for ' + fqdn + ' with ip: ' + ipAddress);
         try {
