@@ -118,7 +118,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         if (this.route53Api !== undefined) {
             const subdomains = await this.database!.getSubdomainsByIpAndPort(ipAddress, streamrWebSocketPort)
             logger.info('Deleting all subdomains from ip: ' + ipAddress + ' port: ' 
-                + streamrWebSocketPort + ' number of subdomains: ' + subdomains.length, { subdomains })
+                + streamrWebSocketPort + ' number of subdomains: ' + subdomains.length)
             await Promise.allSettled(subdomains.map((subdomain) => 
                 this.route53Api!.deleteRecord(
                     RRType.A,
@@ -127,10 +127,12 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                     300
                 )
             ))
+            logger.info('Upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress);
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
-
+        logger.info('Creating certificate for ' + fqdn + ' with ip: ' + ipAddress);
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
+        logger.info('Certificate created for ' + fqdn + ' with ip: ' + ipAddress);
         return {
             fqdn,
             authenticationToken,
