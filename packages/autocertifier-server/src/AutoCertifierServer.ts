@@ -11,6 +11,7 @@ import 'dotenv/config'
 import { ChallengeManager } from './ChallengeManager'
 import { RRType } from '@aws-sdk/client-route-53'
 import { Route53Api } from './Route53Api'
+import dns from 'dns'
 
 const logger = new Logger('AutoCertifierServer')
 
@@ -202,7 +203,25 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         if (this.route53Api !== undefined) {
             logger.trace(`Creating acme challenge for ${fqdn} with value ${value} to Route53`)
             await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
+            // Wait for DNS propagation
+            await this.waitForDnsPropagation('_acme-challenge.' + fqdn, value)
         }
+    }
+    
+    private async waitForDnsPropagation(fqdn: string, expectedValue: string, maxAttempts = 30): Promise<void> {
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const records = await dns.promises.resolveTxt(fqdn)
+                if (records.flat().includes(expectedValue)) {
+                    logger.info(`DNS propagation confirmed for ${fqdn}`)
+                    return
+                }
+            } catch (e) {
+                // NXDOMAIN or other error, continue waiting
+            }
+            await new Promise((resolve) => setTimeout(resolve, 2000)) // Wait 2 seconds between checks
+        }
+        throw new Error(`DNS propagation timeout for ${fqdn}`)
     }
 
     // ChallengeManager implementation
