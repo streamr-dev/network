@@ -131,13 +131,18 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
         logger.info('Creating certificate for ' + fqdn + ' with ip: ' + ipAddress);
-        const certificate = await this.certificateCreator!.createCertificate(fqdn)
-        logger.info('Certificate created for ' + fqdn + ' with ip: ' + ipAddress);
-        return {
-            fqdn,
-            authenticationToken,
-            certificate: certificate.certificate,
-            privateKey: certificate.privateKey
+        try {
+            const certificate = await this.certificateCreator!.createCertificate(fqdn)
+            logger.info('Certificate created for ' + fqdn + ' with ip: ' + ipAddress);
+            return {
+                fqdn,
+                authenticationToken,
+                certificate: certificate.certificate,
+                privateKey: certificate.privateKey
+            }
+        } catch (e) {
+            logger.error('Failed to create certificate for ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + e);
+            throw e;
         }
     }
 
