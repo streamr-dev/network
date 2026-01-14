@@ -119,27 +119,41 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
             const subdomains = await this.database!.getSubdomainsByIpAndPort(ipAddress, streamrWebSocketPort)
             logger.info('Deleting all subdomains from ip: ' + ipAddress + ' port: ' 
                 + streamrWebSocketPort + ' number of subdomains: ' + subdomains.length)
-            await this.route53Api.deleteRecords(
-                RRType.A,
-                subdomains.map((subdomain) => {
-                    return {
-                        fqdn: subdomain.subdomainName + '.' + this.domainName,
-                        value: ipAddress,
-                    }
-                }),
-                300
-            )
+            try {
+                await this.route53Api.deleteRecords(
+                    RRType.A,
+                    subdomains.map((subdomain) => {
+                        return {
+                            fqdn: subdomain.subdomainName + '.' + this.domainName,
+                            value: ipAddress,
+                        }
+                    }),
+                    300
+                )
+            } catch (err) {
+                logger.warn('Failed to delete records from route53 for ip ' + ipAddress + ' error: ' + err)
+            }
+            
             logger.info('Upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress)
-            await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+            try {
+                await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+            } catch (err) {
+                logger.warn('Failed to upsert record to route53 for ip ' + ipAddress + ' error: ' + err)
+            }
         }
         logger.info('Creating certificate for ' + fqdn + ' with ip: ' + ipAddress)
-        const certificate = await this.certificateCreator!.createCertificate(fqdn)
-        logger.info('Certificate created for ' + fqdn + ' with ip: ' + ipAddress)
-        return {
-            fqdn,
-            authenticationToken,
-            certificate: certificate.certificate,
-            privateKey: certificate.privateKey
+        try {
+            const certificate = await this.certificateCreator!.createCertificate(fqdn)
+            logger.info('Certificate created for ' + fqdn + ' with ip: ' + ipAddress)
+            return {
+                fqdn,
+                authenticationToken,
+                certificate: certificate.certificate,
+                privateKey: certificate.privateKey
+            }
+        } catch (err) {
+            logger.warn('Failed to create certificate for ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + err)
+            throw err
         }
     }
 
