@@ -4,7 +4,7 @@ import { RestInterface } from './RestInterface'
 import { RestServer } from './RestServer'
 import { v4 } from 'uuid'
 import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
-import { Logger } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
 import { runStreamrChallenge } from './StreamrChallenger'
 import 'dotenv/config'
@@ -214,6 +214,8 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
             logger.trace(`Creating acme challenge for ${fqdn} with value ${value} to Route53`)
             await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
+        // Wait for 5 seconds to allow the challenge to propagate to Route53
+        await wait(5000)
     }
 
     // ChallengeManager implementation
