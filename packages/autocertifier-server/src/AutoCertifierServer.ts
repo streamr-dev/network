@@ -214,8 +214,8 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
             logger.trace(`Creating acme challenge for ${fqdn} with value ${value} to Route53`)
             await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
-        // Wait for 5 seconds to allow the challenge to propagate to Route53
-        await wait(5000)
+        // Wait for 15 seconds to allow the challenge to propagate to Route53
+        await wait(15000)
     }
 
     // ChallengeManager implementation
