@@ -220,7 +220,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     public async deleteChallenge(fqdn: string, value: string): Promise<void> {
         if (this.route53Api !== undefined) {
             logger.trace(`Deleting acme challenge for ${fqdn} with value ${value} to Route53`)
-            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
+            await this.route53Api.deleteRecords(RRType.TXT, [{ fqdn: '_acme-challenge' + '.' + fqdn, value: `"${value}"`}], 300)
         }
     }
 
