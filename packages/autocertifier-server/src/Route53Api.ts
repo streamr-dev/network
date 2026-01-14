@@ -56,8 +56,12 @@ export class Route53Api {
         return this.changeRecords(ChangeAction.UPSERT, recordType, [ { fqdn, value } ], ttl)
     }
 
-    public async deleteRecord(recordType: RRType, fqdn: string, value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
-        return this.changeRecords(ChangeAction.DELETE, recordType, [ { fqdn, value } ], ttl)
+    public async deleteRecords(
+        recordType: RRType,
+        records: { fqdn: string, value: string }[],
+        ttl: number
+    ): Promise<ChangeResourceRecordSetsCommandOutput> {
+        return this.changeRecords(ChangeAction.DELETE, recordType, records, ttl)
     }
 
     // Debugging tool to list all records in a zone
