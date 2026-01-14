@@ -119,14 +119,16 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
             const subdomains = await this.database!.getSubdomainsByIpAndPort(ipAddress, streamrWebSocketPort)
             logger.info('Deleting all subdomains from ip: ' + ipAddress + ' port: ' 
                 + streamrWebSocketPort + ' number of subdomains: ' + subdomains.length, { subdomains })
-            await Promise.allSettled(subdomains.map((subdomain) => 
-                this.route53Api!.deleteRecord(
-                    RRType.A,
-                    subdomain.subdomainName + '.' + this.domainName,
-                    ipAddress,
-                    300
-                )
-            ))
+            await this.route53Api.deleteRecords(
+                RRType.A,
+                subdomains.map((subdomain) => {
+                    return {
+                        fqdn: subdomain.subdomainName + '.' + this.domainName,
+                        value: ipAddress,
+                    }
+                }),
+                300
+            )
             await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
         }
 
@@ -202,7 +204,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     public async deleteChallenge(fqdn: string, value: string): Promise<void> {
         if (this.route53Api !== undefined) {
             logger.trace(`Deleting acme challenge for ${fqdn} with value ${value} to Route53`)
-            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
+            await this.route53Api.deleteRecords(RRType.TXT, [{ fqdn: '_acme-challenge' + '.' + fqdn, value: `"${value}"` }], 300)
         }
     }
 
