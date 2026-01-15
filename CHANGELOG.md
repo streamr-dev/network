@@ -51,6 +51,29 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 
+## [103.2.0-experiment.1] - 2026-01-12
+
+Internal build improvements for better browser compatibility. No user-facing API changes.
+
+#### Changed
+
+- Refactored internal packages to use explicit exports for Jest and other module systems (https://github.com/streamr-dev/network/pull/3344)
+
+
+## [103.2.0-experiment.0] - 2026-01-09
+
+Internal build improvements introducing separate browser and Node.js bundles across packages. No user-facing API changes.
+
+#### Added
+
+- Expose cross-environment AES cipher utilities (`createCipheriv`, `createDecipheriv`) from `@streamr/utils` for both browser and Node.js (https://github.com/streamr-dev/network/pull/3342)
+- Bundle a limited browser-compatible version of `autocertifier-client` (https://github.com/streamr-dev/network/pull/3340)
+
+#### Changed
+
+- Internal packages now produce separate bundles for browser and Node.js environments, improving tree-shaking and reducing polyfill requirements (https://github.com/streamr-dev/network/pull/3321, https://github.com/streamr-dev/network/pull/3322, https://github.com/streamr-dev/network/pull/3330, https://github.com/streamr-dev/network/pull/3333, https://github.com/streamr-dev/network/pull/3335, https://github.com/streamr-dev/network/pull/3336, https://github.com/streamr-dev/network/pull/3337, https://github.com/streamr-dev/network/pull/3338, https://github.com/streamr-dev/network/pull/3339)
+
+
 ## [103.2.0] - 2025-12-18
 
 ### @streamr/sdk
@@ -540,7 +563,9 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0-experiment.1...HEAD
+[103.2.0-experiment.1]: https://github.com/streamr-dev/network/compare/v103.2.0-experiment.0...v103.2.0-experiment.1
+[103.2.0-experiment.0]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.0-experiment.0
 [103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
 [103.1.2]: https://github.com/streamr-dev/network/compare/v103.1.1...v103.1.2
 [103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1
