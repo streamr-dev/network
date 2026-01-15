@@ -5,7 +5,7 @@ import { Logger } from '@streamr/utils'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import Aedes from 'aedes'
 
-const logger = new Logger(module)
+const logger = new Logger('MqttServer')
 
 export interface MqttServerListener {
     onMessageReceived(topic: string, payload: string, clientId: string): void

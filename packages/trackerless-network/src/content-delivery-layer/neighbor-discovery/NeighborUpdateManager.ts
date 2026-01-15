@@ -19,7 +19,7 @@ interface NeighborUpdateManagerOptions {
     ongoingHandshakes: Set<DhtAddress>
 }
 
-const logger = new Logger(module)
+const logger = new Logger('NeighborUpdateManager')
 
 export const DEFAULT_NEIGHBOR_UPDATE_INTERVAL = 10 * 1000
 

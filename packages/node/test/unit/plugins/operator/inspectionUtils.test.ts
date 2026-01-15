@@ -20,7 +20,7 @@ const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
 const PEER_DESCRIPTOR_TWO = { nodeId: '0x2222' }
 const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 
-const logger = new Logger(module)
+const logger = new Logger('inspectionUtils.test')
 
 describe(findTarget, () => {
     let operator: MockProxy<Operator>

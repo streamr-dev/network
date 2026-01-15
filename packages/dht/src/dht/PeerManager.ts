@@ -15,7 +15,7 @@ import { RingContactList } from './contact/RingContactList'
 import { ReadonlySortedContactList, SortedContactList } from './contact/SortedContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('PeerManager')
 
 interface PeerManagerOptions {
     numberOfNodesPerKBucket: number

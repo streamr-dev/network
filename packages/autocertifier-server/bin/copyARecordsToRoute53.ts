@@ -6,7 +6,7 @@ import chunk from 'lodash/chunk'
 import { ChangeAction } from '@aws-sdk/client-route-53'
 
 (async () => {
-    const logger = new Logger(module)
+    const logger = new Logger('copyARecordsToRoute53')
     
     const domainName = validateEnvironmentVariable('AUTOCERTIFIER_DOMAIN_NAME')
     const databaseFilePath = validateEnvironmentVariable('AUTOCERTIFIER_DATABASE_FILE_PATH')

@@ -6,7 +6,7 @@ import min from 'lodash/min'
 import once from 'lodash/once'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
-const logger = new Logger(module)
+const logger = new Logger('OperatorFleetState')
 
 export interface OperatorFleetStateEvents {
     added: (nodeId: DhtAddress) => void

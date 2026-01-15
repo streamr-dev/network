@@ -5,7 +5,7 @@ import {
     fetchAirportCodeFromFastly } from '../../src/fetchAirportCodeFromCdn'
 import { airportCodeToRegion } from '../../src/airportCodeToRegion'
 
-const logger = new Logger(module)
+const logger = new Logger('fetchAirportCodeFromCdn.test')
 
 describe('fetchAirportCodeFromCdn', () => {
 

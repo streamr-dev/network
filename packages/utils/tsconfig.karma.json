@@ -1,6 +1,10 @@
 {
   "extends": "../../tsconfig.karma.json",
   "compilerOptions": {
+    "types": [
+      "jest",
+      "jest-extended"
+    ],
     "outDir": "dist"
   },
   "include": [

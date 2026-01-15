@@ -17,7 +17,7 @@ import { ConnectionID } from '../IConnection'
 import { ConnectingConnection } from './WebrtcConnector'
 import { PendingConnection } from '../PendingConnection'
 
-const logger = new Logger(module)
+const logger = new Logger('WebrtcConnectorRpcLocal')
 
 interface WebrtcConnectorRpcLocalOptions {
     connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection 

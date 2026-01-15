@@ -30,7 +30,7 @@ export const initResendSubscription = (
             yield* resentMsgs
         } catch (err) {
             if (err.code === 'NO_STORAGE_NODES') {
-                loggerFactory.createLogger(module).warn('Skip resend (no storage assigned to stream)', {
+                loggerFactory.createLogger('resendSubscription').warn('Skip resend (no storage assigned to stream)', {
                     streamPartId: subscription.streamPartId,
                     resendOptions
                 })

@@ -11,7 +11,7 @@ const TAR_SUFFFIX = '.tar.gz'
 const DB_SUFFIX = '.mmdb'
 const HASH_SUFFIX = '.mmdb.sha384'
 
-const logger = new Logger(module)
+const logger = new Logger('downloadGeoIpDatabase')
 
 const downloadNewDb = async (
     url: string,

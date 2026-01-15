@@ -46,7 +46,7 @@ interface UndelegationQueueQueryResultItem {
     amount: string
 }
 
-const logger = new Logger(module)
+const logger = new Logger('AutostakerPlugin')
 
 // 1e12 wei, i.e. one millionth of one DATA token (we can tweak this later if needed)
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n

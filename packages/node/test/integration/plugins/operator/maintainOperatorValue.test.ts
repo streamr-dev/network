@@ -12,7 +12,7 @@ const {
     getOperatorContract
 } = _operatorContractUtils
 
-const logger = new Logger(module)
+const logger = new Logger('maintainOperatorValue.test')
 
 const STAKE_AMOUNT = parseEther('10000')
 const SAFETY_FRACTION = 0.5  // 50%

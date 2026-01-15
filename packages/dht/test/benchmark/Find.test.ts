@@ -8,7 +8,7 @@ import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 import { toDhtAddress, toNodeId } from '../../src/identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('Find.test')
 
 describe('Find correctness', () => {
     let entryPoint: DhtNode

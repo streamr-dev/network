@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('SetMembershipSynchronizer')
 
 export interface Diff<E extends string> {
     added: E[]

@@ -28,7 +28,7 @@ interface HandshakerOptions {
     rpcRequestTimeout?: number
 }
 
-const logger = new Logger(module)
+const logger = new Logger('Handshaker')
 
 const PARALLEL_HANDSHAKE_COUNT = 2
 

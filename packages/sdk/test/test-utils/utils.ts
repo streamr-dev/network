@@ -58,7 +58,7 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
-const logger = new Logger(module)
+const logger = new Logger('sdk-test-utils')
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
     return new LoggerFactory({

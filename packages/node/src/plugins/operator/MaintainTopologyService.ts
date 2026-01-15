@@ -3,7 +3,7 @@ import { Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import pLimit from 'p-limit'
 import { StreamPartAssignments } from './StreamPartAssignments'
 
-const logger = new Logger(module)
+const logger = new Logger('MaintainTopologyService')
 
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient

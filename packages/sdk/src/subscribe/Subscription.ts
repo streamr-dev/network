@@ -49,7 +49,7 @@ export class Subscription extends MessageStream {
         this.erc1271ContractAddress = erc1271ContractAddress
         this.deliveryOptions = deliveryOptions
         this.eventEmitter = eventEmitter
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = loggerFactory.createLogger('Subscription')
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)
             this.logger.debug('Encountered error', { err })

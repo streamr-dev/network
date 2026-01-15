@@ -11,7 +11,7 @@ const parsePeerDescriptor = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
 }
 
-const logger = new Logger(module)
+const logger = new Logger('PeerDescriptorStoreManager')
 
 export const MAX_NODE_COUNT = 8
 

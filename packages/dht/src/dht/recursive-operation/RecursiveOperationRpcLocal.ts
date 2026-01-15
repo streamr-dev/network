@@ -5,7 +5,7 @@ import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { toNodeId } from '../../identifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RecursiveOperationRpcLocal')
 
 interface RecursiveOperationRpcLocalOptions {
     doRouteRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck

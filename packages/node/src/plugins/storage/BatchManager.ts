@@ -35,7 +35,7 @@ export class BatchManager extends EventEmitter {
     constructor(cassandraClient: Client, opts: Partial<BatchManagerOptions> = {}) {
         super()
         ID += 1
-        this.logger = new Logger(module, { id: `${ID}` })
+        this.logger = new Logger('BatchManager', { id: `${ID}` })
 
         const defaultOptions = {
             useTtl: false,

@@ -23,7 +23,7 @@ export class PublishConnection implements Connection {
         streamrClient: StreamrClient,
         payloadFormat: PayloadFormat
     ): Promise<void> {
-        const logger = new Logger(module, { socketId })
+        const logger = new Logger('PublishConnection', { socketId })
         const msgChainId = uuid()
         ws.on('message', async (data: WebSocket.RawData) => {
             const payload = data.toString()

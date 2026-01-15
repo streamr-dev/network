@@ -1,7 +1,7 @@
 import { Stream, StreamrClient } from '@streamr/sdk'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('StoragePoller')
 
 /**
  * Polls full state of storage node assignments on an interval.

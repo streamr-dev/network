@@ -67,7 +67,7 @@ interface Events {
     message: (message: StreamMessage) => void
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ProxyClient')
 
 const SERVICE_ID = 'system/proxy-client'
 

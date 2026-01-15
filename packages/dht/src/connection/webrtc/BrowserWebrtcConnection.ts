@@ -13,7 +13,7 @@ enum DisconnectedRtcPeerConnectionStateEnum {
     CLOSED = 'closed',
 }
 
-const logger = new Logger(module)
+const logger = new Logger('BrowserWebrtcConnection')
 
 interface Params {
     iceServers?: IceServer[]

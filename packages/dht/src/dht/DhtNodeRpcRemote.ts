@@ -15,7 +15,7 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RingIdRaw } from './contact/ringIdentifiers'
 import { RingContacts } from './contact/RingContactList'
 
-const logger = new Logger(module)
+const logger = new Logger('DhtNodeRpcRemote')
 
 // Fields required by objects stored in the k-bucket library
 export interface KBucketContact {

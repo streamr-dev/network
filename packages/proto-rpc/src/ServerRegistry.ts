@@ -33,7 +33,7 @@ interface RegisteredNotification {
     options: MethodOptions
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ServerRegistry')
 
 export function parseWrapper<T>(parseFn: () => T): T | never {
     try {

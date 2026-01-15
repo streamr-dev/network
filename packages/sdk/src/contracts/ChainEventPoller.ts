@@ -56,7 +56,7 @@ export class ChainEventPoller {
         const abortController = new AbortController()
         this.abortController = abortController
         setImmediate(async () => {
-            const logger = new Logger(module, { sessionId: randomString(6) })
+            const logger = new Logger('ChainEventPoller', { sessionId: randomString(6) })
             logger.debug('Start polling', { pollInterval: this.pollInterval })
 
             let fromBlock: number | undefined = undefined

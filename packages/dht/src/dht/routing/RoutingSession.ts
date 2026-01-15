@@ -13,7 +13,7 @@ import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../
 import pull from 'lodash/pull'
 import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
-const logger = new Logger(module)
+const logger = new Logger('RoutingSession')
 
 const MAX_FAILED_HOPS = 2
 const ROUTING_TABLE_MAX_SIZE = 5

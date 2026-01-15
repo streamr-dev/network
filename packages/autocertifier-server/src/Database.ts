@@ -5,7 +5,7 @@ import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger, filePathToNodeFormat } from '@streamr/utils'
 import { DatabaseError, InvalidSubdomainOrToken } from '@streamr/autocertifier-client'
 
-const logger = new Logger(module)
+const logger = new Logger('Database')
 
 export class Database {
 

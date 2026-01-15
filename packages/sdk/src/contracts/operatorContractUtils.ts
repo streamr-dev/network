@@ -28,7 +28,7 @@ import { SignerWithProvider } from '../identity/Identity'
 
 const FRACTION_MAX = parseEther('1')
 
-const logger = new Logger(module)
+const logger = new Logger('operatorContractUtils')
 
 /**
  * @deprecated

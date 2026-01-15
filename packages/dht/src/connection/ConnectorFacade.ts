@@ -25,7 +25,7 @@ export interface ConnectorFacade {
     stop: () => Promise<void>
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ConnectorFacade')
 
 // TODO: Wrap component specific configs to their own objects.
 export interface DefaultConnectorFacadeOptions {

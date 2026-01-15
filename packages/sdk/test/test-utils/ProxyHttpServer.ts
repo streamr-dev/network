@@ -10,7 +10,7 @@ export interface ProxyHttpServerRequest {
     timestamp: number
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ProxyHttpServer')
 
 /**
  * Forwards requests to targetUrl. Supports only JSON requests and responses.

@@ -36,7 +36,7 @@ export class TheGraphClient {
     ) {
         this.serverUrl = opts.serverUrl
         this.fetch = opts.fetch
-        this.logger = opts.logger ?? new Logger(module)
+        this.logger = opts.logger ?? new Logger('TheGraphClient')
         this.indexingState = new IndexingState(
             () => this.getIndexBlockNumber(),
             opts.indexTimeout ?? 60000,

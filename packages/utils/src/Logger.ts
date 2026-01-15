@@ -72,7 +72,7 @@ function wrappedMethodCall(
     }
 }
 
-type LoggerModule = string | { id: string }
+export type LoggerModule = string | { id: string }
 
 export class Logger {
     static NAME_LENGTH = 25

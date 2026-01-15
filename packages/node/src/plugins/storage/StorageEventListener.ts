@@ -1,7 +1,7 @@
 import { Stream, StreamrClient, StorageNodeAssignmentEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('StorageEventListener')
 
 /**
  * Hooks up to StreamrClient event listener to learn about

@@ -14,7 +14,7 @@ import { SubscribeConnection } from './SubscribeConnection'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { WebsocketPluginConfig } from './WebsocketPlugin'
 
-const logger = new Logger(module)
+const logger = new Logger('WebsocketServer')
 
 enum Action {
     PUBLISH = 'publish',

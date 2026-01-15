@@ -19,7 +19,7 @@ export const CUSTOM_GOING_AWAY = 3001
 // https://github.com/websockets/ws/blob/master/doc/ws.md#ready-state-constants
 const OPEN = 1
 
-const logger = new Logger(module)
+const logger = new Logger('AbstractWebsocketClientConnection')
 
 export abstract class AbstractWebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 

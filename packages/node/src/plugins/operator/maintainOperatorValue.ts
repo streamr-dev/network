@@ -1,7 +1,7 @@
 import { Operator } from '@streamr/sdk'
 import { Logger, multiplyWeiAmount, WeiAmount } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('maintainOperatorValue')
 
 export const maintainOperatorValue = async (
     withdrawLimitSafetyFraction: number,

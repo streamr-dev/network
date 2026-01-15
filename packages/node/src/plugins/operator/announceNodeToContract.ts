@@ -1,7 +1,7 @@
 import { Operator, StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
+const logger = new Logger('announceNodeToContract')
 
 export const announceNodeToContract = async (
     writeIntervalInMs: number,

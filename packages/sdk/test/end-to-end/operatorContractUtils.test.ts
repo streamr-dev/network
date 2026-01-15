@@ -9,7 +9,7 @@ const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
         serverUrl: CHAIN_CONFIG.dev2.theGraphUrl,
         fetch,
-        logger: new Logger(module)
+        logger: new Logger('operatorContractUtils.test')
     })
 }
 

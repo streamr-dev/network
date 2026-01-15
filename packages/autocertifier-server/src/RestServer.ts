@@ -14,7 +14,7 @@ import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
 
-const logger = new Logger(module)
+const logger = new Logger('RestServer')
 
 type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>

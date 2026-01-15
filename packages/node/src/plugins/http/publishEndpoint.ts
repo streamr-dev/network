@@ -6,7 +6,7 @@ import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../..
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
 import { HttpServerEndpoint } from '../../Plugin'
 
-const logger = new Logger(module)
+const logger = new Logger('publishEndpoint')
 const PAYLOAD_FORMAT = new PlainPayloadFormat()
 
 const createHandler = (msgChainId: string, streamrClient: StreamrClient): RequestHandler => {

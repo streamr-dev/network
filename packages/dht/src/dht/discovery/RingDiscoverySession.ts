@@ -7,7 +7,7 @@ import { PeerManager } from '../PeerManager'
 import { RingContacts } from '../contact/RingContactList'
 import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from '../contact/ringIdentifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RingDiscoverySession')
 
 interface RingDiscoverySessionOptions {
     targetId: RingIdRaw

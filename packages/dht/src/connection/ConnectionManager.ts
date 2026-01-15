@@ -50,7 +50,7 @@ interface ConnectionManagerMetrics extends MetricsDefinition {
     connectionTotalFailureCount: Metric
 }
 
-const logger = new Logger(module)
+const logger = new Logger('ConnectionManager')
 
 enum ConnectionManagerState {
     IDLE = 'idle',

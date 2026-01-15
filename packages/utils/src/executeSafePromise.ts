@@ -1,9 +1,10 @@
 import { Logger } from './Logger'
 
-const logger = new Logger(module)
+const logger = new Logger('executeSafePromise')
 
 /**
- * Execute a promise that should never reject. If it does, log the error and exit the process.
+ * Execute a promise that should never reject. If it does, log the error and exit the process
+ * (in Node/Electron) or throw an unhandled error (in browsers).
  * To be used in places where we want to "annotate" that the intention of a promise is never
  * to reject (unless something is really wrong).
  */
@@ -12,11 +13,13 @@ export const executeSafePromise = async <T>(createPromise: () => Promise<T>): Pr
         return await createPromise()
     } catch (err: any) {
         logger.fatal('Assertion failure!', { message: err?.message, err })
-        if (process.exit !== undefined) {
+        
+        // Check if we're in a Node/Electron environment
+        if (typeof process !== 'undefined' && process.exit !== undefined) {
             process.exit(1)
         } else {
-            // cause an unhandled promise rejection on purpose
-            throw new Error('executeSafePromise: Assertion failure!', err)
+            // Browser environment - throw with proper error chaining
+            throw new Error('executeSafePromise: Assertion failure!', { cause: err })
         }
     }
 }

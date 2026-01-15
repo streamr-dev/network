@@ -22,7 +22,7 @@ interface Options {
 }
 
 export const MAX_PAUSED_NEIGHBORS_DEFAULT = 3
-const logger = new Logger(module)
+const logger = new Logger('PlumtreeManager')
 
 interface Events {
     message: (msg: StreamMessage) => void

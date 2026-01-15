@@ -8,7 +8,7 @@ import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Logger } from '@streamr/utils'
 import { getRingIdRawFromPeerDescriptor } from '../../src/dht/contact/ringIdentifiers'
 
-const logger = new Logger(module)
+const logger = new Logger('RingCorrectness.test')
 
 describe('Ring correctness', () => {
     let entryPoint: DhtNode

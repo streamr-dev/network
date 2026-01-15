@@ -8,7 +8,7 @@ import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
 import { HttpServerEndpoint } from '../../Plugin'
 
-const logger = new Logger(module)
+const logger = new Logger('dataQueryEndpoint')
 
 // TODO: move this to protocol-js
 export const MIN_SEQUENCE_NUMBER_VALUE = 0

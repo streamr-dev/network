@@ -14,7 +14,7 @@ import range from 'lodash/range'
 
 const SERVICE_ID = 'demo'
 
-const logger = new Logger(module)
+const logger = new Logger('ConnectionManager.test')
 
 // TODO: refactor this test file to use beforeEach and AfterEach for proper teardown
 describe('ConnectionManager', () => {

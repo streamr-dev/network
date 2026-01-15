@@ -12,7 +12,7 @@ import { ContentDeliveryRpcClient } from '../../../generated/packages/trackerles
 import { IProxyConnectionRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 
-const logger = new Logger(module)
+const logger = new Logger('ProxyConnectionRpcLocal')
 
 interface ProxyConnection {
     userId: UserID
