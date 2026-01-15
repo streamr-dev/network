@@ -1,7 +1,6 @@
 import { binaryToHex, binaryToUtf8 } from '@streamr/utils'
 import { EncryptedGroupKey, EncryptionType } from '@streamr/trackerless-network'
-import { MessageID } from '../protocol/MessageID'
-import { MessageRef } from '../protocol/MessageRef'
+import { MessageIdLike, MessageRefLike } from './createSignaturePayload'
 
 const serializeGroupKey = ({ id, data }: EncryptedGroupKey): string => {
     return JSON.stringify([id, binaryToHex(data)])
@@ -11,10 +10,10 @@ const serializeGroupKey = ({ id, data }: EncryptedGroupKey): string => {
  * Only to be used for LEGACY_SECP256K1 signature type.
  */
 export const createLegacySignaturePayload = (opts: {
-    messageId: MessageID
+    messageId: MessageIdLike
     content: Uint8Array
     encryptionType: EncryptionType
-    prevMsgRef?: MessageRef
+    prevMsgRef?: MessageRefLike
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array => {
     const prev = ((opts.prevMsgRef !== undefined) ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : '')

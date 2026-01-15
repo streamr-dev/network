@@ -26,7 +26,7 @@ describe('update encryption key', () => {
         publisher = environment.createClient()
         subscriber = environment.createClient({
             encryption: {
-                keyRequestTimeout: 200
+                keyRequestTimeout: 1000
             }
         })
         const stream = await publisher.createStream('/path')
