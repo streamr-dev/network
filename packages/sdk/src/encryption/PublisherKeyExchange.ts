@@ -24,7 +24,7 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../ConfigTypes'
 import { isCompliantAsymmetricEncryptionType } from '../utils/encryptionCompliance'
 import { StreamrClientError } from '../StreamrClientError'
 

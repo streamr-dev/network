@@ -2,7 +2,6 @@
  * Importing 'timers' ensures `setImmediate` is available in browsers,
  * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
  */
-import 'reflect-metadata'
 import 'timers'
 import './utils/PatchTsyringe'
 
@@ -23,9 +22,8 @@ import {
     NetworkPeerDescriptor,
     StreamrClientConfig,
     StrictStreamrClientConfig,
-    createStrictConfig,
-    redactConfig
-} from './Config'
+} from './ConfigTypes'
+import { createStrictConfig, redactConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'

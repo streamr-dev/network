@@ -1,7 +1,7 @@
 import type { Provider } from 'ethers'
 import { AbstractProvider, FallbackProvider, FetchRequest } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './ConfigTypes'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 

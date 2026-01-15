@@ -15,7 +15,7 @@ import { StreamDefinition } from '../types'
 import { createLazyMap, Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
-import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'
 
 export interface PublishMetadata {

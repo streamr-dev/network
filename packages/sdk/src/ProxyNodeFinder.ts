@@ -1,7 +1,7 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
-import { NetworkPeerDescriptor } from './Config'
+import { NetworkPeerDescriptor } from './ConfigTypes'
 import { StreamIDBuilder, DEFAULT_PARTITION } from './StreamIDBuilder'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { LoggerFactory } from './utils/LoggerFactory'

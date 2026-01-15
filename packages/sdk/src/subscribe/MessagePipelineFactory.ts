@@ -1,7 +1,7 @@
 import { StreamID } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken } from '../Config'
+import { ConfigInjectionToken } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'

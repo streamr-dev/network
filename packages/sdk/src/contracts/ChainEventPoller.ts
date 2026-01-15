@@ -4,7 +4,7 @@ import remove from 'lodash/remove'
 import sample from 'lodash/sample'
 import uniq from 'lodash/uniq'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../ConfigTypes'
 import { RpcProviderSource } from '../RpcProviderSource'
 
 export interface EventListenerDefinition<TEventArgs extends any[]> {
