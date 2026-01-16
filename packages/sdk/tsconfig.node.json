@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": ["es2021"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Don't emit helpers inline. Import them from tslib instead – key for using tsyringe with rollup. */
+    "importHelpers": true,
+
+    /* Resolution */
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "baseUrl": ".",
+  },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "src/generated"
+  ],
+  "references": [
+    { "path": "../utils" },
+    { "path": "../proto-rpc" },
+    { "path": "../dht" },
+    { "path": "../trackerless-network" },
+    { "path": "./tsconfig.generated.json" }
+  ]
+}

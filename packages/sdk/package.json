@@ -7,39 +7,42 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/client"
   },
-  "types": "./dist/types/src/index.d.ts",
-  "main": "./dist/src/exports-commonjs.js",
-  "module": "./dist/src/exports-esm.mjs",
-  "script": "./dist/streamr-sdk.web.min.js",
-  "browser": {
-    "./src/utils/persistence/ServerPersistence.ts": "./src/utils/persistence/BrowserPersistence.mts",
-    "./dist/src/utils/persistence/ServerPersistence.js": "./dist/src/utils/persistence/BrowserPersistence.mjs"
-  },
+  "main": "./dist/exports-nodejs.cjs",
+  "module": "./dist/exports-nodejs.js",
+  "types": "./dist/exports-nodejs.d.ts",
+  "script": "./dist/exports-browser.umd.js",
   "exports": {
-    "default": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/exports-esm.mjs",
-      "require": "./dist/src/exports-commonjs.js"
+    ".": {
+      "types": "./dist/exports-nodejs.d.ts",
+      "browser": {
+        "types": "./dist/exports-browser.d.ts",
+        "import": "./dist/exports-browser.js",
+        "require": "./dist/exports-browser.cjs",
+        "default": "./dist/exports-browser.js"
+      },
+      "node": "./dist/exports-nodejs.cjs",
+      "import": "./dist/exports-nodejs.js",
+      "require": "./dist/exports-nodejs.cjs",
+      "default": "./dist/exports-nodejs.js"
     }
   },
   "files": [
-    "dist",
+    "dist/exports-nodejs.*",
+    "dist/exports-browser.*",
+    "dist/encryption/migrations",
     "!*.tsbuildinfo",
     "LICENSE",
     "README.md",
     "readme-header.png"
   ],
   "scripts": {
-    "prebuild": "node bin/generate-config-validator.js && ./proto.sh",
-    "postbuild": "./scripts/postbuild.sh && bash fix-esm.sh",
+    "prebuild": "npm run reset-self && node bin/generate-config-validator.js && ./proto.sh",
     "build": "tsc -b",
-    "build-browser": "npm run build-browser-development && npm run build-browser-production",
-    "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
-    "build-browser-production": "NODE_ENV=production webpack --mode=production --progress",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -b tsconfig.jest.json",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist src/generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts,mts}'",
-    "generate-protoc-code": "./proto.sh",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-unit": "jest --useStderr --forceExit test/unit",
     "test-integration": "jest --bail --useStderr --forceExit --testTimeout=40000 test/integration/*.test.*",
@@ -60,6 +63,9 @@
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@jest/globals": "^30.0.5",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@streamr/test-utils": "103.2.0-experiment.1",
     "@types/heap": "^0.2.35",
     "@types/lodash": "^4.17.21",
@@ -80,9 +86,14 @@
     "lodash-webpack-plugin": "^0.11.6",
     "nightwatch": "^3.12.3",
     "node-polyfill-webpack-plugin": "^4.1.0",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-dts": "^6.3.0",
     "terser-webpack-plugin": "^5.3.14",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
     "webpack": "^5.103.0",
