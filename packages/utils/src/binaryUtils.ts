@@ -1,12 +1,9 @@
-const textEncoder = new TextEncoder()
-const textDecoder = new TextDecoder()
-
 export const binaryToUtf8 = (bytes: Uint8Array): string => {
-    return textDecoder.decode(bytes)
+    return new TextDecoder().decode(bytes)
 }
 
 export const utf8ToBinary = (utf8: string): Uint8Array => {
-    return textEncoder.encode(utf8)
+    return new TextEncoder().encode(utf8)
 }
 
 export const binaryToHex = (bytes: Uint8Array, addPrefix = false): string => {

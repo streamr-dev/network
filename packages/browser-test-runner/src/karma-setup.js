@@ -3,7 +3,7 @@
 
 import * as jestMock from 'jest-mock'
 
-const expect = require('expect').default
+import expect from 'expect'
 
 import { ModernFakeTimers } from '@jest/fake-timers'
 

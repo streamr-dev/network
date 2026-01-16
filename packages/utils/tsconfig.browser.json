@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.browser.json",
+  "compilerOptions": {
+    "outDir": "dist/browser",
+    "baseUrl": ".",
+
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/browser/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/nodejs"
+  ]
+}

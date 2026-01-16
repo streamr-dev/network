@@ -16,7 +16,7 @@ import { getClosestNodes } from '../contact/getClosestNodes'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
 import { DiscoverySession } from './DiscoverySession'
 import { RingDiscoverySession } from './RingDiscoverySession'
-import { CONTROL_LAYER_NODE_SERVICE_ID } from '../DhtNode'
+import { CONTROL_LAYER_NODE_SERVICE_ID } from '../consts'
 
 interface PeerDiscoveryOptions {
     localPeerDescriptor: PeerDescriptor

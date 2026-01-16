@@ -1,3 +1,2 @@
-import * as customMatchers from './customMatchers'
-
+import { customMatchers } from './customMatchers'
 expect.extend(customMatchers)

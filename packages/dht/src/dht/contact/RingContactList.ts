@@ -2,7 +2,7 @@ import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { OrderedMap } from '@js-sdsl/ordered-map'
 import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from './ringIdentifiers'
 import { DhtAddress, toNodeId } from '../../identifiers'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { Events } from './ContactList'
 
 export interface RingContacts { 

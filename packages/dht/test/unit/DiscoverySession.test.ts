@@ -1,7 +1,8 @@
 import { Multimap, wait } from '@streamr/utils'
 import sampleSize from 'lodash/sampleSize'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
-import { PeerManager, getDistance } from '../../src/dht/PeerManager'
+import { PeerManager } from '../../src/dht/PeerManager'
+import { getPeerDistance } from '../../src/dht/helpers/getPeerDistance'
 import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'
 import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
@@ -79,7 +80,7 @@ describe('DiscoverySession', () => {
         // Each queried node should closer to the target than the previous queried node, because we
         // use parallelism=1 and noProgressLimit=1
         const distancesToTarget = queriedNodes
-            .map((nodeId) => getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
+            .map((nodeId) => getPeerDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
         for (let i = 1; i < distancesToTarget.length ; i++) {
             expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
         }

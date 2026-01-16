@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { fileURLToPath } from 'url'
 import type { Configuration, ExternalItem } from 'webpack'
 
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
@@ -6,7 +7,7 @@ const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 export const createKarmaConfig = (
     testPaths: string[], webpackConfig: () => Configuration, localDirectory?: string
 ): (config: any) => any => {
-    const setupFiles = [__dirname + '/karma-setup.js']
+    const setupFiles = [fileURLToPath(new URL('./karma-setup.js', import.meta.url))]
 
     if (localDirectory !== undefined) {
         const localSetupFile = localDirectory + '/karma-setup.js'
@@ -58,7 +59,7 @@ export const createKarmaConfig = (
                     browserWindowOptions: {
                         webPreferences: {
                             contextIsolation: false,
-                            preload: __dirname + '/preload.js',
+                            preload: fileURLToPath(new URL('./preload.cjs', import.meta.url)),
                             webSecurity: false,
                             sandbox: false,
                             nodeIntegration: true

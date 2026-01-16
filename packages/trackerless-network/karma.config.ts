@@ -10,12 +10,11 @@ const TEST_PATHS = [
 export default createKarmaConfig(TEST_PATHS, createWebpackConfig({
     libraryName: 'trackerless-network',
     alias: {
-        [resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
-            resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
-        [resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
-            resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
-        '@streamr/dht': resolve('../dht/src/exports.ts'),
-        '@streamr/proto-rpc': resolve('../proto-rpc/src/exports.ts'),
+        /**
+         * @todo Our "browser" tests use the Node.js build of DHT package – needed
+         * for WebSocket/Simulator stuff, but still, very confusing.
+         */
+        '@streamr/dht': resolve(__dirname, '../dht/dist/exports-nodejs.cjs'),
     },
     fallback: {
         module: false

@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { DhtAddress } from '../../identifiers'
 
 export interface Events<C> {

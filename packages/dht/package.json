@@ -1,32 +1,43 @@
 {
   "name": "@streamr/dht",
-  "version": "103.2.0",
+  "version": "103.2.0-experiment.1",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/dht"
   },
-  "main": "./dist/src/exports.js",
-  "types": "./dist/src/exports.d.ts",
-  "browser": {
-    "./dist/src/connection/webrtc/NodeWebrtcConnection.js": "./dist/src/connection/webrtc/BrowserWebrtcConnection.js",
-    "./dist/src/connection/websocket/NodeWebsocketClientConnection.js": "./dist/src/connection/websocket/BrowserWebsocketClientConnection.js",
-    "./dist/src/helpers/browser/isBrowserEnvironment.js": "./dist/src/helpers/browser/isBrowserEnvironment_override.js"
+  "main": "./dist/exports-nodejs.cjs",
+  "module": "./dist/exports-nodejs.js",
+  "types": "./dist/exports-nodejs.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/exports-nodejs.d.ts",
+      "browser": {
+        "types": "./dist/exports-browser.d.ts",
+        "import": "./dist/exports-browser.js",
+        "require": "./dist/exports-browser.cjs"
+      },
+      "node": "./dist/exports-nodejs.cjs",
+      "import": "./dist/exports-nodejs.js",
+      "require": "./dist/exports-nodejs.cjs",
+      "default": "./dist/exports-nodejs.js"
+    }
   },
-  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
-  "author": "Streamr Network AG <contact@streamr.network>",
   "files": [
-    "dist",
+    "dist/exports-nodejs.*",
+    "dist/exports-browser.*",
     "!*.tsbuildinfo",
     "README.md"
   ],
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "prebuild": "./proto.sh",
-    "postbuild": "./scripts/postbuild.sh",
+    "prebuild": "npm run reset-self && ./proto.sh",
     "build": "tsc -b",
-    "build-browser": "webpack --mode=development --progress",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -b tsconfig.jest.json",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist generated *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
@@ -40,11 +51,11 @@
     "@js-sdsl/ordered-map": "^4.4.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/autocertifier-client": "103.2.0",
-    "@streamr/cdn-location": "103.2.0",
-    "@streamr/geoip-location": "103.2.0",
-    "@streamr/proto-rpc": "103.2.0",
-    "@streamr/utils": "103.2.0",
+    "@streamr/autocertifier-client": "103.2.0-experiment.1",
+    "@streamr/cdn-location": "103.2.0-experiment.1",
+    "@streamr/geoip-location": "103.2.0-experiment.1",
+    "@streamr/proto-rpc": "103.2.0-experiment.1",
+    "@streamr/utils": "103.2.0-experiment.1",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
@@ -57,8 +68,11 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^6.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "103.2.0",
+    "@streamr/test-utils": "103.2.0-experiment.1",
     "@types/heap": "^0.2.35",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.17.21",
@@ -66,8 +80,11 @@
     "@types/ws": "^8.18.1",
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^30.0.5",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-dts": "^6.3.0",
     "ts-essentials": "^10.1.1",
-    "ts-node": "^10.9.2"
+    "tsx": "^4.21.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",

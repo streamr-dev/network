@@ -10,7 +10,7 @@
       "node",
       "jest",
       "jest-extended",
-      "@streamr/test-utils/customMatcherTypes"
+      "@streamr/test-utils/customMatchers"
     ],
     "sourceMap": false
   }

@@ -25,7 +25,6 @@ import {
     LockRequest,
     UnlockRequest,
     LockResponse
-
 } from '../../generated/packages/dht/protos/DhtRpc'
 
 export const protoClasses: IMessageType<any>[] = [

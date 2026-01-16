@@ -11,7 +11,7 @@ import {
 import { IWebrtcConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { NodeWebrtcConnection } from './NodeWebrtcConnection'
+import type { WebrtcConnection } from '@/WebrtcConnection'
 import { DhtAddress, toNodeId } from '../../identifiers'
 import { ConnectionID } from '../IConnection'
 import { ConnectingConnection } from './WebrtcConnector'
@@ -50,7 +50,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = toNodeId(remotePeerDescriptor)
-        let connection: NodeWebrtcConnection
+        let connection: WebrtcConnection
         let pendingConnection: PendingConnection
 
         if (!this.options.ongoingConnectAttempts.has(nodeId)) {

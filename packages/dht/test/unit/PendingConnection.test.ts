@@ -1,5 +1,5 @@
 import { wait, waitForEvent } from '@streamr/utils'
-import { PendingConnection } from '../../src/exports'
+import { PendingConnection } from '../../src/connection/PendingConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { MockConnection } from '../utils/mock/MockConnection'
 

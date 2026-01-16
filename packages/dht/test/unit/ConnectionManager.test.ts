@@ -1,6 +1,7 @@
 import { MetricsContext } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { toNodeId, PendingConnection } from '../../src/exports'
+import { toNodeId } from '../../src/identifiers'
+import { PendingConnection } from '../../src/connection/PendingConnection'
 import { FakeConnectorFacade } from '../utils/FakeConnectorFacade'
 import { MockConnection } from '../utils/mock/MockConnection'
 import { createMockPeerDescriptor } from '../utils/utils'

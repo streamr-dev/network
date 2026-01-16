@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { createRandomConnectionId } from '../Connection'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { Logger } from '@streamr/utils'
