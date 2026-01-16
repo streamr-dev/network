@@ -60,8 +60,26 @@ export class Route53Api {
         recordType: RRType,
         records: { fqdn: string, value: string }[],
         ttl: number
-    ): Promise<ChangeResourceRecordSetsCommandOutput> {
-        return this.changeRecords(ChangeAction.DELETE, recordType, records, ttl)
+    ): Promise<void> {
+        if (records.length === 0) {
+            return
+        }
+        // Filter to only records that actually exist in Route53
+        const existingRecords = await this.listRecords()
+        const existingNames = new Set(
+            existingRecords.ResourceRecordSets
+                ?.filter((rrs) => rrs.Type === recordType)
+                .map((rrs) => rrs.Name) ?? []
+        )
+        // Route53 returns names with trailing dot, normalize for comparison
+        const recordsToDelete = records.filter((record) => {
+            const normalizedFqdn = record.fqdn.endsWith('.') ? record.fqdn : record.fqdn + '.'
+            return existingNames.has(normalizedFqdn)
+        })
+        if (recordsToDelete.length === 0) {
+            return
+        }
+        await this.changeRecords(ChangeAction.DELETE, recordType, recordsToDelete, ttl)
     }
 
     // Debugging tool to list all records in a zone
