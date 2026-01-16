@@ -62,10 +62,10 @@ export class Route53Api {
         ttl: number
     ): Promise<void> {
         const chunks = chunk(records, 25)
-        const responses = await Promise.all(chunks.map(async (chunk) => 
-            this.changeRecords(ChangeAction.DELETE, recordType, chunk, ttl)
-        ))
-        console.log(responses)
+        for (const chunk of chunks) {
+            const response = await this.changeRecords(ChangeAction.DELETE, recordType, chunk, ttl)
+            console.log(response)
+        }
     }
 
     // Debugging tool to list all records in a zone
