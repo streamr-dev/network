@@ -7,7 +7,7 @@ import {
     RRType,
     ChangeResourceRecordSetsCommandOutput
 } from '@aws-sdk/client-route-53'
-
+import chunk from 'lodash/chunk'
 interface Record {
     fqdn: string 
     value: string
@@ -60,8 +60,12 @@ export class Route53Api {
         recordType: RRType,
         records: { fqdn: string, value: string }[],
         ttl: number
-    ): Promise<ChangeResourceRecordSetsCommandOutput> {
-        return this.changeRecords(ChangeAction.DELETE, recordType, records, ttl)
+    ): Promise<void> {
+        const chunks = chunk(records, 25)
+        const responses = await Promise.all(chunks.map(async (chunk) => 
+            this.changeRecords(ChangeAction.DELETE, recordType, chunk, ttl)
+        ))
+        console.log(responses)
     }
 
     // Debugging tool to list all records in a zone
