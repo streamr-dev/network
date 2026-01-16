@@ -132,12 +132,14 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                 )
             } catch (err) {
                 logger.warn('Error deleting records from route53: ' + ipAddress + ' error: ' + err)
+                throw err
             } 
             logger.info('Upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress)
             try {
                 await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
             } catch (err) {
                 logger.warn('Error upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress + ' error: ' + err)
+                throw err
             }
         }
         logger.info('Creating certificate for ' + fqdn + ' with ip: ' + ipAddress)
