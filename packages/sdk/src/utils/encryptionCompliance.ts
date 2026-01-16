@@ -1,5 +1,5 @@
 import { AsymmetricEncryptionType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
-import { StreamrClientConfig, StrictStreamrClientConfig } from '../ConfigTypes'
+import type { StreamrClientConfig, StrictStreamrClientConfig } from '../ConfigTypes'
 import { Identity } from '../identity/Identity'
 import { RSAKeyPair } from '../encryption/RSAKeyPair'
 import { MLKEMKeyPair } from '../encryption/MLKEMKeyPair'

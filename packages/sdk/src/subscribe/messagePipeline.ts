@@ -2,7 +2,7 @@
  * Subscription message processing pipeline
  */
 import { EthereumAddress, StreamID, StreamPartID } from '@streamr/utils'
-import { StrictStreamrClientConfig } from '../ConfigTypes'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'

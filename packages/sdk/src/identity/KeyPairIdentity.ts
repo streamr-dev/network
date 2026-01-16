@@ -1,7 +1,7 @@
 import { toUserId, UserID, UserIDRaw } from '@streamr/utils'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { Identity, SignerWithProvider } from './Identity'
-import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../ConfigTypes'
+import type { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../ConfigTypes'
 
 /**
  * KeyPairIdentity is an Identity that is defined by a public key and a private key.

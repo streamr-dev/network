@@ -1,7 +1,7 @@
 import { hexToBinary, EcdsaSecp256r1 } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
-import { StrictStreamrClientConfig } from '../ConfigTypes'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import type { webcrypto } from 'crypto'
 
 const signingUtil = new EcdsaSecp256r1()

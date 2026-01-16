@@ -6,9 +6,10 @@ import {
     WeiAmount,
     collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
-import { Interface, Overrides } from 'ethers'
+import type { Overrides } from 'ethers'
+import { Interface } from 'ethers'
 import { z } from 'zod'
-import { NetworkPeerDescriptor } from '../ConfigTypes'
+import type { NetworkPeerDescriptor } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { Identity } from '../identity/Identity'

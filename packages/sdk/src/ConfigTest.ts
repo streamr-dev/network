@@ -1,5 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientConfig } from './ConfigTypes'
+import type { StreamrClientConfig } from './ConfigTypes'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 
 /**

@@ -7,7 +7,7 @@ import {
 import { ContractTransactionReceipt } from 'ethers'
 import { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
-import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../ConfigTypes'
+import { NetworkNodeType, type NetworkPeerDescriptor, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'

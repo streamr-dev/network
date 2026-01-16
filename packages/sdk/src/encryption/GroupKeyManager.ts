@@ -2,7 +2,7 @@ import { hexToBinary, StreamID, StreamPartID, StreamPartIDUtils, UserID, waitFor
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../ConfigTypes'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { StreamrClientEventEmitter } from '../events'
 import { uuid } from '../utils/uuid'

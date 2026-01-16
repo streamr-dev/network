@@ -5,7 +5,7 @@ import { SignatureValidator } from '../signature/SignatureValidator'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyRequest, GroupKeyResponse } from '@streamr/trackerless-network'
-import { StrictStreamrClientConfig } from '../ConfigTypes'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,

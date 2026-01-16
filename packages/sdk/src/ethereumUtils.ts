@@ -3,7 +3,7 @@
  */
 import type { Overrides } from 'ethers'
 import { FeeData } from 'ethers'
-import { StrictStreamrClientConfig } from './ConfigTypes'
+import type { StrictStreamrClientConfig } from './ConfigTypes'
 import { RpcProviderSource } from './RpcProviderSource'
 
 /**

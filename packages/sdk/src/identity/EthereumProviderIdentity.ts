@@ -3,7 +3,7 @@ import { BrowserProvider, JsonRpcApiProvider } from 'ethers'
 import { pLimitFn } from '../utils/promises'
 import { Identity, SignerWithProvider } from './Identity'
 import { SignatureType } from '@streamr/trackerless-network'
-import { EthereumProviderIdentityConfig, StrictStreamrClientConfig } from '../ConfigTypes'
+import type { EthereumProviderIdentityConfig, StrictStreamrClientConfig } from '../ConfigTypes'
 
 /**
  * An identity that uses an Ethereum provider (= external wallet) to sign messages
