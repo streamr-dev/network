@@ -87,6 +87,7 @@
     "nightwatch": "^3.12.3",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "rimraf": "^6.1.2",
+    "@rollup/plugin-terser": "^0.4.4",
     "rollup": "^4.55.1",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-dts": "^6.3.0",

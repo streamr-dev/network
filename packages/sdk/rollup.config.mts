@@ -4,6 +4,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 import cjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import copy from 'rollup-plugin-copy'
+import terser from '@rollup/plugin-terser'
 
 export default defineConfig([
     nodejs(),
@@ -11,6 +12,7 @@ export default defineConfig([
     browser(),
     browserTypes(),
     umd(),
+    umdMinified(),
 ])
 
 function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
@@ -142,6 +144,30 @@ function umd(): RollupOptions {
                 preferBuiltins: false,
             }),
             cjs(),
+        ],
+        external: [],
+        onwarn,
+    }
+}
+
+function umdMinified(): RollupOptions {
+    return {
+        input: './dist/src/exports.js',
+        context: 'window',
+        output: {
+            format: 'umd',
+            name: 'StreamrClient',
+            file: './dist/streamr-client.umd.min.js',
+            sourcemap: true,
+        },
+        plugins: [
+            json(),
+            nodeResolve({
+                browser: true,
+                preferBuiltins: false,
+            }),
+            cjs(),
+            terser(),
         ],
         external: [],
         onwarn,
