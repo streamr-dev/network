@@ -10,7 +10,6 @@ export type { PublishMetadata } from './publish/Publisher'
 export { Subscription, type SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export type { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
-export type { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
     type PermissionQuery,
@@ -45,8 +44,10 @@ export {
     type EnvironmentId,
     ENVIRONMENT_IDS,
     DEFAULT_ENVIRONMENT_ID,
-    type EntryPointDiscovery
-} from './Config'
+    type EntryPointDiscovery,
+    type GapFillStrategy,
+    ConfigInjectionToken,
+} from './ConfigTypes'
 
 export { DEFAULT_KEY_TYPE } from './identity/IdentityMapping'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'

@@ -2,7 +2,7 @@ import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw 
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../ConfigTypes'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { MessageID } from '../protocol/MessageID'
