@@ -1,6 +1,6 @@
 import { EthereumAddress, StreamID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { StrictStreamrClientConfig } from '../Config'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { toInternalResendOptions, ResendOptions, Resends } from './Resends'

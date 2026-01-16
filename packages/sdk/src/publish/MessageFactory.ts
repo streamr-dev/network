@@ -20,7 +20,7 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { StrictStreamrClientConfig } from '../Config'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { isCompliantEncryptionType } from '../utils/encryptionCompliance'
 
 export interface MessageFactoryOptions {

@@ -20,6 +20,12 @@ Changes before Tatum release are not documented in this file.
 
   If you previously relied on importing internal files directly from `dist`, you must update your imports to use the package's public exports.
 
+### General
+
+#### Fixed
+
+- Fix outdated GitHub URLs referencing old `network-monorepo` repository instead of `network` (https://github.com/streamr-dev/network/pull/3348)
+
 ### @streamr/sdk
 
 #### Added

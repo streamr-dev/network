@@ -148,7 +148,7 @@ For URL authentication, for example `mqtt://"":ApiKey@1.2.3.4:1883`. Some MQTT l
 
 :::note
 If you're connecting to the MQTT interface over the open internet, please remember to make sure the port is open.
-Technical information about the plugin interface can be found in the [Streamr node plugin docs](https://github.com/streamr-dev/network-monorepo/blob/main/packages/broker/plugins.md).
+Technical information about the plugin interface can be found in the [Streamr node plugin docs](https://github.com/streamr-dev/network/blob/main/packages/node/plugins.md).
 :::
 
 #### Start pushing data
@@ -168,7 +168,7 @@ await mqttClient.publish(StreamId, JSON.stringify({ foo: bar }))
 
 If everything has been configured correctly so far then the data should now be flowing to the Streamr node, which will receive and sign the data, then publish it to the to the Streamr Network stream.
 
-At this point, you could use the Streamr [CLI tool](https://github.com/streamr-dev/network-monorepo/tree/main/packages/cli-tools) to subscribe to stream and observe the message flow:
+At this point, you could use the Streamr [CLI tool](https://github.com/streamr-dev/network/tree/main/packages/cli-tools) to subscribe to stream and observe the message flow:
 
 ```shell
 $ npm install -g @streamr/cli-tools

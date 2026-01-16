@@ -2,10 +2,9 @@ import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import sample from 'lodash/sample'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Gap, OrderedMessageChain } from './OrderedMessageChain'
+import type { GapFillStrategy } from '../../ConfigTypes'
 
 const logger = new Logger('GapFiller')
-
-export type GapFillStrategy = 'light' | 'full'
 
 interface GapFillerOptions {
     chain: OrderedMessageChain

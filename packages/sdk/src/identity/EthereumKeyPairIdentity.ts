@@ -3,7 +3,7 @@ import { binaryToHex, EcdsaSecp256k1Evm, HexString, hexToBinary } from '@streamr
 import { Wallet } from 'ethers'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { SignatureType } from '@streamr/trackerless-network'
-import { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../Config'
+import type { KeyPairIdentityConfig, StrictStreamrClientConfig } from '../ConfigTypes'
 import { KeyPairIdentity } from './KeyPairIdentity'
 
 const signingUtil = new EcdsaSecp256k1Evm()

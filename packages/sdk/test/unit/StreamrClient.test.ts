@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import merge from 'lodash/merge'
 import { container } from 'tsyringe'
-import { StreamrClientConfig } from '../../src/Config'
+import type { StreamrClientConfig } from '../../src/ConfigTypes'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClient } from '../../src/StreamrClient'
 

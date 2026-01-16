@@ -1,6 +1,6 @@
 import { Logger, type LoggerModule } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 
 @scoped(Lifecycle.ContainerScoped)
 export class LoggerFactory {
