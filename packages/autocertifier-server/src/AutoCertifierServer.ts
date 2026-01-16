@@ -132,7 +132,6 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
                 )
             } catch (err) {
                 logger.warn('Error deleting records from route53: ' + ipAddress + ' error: ' + err)
-                throw err
             } 
             logger.info('Upserting record to route53: ' + fqdn + ' with ip: ' + ipAddress)
             try {
