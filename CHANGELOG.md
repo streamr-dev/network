@@ -8,6 +8,18 @@ Changes before Tatum release are not documented in this file.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **BREAKING CHANGE**: The following packages no longer include all source files in `dist`. They now export bundled artifacts for ESM, CJS, and TypeScript declarations only:
+  - `@streamr/utils`
+  - `@streamr/dht`
+  - `@streamr/proto-rpc`
+  - `@streamr/test-utils`
+  - `@streamr/autocertifier-client`
+  - `@streamr/trackerless-network`
+
+  If you previously relied on importing internal files directly from `dist`, you must update your imports to use the package's public exports.
+
 ### @streamr/sdk
 
 #### Added
