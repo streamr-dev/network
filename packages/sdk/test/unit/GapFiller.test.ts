@@ -8,7 +8,8 @@ import {
     wait,
     until
 } from '@streamr/utils'
-import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
+import { GapFiller } from '../../src/subscribe/ordering/GapFiller'
+import type { GapFillStrategy } from '../../src/ConfigTypes'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
