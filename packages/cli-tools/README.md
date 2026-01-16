@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network/main/packages/sdk/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -175,7 +175,7 @@ The `--config` argument tries to read a configuration file from the current work
 
 If no `--config` argument is specified, default settings are read from `~/.streamr/config/default.json`, if that file exists.
 
-The configuration file is a JSON. It has one root-level property `client`, which contains any configuration properties for the [@streamr/sdk](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/). Example:
+The configuration file is a JSON. It has one root-level property `client`, which contains any configuration properties for the [@streamr/sdk](https://github.com/streamr-dev/network/blob/main/packages/sdk/). Example:
 ```
 {
     "client": {

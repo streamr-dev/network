@@ -66,7 +66,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             if (!streamrClient.getConfig().network.controlLayer.webrtcAllowPrivateAddresses) {
                 logger.warn('WebRTC private address probing is disabled. ' +
                     'This makes it impossible to create network layer connections directly via local routers ' +
-                    'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
+                    'More info: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses')
             }
         },
         stop: async () => {

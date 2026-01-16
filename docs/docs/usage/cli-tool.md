@@ -196,7 +196,7 @@ The `--config` argument tries to read a configuration file from the current work
 
 If no `--config` argument is specified, default settings are read from `~/.streamr/config/default.json`, if that file exists.
 
-The configuration file is a JSON. It has one root-level property `client`, which contains any configuration properties for the [streamr-sdk-javascript](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/) client. Example:
+The configuration file is a JSON. It has one root-level property `client`, which contains any configuration properties for the [streamr-sdk-javascript](https://github.com/streamr-dev/network/blob/main/packages/sdk/) client. Example:
 
 ```
 {

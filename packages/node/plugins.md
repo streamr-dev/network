@@ -122,7 +122,7 @@ If you want to publish or subscribe to a specific partition of a stream, you can
 
 - `/streams/:streamId/subscribe?partitions=0,2,5`: subscribes to given partition numbers
 - `/streams/:streamId/publish?partition=2`: publishes to given partition number
-- `/streams/:streamId/publish?partitionKey=foo`: use the given key to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams))
+- `/streams/:streamId/publish?partitionKey=foo`: use the given key to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network/blob/main/packages/sdk/README.md#publishing-to-partitioned-streams))
 - `/streams/:streamId/publish?partitionKeyField=customerId`: use the given field in a JSON to choose the `paritionKey` (e.g. `{ "customerId": "foo", ...  }` -> `paritionKey` is `foo`)
 
 By default, partition `0` is selected.
@@ -292,7 +292,7 @@ http://localhost:7171/streams/foo.eth%2fbar
 The endpoint supports the following optional query parameters:
 
 - `timestamp` can be used to set the message timestamp explicitly. The timestamp should be passed in ISO-8601 string (e.g. `2001-02-03T04:05:06Z`), or as milliseconds since epoch, e.g. `1234567890000`
-- `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams)). The default (in case neither is provided) is to select a random partition for each message.
+- `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network/blob/main/packages/sdk/README.md#publishing-to-partitioned-streams)). The default (in case neither is provided) is to select a random partition for each message.
 
 #### Port
 

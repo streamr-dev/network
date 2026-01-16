@@ -8,6 +8,12 @@ Changes before Tatum release are not documented in this file.
 
 ## [Unreleased]
 
+### General
+
+#### Fixed
+
+- Fix outdated GitHub URLs referencing old `network-monorepo` repository instead of `network` (https://github.com/streamr-dev/network/pull/3348)
+
 ### @streamr/sdk
 
 #### Added
