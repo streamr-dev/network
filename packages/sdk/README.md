@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="600" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network/main/packages/sdk/readme-header.png" width="600" />
   </a>
 </p>
 
@@ -9,7 +9,7 @@
 </h1>
 
 ![latest npm package version](https://img.shields.io/npm/v/@streamr/sdk?label=latest)
-![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
+![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
 The Streamr SDK allows you to interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org). This library contains convenience functions for creating and managing streams on the Streamr Network.
