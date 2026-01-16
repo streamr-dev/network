@@ -1,6 +1,6 @@
 import merge from 'lodash/merge'
 import { DependencyContainer, container } from 'tsyringe'
-import { StreamrClientConfig } from '../../../src/Config'
+import type { StreamrClientConfig } from '../../../src/ConfigTypes'
 import { NetworkNodeFacade, NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'

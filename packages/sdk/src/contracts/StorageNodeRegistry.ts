@@ -2,7 +2,7 @@ import { NodeRegistryABI, NodeRegistry as NodeRegistryContract } from '@streamr/
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamrClientError } from '../StreamrClientError'
 import { getEthersOverrides } from '../ethereumUtils'

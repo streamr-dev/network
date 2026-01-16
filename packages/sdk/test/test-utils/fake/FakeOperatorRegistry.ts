@@ -1,6 +1,6 @@
 import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
-import { NetworkPeerDescriptor } from '../../../src/Config'
+import type { NetworkPeerDescriptor } from '../../../src/ConfigTypes'
 import { FindOperatorsOnStreamResult, OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
 import { toEthereumAddress } from '@streamr/utils'
 

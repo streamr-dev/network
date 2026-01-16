@@ -13,7 +13,7 @@ import { MOCK_CONTENT, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { StrictStreamrClientConfig } from '../../src/Config'
+import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
 
 const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,

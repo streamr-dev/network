@@ -1,7 +1,7 @@
 import { EthereumAddress } from '@streamr/utils'
 import { AbstractProvider, BaseContract, Contract, ContractTransactionReceipt, InterfaceAbi, Provider, Signer } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ObservableContract, createDecoratedContract } from './contract'

@@ -6,7 +6,7 @@ import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { toStreamID, toStreamPartID, Logger } from '@streamr/utils'
-import { NetworkPeerDescriptor } from '../../src/Config'
+import type { NetworkPeerDescriptor } from '../../src/ConfigTypes'
 
 describe('ProxyNodeFinder', () => {
 

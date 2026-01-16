@@ -1,6 +1,6 @@
 import { MetricsReport, merge, wait } from '@streamr/utils'
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { ConfigInjectionToken, StreamrClientConfig, EthereumProviderIdentityConfig } from './Config'
+import { ConfigInjectionToken, type StreamrClientConfig, type EthereumProviderIdentityConfig } from './ConfigTypes'
 import { DestroySignal } from './DestroySignal'
 import { StreamrClientEventEmitter } from './events'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
