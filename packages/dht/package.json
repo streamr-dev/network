@@ -47,21 +47,21 @@
     "@streamr/utils": "103.2.0",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
-    "ipaddr.js": "^2.0.1",
+    "ipaddr.js": "^2.3.0",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "lru-cache": "^11.2.2",
+    "lru-cache": "^11.2.4",
     "node-datachannel": "^0.27.0",
     "uuid": "^11.1.0",
     "websocket": "^1.0.34",
-    "ws": "^8.18.3"
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.2.0",
     "@types/heap": "^0.2.35",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.17.21",
+    "@types/lodash": "^4.17.23",
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.18.1",
     "jest-leak-detector": "^27.3.1",
@@ -70,7 +70,7 @@
     "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.9",
-    "utf-8-validate": "^6.0.5"
+    "bufferutil": "^4.1.0",
+    "utf-8-validate": "^6.0.6"
   }
 }
