@@ -75,7 +75,7 @@ const getTestName = (module: NodeModule): string => {
     return (groups !== null) ? groups[1] : moduleFilename
 }
 
-const randomTestRunId = process.pid ?? randomBytes(4).toString('hex')
+const randomTestRunId = process.pid ?? Buffer.from(randomBytes(4)).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
