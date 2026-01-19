@@ -4,19 +4,19 @@ import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
-import { pOnce } from '../promises'
+import { pOnce } from '../utils/promises'
 
-import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
+import { PersistenceContext, PersistenceContextOptions } from '../utils/persistence/PersistenceContext'
 import { Logger, wait } from '@streamr/utils'
-import { LoggerFactory } from '../LoggerFactory'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
-export interface ServerPersistenceOptions extends PersistenceContextOptions {
+export interface PersistenceOptions extends PersistenceContextOptions {
     loggerFactory: LoggerFactory
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
 }
 
-export default class ServerPersistence implements PersistenceContext {
+export class Persistence implements PersistenceContext {
     private readonly logger: Logger
     private readonly dbFilePath: string
     private store?: Database
@@ -27,12 +27,12 @@ export default class ServerPersistence implements PersistenceContext {
 
     // uses createInstance factory pattern so that ServerPersistence and BrowserPersistence
     // are interchangeable
-    static async createInstance(opts: ServerPersistenceOptions): Promise<ServerPersistence> {
+    static async createInstance(opts: PersistenceOptions): Promise<Persistence> {
         // TODO init() call could called here, so that we don't need to separate logic for 
         // initialization (i.e. check this.initCalled flag before eaach call).
         // It would be ok to do initialization, because the PersistenceManager already lazy loads
         // and therefore doesn't create this instance before it is needed
-        return new ServerPersistence(opts)
+        return new Persistence(opts)
     }
 
     private constructor({
@@ -40,8 +40,8 @@ export default class ServerPersistence implements PersistenceContext {
         ownerId,
         migrationsPath,
         onInit
-    }: ServerPersistenceOptions) {
-        this.logger = loggerFactory.createLogger('ServerPersistence')
+    }: PersistenceOptions) {
+        this.logger = loggerFactory.createLogger('Persistence')
         const paths = envPaths('streamr-sdk')
         // ownerId could be too long for the FS, but unlikely to collide locally - concatenate to first 50 chars
         this.dbFilePath = resolve(paths.data, join('./', ownerId.substring(0, 50), `GroupKeys.db`))
