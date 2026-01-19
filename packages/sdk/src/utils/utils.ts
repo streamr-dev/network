@@ -5,7 +5,7 @@ import {
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
-import { Readable } from 'stream'
+import type { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, type NetworkPeerDescriptor, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientEventEmitter } from '../events'

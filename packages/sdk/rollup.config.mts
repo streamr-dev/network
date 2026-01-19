@@ -25,6 +25,7 @@ const browserAliases: Alias[] = [
         ),
     },
     { find: 'timers', replacement: 'timers-browserify' },
+    { find: 'stream', replacement: 'readable-stream' },
 ]
 
 export default defineConfig([
