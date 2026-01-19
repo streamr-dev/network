@@ -146,7 +146,7 @@ export class EncryptionUtil {
      * Returns a hex string without the '0x' prefix.
      */
     static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): Uint8Array {
-        const iv = crypto.randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
+        const iv = randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', cipherKey, iv)
         return Buffer.concat([iv, cipher.update(data), cipher.final()])
     }

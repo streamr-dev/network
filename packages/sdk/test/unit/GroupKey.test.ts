@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import { randomBytes } from '@noble/post-quantum/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 
 describe('GroupKey', () => {
@@ -11,14 +11,14 @@ describe('GroupKey', () => {
 
         it('throws if key is the wrong size', () => {
             expect(() => {
-                new GroupKey('test', crypto.randomBytes(16))
+                new GroupKey('test', Buffer.from(randomBytes(16)))
             }).toThrow('size')
         })
 
         it('throws if key is not a buffer', () => {
             expect(() => {
                 // @ts-expect-error expected error below is desirable, show typecheks working as intended
-                new GroupKey('test', Array.from(crypto.randomBytes(32)))
+                new GroupKey('test', Array.from(randomBytes(32)))
             }).toThrow('Buffer')
         })
     })

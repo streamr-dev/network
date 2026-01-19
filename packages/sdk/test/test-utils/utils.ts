@@ -15,7 +15,7 @@ import {
     utf8ToBinary,
     wait
 } from '@streamr/utils'
-import crypto from 'crypto'
+import { randomBytes } from '@noble/post-quantum/utils'
 import { id, Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
@@ -75,7 +75,7 @@ const getTestName = (module: NodeModule): string => {
     return (groups !== null) ? groups[1] : moduleFilename
 }
 
-const randomTestRunId = process.pid ?? crypto.randomBytes(4).toString('hex')
+const randomTestRunId = process.pid ?? randomBytes(4).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
