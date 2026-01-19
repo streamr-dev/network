@@ -3,7 +3,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'
 import { LoggerFactory } from './utils/LoggerFactory'
-import type { Persistence as PersistenceInterface } from './utils/persistence/types'
+import type { Persistence as PersistenceInterface } from './Persistence.types'
 import { Persistence } from '@/Persistence'
 
 export const NAMESPACES = {

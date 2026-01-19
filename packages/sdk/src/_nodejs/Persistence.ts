@@ -1,20 +1,12 @@
 import envPaths from 'env-paths'
 import { dirname, resolve, join } from 'path'
 import { promises as fs } from 'fs'
-import { open, Database } from 'sqlite'
+import { open, type Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
-
 import { pOnce } from '../utils/promises'
-
-import { PersistenceContext, PersistenceContextOptions } from '../utils/persistence/PersistenceContext'
-import { Logger, wait } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
-
-export interface PersistenceOptions extends PersistenceContextOptions {
-    loggerFactory: LoggerFactory
-    migrationsPath?: string
-    onInit?: (db: Database) => Promise<void>
-}
+import type { PersistenceContext, PersistenceOptions } from '../Persistence.types'
+import type { Logger } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 
 export class Persistence implements PersistenceContext {
     private readonly logger: Logger

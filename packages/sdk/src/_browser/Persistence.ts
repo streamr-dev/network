@@ -1,5 +1,5 @@
-import { openDB, IDBPDatabase } from 'idb'
-import { PersistenceContext, PersistenceContextOptions } from '../utils/persistence/PersistenceContext'
+import { openDB, type IDBPDatabase } from 'idb'
+import type { PersistenceContext, PersistenceOptions } from '../Persistence.types'
 
 /**
  * This file is a ES module (.mts) instead of CommonJS. It was converted to ESM to resolve
@@ -20,7 +20,7 @@ export class Persistence implements PersistenceContext {
     
     private readonly db: IDBPDatabase
 
-    static async createInstance(opts: PersistenceContextOptions): Promise<Persistence> {
+    static async createInstance(opts: PersistenceOptions): Promise<Persistence> {
         const db = await openDB(`streamr-sdk::${opts.ownerId}`, 1, {
             upgrade(db) {
                 opts.namespaces.forEach((namespace) => db.createObjectStore(namespace))
