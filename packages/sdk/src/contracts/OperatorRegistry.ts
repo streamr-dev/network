@@ -1,9 +1,8 @@
-import { Logger, TheGraphClient, GraphQLQuery, EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { Logger, TheGraphClient, GraphQLQuery, EthereumAddress, toEthereumAddress, type StreamID } from '@streamr/utils'
 import shuffle from 'lodash/shuffle'
 import { Lifecycle, scoped } from 'tsyringe'
 import type { NetworkPeerDescriptor } from '../ConfigTypes'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { StreamID } from '../exports'
 
 // TODO maybe this class could be removed/renamed (the method could be extracted to be a function as there is no state)
 
