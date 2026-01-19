@@ -32,15 +32,15 @@
   },
   "dependencies": {
     "@streamr/utils": "103.2.2",
-    "eventemitter3": "^5.0.0",
+    "eventemitter3": "^5.0.4",
     "long-timeout": "^0.1.1",
-    "mmdb-lib": "^3.0.1",
-    "tar": "^7.5.2",
+    "mmdb-lib": "^3.0.2",
+    "tar": "^7.5.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/long-timeout": "^0.1.2",
     "@types/tar": "^6.1.11",
-    "express": "^5.2.0"
+    "express": "^5.2.1"
   }
 }
