@@ -106,12 +106,7 @@ function browser(): RollupOptions {
             }),
         ],
         external: [
-            /**
-             * We need to bundle some dependencies in. This will make sure we use the local `md5.js`
-             * and not the one shipped with `create-hash` (which is outdated and has issues with
-             * modern bundlers).
-             */
-            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base)/,
+            /node_modules/,
             /@streamr\//,
         ],
     }

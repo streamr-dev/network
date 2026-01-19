@@ -41,3 +41,17 @@ export function createDecipheriv(
 ): crypto.Decipheriv {
     return crypto.createDecipheriv(algorithm, key, iv)
 }
+
+export function publicEncrypt(
+    publicKey: string,
+    buffer: Buffer | Uint8Array
+): Buffer {
+    return crypto.publicEncrypt(publicKey, buffer)
+}
+
+export function privateDecrypt(
+    privateKey: string,
+    buffer: Buffer | Uint8Array
+): Buffer {
+    return crypto.privateDecrypt(privateKey, buffer)
+}

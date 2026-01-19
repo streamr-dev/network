@@ -4,7 +4,7 @@ import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
-import { binaryToUtf8, createCipheriv, createDecipheriv, getSubtle } from '@streamr/utils'
+import { binaryToUtf8, createCipheriv, createDecipheriv, getSubtle, privateDecrypt, publicEncrypt } from '@streamr/utils'
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 
@@ -62,13 +62,13 @@ export class EncryptionUtil {
 
     private static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Buffer {
         const keyString = this.toRSAPublicKeyString(publicKey)
-        const ciphertextBuffer = crypto.publicEncrypt(keyString, plaintextBuffer)
+        const ciphertextBuffer = publicEncrypt(keyString, plaintextBuffer)
         return ciphertextBuffer
     }
 
     private static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: Uint8Array): Buffer {
         const keyString = this.toRSAPrivateKeyString(privateKey)
-        return crypto.privateDecrypt(keyString, ciphertext)
+        return privateDecrypt(keyString, ciphertext)
     }
 
     /**
