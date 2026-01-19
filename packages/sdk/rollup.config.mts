@@ -17,7 +17,10 @@ export default defineConfig([
 
 function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
     // Suppress circular dependency warnings from external libraries
-    if (log.code === 'CIRCULAR_DEPENDENCY' && /node_modules/.test(log.message ?? '')) {
+    if (
+        log.code === 'CIRCULAR_DEPENDENCY' &&
+        /node_modules/.test(log.message ?? '')
+    ) {
         return
     }
 
@@ -49,15 +52,12 @@ function nodejs(): RollupOptions {
                 targets: [
                     {
                         src: 'src/encryption/migrations/*',
-                        dest: 'dist/encryption/migrations'
-                    }
-                ]
+                        dest: 'dist/encryption/migrations',
+                    },
+                ],
             }),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
         onwarn,
     }
 }
@@ -65,17 +65,9 @@ function nodejs(): RollupOptions {
 function nodejsTypes(): RollupOptions {
     return {
         input: './dist/src/index.d.ts',
-        output: [
-            { file: './dist/exports-nodejs.d.ts' },
-        ],
-        plugins: [
-            nodeResolve(),
-            dts(),
-        ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        output: [{ file: './dist/exports-nodejs.d.ts' }],
+        plugins: [nodeResolve(), dts()],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -102,10 +94,7 @@ function browser(): RollupOptions {
             }),
             cjs(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
         onwarn,
     }
 }
@@ -113,17 +102,12 @@ function browser(): RollupOptions {
 function browserTypes(): RollupOptions {
     return {
         input: './dist/src/index.d.ts',
-        output: [
-            { file: './dist/exports-browser.d.ts' },
-        ],
+        output: [{ file: './dist/exports-browser.d.ts' }],
         plugins: [
             nodeResolve(),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -162,6 +146,9 @@ function umdMinified(): RollupOptions {
         },
         plugins: [
             json(),
+            alias({
+                entries: browserAliases,
+            }),
             nodeResolve({
                 browser: true,
                 preferBuiltins: false,
