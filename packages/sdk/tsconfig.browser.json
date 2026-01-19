@@ -1,0 +1,50 @@
+{
+  "extends": "../../tsconfig.browser.json",
+  "compilerOptions": {
+    "outDir": "dist/browser",
+    "lib": ["ES2022", "DOM"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    "allowJs": true,
+
+    /* Don't emit helpers inline. Import them from tslib instead – key for using tsyringe with rollup. */
+    "importHelpers": true,
+
+    /* Resolution */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/_browser/*"]
+    },
+
+      /* @todo Make verbatimModuleSyntax (true) work. */
+    "verbatimModuleSyntax": false,
+
+    /* @todo Make useUnknownInCatchVariables (true) work. */
+    "useUnknownInCatchVariables": false,
+
+    /* @todo Make erasableSyntaxOnly (true) work. */
+    "erasableSyntaxOnly": false,
+
+    /* @todo Make noUnusedLocals (true) work. */
+    "noUnusedLocals": false,
+
+    /* @todo Make noUnusedParameters (true) work. */
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "src/generated",
+    "src/_nodejs"
+  ],
+  "references": [
+    { "path": "../utils/tsconfig.browser.json" },
+    { "path": "../proto-rpc" },
+    { "path": "../dht/tsconfig.browser.json" },
+    { "path": "../trackerless-network" },
+    { "path": "./tsconfig.browser-generated.json" }
+  ]
+}

@@ -6,8 +6,24 @@ import json from '@rollup/plugin-json'
 import copy from 'rollup-plugin-copy'
 import terser from '@rollup/plugin-terser'
 import alias, { type Alias } from '@rollup/plugin-alias'
+import { fileURLToPath } from 'node:url'
+
+const nodejsAliases: Alias[] = [
+    {
+        find: /^@\//,
+        replacement: fileURLToPath(
+            new URL('./dist/nodejs/src/_nodejs/', import.meta.url)
+        ),
+    },
+]
 
 const browserAliases: Alias[] = [
+    {
+        find: /^@\//,
+        replacement: fileURLToPath(
+            new URL('./dist/browser/src/_browser/', import.meta.url)
+        ),
+    },
     { find: 'timers', replacement: 'timers-browserify' },
 ]
 
@@ -34,7 +50,7 @@ function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
 
 function nodejs(): RollupOptions {
     return {
-        input: './dist/src/exports.js',
+        input: './dist/nodejs/src/exports.js',
         output: [
             {
                 format: 'es',
@@ -49,6 +65,9 @@ function nodejs(): RollupOptions {
         ],
         plugins: [
             json(),
+            alias({
+                entries: nodejsAliases,
+            }),
             nodeResolve({
                 preferBuiltins: true,
             }),
@@ -69,16 +88,22 @@ function nodejs(): RollupOptions {
 
 function nodejsTypes(): RollupOptions {
     return {
-        input: './dist/src/index.d.ts',
+        input: './dist/nodejs/src/index.d.ts',
         output: [{ file: './dist/exports-nodejs.d.ts' }],
-        plugins: [nodeResolve(), dts()],
+        plugins: [
+            alias({
+                entries: nodejsAliases,
+            }),
+            nodeResolve(),
+            dts(),
+        ],
         external: [/node_modules/, /@streamr\//],
     }
 }
 
 function browser(): RollupOptions {
     return {
-        input: './dist/src/exports.js',
+        input: './dist/browser/src/exports.js',
         output: [
             {
                 format: 'es',
@@ -109,7 +134,7 @@ function browser(): RollupOptions {
 
 function browserTypes(): RollupOptions {
     return {
-        input: './dist/src/index.d.ts',
+        input: './dist/browser/src/index.d.ts',
         output: [{ file: './dist/exports-browser.d.ts' }],
         plugins: [
             alias({
@@ -124,7 +149,7 @@ function browserTypes(): RollupOptions {
 
 function umd(): RollupOptions {
     return {
-        input: './dist/src/exports.js',
+        input: './dist/browser/src/exports.js',
         context: 'window',
         output: {
             format: 'umd',
@@ -150,7 +175,7 @@ function umd(): RollupOptions {
 
 function umdMinified(): RollupOptions {
     return {
-        input: './dist/src/exports.js',
+        input: './dist/browser/src/exports.js',
         context: 'window',
         output: {
             format: 'umd',

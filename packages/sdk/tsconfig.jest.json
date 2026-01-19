@@ -3,7 +3,13 @@
   "compilerOptions": {
     "lib": ["es2021"],
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/_nodejs/*"]
+    }
   },
   "include": [
     "package.json",

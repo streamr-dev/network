@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/nodejs",
     "lib": ["es2021"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -13,19 +13,23 @@
     "moduleResolution": "bundler",
     "module": "preserve",
     "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/_nodejs/*"]
+    }
   },
   "include": [
     "src",
     "src/**/*.json"
   ],
   "exclude": [
-    "src/generated"
+    "src/generated",
+    "src/_browser"
   ],
   "references": [
     { "path": "../utils" },
     { "path": "../proto-rpc" },
     { "path": "../dht" },
     { "path": "../trackerless-network" },
-    { "path": "./tsconfig.generated.json" }
+    { "path": "./tsconfig.node-generated.json" }
   ]
 }
