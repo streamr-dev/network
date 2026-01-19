@@ -18,7 +18,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - run: bash release.sh ${{ github.event.inputs.tag }}
