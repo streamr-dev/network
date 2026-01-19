@@ -53,6 +53,6 @@ export { type UserID, type UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEt
 export type { HexString } from './HexString'
 export type { ChangeFieldType, MapKey } from './types'
 export { type WeiAmount, multiplyWeiAmount } from './WeiAmount'
-export { getSubtle, computeMd5, computeSha1, createCipheriv, createDecipheriv, publicEncrypt, privateDecrypt } from '@/crypto'
+export { getSubtle, computeMd5, computeSha1, createCipheriv, createDecipheriv, publicEncrypt, privateDecrypt, type CryptoKey, type Jwk } from '@/crypto'
 export { SigningUtil, EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, type KeyType, KEY_TYPES } from './SigningUtil'
 export { randomBytes } from '@noble/post-quantum/utils'
