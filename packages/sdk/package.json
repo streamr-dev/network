@@ -10,7 +10,7 @@
   "main": "./dist/exports-nodejs.cjs",
   "module": "./dist/exports-nodejs.js",
   "types": "./dist/exports-nodejs.d.ts",
-  "script": "./dist/exports-browser.umd.js",
+  "script": "./dist/exports-umd.min.js",
   "exports": {
     ".": {
       "types": "./dist/exports-nodejs.d.ts",

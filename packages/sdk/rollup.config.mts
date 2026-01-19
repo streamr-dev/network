@@ -89,7 +89,7 @@ function nodejs(): RollupOptions {
 
 function nodejsTypes(): RollupOptions {
     return {
-        input: './dist/nodejs/src/index.d.ts',
+        input: './dist/nodejs/src/exports.d.ts',
         output: [{ file: './dist/exports-nodejs.d.ts' }],
         plugins: [
             alias({
@@ -135,7 +135,7 @@ function browser(): RollupOptions {
 
 function browserTypes(): RollupOptions {
     return {
-        input: './dist/browser/src/index.d.ts',
+        input: './dist/browser/src/exports.d.ts',
         output: [{ file: './dist/exports-browser.d.ts' }],
         plugins: [
             alias({
@@ -155,7 +155,7 @@ function umd(): RollupOptions {
         output: {
             format: 'umd',
             name: 'StreamrClient',
-            file: './dist/streamr-client.umd.js',
+            file: './dist/exports-umd.js',
             sourcemap: true,
         },
         plugins: [
@@ -181,7 +181,7 @@ function umdMinified(): RollupOptions {
         output: {
             format: 'umd',
             name: 'StreamrClient',
-            file: './dist/streamr-client.umd.min.js',
+            file: './dist/exports-umd.min.js',
             sourcemap: true,
         },
         plugins: [
