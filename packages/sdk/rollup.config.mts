@@ -5,6 +5,11 @@ import cjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import copy from 'rollup-plugin-copy'
 import terser from '@rollup/plugin-terser'
+import alias, { type Alias } from '@rollup/plugin-alias'
+
+const browserAliases: Alias[] = [
+    { find: 'timers', replacement: 'timers-browserify' },
+]
 
 export default defineConfig([
     nodejs(),
@@ -88,6 +93,9 @@ function browser(): RollupOptions {
         ],
         plugins: [
             json(),
+            alias({
+                entries: browserAliases,
+            }),
             nodeResolve({
                 browser: true,
                 preferBuiltins: false,
@@ -104,6 +112,9 @@ function browserTypes(): RollupOptions {
         input: './dist/src/index.d.ts',
         output: [{ file: './dist/exports-browser.d.ts' }],
         plugins: [
+            alias({
+                entries: browserAliases,
+            }),
             nodeResolve(),
             dts(),
         ],
@@ -123,6 +134,9 @@ function umd(): RollupOptions {
         },
         plugins: [
             json(),
+            alias({
+                entries: browserAliases,
+            }),
             nodeResolve({
                 browser: true,
                 preferBuiltins: false,
