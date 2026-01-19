@@ -1,5 +1,6 @@
 import envPaths from 'env-paths'
 import { dirname, resolve, join } from 'path'
+import { fileURLToPath } from 'url'
 import { promises as fs } from 'fs'
 import { open, type Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
@@ -14,7 +15,7 @@ export class Persistence implements PersistenceContext {
     private store?: Database
     private error?: Error
     private initCalled = false
-    private readonly migrationsPath?: string
+    private readonly migrationsUrl?: URL
     private readonly onInit?: (db: Database) => Promise<void>
 
     // uses createInstance factory pattern so that ServerPersistence and BrowserPersistence
@@ -30,14 +31,14 @@ export class Persistence implements PersistenceContext {
     private constructor({
         loggerFactory,
         ownerId,
-        migrationsPath,
+        migrationsUrl,
         onInit
     }: PersistenceOptions) {
         this.logger = loggerFactory.createLogger('Persistence')
         const paths = envPaths('streamr-sdk')
         // ownerId could be too long for the FS, but unlikely to collide locally - concatenate to first 50 chars
         this.dbFilePath = resolve(paths.data, join('./', ownerId.substring(0, 50), `GroupKeys.db`))
-        this.migrationsPath = migrationsPath
+        this.migrationsUrl = migrationsUrl
         this.onInit = onInit
         this.init = pOnce(this.init.bind(this))
     }
@@ -93,11 +94,11 @@ export class Persistence implements PersistenceContext {
                 await store.configure('busyTimeout', 200)
                 await store.run('PRAGMA journal_mode = WAL;')
             })
-            if (this.migrationsPath !== undefined) {
+            if (this.migrationsUrl !== undefined) {
                 await this.tryExec(async () => {
                     try {
                         await store.migrate({
-                            migrationsPath: this.migrationsPath
+                            migrationsPath: fileURLToPath(this.migrationsUrl!)
                         })
                     } catch (err) {
                         if (err.code.startsWith('SQLITE_')) {

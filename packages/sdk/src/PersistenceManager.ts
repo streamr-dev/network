@@ -1,4 +1,5 @@
-import { join } from 'path'
+import './setupTsyringe'
+
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'
@@ -38,7 +39,7 @@ export class PersistenceManager {
             loggerFactory: this.loggerFactory,
             ownerId: await this.identity.getUserId(),
             namespaces: Object.values(NAMESPACES),
-            migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
+            migrationsUrl: new URL('./encryption/migrations', import.meta.url)
         })
     }
 

@@ -22,12 +22,12 @@ export interface Persistence {
 
 /**
  * Unified options for Persistence.createInstance().
- * Browser implementation ignores Node.js-specific fields (loggerFactory, migrationsPath, onInit).
+ * Browser implementation ignores Node.js-specific fields (loggerFactory, migrationsUrl, onInit).
  */
 export interface PersistenceOptions {
     ownerId: UserID
     namespaces: string[]
     loggerFactory: LoggerFactory
-    migrationsPath?: string
+    migrationsUrl?: URL
     onInit?: (db: unknown) => Promise<void>
 }
