@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { createTestWallet, describeOnlyInNodeJs } from '@streamr/test-utils'
 import { Logger, TheGraphClient, until } from '@streamr/utils'
 import { parseEther } from 'ethers'
-import { _operatorContractUtils } from '../../src'
+import { _operatorContractUtils } from '../../src/exports'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const createTheGraphClient = (): TheGraphClient => {

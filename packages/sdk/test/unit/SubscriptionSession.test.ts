@@ -1,7 +1,7 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
-import { Subscription } from '../../src'
+import { Subscription } from '../../src/subscribe/Subscription'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
 import { SubscriptionSession } from '../../src/subscribe/SubscriptionSession'
