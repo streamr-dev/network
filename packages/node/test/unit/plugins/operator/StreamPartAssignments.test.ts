@@ -2,7 +2,7 @@ import { DhtAddress } from '@streamr/dht'
 import { NetworkPeerDescriptor } from '@streamr/sdk'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID, wait } from '@streamr/utils'
-import EventEmitter3 from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import range from 'lodash/range'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorFleetStateEvents, OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
@@ -25,8 +25,8 @@ const streamPartMappings = new Map<StreamID, StreamPartID[]>()
 
 describe(StreamPartAssignments, () => {
     let events: [string, ...any[]][]
-    let operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
-    let maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
+    let operatorFleetState: EventEmitter<OperatorFleetStateEvents>
+    let maintainTopologyHelper: EventEmitter<MaintainTopologyHelperEvents>
     let assigments: StreamPartAssignments
 
     function clearEvents(): void {
@@ -42,14 +42,14 @@ describe(StreamPartAssignments, () => {
             }
             return streamParts
         })
-        operatorFleetState = new class extends EventEmitter3 {
+        operatorFleetState = new class extends EventEmitter {
             // eslint-disable-next-line class-methods-use-this
             getPeerDescriptor(nodeId: DhtAddress): NetworkPeerDescriptor | undefined {
                 return { nodeId } as unknown as NetworkPeerDescriptor
             }
         } as unknown as OperatorFleetState
         // operatorFleetState.getPeerDescriptor = jest.fn()
-        maintainTopologyHelper = new EventEmitter3()
+        maintainTopologyHelper = new EventEmitter()
         assigments = new StreamPartAssignments(
             MY_NODE_ID,
             1,

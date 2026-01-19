@@ -1,6 +1,6 @@
 import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import WebSocket, { WebSocketServer } from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Logger, asAbortable } from '@streamr/utils'

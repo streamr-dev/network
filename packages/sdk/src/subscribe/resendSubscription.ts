@@ -1,5 +1,5 @@
 import { EthereumAddress, StreamID } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { LoggerFactory } from '../utils/LoggerFactory'

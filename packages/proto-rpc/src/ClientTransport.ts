@@ -13,7 +13,7 @@ import {
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
 import { RpcMessage } from '../generated/ProtoRpc'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcOptions } from './ProtoCallContext'
 import { Any } from '../generated/google/protobuf/any'

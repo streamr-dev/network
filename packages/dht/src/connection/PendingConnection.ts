@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'

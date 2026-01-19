@@ -13,7 +13,7 @@ import {
     TheGraphClient, toEthereumAddress, toUserId
 } from '@streamr/utils'
 import type { Overrides } from 'ethers'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'

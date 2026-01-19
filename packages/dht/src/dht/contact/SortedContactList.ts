@@ -1,6 +1,6 @@
 import { Events } from './ContactList'
 import sortedIndexBy from 'lodash/sortedIndexBy'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { getDistance } from '../PeerManager'
 import { DhtAddress, toDhtAddressRaw } from '../../identifiers'
 
