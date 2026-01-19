@@ -25,6 +25,6 @@
     "test/exports"
   ],
   "references": [
-    { "path": "./tsconfig.generated.json" }
+    { "path": "./tsconfig.node-generated.json" }
   ]
 }
