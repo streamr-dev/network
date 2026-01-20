@@ -590,6 +590,8 @@ Autostaker changes:
 
 
 [Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0...HEAD
+[103.2.2]: https://github.com/streamr-dev/network/compare/v103.2.1...v103.2.2
+[103.2.1]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.1
 [103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
 [103.1.2]: https://github.com/streamr-dev/network/compare/v103.1.1...v103.1.2
 [103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1
