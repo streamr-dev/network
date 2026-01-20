@@ -1,11 +1,12 @@
 import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
-import { delay, inject } from 'tsyringe'
+import { delay, inject, injectable } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
 
+@injectable()
 export class Subscriber {
 
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()

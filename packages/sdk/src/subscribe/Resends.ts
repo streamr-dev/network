@@ -13,7 +13,7 @@ import {
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
-import { delay, inject } from 'tsyringe'
+import { delay, inject, injectable } from 'tsyringe'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../contracts/StorageNodeRegistry'
@@ -119,6 +119,7 @@ export const toInternalResendOptions = (options: ResendOptions): InternalResendO
     }
 }
 
+@injectable()
 export class Resends {
 
     private readonly storageNodeRegistry: StorageNodeRegistry
