@@ -17,6 +17,13 @@ const getAnyItemFromSet = <T>(set: Set<T>): T | undefined => {
     return set.values().next().value
 }
 
+export interface SubscriptionSessionOptions {
+    streamPartId: StreamPartID
+    messagePipelineFactory: MessagePipelineFactory
+    node: NetworkNodeFacade
+    resends: Resends
+}
+
 export class SubscriptionSession {
 
     public readonly streamPartId: StreamPartID
@@ -28,19 +35,14 @@ export class SubscriptionSession {
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
 
-    constructor(
-        streamPartId: StreamPartID,
-        messagePipelineFactory: MessagePipelineFactory,
-        node: NetworkNodeFacade,
-        resends: Resends
-    ) {
-        this.streamPartId = streamPartId
+    constructor(opts: SubscriptionSessionOptions) {
+        this.streamPartId = opts.streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
-        this.node = node
+        this.node = opts.node
         this.onError = this.onError.bind(this)
-        this.pipeline = messagePipelineFactory.createMessagePipeline({
-            streamPartId,
-            resends
+        this.pipeline = opts.messagePipelineFactory.createMessagePipeline({
+            streamPartId: opts.streamPartId,
+            resends: opts.resends
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline

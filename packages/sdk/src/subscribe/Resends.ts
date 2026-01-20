@@ -13,7 +13,7 @@ import {
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../contracts/StorageNodeRegistry'
@@ -127,10 +127,9 @@ export class Resends {
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
-    /* eslint-disable indent */
     constructor(
-        @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
+        storageNodeRegistry: StorageNodeRegistry,
+        messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {

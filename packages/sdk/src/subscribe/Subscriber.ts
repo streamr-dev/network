@@ -1,5 +1,5 @@
 import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -18,8 +18,8 @@ export class Subscriber {
 
     constructor(
         node: NetworkNodeFacade,
-        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
-        @inject(delay(() => Resends)) resends: Resends,
+        messagePipelineFactory: MessagePipelineFactory,
+        resends: Resends,
         loggerFactory: LoggerFactory,
     ) {
         this.node = node
@@ -32,12 +32,12 @@ export class Subscriber {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession(streamPartId)!
         }
-        const subSession = new SubscriptionSession(
+        const subSession = new SubscriptionSession({
             streamPartId,
-            this.messagePipelineFactory,
-            this.node,
-            this.resends
-        )
+            messagePipelineFactory: this.messagePipelineFactory,
+            node: this.node,
+            resends: this.resends
+        })
 
         this.subSessions.set(streamPartId, subSession)
         subSession.onRetired.listen(() => {

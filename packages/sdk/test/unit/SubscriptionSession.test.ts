@@ -30,7 +30,12 @@ describe('SubscriptionSession', () => {
         pipelineFactory.createMessagePipeline.mockReturnValue(pushPipeline)
         const networkNodeFacade = mock<NetworkNodeFacade>()
         const resends = mock<Resends>()
-        session = new SubscriptionSession(STREAM_PART_ID, pipelineFactory, networkNodeFacade, resends)
+        session = new SubscriptionSession({
+            streamPartId: STREAM_PART_ID,
+            messagePipelineFactory: pipelineFactory,
+            node: networkNodeFacade,
+            resends
+        })
     })
 
     describe('getERC1271ContractAddress', () => {
