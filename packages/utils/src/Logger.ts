@@ -106,7 +106,7 @@ export class Logger {
     }
 
     static createName(loggerModule: LoggerModule): string {
-        const loggerModuleId = typeof loggerModule === 'string' ? loggerModule : loggerModule.id
+        const loggerModuleId = typeof loggerModule === 'string' ? loggerModule : String(loggerModule.id)
         const parsedPath = path.parse(loggerModuleId)
         let fileId = parsedPath.name
         if (fileId === 'index') {

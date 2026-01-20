@@ -15,7 +15,7 @@ import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { EncryptionType, SignatureType, ContentType } from '@streamr/trackerless-network'
-import { StrictStreamrClientConfig } from '../../src/Config'
+import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
 import { DestroySignal } from '../../src/DestroySignal'
 
 const CONTENT = { foo: 'bar' }

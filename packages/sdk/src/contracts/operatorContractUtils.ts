@@ -23,8 +23,8 @@ import {
     parseEther,
     ZeroAddress
 } from 'ethers'
-import { EnvironmentId } from '../Config'
-import { SignerWithProvider } from '../identity/Identity'
+import type { EnvironmentId } from '../ConfigTypes'
+import type { SignerWithProvider } from '../identity/Identity'
 
 const FRACTION_MAX = parseEther('1')
 

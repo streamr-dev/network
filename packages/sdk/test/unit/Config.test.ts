@@ -1,6 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import cloneDeep from 'lodash/cloneDeep'
-import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
+import { createStrictConfig, redactConfig } from '../../src/Config'
+import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, type NetworkPeerDescriptor } from '../../src/ConfigTypes'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 

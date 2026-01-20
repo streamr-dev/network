@@ -8,6 +8,10 @@ Changes before Tatum release are not documented in this file.
 
 ## [Unreleased]
 
+### General
+
+#### Fixed
+
 ### @streamr/sdk
 
 #### Added
@@ -50,6 +54,51 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
+
+## [103.2.2] - 2026-01-19
+
+### General
+
+#### Changed
+
+- Update package lock files
+
+## [103.2.1] - 2026-01-19
+
+### General
+
+#### Fixed
+
+- Fix outdated GitHub URLs referencing old `network-monorepo` repository instead of `network` (https://github.com/streamr-dev/network/pull/3348)
+
+### @streamr/sdk
+
+#### Changed
+
+- Resolve selected circular dependencies in the SDK package (https://github.com/streamr-dev/network/pull/3351)
+
+### @streamr/utils
+
+#### Changed
+
+- Make `executeSafePromise` work in browsers without polyfills (https://github.com/streamr-dev/network/pull/3310)
+- Use explicit logger scopes instead of NodeJS-specific `module` (https://github.com/streamr-dev/network/pull/3309, https://github.com/streamr-dev/network/pull/3317)
+
+#### Fixed
+
+- Fix logger id type handling after minimization
+
+### @streamr/autocertifier-server
+
+#### Added
+
+- Delete unused DNS records in batches from Route53 (https://github.com/streamr-dev/network/pull/3346)
+
+#### Fixed
+
+- Wait for acme-challenge record to propagate (https://github.com/streamr-dev/network/pull/3347)
+- Add error handling for delete records operation (https://github.com/streamr-dev/network/pull/3349)
+- Only delete existing records from Route53 (https://github.com/streamr-dev/network/pull/3350)
 
 ## [103.2.0] - 2025-12-18
 

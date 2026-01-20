@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { DhtAddress } from '@streamr/dht'
 import { LevelMetric, MetricsContext, wait } from '@streamr/utils'
-import { StreamrClientConfig } from '../../src/Config'
+import type { StreamrClientConfig } from '../../src/ConfigTypes'
 import { DestroySignal } from '../../src/DestroySignal'
 import { DEFAULTS, MetricsPublisher } from '../../src/MetricsPublisher'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'

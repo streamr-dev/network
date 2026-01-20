@@ -1,7 +1,7 @@
 import { Logger, TheGraphClient, GraphQLQuery, EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import shuffle from 'lodash/shuffle'
 import { Lifecycle, scoped } from 'tsyringe'
-import { NetworkPeerDescriptor } from '../Config'
+import type { NetworkPeerDescriptor } from '../ConfigTypes'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamID } from '../exports'
 

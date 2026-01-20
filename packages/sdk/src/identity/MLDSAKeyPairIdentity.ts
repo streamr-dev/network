@@ -1,7 +1,7 @@
 import { hexToBinary, SigningUtil } from '@streamr/utils'
 import { KeyPairIdentity } from './KeyPairIdentity'
 import { SignatureType } from '@streamr/trackerless-network'
-import { StrictStreamrClientConfig } from '../Config'
+import type { StrictStreamrClientConfig } from '../ConfigTypes'
 
 const signingUtil = SigningUtil.getInstance('ML_DSA_87')
 

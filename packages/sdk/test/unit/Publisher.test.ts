@@ -6,7 +6,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
-import { StrictStreamrClientConfig } from '../../src/Config'
+import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
 
 describe('Publisher', () => {
     it('error message', async () => {

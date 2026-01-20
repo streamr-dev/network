@@ -1,5 +1,5 @@
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
-import { StrictStreamrClientConfig } from '../../Config'
+import type { StrictStreamrClientConfig } from '../../ConfigTypes'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
