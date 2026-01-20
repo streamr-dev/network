@@ -52,6 +52,7 @@ function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
 function nodejs(): RollupOptions {
     return {
         input: './dist/nodejs/src/exports.js',
+        context: 'globalThis',
         output: [
             {
                 format: 'es',
@@ -105,6 +106,7 @@ function nodejsTypes(): RollupOptions {
 function browser(): RollupOptions {
     return {
         input: './dist/browser/src/exports.js',
+        context: 'globalThis',
         output: [
             {
                 format: 'es',
