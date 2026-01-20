@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { convertStreamMessageToMessage } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

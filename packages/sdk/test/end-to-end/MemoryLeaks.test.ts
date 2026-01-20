@@ -1,7 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { createTestPrivateKey, describeOnlyInNodeJs } from '@streamr/test-utils'
 import { Defer, merge, TheGraphClient, wait } from '@streamr/utils'
-import 'reflect-metadata'
 import { DependencyContainer, container as rootContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { IdentityInjectionToken } from '../../src/identity/Identity'

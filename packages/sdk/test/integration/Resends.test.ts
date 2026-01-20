@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'

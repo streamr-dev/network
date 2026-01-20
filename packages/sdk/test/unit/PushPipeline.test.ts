@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toStreamID, utf8ToBinary, wait } from '@streamr/utils'
 import { MessageSigner } from '../../src/signature/MessageSigner'

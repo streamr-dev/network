@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import capitalize from 'lodash/capitalize'

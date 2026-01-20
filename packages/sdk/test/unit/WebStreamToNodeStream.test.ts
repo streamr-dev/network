@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { promises } from 'stream'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'

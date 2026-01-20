@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { mock } from 'jest-mock-extended'
 import { Publisher } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'

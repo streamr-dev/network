@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import {
     Operator as OperatorContract,
     Sponsorship as SponsorshipContract

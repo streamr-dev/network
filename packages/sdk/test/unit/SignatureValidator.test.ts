@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, toStreamID, toUserId, utf8ToBinary } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'

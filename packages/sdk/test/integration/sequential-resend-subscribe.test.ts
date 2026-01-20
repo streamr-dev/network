@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { collect, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'

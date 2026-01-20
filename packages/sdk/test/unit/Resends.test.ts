@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { isRunningInElectron, randomEthereumAddress, randomUserId, startTestServer } from '@streamr/test-utils'
 import { StreamPartIDUtils, collect, hexToBinary, toLengthPrefixedFrame, toStreamID } from '@streamr/utils'
 import range from 'lodash/range'

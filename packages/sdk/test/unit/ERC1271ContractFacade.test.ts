@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
 import { EcdsaSecp256k1Evm, hexToBinary } from '@streamr/utils'
 import { Provider } from 'ethers'

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'

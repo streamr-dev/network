@@ -6,6 +6,7 @@ const config: Config.InitialOptions = {
     globalSetup: './jest.setup.ts',
     setupFilesAfterEnv: [
         ...defaultConfig.setupFilesAfterEnv,
+        './src/setupTsyringe.ts',
         './test/test-utils/customMatchers.ts',
         '@streamr/test-utils/setupCustomMatchers',
     ],

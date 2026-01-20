@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { toStreamID, UserID } from '@streamr/utils'
 import range from 'lodash/range'

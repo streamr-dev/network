@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet } from '@streamr/test-utils'
 import { StreamID, toStreamPartID, wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'

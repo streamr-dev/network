@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import { ProxyNodeFinder } from '../../src/ProxyNodeFinder'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { OperatorRegistry, FindOperatorsOnStreamResult } from '../../src/contracts/OperatorRegistry'
