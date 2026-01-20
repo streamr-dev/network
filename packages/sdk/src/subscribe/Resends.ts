@@ -211,7 +211,8 @@ export class Resends {
              * in ascending order, we don't need the ordering functionality.
              */
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
-            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
+            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config,
+            resends: this
         })
         const lines = transformError(fetchLengthPrefixedFrameHttpBinaryStream(url, abortSignal), getHttpErrorTransform())
         setImmediate(async () => {

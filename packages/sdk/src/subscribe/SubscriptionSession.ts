@@ -5,6 +5,7 @@ import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
+import type { Resends } from './Resends'
 import { Subscription } from './Subscription'
 
 /**
@@ -30,14 +31,16 @@ export class SubscriptionSession {
     constructor(
         streamPartId: StreamPartID,
         messagePipelineFactory: MessagePipelineFactory,
-        node: NetworkNodeFacade
+        node: NetworkNodeFacade,
+        resends: Resends
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
         this.pipeline = messagePipelineFactory.createMessagePipeline({
-            streamPartId
+            streamPartId,
+            resends
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline

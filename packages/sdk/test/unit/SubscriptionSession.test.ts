@@ -4,6 +4,7 @@ import { mock } from 'jest-mock-extended'
 import { Subscription } from '../../src'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
+import type { Resends } from '../../src/subscribe/Resends'
 import { SubscriptionSession } from '../../src/subscribe/SubscriptionSession'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { ErrorSignal, Signal } from '../../src/utils/Signal'
@@ -28,7 +29,8 @@ describe('SubscriptionSession', () => {
         pushPipeline.pipe.mockReturnValue(pushPipeline as any)
         pipelineFactory.createMessagePipeline.mockReturnValue(pushPipeline)
         const networkNodeFacade = mock<NetworkNodeFacade>()
-        session = new SubscriptionSession(STREAM_PART_ID, pipelineFactory, networkNodeFacade)
+        const resends = mock<Resends>()
+        session = new SubscriptionSession(STREAM_PART_ID, pipelineFactory, networkNodeFacade, resends)
     })
 
     describe('getERC1271ContractAddress', () => {

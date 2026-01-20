@@ -24,7 +24,7 @@ import { EncryptionType } from '@streamr/trackerless-network'
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
-    resends: Resends
+    resends?: Resends
     streamRegistry: StreamRegistry
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
@@ -91,7 +91,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet<MessageID>()
     messageStream.onError.listen(onError)
-    if (opts.config.orderMessages) {
+    if (opts.config.orderMessages && opts.resends) {
         // order messages and fill gaps
         const orderMessages = new OrderMessages(
             opts.streamPartId,

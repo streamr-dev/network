@@ -3,6 +3,7 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
+import { Resends } from './Resends'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
 
@@ -12,15 +13,18 @@ export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly node: NetworkNodeFacade
     private readonly messagePipelineFactory: MessagePipelineFactory
+    private readonly resends: Resends
     private readonly logger: Logger
 
     constructor(
         node: NetworkNodeFacade,
         @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
+        @inject(delay(() => Resends)) resends: Resends,
         loggerFactory: LoggerFactory,
     ) {
         this.node = node
         this.messagePipelineFactory = messagePipelineFactory
+        this.resends = resends
         this.logger = loggerFactory.createLogger('Subscriber')
     }
 
@@ -31,7 +35,8 @@ export class Subscriber {
         const subSession = new SubscriptionSession(
             streamPartId,
             this.messagePipelineFactory,
-            this.node
+            this.node,
+            this.resends
         )
 
         this.subSessions.set(streamPartId, subSession)
