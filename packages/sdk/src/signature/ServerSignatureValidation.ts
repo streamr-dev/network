@@ -27,9 +27,10 @@ export default class ServerSignatureValidation implements SignatureValidationCon
         return this.workerApi.validateSignature(data)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    destroy(): void {
-        // No-op for server implementation
+    async destroy(): Promise<void> {
+        this.workerApi[Comlink.releaseProxy]()
+        this.worker.removeAllListeners()
+        await this.worker.terminate()
     }
 }
 
