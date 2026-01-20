@@ -52,7 +52,9 @@ module.exports = (env, argv) => {
             ]
         },
         resolve: {
-            alias: {},
+            alias: {
+                '@': path.resolve(__dirname, 'src/_browser'),
+            },
             fallback: {},
             modules: ['node_modules', ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts'],

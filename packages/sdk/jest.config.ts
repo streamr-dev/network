@@ -10,6 +10,9 @@ const config: Config.InitialOptions = {
         './test/test-utils/customMatchers.ts',
         '@streamr/test-utils/setupCustomMatchers',
     ],
+    moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
+    },
 }
 
 export default config
