@@ -6,9 +6,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
-    /* Don't emit helpers inline. Import them from tslib instead – key for using tsyringe with rollup. */
-    "importHelpers": true,
-
     /* Resolution */
     "moduleResolution": "bundler",
     "module": "preserve",
