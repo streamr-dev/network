@@ -1,3 +1,5 @@
+import '../setupTsyringe'
+
 import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
@@ -10,7 +12,7 @@ import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { Subscriber } from '../subscribe/Subscriber'
+import type { Subscriber } from '../subscribe/Subscriber'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
@@ -21,6 +23,7 @@ import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest,
 import { KeyExchangeKeyPair } from './KeyExchangeKeyPair'
 import { createCompliantExchangeKeys } from '../utils/encryptionCompliance'
 import { StreamrClientError } from '../StreamrClientError'
+import { Tokens } from '../tokens'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -51,7 +54,7 @@ export class SubscriberKeyExchange {
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
-        subscriber: Subscriber,
+        @inject(Tokens.Subscriber) subscriber: Subscriber,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>,
         @inject(IdentityInjectionToken) identity: Identity,
         loggerFactory: LoggerFactory
