@@ -1,12 +1,11 @@
 import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { delay, inject } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
 
-@scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
 
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
