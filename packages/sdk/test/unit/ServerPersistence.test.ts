@@ -60,7 +60,7 @@ describe('Persistence', () => {
                 loggerFactory: mockLoggerFactory(),
                 ownerId,
                 namespaces: ['EncryptionKeys'],
-                migrationsUrl: new URL('../../src/encryption/migrations', import.meta.url)
+                migrationsUrl: new URL('../../src/encryption/migrations', `file://${__dirname}/`),
             })
             await instance.set('key', `value${i}`, 'EncryptionKeys')
             const value = await instance.get('key', 'EncryptionKeys')
