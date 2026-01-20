@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet, randomUserId } from '@streamr/test-utils'
 import { toStreamID, toStreamPartID, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'

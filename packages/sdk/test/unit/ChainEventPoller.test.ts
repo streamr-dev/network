@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { until, wait } from '@streamr/utils'
 import { AbstractProvider, Interface, Log } from 'ethers'

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { DhtAddress } from '@streamr/dht'
 import { LevelMetric, MetricsContext, wait } from '@streamr/utils'
 import type { StreamrClientConfig } from '../../src/ConfigTypes'

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet } from '@streamr/test-utils'
 import { Defer, StreamID, collect, toUserId, until, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'

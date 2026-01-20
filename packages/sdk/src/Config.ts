@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import cloneDeep from 'lodash/cloneDeep'
 import { merge } from '@streamr/utils'
 import { generateClientId } from './utils/utils'

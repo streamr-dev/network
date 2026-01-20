@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { toUserId, UserID, until } from '@streamr/utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'

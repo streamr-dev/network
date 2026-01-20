@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { toStreamID } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { Identity } from '../../src/identity/Identity'

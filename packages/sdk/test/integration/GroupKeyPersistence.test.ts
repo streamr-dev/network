@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect, toStreamPartID, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
