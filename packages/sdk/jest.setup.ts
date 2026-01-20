@@ -1,6 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
-import './src/setupTsyringe.ts'
 import pkg from './package.json'
 
 export default async function setup(): Promise<void> {
