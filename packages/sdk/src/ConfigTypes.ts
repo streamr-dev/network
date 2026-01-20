@@ -1,5 +1,3 @@
-import './setupTsyringe'
-
 import type { Overrides, Eip1193Provider } from 'ethers'
 import type { DeepRequired, MarkOptional } from 'ts-essentials'
 import type { HexString, LogLevel, KeyType } from '@streamr/utils'
