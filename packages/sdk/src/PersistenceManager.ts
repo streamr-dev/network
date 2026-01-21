@@ -1,3 +1,5 @@
+import './setupTsyringe'
+
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'

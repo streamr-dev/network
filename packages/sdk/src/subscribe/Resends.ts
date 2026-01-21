@@ -24,8 +24,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
 import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream } from '../utils/utils'
-import type { MessagePipelineFactory } from './MessagePipelineFactory'
-import { Tokens } from '../tokens'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -131,7 +130,7 @@ export class Resends {
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        @inject(Tokens.MessagePipelineFactory) messagePipelineFactory: MessagePipelineFactory,
+        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
