@@ -1,7 +1,7 @@
 import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { Database } from 'sqlite'
-import { Persistence } from '../../src/_nodejs/Persistence'
+import { Persistence } from '@/Persistence'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const NAMESPACE = 'MockTable'

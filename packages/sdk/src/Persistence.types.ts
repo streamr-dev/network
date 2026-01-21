@@ -8,6 +8,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 export interface PersistenceContext {
     get(key: string, namespace: string): Promise<string | undefined>
     set(key: string, value: string, namespace: string): Promise<void>
+    exists(): Promise<boolean>
     close(): Promise<void>
 }
 

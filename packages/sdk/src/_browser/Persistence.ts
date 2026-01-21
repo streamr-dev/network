@@ -33,6 +33,11 @@ export class Persistence implements PersistenceContext {
         this.db = db
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    async exists(): Promise<boolean> {
+        throw new Error('Method not implemented in browser Persistence.')
+    }
+
     async get(key: string, namespace: string): Promise<string | undefined> {
         return this.db.get(namespace, key)
     }
