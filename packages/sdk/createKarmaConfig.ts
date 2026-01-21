@@ -14,6 +14,7 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
                     __dirname,
                     'test/test-utils/jestGlobalsMock.ts'
                 ),
+                '@streamr/dht': resolve(__dirname, '../dht/dist/exports-browser.cjs'),
                 '@': resolve(__dirname, 'src/_browser'),
             },
             fallback: {
