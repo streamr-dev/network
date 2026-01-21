@@ -10,15 +10,6 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
         createWebpackConfig({
             libraryName: 'sdk',
             alias: {
-                /**
-                 * @todo Our "browser" tests use the Node.js build of DHT package – needed
-                 * for WebSocket/Simulator stuff, but still, very confusing.
-                 */
-                '@streamr/dht': resolve(
-                    __dirname,
-                    '../dht/dist/exports-nodejs.cjs'
-                ),
-
                 '@jest/globals': resolve(
                     __dirname,
                     'test/test-utils/jestGlobalsMock.ts'
