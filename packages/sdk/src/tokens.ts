@@ -1,4 +1,5 @@
 export const Tokens = {
     Resends: Symbol('Resends'),
-    Subscriber: Symbol('Subscriber')
+    Subscriber: Symbol('Subscriber'),
+    MessagePipelineFactory: Symbol('MessagePipelineFactory'),
 }

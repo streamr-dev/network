@@ -1,6 +1,6 @@
 import { StreamID } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { delay, inject, injectable } from 'tsyringe'
 import { ConfigInjectionToken } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'
@@ -24,7 +24,7 @@ type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'getStorageNodes' |
     'config'>
 
-@scoped(Lifecycle.ContainerScoped)
+@injectable()
 export class MessagePipelineFactory {
 
     private readonly resends: Resends

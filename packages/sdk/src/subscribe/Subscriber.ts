@@ -1,10 +1,11 @@
 import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
-import { delay, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { MessagePipelineFactory } from './MessagePipelineFactory'
+import type { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
+import { Tokens } from '../tokens'
 
 @injectable()
 export class Subscriber {
@@ -16,7 +17,7 @@ export class Subscriber {
 
     constructor(
         node: NetworkNodeFacade,
-        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
+        @inject(Tokens.MessagePipelineFactory) messagePipelineFactory: MessagePipelineFactory,
         loggerFactory: LoggerFactory,
     ) {
         this.node = node
