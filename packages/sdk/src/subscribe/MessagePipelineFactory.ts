@@ -10,8 +10,9 @@ import { StreamMessage } from '../protocol/StreamMessage'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
-import { Resends } from './Resends'
+import type { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
+import { Tokens } from '../tokens'
 
 type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |
@@ -37,7 +38,7 @@ export class MessagePipelineFactory {
 
     /* eslint-disable indent */
     constructor(
-        @inject(delay(() => Resends)) resends: Resends,
+        @inject(Tokens.Resends) resends: Resends,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         signatureValidator: SignatureValidator,

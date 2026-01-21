@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { Defer, merge } from '@streamr/utils'
 import { Message } from '../../src/Message'

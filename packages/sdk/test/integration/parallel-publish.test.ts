@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { wait } from '@streamr/utils'
 import random from 'lodash/random'
 import uniq from 'lodash/uniq'

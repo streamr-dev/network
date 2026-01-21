@@ -24,7 +24,14 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix outdated GitHub URLs referencing old `network-monorepo` repository instead of `network` (https://github.com/streamr-dev/network/pull/3348)
+#### Added
+
+- Expose cross-environment AES cipher utilities (`createCipheriv`, `createDecipheriv`) from `@streamr/utils` for both browser and Node.js (https://github.com/streamr-dev/network/pull/3342)
+- Bundle a limited browser-compatible version of `autocertifier-client` (https://github.com/streamr-dev/network/pull/3340)
+
+#### Changed
+
+- Internal packages now produce separate bundles for browser and Node.js environments, improving tree-shaking and reducing polyfill requirements (https://github.com/streamr-dev/network/pull/3321, https://github.com/streamr-dev/network/pull/3322, https://github.com/streamr-dev/network/pull/3330, https://github.com/streamr-dev/network/pull/3333, https://github.com/streamr-dev/network/pull/3335, https://github.com/streamr-dev/network/pull/3336, https://github.com/streamr-dev/network/pull/3337, https://github.com/streamr-dev/network/pull/3338, https://github.com/streamr-dev/network/pull/3339)
 
 ### @streamr/sdk
 
@@ -68,29 +75,50 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
+## [103.2.2] - 2026-01-19
 
-## [103.2.0-experiment.1] - 2026-01-12
-
-Internal build improvements for better browser compatibility. No user-facing API changes.
+### General
 
 #### Changed
 
-- Refactored internal packages to use explicit exports for Jest and other module systems (https://github.com/streamr-dev/network/pull/3344)
+- Update package lock files
 
+## [103.2.1] - 2026-01-19
 
-## [103.2.0-experiment.0] - 2026-01-09
+### General
 
-Internal build improvements introducing separate browser and Node.js bundles across packages. No user-facing API changes.
+#### Fixed
+
+- Fix outdated GitHub URLs referencing old `network-monorepo` repository instead of `network` (https://github.com/streamr-dev/network/pull/3348)
+
+### @streamr/sdk
+
+#### Changed
+
+- Resolve selected circular dependencies in the SDK package (https://github.com/streamr-dev/network/pull/3351)
+
+### @streamr/utils
+
+#### Changed
+
+- Make `executeSafePromise` work in browsers without polyfills (https://github.com/streamr-dev/network/pull/3310)
+- Use explicit logger scopes instead of NodeJS-specific `module` (https://github.com/streamr-dev/network/pull/3309, https://github.com/streamr-dev/network/pull/3317)
+
+#### Fixed
+
+- Fix logger id type handling after minimization
+
+### @streamr/autocertifier-server
 
 #### Added
 
-- Expose cross-environment AES cipher utilities (`createCipheriv`, `createDecipheriv`) from `@streamr/utils` for both browser and Node.js (https://github.com/streamr-dev/network/pull/3342)
-- Bundle a limited browser-compatible version of `autocertifier-client` (https://github.com/streamr-dev/network/pull/3340)
+- Delete unused DNS records in batches from Route53 (https://github.com/streamr-dev/network/pull/3346)
 
-#### Changed
+#### Fixed
 
-- Internal packages now produce separate bundles for browser and Node.js environments, improving tree-shaking and reducing polyfill requirements (https://github.com/streamr-dev/network/pull/3321, https://github.com/streamr-dev/network/pull/3322, https://github.com/streamr-dev/network/pull/3330, https://github.com/streamr-dev/network/pull/3333, https://github.com/streamr-dev/network/pull/3335, https://github.com/streamr-dev/network/pull/3336, https://github.com/streamr-dev/network/pull/3337, https://github.com/streamr-dev/network/pull/3338, https://github.com/streamr-dev/network/pull/3339)
-
+- Wait for acme-challenge record to propagate (https://github.com/streamr-dev/network/pull/3347)
+- Add error handling for delete records operation (https://github.com/streamr-dev/network/pull/3349)
+- Only delete existing records from Route53 (https://github.com/streamr-dev/network/pull/3350)
 
 ## [103.2.0] - 2025-12-18
 
@@ -581,9 +609,9 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0-experiment.1...HEAD
-[103.2.0-experiment.1]: https://github.com/streamr-dev/network/compare/v103.2.0-experiment.0...v103.2.0-experiment.1
-[103.2.0-experiment.0]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.0-experiment.0
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0...HEAD
+[103.2.2]: https://github.com/streamr-dev/network/compare/v103.2.1...v103.2.2
+[103.2.1]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.1
 [103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
 [103.1.2]: https://github.com/streamr-dev/network/compare/v103.1.1...v103.1.2
 [103.1.1]: https://github.com/streamr-dev/network/compare/v103.1.0...v103.1.1

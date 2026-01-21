@@ -1,4 +1,4 @@
-import 'reflect-metadata'
+import './setupTsyringe'
 
 import { join } from 'path'
 import { inject, Lifecycle, scoped } from 'tsyringe'

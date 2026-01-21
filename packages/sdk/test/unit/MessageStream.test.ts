@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { toStreamID, utf8ToBinary } from '@streamr/utils'
 import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'

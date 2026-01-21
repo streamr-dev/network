@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet } from '@streamr/test-utils'
 import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'

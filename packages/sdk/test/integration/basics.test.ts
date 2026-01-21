@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

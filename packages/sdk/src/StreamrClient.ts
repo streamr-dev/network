@@ -2,8 +2,8 @@
  * Importing 'timers' ensures `setImmediate` is available in browsers,
  * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
  */
-import 'reflect-metadata'
 import 'timers'
+import './setupTsyringe'
 import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
@@ -65,6 +65,7 @@ import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 import { assertCompliantIdentity } from './utils/encryptionCompliance'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { Tokens } from './tokens'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -137,8 +138,8 @@ export class StreamrClient {
         this.identity = identity
         this.theGraphClient = theGraphClient
         this.publisher = container.resolve<Publisher>(Publisher)
-        this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.resends = container.resolve<Resends>(Resends)
+        this.subscriber = container.resolve<Subscriber>(Tokens.Subscriber)
+        this.resends = container.resolve<Resends>(Tokens.Resends)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.rpcProviderSource = container.resolve(RpcProviderSource)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'

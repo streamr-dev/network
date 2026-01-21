@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { Stream } from '../../src/Stream'
 
 describe('Stream', () => {

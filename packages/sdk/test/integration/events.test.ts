@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('events', () => {
