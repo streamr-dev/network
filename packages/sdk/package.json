@@ -29,6 +29,7 @@
   "files": [
     "dist/exports-nodejs.*",
     "dist/exports-browser.*",
+    "dist/exports-umd.*",
     "dist/encryption/migrations",
     "!*.tsbuildinfo",
     "LICENSE",
