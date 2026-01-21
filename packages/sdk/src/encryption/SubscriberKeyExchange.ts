@@ -1,5 +1,3 @@
-import '../setupTsyringe'
-
 import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'

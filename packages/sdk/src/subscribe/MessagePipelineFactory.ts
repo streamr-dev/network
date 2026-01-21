@@ -1,5 +1,3 @@
-import '../setupTsyringe'
-
 import { StreamID } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
