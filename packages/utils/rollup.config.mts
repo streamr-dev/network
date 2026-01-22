@@ -106,7 +106,12 @@ function browser(): RollupOptions {
             }),
         ],
         external: [
-            /node_modules/,
+            /**
+             * Bundle certain dependencies to use browser-compatible versions of their
+             * sub-dependencies (e.g. `readable-stream` for `stream`). This also ensures we
+             * use up-to-date versions that work with modern bundlers.
+             */
+            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base|public-encrypt|create-hash|parse-asn1|ripemd160)/,
             /@streamr\//,
         ],
     }
