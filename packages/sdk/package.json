@@ -71,7 +71,6 @@
     "benchmark": "^2.1.4",
     "buffer": "^6.0.3",
     "bytes": "^3.1.1",
-    "chromedriver": "^121.0.2",
     "express": "^5.2.0",
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^30.0.5",
