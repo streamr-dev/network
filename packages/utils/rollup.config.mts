@@ -40,6 +40,19 @@ const browserAliases: Alias[] = [
         find: /^pino$/,
         replacement: 'pino/browser',
     },
+    {
+        /**
+         * Although `randombytes` has a browser build, it uses `global` keyword which
+         * breaks some bundlers (e.g. Vite). Therefore, we use a custom one.
+         */
+        find: 'randombytes',
+        replacement: fileURLToPath(
+            new URL(
+                './dist/browser/src/browser/randombytes.js',
+                import.meta.url
+            )
+        ),
+    },
 ]
 
 export default defineConfig([
@@ -72,10 +85,7 @@ function nodejs(): RollupOptions {
                 preferBuiltins: true,
             }),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -111,7 +121,7 @@ function browser(): RollupOptions {
              * sub-dependencies (e.g. `readable-stream` for `stream`). This also ensures we
              * use up-to-date versions that work with modern bundlers.
              */
-            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base|public-encrypt|create-hash|parse-asn1|ripemd160)/,
+            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base|public-encrypt|create-hash|parse-asn1|ripemd160|pbkdf2|browserify-rsa)/,
             /@streamr\//,
         ],
     }
@@ -132,10 +142,7 @@ function nodejsTypes(): RollupOptions {
             nodeResolve(),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -157,9 +164,6 @@ function browserTypes(): RollupOptions {
             }),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
