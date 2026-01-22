@@ -159,6 +159,7 @@ function umd(): RollupOptions {
             name: 'StreamrClient',
             file: './dist/exports-umd.js',
             sourcemap: true,
+            outro: 'window.StreamrClient = window.StreamrClient.StreamrClient;',
         },
         plugins: [
             json(),
@@ -185,6 +186,7 @@ function umdMinified(): RollupOptions {
             name: 'StreamrClient',
             file: './dist/exports-umd.min.js',
             sourcemap: true,
+            outro: 'window.StreamrClient = window.StreamrClient.StreamrClient;',
         },
         plugins: [
             json(),
