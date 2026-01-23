@@ -70,6 +70,11 @@ const bundledBrowserDeps = [
     'cipher-base',
 
     /**
+     * Unwrap `hash-base` to get to use newer `readable-stream` (v4.7 vs v2.3.8).
+     */
+    'hash-base',
+
+    /**
      * Additionally, we
      * - use custom implementation of `randombytes` for browser (see alias below),
      * - install `asn1.js` and `hash-base` as backward compatible direct dependencies to ensure
