@@ -1,7 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { Logger, StreamID, StreamPartID } from '@streamr/utils'
 import { NetworkPeerDescriptor } from '@streamr/sdk'
-import EventEmitter3 from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import pLimit from 'p-limit'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
@@ -14,7 +14,7 @@ export interface StreamPartAssignmentEvents {
     unassigned(streamPartId: StreamPartID): void
 }
 
-export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEvents> {
+export class StreamPartAssignments extends EventEmitter<StreamPartAssignmentEvents> {
     private readonly assignments = new Map<StreamPartID, DhtAddress[]>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
@@ -22,14 +22,14 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private readonly myNodeId: DhtAddress
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: OperatorFleetState
-    private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
+    private readonly maintainTopologyHelper: EventEmitter<MaintainTopologyHelperEvents>
 
     constructor(
         myNodeId: DhtAddress,
         redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: OperatorFleetState,
-        maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
+        maintainTopologyHelper: EventEmitter<MaintainTopologyHelperEvents>,
     ) {
         super()
         this.myNodeId = myNodeId

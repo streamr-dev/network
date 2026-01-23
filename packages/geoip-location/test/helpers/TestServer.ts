@@ -4,7 +4,7 @@ import { Logger, wait } from '@streamr/utils'
 import { fetchFileToMemory } from './fetchFileToMemory'
 import fs from 'fs'
 import { v4 } from 'uuid'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { Duplex, pipeline } from 'stream'
 
 const logger = new Logger('TestServer')

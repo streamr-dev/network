@@ -1,5 +1,5 @@
 import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessageStream } from './MessageStream'
 import { StreamPartDeliveryOptions } from '@streamr/trackerless-network'

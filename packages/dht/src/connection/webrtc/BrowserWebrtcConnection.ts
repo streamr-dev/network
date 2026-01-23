@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'

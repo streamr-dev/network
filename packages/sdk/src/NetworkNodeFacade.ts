@@ -15,7 +15,7 @@ import {
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
 import { Logger, MetricsContext, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import pull from 'lodash/pull'
 import omit from 'lodash/omit'
 import { Lifecycle, inject, scoped } from 'tsyringe'

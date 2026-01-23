@@ -1,7 +1,7 @@
 import {
     Logger
 } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import KBucket from 'k-bucket'
 import { LockID } from '../connection/ConnectionLockStates'
 import { ConnectionLocker } from '../connection/ConnectionManager'
