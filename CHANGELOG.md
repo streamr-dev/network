@@ -11,6 +11,7 @@ Changes before Tatum release are not documented in this file.
 ### Breaking Changes
 
 - **BREAKING CHANGE**: The following packages no longer include all source files in `dist`. They now export bundled artifacts for ESM, CJS, and TypeScript declarations only:
+  - `@streamr/sdk`
   - `@streamr/utils`
   - `@streamr/dht`
   - `@streamr/proto-rpc`
@@ -22,30 +23,42 @@ Changes before Tatum release are not documented in this file.
 
 ### General
 
-#### Fixed
-
 #### Added
 
-- Expose cross-environment AES cipher utilities (`createCipheriv`, `createDecipheriv`) from `@streamr/utils` for both browser and Node.js (https://github.com/streamr-dev/network/pull/3342)
-- Bundle a limited browser-compatible version of `autocertifier-client` (https://github.com/streamr-dev/network/pull/3340)
+- Expose cross-environment cryptographic utilities from `@streamr/utils` for both browser and Node.js ([#3342]):
+  - AES cipher utilities: `createCipheriv`, `createDecipheriv`
+  - Hash functions: `computeMd5`, `computeSha1`
+  - RSA utilities: `publicEncrypt`, `privateDecrypt`
+  - Random bytes: `randomBytes` (re-exported from `@noble/post-quantum/utils`)
+  - Types: `CryptoKey`, `Jwk`
+- Bundle a limited browser-compatible version of `autocertifier-client` ([#3340])
 
 #### Changed
 
-- Internal packages now produce separate bundles for browser and Node.js environments, improving tree-shaking and reducing polyfill requirements (https://github.com/streamr-dev/network/pull/3321, https://github.com/streamr-dev/network/pull/3322, https://github.com/streamr-dev/network/pull/3330, https://github.com/streamr-dev/network/pull/3333, https://github.com/streamr-dev/network/pull/3335, https://github.com/streamr-dev/network/pull/3336, https://github.com/streamr-dev/network/pull/3337, https://github.com/streamr-dev/network/pull/3338, https://github.com/streamr-dev/network/pull/3339)
+- Internal packages now produce separate bundles for browser and Node.js environments, improving tree-shaking and reducing polyfill requirements ([#3321], [#3322], [#3330], [#3333], [#3335], [#3336], [#3337], [#3338], [#3339])
 
 ### @streamr/sdk
 
 #### Added
 
+- Bundle `@streamr/sdk` for browser (no polyfills required!) and for Node.js ([#3358])
+
 #### Changed
 
-#### Deprecated
-
-#### Removed
+- **BREAKING CHANGE**: The package no longer provides a default export. Use named imports instead: `import { StreamrClient } from '@streamr/sdk'`. The UMD bundle remains accessible via `window.StreamrClient`. ([#3358])
+- Use named `StreamrClient` export and explicit `type` import syntax ([#3369])
+- Use named imports for `EventEmitter` from `eventemitter3` ([#3366])
 
 #### Fixed
 
-#### Security
+- Resolve circular dependencies in the SDK package ([#3361], [#3367])
+- Clean-up `tsyringe` setup ([#3362])
+
+### @streamr/browser-test-runner
+
+#### Added
+
+- Support TypeScript karma-setup files ([#3368])
 
 ### @streamr/node
 
@@ -609,7 +622,7 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.2...HEAD
 [103.2.2]: https://github.com/streamr-dev/network/compare/v103.2.1...v103.2.2
 [103.2.1]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.1
 [103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
@@ -633,3 +646,22 @@ Autostaker changes:
 [100.1.2]: https://github.com/streamr-dev/network/compare/v100.1.1...v100.1.2
 [100.1.1]: https://github.com/streamr-dev/network/compare/v100.1.0...v100.1.1
 [100.1.0]: https://github.com/streamr-dev/network/compare/v100.0.0...v100.1.0
+
+[#3321]: https://github.com/streamr-dev/network/pull/3321
+[#3322]: https://github.com/streamr-dev/network/pull/3322
+[#3330]: https://github.com/streamr-dev/network/pull/3330
+[#3333]: https://github.com/streamr-dev/network/pull/3333
+[#3335]: https://github.com/streamr-dev/network/pull/3335
+[#3336]: https://github.com/streamr-dev/network/pull/3336
+[#3337]: https://github.com/streamr-dev/network/pull/3337
+[#3338]: https://github.com/streamr-dev/network/pull/3338
+[#3339]: https://github.com/streamr-dev/network/pull/3339
+[#3340]: https://github.com/streamr-dev/network/pull/3340
+[#3342]: https://github.com/streamr-dev/network/pull/3342
+[#3358]: https://github.com/streamr-dev/network/pull/3358
+[#3361]: https://github.com/streamr-dev/network/pull/3361
+[#3362]: https://github.com/streamr-dev/network/pull/3362
+[#3366]: https://github.com/streamr-dev/network/pull/3366
+[#3367]: https://github.com/streamr-dev/network/pull/3367
+[#3368]: https://github.com/streamr-dev/network/pull/3368
+[#3369]: https://github.com/streamr-dev/network/pull/3369
