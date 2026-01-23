@@ -15,6 +15,67 @@ const nodejsAliases: Alias[] = [
     },
 ]
 
+/**
+ * Dependencies to bundle for browser builds. These need browser-compatible versions of their
+ * sub-dependencies (e.g. `readable-stream` for `stream`). Bundling also ensures we use up-to-date
+ * versions that work with modern bundlers.
+ */
+const bundledBrowserDeps = [
+    /**
+     * Unwrap `browserify-aes` to get to `cipher-base`, `create-hash`, `evp_bytestokey`.
+     */
+    'browserify-aes',
+
+    /**
+     * Unwrap `public-encrypt` to get to `browserify-rsa`, `create-hash`, `parse-asn1`,
+     * `randombytes`.
+     */
+    'public-encrypt',
+
+    /**
+     * Unwrap `browserify-rsa` to get to `randombytes`.
+     */
+    'browserify-rsa',
+
+    /**
+     * Unwrap `parse-asn1` to get to `asn1.js`, `browserify-aes`, `evp_bytestokey`, `pbkdf2`.
+     */
+    'parse-asn1',
+
+    /**
+     * Unwrap `pbkdf2` to get to `create-hash`, `ripemd160`.
+     */
+    'pbkdf2',
+
+    /**
+     * Unwrap `evp_bytestokey` to get to `md5.js`.
+     */
+    'evp_bytestokey',
+
+    /**
+     * Unwrap `create-hash` to get to `cipher-base`, `md5.js`, `ripemd160`.
+     */
+    'create-hash',
+
+    /**
+     * Unwrap `md5.js` and 'ripemd160' to get to `hash-base`.
+     */
+    'md5.js',
+
+    /**
+     * Unwrap `cipher-base` to get to Node's `stream` used inside. For browser builds, we want
+     * to swap it to `readable-stream` instead.
+     */
+    'cipher-base',
+
+    /**
+     * Additionally, we
+     * - use custom implementation of `randombytes` for browser (see alias below),
+     * - install `asn1.js` and `hash-base` as backward compatible direct dependencies to ensure
+     *   we have browser-compatible versions.
+     */
+]
+
 const browserAliases: Alias[] = [
     {
         find: /^@\//,
@@ -115,15 +176,17 @@ function browser(): RollupOptions {
                 preferBuiltins: false,
             }),
         ],
-        external: [
-            /**
-             * Bundle certain dependencies to use browser-compatible versions of their
-             * sub-dependencies (e.g. `readable-stream` for `stream`). This also ensures we
-             * use up-to-date versions that work with modern bundlers.
-             */
-            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base|public-encrypt|create-hash|parse-asn1|ripemd160|pbkdf2|browserify-rsa)/,
-            /@streamr\//,
-        ],
+        external: (id: string) => {
+            if (/@streamr\//.test(id)) {
+                return true
+            }
+            if (id.includes('node_modules')) {
+                return !bundledBrowserDeps.some((dep) =>
+                    id.includes(`node_modules/${dep}`)
+                )
+            }
+            return false
+        },
     }
 }
 
