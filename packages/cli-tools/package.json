@@ -42,13 +42,13 @@
     "easy-table": "^1.1.1",
     "ethers": "^6.13.0",
     "event-stream": "^4.0.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "semver": "^7.7.3"
   },
   "devDependencies": {
     "@streamr/test-utils": "103.2.2",
     "@types/event-stream": "^4.0.6",
-    "@types/lodash": "^4.17.21",
+    "@types/lodash": "^4.17.23",
     "@types/merge2": "^1.4.4",
     "@types/semver": "^7.7.1",
     "merge2": "^1.4.1"
