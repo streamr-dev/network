@@ -1,4 +1,4 @@
-import { Stream, StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
+import { type Stream, type StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { until, wait } from '@streamr/utils'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'

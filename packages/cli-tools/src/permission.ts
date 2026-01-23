@@ -1,5 +1,5 @@
 import { Argument } from 'commander'
-import { PermissionAssignment, Stream, StreamPermission, StreamrClient } from '@streamr/sdk'
+import { type PermissionAssignment, type Stream, StreamPermission, StreamrClient } from '@streamr/sdk'
 import { createClientCommand } from './command'
 
 const PUBLIC_USER_ID = 'public'

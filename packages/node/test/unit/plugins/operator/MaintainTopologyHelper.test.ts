@@ -1,4 +1,4 @@
-import { Operator, OperatorEvents, StakeEvent } from '@streamr/sdk'
+import type { Operator, OperatorEvents, StakeEvent } from '@streamr/sdk'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, Multimap, toStreamID, wait } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'

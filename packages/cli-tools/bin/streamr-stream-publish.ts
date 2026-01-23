@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { convertBytesToStreamMessage, PublishMetadata, StreamMessage, StreamrClient } from '@streamr/sdk'
+import { convertBytesToStreamMessage, type PublishMetadata, type StreamMessage, StreamrClient } from '@streamr/sdk'
 import { hexToBinary, LengthPrefixedFrameDecoder, merge, toEthereumAddress, toStreamID, wait } from '@streamr/utils'
 import es from 'event-stream'
 import { Writable } from 'stream'

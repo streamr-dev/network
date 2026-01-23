@@ -1,4 +1,4 @@
-import { GetOperatorSponsorshipsResult, Operator } from '@streamr/sdk'
+import { type GetOperatorSponsorshipsResult, Operator } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger('closeExpiredFlags')

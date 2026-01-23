@@ -1,5 +1,5 @@
 import {
-    ReviewRequestEvent,
+    type ReviewRequestEvent,
     StreamrClient
 } from '@streamr/sdk'
 import {

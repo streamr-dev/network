@@ -1,4 +1,4 @@
-import { Stream, StreamrClient, StorageNodeAssignmentEvent } from '@streamr/sdk'
+import { type Stream, StreamrClient, type StorageNodeAssignmentEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
 
 const logger = new Logger('StorageEventListener')

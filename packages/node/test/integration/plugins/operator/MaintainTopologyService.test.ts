@@ -1,5 +1,5 @@
 import {
-    Stream, StreamrClient, _operatorContractUtils
+    type Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'

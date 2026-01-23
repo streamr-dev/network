@@ -1,4 +1,4 @@
-import { Operator, GetOperatorSponsorshipsResult } from '@streamr/sdk'
+import type { Operator, GetOperatorSponsorshipsResult } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { mock } from 'jest-mock-extended'
 import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'

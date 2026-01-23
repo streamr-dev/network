@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import qs from 'qs'
-import { StreamrClient, Subscription } from '@streamr/sdk'
+import type { StreamrClient, Subscription } from '@streamr/sdk'
 import { waitForEvent, until, merge } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'

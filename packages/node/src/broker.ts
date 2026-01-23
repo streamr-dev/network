@@ -1,7 +1,7 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import StreamrClient from '@streamr/sdk'
+import { StreamrClient } from '@streamr/sdk'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config } from './config/config'

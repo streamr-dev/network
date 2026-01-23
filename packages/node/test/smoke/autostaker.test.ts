@@ -1,4 +1,4 @@
-import StreamrClient, { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
+import { StreamrClient, _operatorContractUtils, type SignerWithProvider } from '@streamr/sdk'
 import {
     createTestPrivateKey,
     createTestWallet,

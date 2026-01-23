@@ -1,4 +1,4 @@
-import { Message, Stream } from '@streamr/sdk'
+import type { Message, Stream } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import range from 'lodash/range'
