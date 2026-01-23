@@ -1,7 +1,7 @@
-import crypto from 'crypto'
 import { EncryptedGroupKey } from '@streamr/trackerless-network'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
+import { randomBytes } from '@noble/post-quantum/utils'
 export class GroupKeyError extends Error {
 
     public groupKey?: GroupKey
@@ -64,8 +64,8 @@ export class GroupKey {
     }
 
     static generate(id = uuid('GroupKey')): GroupKey {
-        const keyBytes = crypto.randomBytes(32)
-        return new GroupKey(id, keyBytes)
+        const keyBytes = randomBytes(32)
+        return new GroupKey(id, Buffer.from(keyBytes))
     }
 
     /** @internal */

@@ -1,24 +1,23 @@
 import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
-import { join } from 'path'
 import { Database } from 'sqlite'
-import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
+import { Persistence } from '@/Persistence'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const NAMESPACE = 'MockTable'
 
-describe('ServerPersistence', () => {
+describe('Persistence', () => {
 
-    let persistence: ServerPersistence
+    let persistence: Persistence
 
     beforeEach(async () => {
         const ownerId = randomUserId()
-        persistence = await ServerPersistence.createInstance({
+        persistence = await Persistence.createInstance({
             loggerFactory: mockLoggerFactory(),
             ownerId,
             namespaces: [NAMESPACE],
-            onInit: async (db: Database) => {
-                await db.exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
+            onInit: async (db) => {
+                await (db as Database).exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
             }
         })
     })
@@ -57,11 +56,11 @@ describe('ServerPersistence', () => {
         const instanceCount = 10
         const ownerId = randomUserId()
         const values = await Promise.all(range(instanceCount).map(async (i: number) => {
-            const instance = await ServerPersistence.createInstance({
+            const instance = await Persistence.createInstance({
                 loggerFactory: mockLoggerFactory(),
                 ownerId,
                 namespaces: ['EncryptionKeys'],
-                migrationsPath: join(__dirname, '../../src/encryption/migrations')
+                migrationsUrl: new URL('../../src/encryption/migrations', `file://${__dirname}/`),
             })
             await instance.set('key', `value${i}`, 'EncryptionKeys')
             const value = await instance.get('key', 'EncryptionKeys')

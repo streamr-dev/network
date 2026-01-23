@@ -15,6 +15,68 @@ const nodejsAliases: Alias[] = [
     },
 ]
 
+/**
+ * Dependencies to bundle for browser builds. These need browser-compatible versions of their
+ * sub-dependencies (e.g. `readable-stream` for `stream`). Bundling also ensures we use up-to-date
+ * versions that work with modern bundlers.
+ */
+const bundledBrowserDeps = [
+    /**
+     * Unwrap `browserify-aes` to get to `cipher-base`, `create-hash`, `evp_bytestokey`.
+     */
+    'browserify-aes',
+
+    /**
+     * Unwrap `public-encrypt` to get to `browserify-rsa`, `create-hash`, `parse-asn1`,
+     * `randombytes`.
+     */
+    'public-encrypt',
+
+    /**
+     * Unwrap `browserify-rsa` to get to `randombytes`.
+     */
+    'browserify-rsa',
+
+    /**
+     * Unwrap `parse-asn1` to get to `asn1.js`, `browserify-aes`, `evp_bytestokey`, `pbkdf2`.
+     */
+    'parse-asn1',
+
+    /**
+     * Unwrap `pbkdf2` to get to `create-hash`, `ripemd160`.
+     */
+    'pbkdf2',
+
+    /**
+     * Unwrap `evp_bytestokey` to get to `md5.js`.
+     */
+    'evp_bytestokey',
+
+    /**
+     * Unwrap `create-hash` to get to `cipher-base`, `md5.js`, `ripemd160`.
+     */
+    'create-hash',
+
+    /**
+     * Unwrap `md5.js` and 'ripemd160' to get to `hash-base`.
+     */
+    'md5.js',
+    'ripemd160',
+
+    /**
+     * Unwrap `cipher-base` to get to Node's `stream` used inside. For browser builds, we want
+     * to swap it to `readable-stream` instead.
+     */
+    'cipher-base',
+
+    /**
+     * Additionally, we
+     * - use custom implementation of `randombytes` for browser (see alias below),
+     * - install `asn1.js` and `hash-base` as backward compatible direct dependencies to ensure
+     *   we have browser-compatible versions.
+     */
+]
+
 const browserAliases: Alias[] = [
     {
         find: /^@\//,
@@ -39,6 +101,19 @@ const browserAliases: Alias[] = [
     {
         find: /^pino$/,
         replacement: 'pino/browser',
+    },
+    {
+        /**
+         * Although `randombytes` has a browser build, it uses `global` keyword which
+         * breaks some bundlers (e.g. Vite). Therefore, we use a custom one.
+         */
+        find: 'randombytes',
+        replacement: fileURLToPath(
+            new URL(
+                './dist/browser/src/browser/randombytes.js',
+                import.meta.url
+            )
+        ),
     },
 ]
 
@@ -72,10 +147,7 @@ function nodejs(): RollupOptions {
                 preferBuiltins: true,
             }),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -105,15 +177,17 @@ function browser(): RollupOptions {
                 preferBuiltins: false,
             }),
         ],
-        external: [
-            /**
-             * We need to bundle some dependencies in. This will make sure we use the local `md5.js`
-             * and not the one shipped with `create-hash` (which is outdated and has issues with
-             * modern bundlers).
-             */
-            /node_modules\/(?!browserify-aes|cipher-base|evp_bytestokey|md5.js|hash-base)/,
-            /@streamr\//,
-        ],
+        external: (id: string) => {
+            if (/@streamr\//.test(id)) {
+                return true
+            }
+            if (id.includes('node_modules')) {
+                return !bundledBrowserDeps.some((dep) =>
+                    id.includes(`node_modules/${dep}`)
+                )
+            }
+            return false
+        },
     }
 }
 
@@ -132,10 +206,7 @@ function nodejsTypes(): RollupOptions {
             nodeResolve(),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -157,9 +228,6 @@ function browserTypes(): RollupOptions {
             }),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }

@@ -1,7 +1,7 @@
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { MessageMetadata } from '../../src'
+import type { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { deployTestERC1271Contract } from '../test-utils/deployTestERC1271Contract'

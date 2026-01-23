@@ -1,5 +1,5 @@
 import { isRunningInElectron } from '@streamr/test-utils'
-import { StreamrClient } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 
 describe('StreamrClient', () => {
     let client: StreamrClient

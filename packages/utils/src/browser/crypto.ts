@@ -1,12 +1,15 @@
-import md5 from 'md5'
 import {
     createCipheriv as createCipherivUtil,
     createDecipheriv as createDecipherivUtil,
 } from 'browserify-aes'
 import aesModes from 'browserify-aes/modes'
-import { sha1 } from '@noble/hashes/legacy.js'
+import { sha1, md5 } from '@noble/hashes/legacy.js'
 import type { Transform } from 'readable-stream'
 import { utf8ToBinary } from '../binaryUtils'
+import {
+    publicEncrypt as publicEncryptUtil,
+    privateDecrypt as privateDecryptUtil,
+} from 'public-encrypt'
 
 export function getSubtle(): SubtleCrypto {
     const { crypto } = globalThis
@@ -23,7 +26,7 @@ export function getSubtle(): SubtleCrypto {
 }
 
 export function computeMd5(input: string): Buffer {
-    return Buffer.from(md5(input), 'hex')
+    return Buffer.from(md5(utf8ToBinary(input)))
 }
 
 export function computeSha1(input: string): Buffer {
@@ -45,7 +48,9 @@ export function createCipheriv(
         return createCipherivUtil(suite, key, iv)
     }
 
-    throw new TypeError(`Invalid suite type.  In browser only AES is supported but got ${algorithm}.`)
+    throw new TypeError(
+        `Invalid suite type.  In browser only AES is supported but got ${algorithm}.`
+    )
 }
 
 export function createDecipheriv(
@@ -59,5 +64,21 @@ export function createDecipheriv(
         return createDecipherivUtil(suite, key, iv)
     }
 
-    throw new TypeError(`Invalid suite type.  In browser only AES is supported but got ${algorithm}.`)
+    throw new TypeError(
+        `Invalid suite type.  In browser only AES is supported but got ${algorithm}.`
+    )
+}
+
+export function publicEncrypt(
+    publicKey: string,
+    buffer: Buffer | Uint8Array
+): Buffer {
+    return publicEncryptUtil(publicKey, buffer)
+}
+
+export function privateDecrypt(
+    privateKey: string,
+    buffer: Buffer | Uint8Array
+): Buffer {
+    return privateDecryptUtil(privateKey, buffer)
 }

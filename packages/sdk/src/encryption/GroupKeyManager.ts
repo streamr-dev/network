@@ -1,5 +1,5 @@
 import { hexToBinary, StreamID, StreamPartID, StreamPartIDUtils, UserID, waitForEvent } from '@streamr/utils'
-import crypto from 'crypto'
+import { randomBytes } from '@noble/post-quantum/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { ConfigInjectionToken, type StrictStreamrClientConfig } from '../ConfigTypes'
@@ -113,7 +113,7 @@ export class GroupKeyManager {
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {
-            const keyData = crypto.randomBytes(32)
+            const keyData = Buffer.from(randomBytes(32))
             groupKey = new GroupKey(uuid('GroupKey'), keyData)
         }
         await this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)

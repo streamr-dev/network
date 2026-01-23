@@ -7,7 +7,7 @@ import {
     ProxyDirection
 } from '@streamr/trackerless-network'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
-import crypto from 'crypto'
+import { randomBytes } from '@noble/post-quantum/utils'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
@@ -26,7 +26,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork, options: NetworkOptions = {}) {
-        this.id = toDhtAddress(crypto.randomBytes(10))
+        this.id = toDhtAddress(randomBytes(10))
         this.options = options
         this.network = network
     }

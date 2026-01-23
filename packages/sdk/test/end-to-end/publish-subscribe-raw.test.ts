@@ -6,7 +6,8 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { Wallet } from 'ethers'
 import { MessageID } from '../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
-import { StreamMessageType, StreamPermission } from '../../src'
+import { StreamMessageType } from '../../src/protocol/StreamMessage'
+import { StreamPermission } from '../../src/permission'
 import { createTestWallet } from '@streamr/test-utils'
 
 describe('publish-subscribe-raw', () => {
