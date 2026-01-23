@@ -1,4 +1,4 @@
-import { _operatorContractUtils, SignerWithProvider, SponsorshipCreatedEvent, StreamrClient, TransactionOpts } from '@streamr/sdk'
+import { _operatorContractUtils, type SignerWithProvider, type SponsorshipCreatedEvent, StreamrClient, type TransactionOpts } from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'

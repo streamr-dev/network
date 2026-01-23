@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { Logger, StreamID, StreamPartID } from '@streamr/utils'
-import { NetworkPeerDescriptor } from '@streamr/sdk'
+import type { NetworkPeerDescriptor } from '@streamr/sdk'
 import { EventEmitter } from 'eventemitter3'
 import pLimit from 'p-limit'
 import { ConsistentHashRing } from './ConsistentHashRing'

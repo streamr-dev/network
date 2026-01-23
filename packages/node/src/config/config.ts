@@ -1,4 +1,4 @@
-import { StreamrClientConfig } from '@streamr/sdk'
+import type { StreamrClientConfig } from '@streamr/sdk'
 import path from 'path'
 import * as os from 'os'
 import camelCase from 'lodash/camelCase'

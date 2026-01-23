@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { NetworkPeerDescriptor } from '@streamr/sdk'
+import type { NetworkPeerDescriptor } from '@streamr/sdk'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'

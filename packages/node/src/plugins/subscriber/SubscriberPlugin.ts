@@ -1,6 +1,6 @@
 import { Plugin } from '../../Plugin'
 import { pTransaction, Logger } from '@streamr/utils'
-import { Subscription, StreamrClient } from '@streamr/sdk'
+import { type Subscription, StreamrClient } from '@streamr/sdk'
 
 interface ConfigStream {
     streamId: string

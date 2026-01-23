@@ -1,4 +1,4 @@
-import { StreamrClient, Subscription } from '@streamr/sdk'
+import type { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID, wait, until } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { MockProxy, mock } from 'jest-mock-extended'

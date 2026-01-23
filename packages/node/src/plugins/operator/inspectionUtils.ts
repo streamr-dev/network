@@ -1,4 +1,4 @@
-import { NetworkPeerDescriptor, Operator, StreamrClient } from '@streamr/sdk'
+import { type NetworkPeerDescriptor, Operator, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import shuffle from 'lodash/shuffle'
 import sample from 'lodash/sample'

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { EthereumAddress, StreamrClient, _operatorContractUtils } from '@streamr/sdk'
+import { type EthereumAddress, StreamrClient, _operatorContractUtils } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseEthereumAddressList, createFnParseInt } from '../src/common'
 

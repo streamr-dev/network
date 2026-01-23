@@ -1,4 +1,4 @@
-import { StreamrClient } from '@streamr/sdk'
+import type { StreamrClient } from '@streamr/sdk'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { PublishConnection } from '../../../../src/plugins/websocket/PublishConnection'
 import { mock, MockProxy } from 'jest-mock-extended'

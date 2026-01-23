@@ -1,4 +1,4 @@
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { type Stream, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, keyToArrayIndex, Logger, StreamPartID } from '@streamr/utils'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
 import { StorageEventListener } from './StorageEventListener'

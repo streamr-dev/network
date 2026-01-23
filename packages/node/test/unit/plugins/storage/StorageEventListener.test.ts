@@ -1,4 +1,4 @@
-import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
+import type { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
 import { EthereumAddress, toEthereumAddress, toStreamID, wait } from '@streamr/utils'
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 
