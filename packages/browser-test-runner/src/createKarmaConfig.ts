@@ -10,9 +10,16 @@ export const createKarmaConfig = (
     const setupFiles = [fileURLToPath(new URL('./karma-setup.js', import.meta.url))]
 
     if (localDirectory !== undefined) {
-        const localSetupFile = localDirectory + '/karma-setup.js'
-        if (fs.existsSync(localSetupFile)) {
-            setupFiles.push(localSetupFile)
+        const karmaSetupCandidates = [
+            `${localDirectory}/karma-setup.js`,
+            `${localDirectory}/karma-setup.ts`
+        ]
+
+        for (const candidate of karmaSetupCandidates) {
+            if (fs.existsSync(candidate)) {
+                setupFiles.push(candidate)
+                break
+            }
         }
     }
 

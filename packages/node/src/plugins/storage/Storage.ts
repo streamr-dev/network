@@ -1,4 +1,4 @@
-import { StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
+import { type StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
 import { Logger, MetricsContext, RateMetric, UserID } from '@streamr/utils'
 import { Client, auth, tracker, types } from 'cassandra-driver'
 import { EventEmitter } from 'events'

@@ -1,4 +1,4 @@
-import { StreamrClient, Subscription } from '@streamr/sdk'
+import type { StreamrClient, Subscription } from '@streamr/sdk'
 import { toStreamID, toStreamPartID } from '@streamr/utils'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { Bridge } from '../../../../src/plugins/mqtt/Bridge'

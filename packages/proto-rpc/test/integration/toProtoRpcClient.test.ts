@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
 import { toProtoRpcClient } from '../../src/toProtoRpcClient'

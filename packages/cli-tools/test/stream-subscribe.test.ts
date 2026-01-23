@@ -1,4 +1,4 @@
-import StreamrClient, { convertBytesToStreamMessage, StreamPermission } from '@streamr/sdk'
+import { StreamrClient, convertBytesToStreamMessage, StreamPermission } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { collect, Defer, LengthPrefixedFrameDecoder, StreamID } from '@streamr/utils'
 import { createTestClient, startCommand } from './utils'

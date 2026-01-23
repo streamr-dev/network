@@ -1,4 +1,4 @@
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { type Stream, StreamrClient } from '@streamr/sdk'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 
 const logger = new Logger('StoragePoller')

@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { NetworkPeerDescriptor, StreamrClient, Subscription } from '@streamr/sdk'
+import { type NetworkPeerDescriptor, StreamrClient, type Subscription } from '@streamr/sdk'
 import { Gate, Logger, StreamID, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import min from 'lodash/min'

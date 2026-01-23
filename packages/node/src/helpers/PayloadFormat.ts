@@ -1,4 +1,4 @@
-import { MessageMetadata } from '@streamr/sdk'
+import type { MessageMetadata } from '@streamr/sdk'
 
 export interface PayloadFormat {
     createMessage: (payload: string) => Message | never

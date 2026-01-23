@@ -1,4 +1,4 @@
-import { NetworkNodeType, NetworkPeerDescriptor } from '@streamr/sdk'
+import { NetworkNodeType, type NetworkPeerDescriptor } from '@streamr/sdk'
 import { z } from 'zod'
 import { version as applicationVersion } from '../../../package.json'
 import { StrictConfig } from '../../config/config'

@@ -1,4 +1,4 @@
-import { Stream, StreamMessage, StreamMessageType, StreamrClient, formStorageNodeAssignmentStreamId } from '@streamr/sdk'
+import { type Stream, type StreamMessage, StreamMessageType, StreamrClient, formStorageNodeAssignmentStreamId } from '@streamr/sdk'
 import { EthereumAddress, Logger, MetricsContext, executeSafePromise, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { ApiPluginConfig, Plugin } from '../../Plugin'

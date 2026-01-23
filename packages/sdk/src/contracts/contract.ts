@@ -7,7 +7,7 @@ import {
     ContractTransactionResponse,
     FunctionFragment,
 } from 'ethers'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { LoggerFactory } from '../utils/LoggerFactory'

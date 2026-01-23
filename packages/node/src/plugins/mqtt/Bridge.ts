@@ -1,4 +1,4 @@
-import { MessageMetadata, StreamrClient, Subscription } from '@streamr/sdk'
+import { type MessageMetadata, StreamrClient, type Subscription } from '@streamr/sdk'
 import { Logger, StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/utils'
 import without from 'lodash/without'
 import { Message, PayloadFormat } from '../../helpers/PayloadFormat'

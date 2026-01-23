@@ -1,4 +1,4 @@
-import { KeyPairIdentityConfig, StreamrClient, StreamrClientConfig } from '@streamr/sdk'
+import { type KeyPairIdentityConfig, StreamrClient, type StreamrClientConfig } from '@streamr/sdk'
 import merge from 'lodash/merge'
 import { Options } from './command'
 import { getConfig } from './config'

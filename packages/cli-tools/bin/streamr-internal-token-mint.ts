@@ -3,7 +3,7 @@ import '../src/logLevel'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DATAv2ABI as DATATokenABI, DATAv2 as DATATokenContract } from '@streamr/network-contracts'
-import StreamrClient from '@streamr/sdk'
+import { StreamrClient } from '@streamr/sdk'
 import { Contract, parseEther, Provider, Wallet } from 'ethers'
 import { createClientCommand } from '../src/command'
 

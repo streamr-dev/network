@@ -2,7 +2,7 @@ import {
     Operator as OperatorContract,
     Sponsorship as SponsorshipContract
 } from '@streamr/network-contracts'
-import { _operatorContractUtils, DeployOperatorContractOpts, DeploySponsorshipContractOpts, Stream, StreamrClient } from '@streamr/sdk'
+import { _operatorContractUtils, type DeployOperatorContractOpts, type DeploySponsorshipContractOpts, type Stream, StreamrClient } from '@streamr/sdk'
 import { collect, until } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'

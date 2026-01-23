@@ -1,5 +1,5 @@
 import { createIsLeaderFn } from '../../../../src/plugins/operator/createIsLeaderFn'
-import { StreamrClient } from '@streamr/sdk'
+import type { StreamrClient } from '@streamr/sdk'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { Logger } from '@streamr/utils'

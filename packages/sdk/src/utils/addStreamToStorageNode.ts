@@ -1,5 +1,5 @@
 import { EthereumAddress, StreamID, toStreamPartID, withTimeout } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'

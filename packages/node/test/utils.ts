@@ -4,14 +4,14 @@ import {
 } from '@streamr/network-contracts'
 import {
     _operatorContractUtils,
-    DeployOperatorContractOpts,
-    DeploySponsorshipContractOpts,
-    NetworkPeerDescriptor,
-    Stream,
-    StreamMetadata,
+    type DeployOperatorContractOpts,
+    type DeploySponsorshipContractOpts,
+    type NetworkPeerDescriptor,
+    type Stream,
+    type StreamMetadata,
     StreamPermission,
     StreamrClient,
-    StreamrClientConfig
+    type StreamrClientConfig
 } from '@streamr/sdk'
 import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import padEnd from 'lodash/padEnd'

@@ -1,4 +1,4 @@
-import { Operator, StakeEvent } from '@streamr/sdk'
+import { Operator, type StakeEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger, StreamID, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 
