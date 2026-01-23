@@ -7,9 +7,12 @@ const config: Config.InitialOptions = {
     setupFilesAfterEnv: [
         ...defaultConfig.setupFilesAfterEnv,
         './src/setupTsyringe.ts',
-        './test/test-utils/customMatchers.ts',
+        './test/test-utils/setupCustomMatchers.ts',
         '@streamr/test-utils/setupCustomMatchers',
     ],
+    moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
+    },
 }
 
 export default config

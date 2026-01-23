@@ -1,4 +1,2 @@
-import webpackConfig from './webpack-karma.config'
-import { createKarmaConfig } from '@streamr/browser-test-runner'
-
-export default createKarmaConfig(['test/unit/**/*.ts'], webpackConfig, __dirname)
+import { createKarmaConfig } from './createKarmaConfig'
+export default createKarmaConfig(['test/unit/**/*.ts'])

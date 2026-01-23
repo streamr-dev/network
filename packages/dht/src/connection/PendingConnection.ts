@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger, setAbortableTimeout } from '@streamr/utils'
-import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 import { IConnection } from './IConnection'
 
 export interface PendingConnectionEvents {

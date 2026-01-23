@@ -1,7 +1,25 @@
 {
   "extends": "../../tsconfig.jest.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/nodejs/*"
+      ]
+    }
+  },
   "include": [
     "src",
     "test"
+  ],
+  "exclude": [
+    "src/browser"
+  ],
+  "references": [
+    { "path": "./tsconfig.browser.json" }
   ]
 }

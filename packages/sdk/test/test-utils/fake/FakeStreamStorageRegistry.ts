@@ -1,7 +1,7 @@
 import { Methods } from '@streamr/test-utils'
 import { EthereumAddress, StreamID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
-import { StreamMetadata } from '../../../src'
+import type { StreamMetadata } from '../../../src/StreamMetadata'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamStorageRegistry } from '../../../src/contracts/StreamStorageRegistry'
 import { FakeChain } from './FakeChain'

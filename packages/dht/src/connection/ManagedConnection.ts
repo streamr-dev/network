@@ -3,7 +3,7 @@ import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 import { DhtAddress, toNodeId } from '../identifiers'
 import { createRandomConnectionId } from './Connection'
 

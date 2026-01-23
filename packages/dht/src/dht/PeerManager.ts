@@ -1,11 +1,9 @@
-import {
-    Logger
-} from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import KBucket from 'k-bucket'
 import { LockID } from '../connection/ConnectionLockStates'
 import { ConnectionLocker } from '../connection/ConnectionManager'
-import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
+import { DhtAddress, toNodeId, toDhtAddressRaw } from '../identifiers'
 import {
     PeerDescriptor
 } from '../../generated/packages/dht/protos/DhtRpc'
@@ -52,10 +50,6 @@ export interface PeerManagerEvents {
     ringContactAdded: (peerDescriptor: PeerDescriptor) => void
     ringContactRemoved: (peerDescriptor: PeerDescriptor) => void
     kBucketEmpty: () => void
-}
-
-export const getDistance = (nodeIdOrDataKeyRaw1: DhtAddressRaw, nodeIdOrDataKeyRaw2: DhtAddressRaw): number => {
-    return KBucket.distance(nodeIdOrDataKeyRaw1, nodeIdOrDataKeyRaw2)
 }
 
 export class PeerManager extends EventEmitter<PeerManagerEvents> {

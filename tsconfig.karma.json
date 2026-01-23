@@ -18,7 +18,7 @@
     "types": [
       "jest",
       "jest-extended",
-      "@streamr/test-utils/customMatcherTypes"
+      "@streamr/test-utils/customMatchers"
     ],
     "sourceMap": true,
     "skipLibCheck": true,

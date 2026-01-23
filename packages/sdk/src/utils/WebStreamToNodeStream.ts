@@ -1,12 +1,11 @@
-import { PassThrough, Readable, TransformOptions } from 'stream'
-import WebStream from 'node:stream/web'
+import { PassThrough, type Readable, type TransformOptions } from 'stream'
 import { once } from 'events'
 
 /**
  * Background async task to pull data from the browser stream and push it into the node stream.
  */
 async function pull(
-    webStream: ReadableStream | WebStream.ReadableStream,
+    webStream: ReadableStream,
     nodeStream: PassThrough
 ): Promise<void> {
     const reader = webStream.getReader()
@@ -63,7 +62,7 @@ async function pull(
  * Convert browser ReadableStream to Node stream.Readable.
  */
 export function WebStreamToNodeStream(
-    webStream: ReadableStream | Readable | WebStream.ReadableStream,
+    webStream: ReadableStream | Readable,
     nodeStreamOptions?: TransformOptions
 ): Readable {
     if ('pipe' in webStream) {

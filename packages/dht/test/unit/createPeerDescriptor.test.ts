@@ -1,6 +1,6 @@
 import { ipv4ToNumber } from '@streamr/utils'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
-import { isBrowserEnvironment } from '../../src/helpers/browser/isBrowserEnvironment'
+import { isBrowserEnvironment } from '@/isBrowserEnvironment'
 import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
@@ -18,7 +18,7 @@ describe('createPeerDescriptor', () => {
         const peerDescriptor = await createPeerDescriptor(connectivityResponse, region)
         expect(peerDescriptor).toEqual({
             nodeId: expect.any(Uint8Array),
-            type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
+            type: isBrowserEnvironment ? NodeType.BROWSER : NodeType.NODEJS,
             ipAddress: ipv4ToNumber(IP_ADDRESS),
             publicKey: expect.any(Uint8Array),
             signature: expect.any(Uint8Array),
@@ -38,7 +38,7 @@ describe('createPeerDescriptor', () => {
         const peerDescriptor = await createPeerDescriptor(connectivityResponse, region)
         expect(peerDescriptor).toEqual({
             nodeId: expect.any(Uint8Array),
-            type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
+            type: isBrowserEnvironment ? NodeType.BROWSER : NodeType.NODEJS,
             ipAddress: ipv4ToNumber(IP_ADDRESS),
             publicKey: expect.any(Uint8Array),
             signature: expect.any(Uint8Array),
@@ -59,7 +59,7 @@ describe('createPeerDescriptor', () => {
         const peerDescriptor = await createPeerDescriptor(connectivityResponse, region, nodeId)
         expect(peerDescriptor).toEqual({
             nodeId: toDhtAddressRaw(nodeId),
-            type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
+            type: isBrowserEnvironment ? NodeType.BROWSER : NodeType.NODEJS,
             ipAddress: ipv4ToNumber(IP_ADDRESS),
             publicKey: expect.any(Uint8Array),
             signature: expect.any(Uint8Array),

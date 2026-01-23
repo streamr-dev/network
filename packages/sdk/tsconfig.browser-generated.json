@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.browser.json",
+  "compilerOptions": {
+    "noImplicitOverride": false
+  },
+  "include": [
+    "src/generated"
+  ],
+  "exclude": []
+}

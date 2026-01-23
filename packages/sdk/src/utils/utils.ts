@@ -5,7 +5,7 @@ import {
     randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { ContractTransactionReceipt } from 'ethers'
-import { Readable } from 'stream'
+import type { Readable } from 'stream'
 import { LRUCache } from 'lru-cache'
 import { NetworkNodeType, type NetworkPeerDescriptor, type StrictStreamrClientConfig } from '../ConfigTypes'
 import { StreamrClientEventEmitter } from '../events'
@@ -149,7 +149,7 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
 }
 
 export function generateClientId(): string {
-    return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
+    return counterId(typeof process !== 'undefined' && process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
 export type LookupKeyType = (string | number | symbol) | (string | number | symbol)[]

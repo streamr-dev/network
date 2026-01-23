@@ -20,7 +20,7 @@ import {
 } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, SignatureType } from '@streamr/trackerless-network'
-import { StreamrClientConfig } from '../../src'
+import type { StreamrClientConfig } from '../../src/ConfigTypes'
 
 describe('SubscriberKeyExchange', () => {
 

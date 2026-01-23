@@ -1,4 +1,4 @@
-import { StreamMessage } from './exports'
+import type { StreamMessage } from './protocol/StreamMessage'
 import { MessageID } from './protocol/MessageID'
 
 export type StreamrClientErrorCode =

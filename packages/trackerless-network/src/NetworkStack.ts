@@ -32,19 +32,47 @@ const stopInstances = async () => {
     const clonedInstances = [...instances]
     await Promise.all(clonedInstances.map((instance) => instance.stop()))
 }
-const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
-EXIT_EVENTS.forEach((event) => {
-    process.on(event, async (eventArg) => {
-        const isError = (event === 'uncaughtException') || (event === 'unhandledRejection')
-        if (isError) {
-            logger.error(`exit event: ${event}`, eventArg)
-        }
-        await stopInstances()
-        process.exit(isError ? 1 : 0)
+
+/**
+ * @todo The following cleanup logic is currently handled inside this module for both Node.js and
+ * browser environments. Consider refactoring it into a higher-level integration layer if lifecycle
+ * management is centralized elsewhere.
+ */
+if (typeof process === 'object' && typeof process?.on === 'function') {
+    /**
+     * @todo The `exit` event shouldn't use an async handler because the event loop is already
+     * shutting down, so async work won't complete. Calling `process.exit()` inside an `exit`
+     * handler is also redundant and may cause issues. Remove `exit` from `EXIT_EVENTS`
+     * or omit it entirely, since other signal handlers already terminate the process.
+     */
+    const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
+    EXIT_EVENTS.forEach((event) => {
+        /**
+         * @todo Registering handlers at module load time can cause side effects. Use explicit
+         * or lazy initialization to improve control and testability.
+         */
+        process.on(event, async (eventArg) => {
+            const isError = (event === 'uncaughtException') || (event === 'unhandledRejection')
+            if (isError) {
+                logger.error(`exit event: ${event}`, eventArg)
+            }
+            /**
+             * @todo Async `stopInstances()` may be interrupted by `process.exit()`. Use
+             * synchronous cleanup or a timeout, and wait for cleanup on graceful signals
+             * but exit quickly on error events.
+             */
+            await stopInstances()
+            process.exit(isError ? 1 : 0)
+        })
     })
-})
+}
+
 declare let window: any
 if (typeof window === 'object') {
+    /**
+     * @todo Registering handlers at module load time can cause side effects. Use explicit
+     * or lazy initialization to improve control and testability.
+     */
     window.addEventListener('unload', async () => {
         await stopInstances()
     })

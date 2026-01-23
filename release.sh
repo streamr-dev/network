@@ -15,17 +15,6 @@ fi
 
 npm run build
 
-# Build sdk webpack bundle
-npm run build-browser -w packages/sdk
-
-if [ $? -ne 0 ]
-then
-    echo
-    echo 'SDK build failed, did not publish all packages!'
-    echo
-    exit 1
-fi
-
 cd packages/utils || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..

@@ -8,18 +8,6 @@ interface PartialStreamrClientError {
     message?: string
 }
 
-// we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
-// but the IDE doesn't find custom matchers if we do that
-declare global {
-    // eslint-disable-next-line @typescript-eslint/no-namespace
-    namespace jest {
-        interface Matchers<R> {
-            toThrowStreamrClientError(expectedError: PartialStreamrClientError): R
-            toEqualStreamrClientError(expectedError: PartialStreamrClientError): R
-        }
-    }
-}
-
 const formErrorMessage = (field: keyof StreamrClientError, expected: string, actual: string): string => {
     return `StreamrClientError ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
@@ -97,3 +85,29 @@ expect.extend({
     toThrowStreamrClientError,
     toEqualStreamrClientError
 })
+
+export const customMatchers = {
+    toThrowStreamrClientError,
+    toEqualStreamrClientError,
+}
+
+export interface CustomMatchers<R = unknown> {
+    toThrowStreamrClientError(expectedError: PartialStreamrClientError): R
+    toEqualStreamrClientError(expectedError: PartialStreamrClientError): R
+}
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace jest {
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        interface Matchers<R> extends CustomMatchers<R> {}
+    }
+}
+
+declare module 'expect' {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface AsymmetricMatchers extends CustomMatchers<void> {}
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface Matchers<R> extends CustomMatchers<R> {}
+}

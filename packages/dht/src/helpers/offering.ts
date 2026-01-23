@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import { computeMd5 } from '@streamr/utils'
 import { DhtAddress } from '../identifiers'
 
 type Offerer = 'local' | 'remote'
@@ -10,6 +10,5 @@ export const getOfferer = (localNodeId: DhtAddress, remoteNodeId: DhtAddress): O
 }
 
 const getOfferingHash = (idPair: string): number => {
-    const buffer = crypto.createHash('md5').update(idPair).digest()
-    return buffer.readInt32LE(0)
+    return computeMd5(idPair).readInt32LE(0)
 }
