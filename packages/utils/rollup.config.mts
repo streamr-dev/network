@@ -61,6 +61,7 @@ const bundledBrowserDeps = [
      * Unwrap `md5.js` and 'ripemd160' to get to `hash-base`.
      */
     'md5.js',
+    'ripemd160',
 
     /**
      * Unwrap `cipher-base` to get to Node's `stream` used inside. For browser builds, we want
