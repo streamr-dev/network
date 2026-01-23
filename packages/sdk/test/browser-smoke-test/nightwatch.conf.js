@@ -2,7 +2,6 @@ module.exports = {
     live_output: true,
     webdriver: {
         start_process: true,
-        server_path: '',
         cli_args: [
             '--verbose'
         ],
