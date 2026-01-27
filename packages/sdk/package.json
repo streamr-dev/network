@@ -113,6 +113,7 @@
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
+    "web-worker": "^1.5.0",
     "zod": "^4.1.13"
   },
   "optionalDependencies": {
