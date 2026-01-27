@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.karma.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "outDir": "dist/karma",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+
+    /* Mapping */
+    "paths": {
+      "@/*": [
+        "src/_browser/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "test/types",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "src/generated",
+    "src/_nodejs"
+  ]
+}

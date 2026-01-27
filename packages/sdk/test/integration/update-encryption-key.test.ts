@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { GroupKey } from '../../src/encryption/GroupKey'

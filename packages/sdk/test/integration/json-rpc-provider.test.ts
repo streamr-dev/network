@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { wait, until } from '@streamr/utils'
 import range from 'lodash/range'
 import sortBy from 'lodash/sortBy'

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { convertStreamMessageToBytes, MessageMetadata, type StreamMessage, StreamrClient } from '@streamr/sdk'
+import { convertStreamMessageToBytes, type MessageMetadata, type StreamMessage, StreamrClient } from '@streamr/sdk'
 import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 import mapValues from 'lodash/mapValues'
 import isString from 'lodash/isString'

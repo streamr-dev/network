@@ -1,6 +1,6 @@
 import {
     ProxyDirection,
-    SignerWithProvider,
+    type SignerWithProvider,
     StreamPermission,
     _operatorContractUtils
 } from '@streamr/sdk'

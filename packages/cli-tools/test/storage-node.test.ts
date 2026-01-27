@@ -1,4 +1,4 @@
-import { StreamID } from '@streamr/sdk'
+import type { StreamID } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { until } from '@streamr/utils'
 import 'jest-extended'

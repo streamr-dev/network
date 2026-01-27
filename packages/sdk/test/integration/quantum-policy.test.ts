@@ -1,12 +1,12 @@
-import 'reflect-metadata'
-
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { EthereumKeyPairIdentity, Identity, MLDSAKeyPairIdentity } from '../../src'
+import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
+import { Identity } from '../../src/identity/Identity'
+import { MLDSAKeyPairIdentity } from '../../src/identity/MLDSAKeyPairIdentity'
 import { collect } from '@streamr/utils'
 
 describe('Quantum encryption policies', () => {

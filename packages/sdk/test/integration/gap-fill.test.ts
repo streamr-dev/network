@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'

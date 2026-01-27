@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { UserID, hexToBinary, toStreamID, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
 import { mock } from 'jest-mock-extended'

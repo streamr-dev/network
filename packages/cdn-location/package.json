@@ -7,10 +7,11 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/cdn-location"
   },
-  "main": "dist/src/exports.js",
-  "types": "dist/src/exports.d.ts",
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "files": [
-    "dist",
+    "dist/exports.*",
     "!*.tsbuildinfo",
     "README.md",
     "LICENSE"
@@ -18,8 +19,11 @@
   "license": "Apache-2.0",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "prebuild": "npm run reset-self",
     "build": "tsc -b",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc -p tsconfig.jest.json",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "clean": "jest --clearCache --config '{}' || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest test/integration",
@@ -32,6 +36,11 @@
     "haversine": "^1.1.1"
   },
   "devDependencies": {
-    "@types/haversine": "^1.1.8"
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@types/haversine": "^1.1.8",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-dts": "^6.3.0",
+    "tsx": "^4.21.0"
   }
 }

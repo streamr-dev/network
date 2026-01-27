@@ -6,9 +6,13 @@ const config: Config.InitialOptions = {
     globalSetup: './jest.setup.ts',
     setupFilesAfterEnv: [
         ...defaultConfig.setupFilesAfterEnv,
-        './test/test-utils/customMatchers.ts',
+        './src/setupTsyringe.ts',
+        './test/test-utils/setupCustomMatchers.ts',
         '@streamr/test-utils/setupCustomMatchers',
     ],
+    moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
+    },
 }
 
 export default config

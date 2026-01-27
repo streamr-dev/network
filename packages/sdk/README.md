@@ -41,7 +41,7 @@ The Streamr SDK is built for the browser and Node.js environments.
 
 **Browser (Website/WebApps)**
 - For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
-- `<script src="https://unpkg.com/@streamr/sdk@latest/streamr-sdk.web.min.js"></script>`
+- `<script src="https://unpkg.com/@streamr/sdk@latest/exports-umd.min.js"></script>`
 - To use within React, please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 
 **Browser extension**

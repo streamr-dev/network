@@ -1,14 +1,12 @@
 // check ts esm works via tsc
 
-import DefaultExport, * as NamedExports from '@streamr/sdk'
+import { StreamrClient, Subscription } from '@streamr/sdk'
 
-console.info('import DefaultExport, * as NamedExports from \'@streamr/sdk\':', { DefaultExport, NamedExports })
+console.info('import { StreamrClient, Subscription } from \'@streamr/sdk\':', { StreamrClient, Subscription })
 
-const StreamrClient = DefaultExport
+console.assert(!!Subscription, 'Named exports should have Subscription')
 
 const client = new StreamrClient()
-
- console.assert(!!NamedExports.Subscription, 'NamedExports should have Subscription')
 
 client.connect().then(async () => {
     console.info('success')

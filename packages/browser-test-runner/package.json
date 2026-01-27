@@ -8,18 +8,24 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "./dist/src/exports.js",
-  "browser": {
-    "./dist/src/exports.js": false
-  },
+  "main": "./dist/exports.cjs",
+  "module": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "files": [
-    "dist",
+    "dist/exports.*",
+    "dist/preload.cjs",
+    "dist/preload.cjs.map",
+    "dist/karma-setup.js",
+    "dist/karma-setup.js.map",
     "!*.tsbuildinfo",
     "LICENSE"
   ],
   "scripts": {
+    "prebuild": "npm run reset-self",
     "build": "tsc -b",
+    "postbuild": "NODE_OPTIONS='--import tsx' rollup -c rollup.config.mts",
     "check": "tsc --noEmit",
+    "reset-self": "rimraf --glob 'dist/**/*.tsbuildinfo'",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
@@ -27,6 +33,7 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.1",
     "@jest/fake-timers": "^30.0.5",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "buffer": "^6.0.3",
     "electron": "^34.0.0",
     "expect": "^30.0.5",
@@ -40,6 +47,11 @@
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.55.1",
+    "rollup-plugin-dts": "^6.3.0",
+    "ts-loader": "^9.5.4",
+    "tsx": "^4.21.0",
     "webpack": "^5.103.0",
     "webpack-cli": "^6.0.1"
   }

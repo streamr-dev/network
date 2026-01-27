@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { Defer, StreamPartID, StreamPartIDUtils, collect, wait } from '@streamr/utils'
 import { MessageMetadata } from '../../src/Message'

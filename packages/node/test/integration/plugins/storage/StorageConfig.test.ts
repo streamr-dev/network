@@ -1,4 +1,4 @@
-import { Stream, StreamrClient, convertBytesToStreamMessage } from '@streamr/sdk'
+import { type Stream, StreamrClient, convertBytesToStreamMessage } from '@streamr/sdk'
 import { createTestWallet } from '@streamr/test-utils'
 import { until } from '@streamr/utils'
 import cassandra, { Client } from 'cassandra-driver'

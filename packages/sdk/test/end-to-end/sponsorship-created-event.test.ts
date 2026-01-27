@@ -1,10 +1,8 @@
-import 'reflect-metadata'
-
 import { createTestWallet } from '@streamr/test-utils'
 import { Wallet, parseEther } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestClient, createTestStream, deployTestSponsorshipContract } from '../test-utils/utils'
-import { Stream } from '../../src'
+import { Stream } from '../../src/Stream'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { SponsorshipCreatedEvent } from '../../src/contracts/SponsorshipFactory'
 

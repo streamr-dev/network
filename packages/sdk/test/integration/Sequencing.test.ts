@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { collect, merge, wait, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'

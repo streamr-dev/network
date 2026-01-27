@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import {
     StreamID,
@@ -22,7 +20,7 @@ import {
 } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { AsymmetricEncryptionType, ContentType, EncryptionType, GroupKeyRequest, SignatureType } from '@streamr/trackerless-network'
-import { StreamrClientConfig } from '../../src'
+import type { StreamrClientConfig } from '../../src/ConfigTypes'
 
 describe('SubscriberKeyExchange', () => {
 

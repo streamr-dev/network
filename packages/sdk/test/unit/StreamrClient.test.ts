@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import merge from 'lodash/merge'
 import { container } from 'tsyringe'
 import type { StreamrClientConfig } from '../../src/ConfigTypes'

@@ -1,11 +1,10 @@
-import crypto, { CipherKey } from 'crypto'
 import { ml_kem1024 } from '@noble/post-quantum/ml-kem'
 import { randomBytes } from '@noble/post-quantum/utils'
 import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKey } from './GroupKey'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
-import { binaryToUtf8, getSubtle } from '@streamr/utils'
+import { binaryToUtf8, createCipheriv, createDecipheriv, getSubtle, privateDecrypt, publicEncrypt } from '@streamr/utils'
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
 
@@ -63,13 +62,13 @@ export class EncryptionUtil {
 
     private static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: Uint8Array): Buffer {
         const keyString = this.toRSAPublicKeyString(publicKey)
-        const ciphertextBuffer = crypto.publicEncrypt(keyString, plaintextBuffer)
+        const ciphertextBuffer = publicEncrypt(keyString, plaintextBuffer)
         return ciphertextBuffer
     }
 
     private static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: Uint8Array): Buffer {
         const keyString = this.toRSAPrivateKeyString(privateKey)
-        return crypto.privateDecrypt(keyString, ciphertext)
+        return privateDecrypt(keyString, ciphertext)
     }
 
     /**
@@ -145,18 +144,18 @@ export class EncryptionUtil {
     /*
      * Returns a hex string without the '0x' prefix.
      */
-    static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): Uint8Array {
-        const iv = crypto.randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
-        const cipher = crypto.createCipheriv('aes-256-ctr', cipherKey, iv)
+    static encryptWithAES(data: Uint8Array, cipherKey: Uint8Array): Uint8Array {
+        const iv = randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
+        const cipher = createCipheriv('aes-256-ctr', cipherKey, iv)
         return Buffer.concat([iv, cipher.update(data), cipher.final()])
     }
 
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decryptWithAES(cipher: Uint8Array, cipherKey: CipherKey): Buffer {
+    static decryptWithAES(cipher: Uint8Array, cipherKey: Uint8Array): Buffer {
         const iv = cipher.slice(0, INITIALIZATION_VECTOR_LENGTH)
-        const decipher = crypto.createDecipheriv('aes-256-ctr', cipherKey, iv)
+        const decipher = createDecipheriv('aes-256-ctr', cipherKey, iv)
         return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
     }
 

@@ -1,6 +1,6 @@
-import { StreamrClient, Subscription } from '@streamr/sdk'
+import type { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID, wait, until } from '@streamr/utils'
-import EventEmitter3 from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { StreamPartAssignmentEvents } from '../../../../src/plugins/operator/StreamPartAssignments'
@@ -47,12 +47,12 @@ const formRawSubscriptionParam = (streamPartId: StreamPartID) => ({
 describe('MaintainTopologyService', () => {
     let streamrClient: MockProxy<StreamrClient>
     let fixtures: Record<StreamPartID, MockSubscription>
-    let assignments: EventEmitter3<StreamPartAssignmentEvents>
+    let assignments: EventEmitter<StreamPartAssignmentEvents>
 
     beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
         fixtures = setUpFixturesAndMocks(streamrClient)
-        assignments = new EventEmitter3()
+        assignments = new EventEmitter()
         new MaintainTopologyService(streamrClient, assignments as any)
     })
 

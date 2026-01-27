@@ -1,4 +1,4 @@
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { type Stream, StreamrClient } from '@streamr/sdk'
 import mqtt from 'async-mqtt'
 import { createTestWallet, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'

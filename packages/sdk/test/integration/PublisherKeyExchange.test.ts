@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import { createTestWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, toUserId, UserID, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -9,7 +8,8 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, GroupKeyResponse, SignatureType } from '@streamr/trackerless-network'
-import { Stream, StreamrClientConfig } from '../../src'
+import { Stream } from '../../src/Stream'
+import type { StreamrClientConfig } from '../../src/ConfigTypes'
 
 describe('PublisherKeyExchange', () => {
 

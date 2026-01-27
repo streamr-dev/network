@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { createTestWallet, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'

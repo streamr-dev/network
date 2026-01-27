@@ -1,4 +1,4 @@
-import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientConfig, DEFAULT_KEY_TYPE } from '@streamr/sdk'
+import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, type EnvironmentId, type StreamrClientConfig, DEFAULT_KEY_TYPE } from '@streamr/sdk'
 import { KeyType, KEY_TYPES } from '@streamr/utils'
 import commander, { Command } from 'commander'
 import pkg from '../package.json'

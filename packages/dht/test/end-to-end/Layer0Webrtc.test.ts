@@ -3,7 +3,7 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { toNodeId } from '../../src/exports'
+import { toNodeId } from './../../src/identifiers'
 
 describe('Layer0 with WebRTC connections', () => {
 

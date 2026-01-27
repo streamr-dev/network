@@ -1,6 +1,5 @@
-/**
- * This file captures named exports so we can manipulate them for cjs/browser builds.
- */
+import 'reflect-metadata'
+
 export { StreamrClient, type SubscribeOptions, type ExtraSubscribeOptions } from './StreamrClient'
 export { Stream } from './Stream'
 export { type StreamMetadata, parseMetadata as parseStreamMetadata, getPartitionCount as getStreamPartitionCount } from './StreamMetadata'

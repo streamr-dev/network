@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { MessageMetadata, StreamrClient, Subscription } from '@streamr/sdk'
+import { type MessageMetadata, StreamrClient, type Subscription } from '@streamr/sdk'
 import { Connection } from './Connection'
 import { parsePositiveInteger, parseQueryParameterArray } from '../../helpers/parser'
 import { ParsedQs } from 'qs'

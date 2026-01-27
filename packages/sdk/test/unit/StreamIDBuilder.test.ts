@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { StreamPartIDUtils, toUserId } from '@streamr/utils'
 import { Identity } from '../../src/identity/Identity'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'

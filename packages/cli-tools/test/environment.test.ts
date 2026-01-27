@@ -1,7 +1,7 @@
 import { randomString } from '@streamr/utils'
 import fs from 'fs/promises'
 import { runCommand } from './utils'
-import { StreamrClientConfig } from '@streamr/sdk'
+import type { StreamrClientConfig } from '@streamr/sdk'
 
 const POLYGON_AMOY_CHAIN_ID = 80002
 

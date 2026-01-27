@@ -1,4 +1,4 @@
-import { MessageMetadata, Stream, StreamrClient } from '@streamr/sdk'
+import { type MessageMetadata, type Stream, StreamrClient } from '@streamr/sdk'
 import { createTestWallet, Queue } from '@streamr/test-utils'
 import { merge, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'

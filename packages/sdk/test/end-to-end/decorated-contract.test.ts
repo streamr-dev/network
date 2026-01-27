@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamRegistryABI, StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
 import { createTestPrivateKey, getTestProvider } from '@streamr/test-utils'

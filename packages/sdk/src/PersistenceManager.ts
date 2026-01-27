@@ -1,12 +1,9 @@
-import 'reflect-metadata'
-
-import { join } from 'path'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Identity, IdentityInjectionToken } from './identity/Identity'
 import { DestroySignal } from './DestroySignal'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { Persistence } from './utils/persistence/Persistence'
-import ServerPersistence from './utils/persistence/ServerPersistence'
+import type { Persistence as PersistenceInterface } from './Persistence.types'
+import { Persistence } from '@/Persistence'
 
 export const NAMESPACES = {
     ENCRYPTION_KEYS: 'EncryptionKeys',
@@ -16,7 +13,7 @@ export const NAMESPACES = {
 @scoped(Lifecycle.ContainerScoped)
 export class PersistenceManager {
 
-    private persistence?: ServerPersistence
+    private persistence?: Persistence
     private readonly identity: Identity
     private readonly loggerFactory: LoggerFactory
 
@@ -36,15 +33,15 @@ export class PersistenceManager {
     }
 
     private async ensureInitialized() {
-        this.persistence ??= await ServerPersistence.createInstance({
+        this.persistence ??= await Persistence.createInstance({
             loggerFactory: this.loggerFactory,
             ownerId: await this.identity.getUserId(),
             namespaces: Object.values(NAMESPACES),
-            migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
+            migrationsUrl: new URL('./encryption/migrations', `file://${__dirname}/`),
         })
     }
 
-    async getPersistence(namespace: string): Promise<Persistence> {
+    async getPersistence(namespace: string): Promise<PersistenceInterface> {
         await this.ensureInitialized()
         return {
             get: (key: string): Promise<string | undefined> => {

@@ -1,20 +1,22 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
-import 'reflect-metadata'
+import { execSync } from 'child_process'
 import pkg from './package.json'
+
+const execGitCommand = (command: string): string => {
+    try {
+        return execSync(command, { encoding: 'utf8' }).trim()
+    } catch {
+        return ''
+    }
+}
 
 export default async function setup(): Promise<void> {
     if (process.env.GIT_VERSION) {
         return
     }
 
-    const gitRevisionPlugin = new GitRevisionPlugin()
-
-    const [GIT_VERSION, GIT_COMMITHASH, GIT_BRANCH] = await Promise.all([
-        gitRevisionPlugin.version(),
-        gitRevisionPlugin.commithash(),
-        gitRevisionPlugin.branch(),
-    ])
+    const GIT_VERSION = execGitCommand('git describe --always --tags')
+    const GIT_COMMITHASH = execGitCommand('git rev-parse HEAD')
+    const GIT_BRANCH = execGitCommand('git rev-parse --abbrev-ref HEAD')
 
     Object.assign(process.env, {
         version: pkg.version,

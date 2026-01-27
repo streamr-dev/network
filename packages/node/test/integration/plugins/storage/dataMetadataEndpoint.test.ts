@@ -1,4 +1,4 @@
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { type Stream, StreamrClient } from '@streamr/sdk'
 import { createTestPrivateKey, createTestWallet } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'

@@ -1,6 +1,5 @@
-import { EcdsaSecp256k1Evm } from '@streamr/utils'
-import crypto from 'crypto'
-import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { EcdsaSecp256k1Evm, randomBytes } from '@streamr/utils'
+import { isBrowserEnvironment } from '@/isBrowserEnvironment'
 import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescriptorSignaturePayload'
 import { DhtAddress, DhtAddressRaw, toDhtAddressRaw } from '../identifiers'
 import {
@@ -30,8 +29,8 @@ const calculateNodeIdRaw = async (ipAddress: number, privateKey: Uint8Array): Pr
 
 export const createPeerDescriptor = async (connectivityResponse: ConnectivityResponse, 
     region: number, nodeId?: DhtAddress): Promise<PeerDescriptor> => {
-    const privateKey = crypto.randomBytes(32)
-    const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
+    const privateKey = randomBytes(32)
+    const publicKey = randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
     if (nodeId !== undefined) {
         nodeIdRaw = toDhtAddressRaw(nodeId)
@@ -40,7 +39,7 @@ export const createPeerDescriptor = async (connectivityResponse: ConnectivityRes
     }
     const ret: PeerDescriptor = {
         nodeId: nodeIdRaw,
-        type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
+        type: isBrowserEnvironment ? NodeType.BROWSER : NodeType.NODEJS,
         ipAddress: connectivityResponse.ipAddress,
         region,
         publicKey 

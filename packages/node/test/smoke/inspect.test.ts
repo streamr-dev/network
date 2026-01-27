@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactoryABI, OperatorFactory as OperatorFactoryContract, StreamrConfig, StreamrConfigABI } from '@streamr/network-contracts'
-import { _operatorContractUtils, SignerWithProvider } from '@streamr/sdk'
+import { _operatorContractUtils, type SignerWithProvider } from '@streamr/sdk'
 import {
     createTestPrivateKey,
     createTestWallet,

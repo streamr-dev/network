@@ -1,4 +1,4 @@
-import { Operator, StreamrClient, Subscription } from '@streamr/sdk'
+import type { Operator, StreamrClient, Subscription } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, Logger, StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'

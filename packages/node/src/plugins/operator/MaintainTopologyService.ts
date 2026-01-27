@@ -1,4 +1,4 @@
-import { StreamrClient, Subscription } from '@streamr/sdk'
+import { StreamrClient, type Subscription } from '@streamr/sdk'
 import { Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import pLimit from 'p-limit'
 import { StreamPartAssignments } from './StreamPartAssignments'

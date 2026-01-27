@@ -38,7 +38,7 @@ Node.js `20` is the minimum required version, ideally version 22 and later. Node
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<script src="https://unpkg.com/@streamr/sdk/streamr-sdk.web.js"></script>
+<script src="https://unpkg.com/@streamr/sdk/exports-umd.js"></script>
 ```
 
 #### Browser extension

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { promises } from 'stream'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
@@ -25,7 +23,7 @@ describeOnlyInNodeJs('WebStreamToNodeStream', () => {
             }
         })
 
-        const nodeStream = WebStreamToNodeStream(webStream, { objectMode: true })
+        const nodeStream = WebStreamToNodeStream(webStream as ReadableStream, { objectMode: true })
         expect(typeof nodeStream.pipe).toBe('function')
         const received = []
         for await (const msg of nodeStream) {
@@ -51,7 +49,7 @@ describeOnlyInNodeJs('WebStreamToNodeStream', () => {
             }
         })
 
-        const nodeStream = WebStreamToNodeStream(webStream, { objectMode: true, highWaterMark: 1 })
+        const nodeStream = WebStreamToNodeStream(webStream as ReadableStream, { objectMode: true, highWaterMark: 1 })
         expect(typeof nodeStream.pipe).toBe('function')
         const received = []
         for await (const msg of nodeStream) {
@@ -79,7 +77,7 @@ describeOnlyInNodeJs('WebStreamToNodeStream', () => {
 
         const err = new Error('expected')
         const received: any[] = []
-        const nodeStream = WebStreamToNodeStream(webStream, {
+        const nodeStream = WebStreamToNodeStream(webStream as ReadableStream, {
             objectMode: true,
             highWaterMark: 1,
             transform(chunk, _enc, done) {
