@@ -31,6 +31,7 @@
     "dist/exports-browser.*",
     "dist/exports-umd.*",
     "dist/encryption/migrations",
+    "dist/workers",
     "!*.tsbuildinfo",
     "LICENSE",
     "README.md",

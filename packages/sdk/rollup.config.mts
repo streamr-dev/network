@@ -35,6 +35,8 @@ export default defineConfig([
     browserTypes(),
     umd(),
     umdMinified(),
+    workerNodejs(),
+    workerBrowser(),
 ])
 
 function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
@@ -199,6 +201,61 @@ function umdMinified(): RollupOptions {
             }),
             cjs(),
             terser(),
+        ],
+        external: [],
+        onwarn,
+    }
+}
+
+/**
+ * Worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
+ */
+function workerNodejs(): RollupOptions {
+    return {
+        input: './dist/nodejs/src/signature/SignatureValidationWorker.js',
+        context: 'globalThis',
+        output: {
+            format: 'es',
+            file: './dist/workers/SignatureValidationWorker.node.js',
+            sourcemap: true,
+        },
+        plugins: [
+            json(),
+            alias({
+                entries: nodejsAliases,
+            }),
+            nodeResolve({
+                preferBuiltins: true,
+            }),
+            cjs(),
+        ],
+        external: [],
+        onwarn,
+    }
+}
+
+/**
+ * Worker bundle for browser - ESM format for use with web-worker {type: 'module'}
+ */
+function workerBrowser(): RollupOptions {
+    return {
+        input: './dist/browser/src/signature/SignatureValidationWorker.js',
+        context: 'self',
+        output: {
+            format: 'es',
+            file: './dist/workers/SignatureValidationWorker.browser.js',
+            sourcemap: true,
+        },
+        plugins: [
+            json(),
+            alias({
+                entries: browserAliases,
+            }),
+            nodeResolve({
+                browser: true,
+                preferBuiltins: false,
+            }),
+            cjs(),
         ],
         external: [],
         onwarn,

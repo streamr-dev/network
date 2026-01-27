@@ -5,15 +5,13 @@ import { DestroySignal } from '../DestroySignal'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { createSignaturePayload } from './createSignaturePayload'
-import { SignatureValidationContext } from './SignatureValidationContext'
-// This import will be swapped to BrowserSignatureValidation.mts in browser builds
-import SignatureValidation from './ServerSignatureValidation'
+import { SignatureValidation } from './SignatureValidationClient'
 import { SignatureType } from '@streamr/trackerless-network'
 
 @scoped(Lifecycle.ContainerScoped)
 export class SignatureValidator {
     private readonly erc1271ContractFacade: ERC1271ContractFacade
-    private validationContext: SignatureValidationContext | undefined
+    private signatureValidation: SignatureValidation | undefined
 
     constructor(
         erc1271ContractFacade: ERC1271ContractFacade,
@@ -23,8 +21,8 @@ export class SignatureValidator {
         destroySignal.onDestroy.listen(() => this.destroy())
     }
 
-    private getValidationContext(): SignatureValidationContext {
-        return this.validationContext ??= new SignatureValidation()
+    private getSignatureValidation(): SignatureValidation {
+        return this.signatureValidation ??= new SignatureValidation()
     }
 
     /**
@@ -52,7 +50,7 @@ export class SignatureValidator {
                 streamMessage.signature
             )
         }
-        const result = await this.getValidationContext().validateSignature(streamMessage)
+        const result = await this.getSignatureValidation().validateSignature(streamMessage)
         switch (result.type) {
             case 'valid':
                 return true
@@ -69,9 +67,9 @@ export class SignatureValidator {
      * Cleanup worker resources when the validator is no longer needed.
      */
     destroy(): void {
-        if (this.validationContext) {
-            this.validationContext.destroy()
-            this.validationContext = undefined
+        if (this.signatureValidation) {
+            this.signatureValidation.destroy()
+            this.signatureValidation = undefined
         }
     }
 }
