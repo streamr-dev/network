@@ -3,7 +3,7 @@
  * This offloads CPU-intensive cryptographic operations to a separate thread.
  * Works in both browser and Node.js environments via platform-specific config.
  */
-import * as Comlink from 'comlink'
+import { wrap, type Remote } from 'comlink'
 import { createSignatureValidationWorker } from '@/createSignatureValidationWorker'
 import { SignatureValidationResult, toSignatureValidationData } from './signatureValidationUtils'
 import type { SignatureValidationWorkerApi } from './SignatureValidationWorker'
@@ -11,11 +11,11 @@ import { StreamMessage } from '../protocol/StreamMessage'
 
 export class SignatureValidation {
     private worker: ReturnType<typeof createSignatureValidationWorker>
-    private workerApi: Comlink.Remote<SignatureValidationWorkerApi>
+    private workerApi: Remote<SignatureValidationWorkerApi>
 
     constructor() {
         this.worker = createSignatureValidationWorker()
-        this.workerApi = Comlink.wrap<SignatureValidationWorkerApi>(this.worker)
+        this.workerApi = wrap<SignatureValidationWorkerApi>(this.worker)
     }
 
     async validateSignature(message: StreamMessage): Promise<SignatureValidationResult> {
