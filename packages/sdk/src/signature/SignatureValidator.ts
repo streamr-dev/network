@@ -5,7 +5,7 @@ import { DestroySignal } from '../DestroySignal'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 import { createSignaturePayload } from './createSignaturePayload'
-import { SignatureValidation } from './SignatureValidationClient'
+import { SignatureValidation } from './SignatureValidation'
 import { SignatureType } from '@streamr/trackerless-network'
 
 @scoped(Lifecycle.ContainerScoped)
