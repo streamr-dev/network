@@ -1,4 +1,4 @@
-import { expose } from 'comlink'
+import { exposeWorkerApi } from '@/exposeWorkerApi'
 import { validateSignatureData, SignatureValidationResult, SignatureValidationData } from './signatureValidationUtils'
 
 const workerApi = {
@@ -9,4 +9,4 @@ const workerApi = {
 
 export type SignatureValidationWorkerApi = typeof workerApi
 
-expose(workerApi)
+exposeWorkerApi(workerApi)
