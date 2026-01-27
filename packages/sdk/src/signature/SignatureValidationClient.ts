@@ -5,7 +5,7 @@
  */
 import * as Comlink from 'comlink'
 import { createSignatureValidationWorker } from '@/createSignatureValidationWorker'
-import { SignatureValidationResult, toSignatureValidationData } from './signatureValidation'
+import { SignatureValidationResult, toSignatureValidationData } from './signatureValidationUtils'
 import type { SignatureValidationWorkerApi } from './SignatureValidationWorker'
 import { StreamMessage } from '../protocol/StreamMessage'
 
