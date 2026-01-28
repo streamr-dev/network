@@ -14,7 +14,7 @@ const config: Config.InitialOptions = {
         "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
     },
     transform: {
-        '^.+\\.ts$': ['./test/test-utils/importMetaTransformer.js', {
+        '^.+\\.ts$': ['./test/test-utils/importMetaTransformer.mjs', {
             tsconfig: 'tsconfig.jest.json'
         }],
     },
