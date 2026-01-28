@@ -13,6 +13,11 @@ const config: Config.InitialOptions = {
     moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
     },
+    transform: {
+        '^.+\\.ts$': ['./test/test-utils/importMetaTransformer.js', {
+            tsconfig: 'tsconfig.jest.json'
+        }],
+    },
 }
 
 export default config
