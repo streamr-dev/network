@@ -29,14 +29,14 @@ const browserAliases: Alias[] = [
 ]
 
 export default defineConfig([
+    workerNodejs(),
+    workerBrowser(),
     nodejs(),
     nodejsTypes(),
     browser(),
     browserTypes(),
     umd(),
     umdMinified(),
-    workerNodejs(),
-    workerBrowser(),
 ])
 
 function onwarn(log: RollupLog, rollupWarn: (log: RollupLog) => void): void {
