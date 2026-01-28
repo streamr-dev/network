@@ -86,7 +86,7 @@ describe('messagePipeline', () => {
             getStorageNodes: undefined as any,
             resends: undefined as any,
             streamRegistry: streamRegistry as any,
-            signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>()),
+            signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>(), destroySignal),
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 groupKeyStore,

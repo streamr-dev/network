@@ -9,6 +9,7 @@ import { StreamrClientError } from './../../src/StreamrClientError'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
+import { DestroySignal } from '../../src/DestroySignal'
 
 describe('SignatureValidator', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
@@ -16,7 +17,7 @@ describe('SignatureValidator', () => {
 
     beforeEach(() => {
         erc1271ContractFacade = mock<ERC1271ContractFacade>()
-        signatureValidator = new SignatureValidator(erc1271ContractFacade)
+        signatureValidator = new SignatureValidator(erc1271ContractFacade, new DestroySignal())
     })
 
     describe('SECP256K1', () => {

@@ -53,6 +53,8 @@ export const createClientCommand = (
                         await client.destroy()
                     }
                 }
+                // Exit cleanly after command completes - worker threads may keep event loop alive
+                process.exit(0)
             } catch (e: any) {
                 console.error(e)
                 process.exit(1)

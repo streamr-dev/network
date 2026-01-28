@@ -4,8 +4,16 @@ import type { Configuration, ExternalItem } from 'webpack'
 
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 
+export interface KarmaConfigOptions {
+    // File patterns to serve but not include in the test bundle (e.g. worker files)
+    servedFiles?: string[]
+}
+
 export const createKarmaConfig = (
-    testPaths: string[], webpackConfig: () => Configuration, localDirectory?: string
+    testPaths: string[],
+    webpackConfig: () => Configuration,
+    localDirectory?: string,
+    options: KarmaConfigOptions = {}
 ): (config: any) => any => {
     const setupFiles = [fileURLToPath(new URL('./karma-setup.js', import.meta.url))]
 
@@ -57,7 +65,13 @@ export const createKarmaConfig = (
             reporters: ['spec'],
             files: [
                 ...setupFiles,
-                ...testPaths
+                ...testPaths,
+                ...(options.servedFiles ?? []).map((pattern) => ({
+                    pattern,
+                    included: false,
+                    served: true,
+                    watched: false
+                }))
             ],
             preprocessors,
             customLaunchers: {

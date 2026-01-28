@@ -15,6 +15,7 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
                     'test/test-utils/jestGlobalsMock.ts'
                 ),
                 '@streamr/dht': resolve(__dirname, '../dht/dist/exports-browser.cjs'),
+                "@/createSignatureValidationWorker": resolve(__dirname, 'src/_karma/createSignatureValidationWorker.ts'),
                 '@': resolve(__dirname, 'src/_browser'),
             },
             fallback: {
@@ -30,6 +31,9 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
                 'node:timers/promises': 'timers/promises',
             },
         }),
-        __dirname
+        __dirname,
+        {
+            servedFiles: ['dist/*.mjs']
+        }
     )
 }

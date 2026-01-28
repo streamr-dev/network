@@ -11,6 +11,7 @@ const config: Config.InitialOptions = {
         '@streamr/test-utils/setupCustomMatchers',
     ],
     moduleNameMapper: {
+        "^@/createSignatureValidationWorker$": "<rootDir>/src/_jest/createSignatureValidationWorker.ts",
         "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
     },
     transform: {

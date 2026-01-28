@@ -10,6 +10,7 @@ import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
 import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
+import { DestroySignal } from '../../src/DestroySignal'
 
 const PARTITION_COUNT = 3
 
@@ -45,7 +46,7 @@ describe('Validator', () => {
         await validateStreamMessage(
             msg,
             streamRegistry as any,
-            new SignatureValidator(mock<ERC1271ContractFacade>()),
+            new SignatureValidator(mock<ERC1271ContractFacade>(), new DestroySignal()),
             {
                 validation: {
                     permissions: true,
