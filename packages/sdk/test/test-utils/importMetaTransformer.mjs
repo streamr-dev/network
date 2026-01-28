@@ -1,5 +1,3 @@
-'use strict'
-
 import { TsJestTransformer } from 'ts-jest'
 
 class ImportMetaTransformer extends TsJestTransformer {
