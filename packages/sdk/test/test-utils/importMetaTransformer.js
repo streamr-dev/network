@@ -1,6 +1,6 @@
 'use strict'
 
-const { TsJestTransformer } = require('ts-jest')
+import { TsJestTransformer } from 'ts-jest'
 
 class ImportMetaTransformer extends TsJestTransformer {
     process(sourceText, sourcePath, options) {
@@ -20,7 +20,8 @@ class ImportMetaTransformer extends TsJestTransformer {
     }
 }
 
-module.exports = {
+export default {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     createTransformer(tsJestConfig) {
         return new ImportMetaTransformer(tsJestConfig)
     },
