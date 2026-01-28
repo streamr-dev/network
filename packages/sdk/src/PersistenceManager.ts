@@ -37,7 +37,7 @@ export class PersistenceManager {
             loggerFactory: this.loggerFactory,
             ownerId: await this.identity.getUserId(),
             namespaces: Object.values(NAMESPACES),
-            migrationsUrl: new URL('./encryption/migrations', import.meta.url),
+            migrationsUrl: new URL(/* webpackIgnore: true */ './encryption/migrations', import.meta.url),
         })
     }
 
