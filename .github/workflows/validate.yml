@@ -155,7 +155,17 @@ jobs:
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-end-to-end
-        npm run test-browser-smoke
+  sdk-browser-smoke-test:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: sdk
+      browser: true
+      extra-log-prefix: '-browser-smoke-test'
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
+      run-nodes: true
+      command: npm run test-browser-smoke
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
