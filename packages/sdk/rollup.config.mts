@@ -216,7 +216,7 @@ function workerNodejs(): RollupOptions {
         context: 'globalThis',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.node.js',
+            file: './dist/workers/SignatureValidationWorker.node.mjs',
             sourcemap: true,
         },
         plugins: [
@@ -229,7 +229,7 @@ function workerNodejs(): RollupOptions {
             }),
             cjs(),
         ],
-        external: [],
+        external: [/node_modules/, /@streamr\//],
         onwarn,
     }
 }
@@ -243,7 +243,7 @@ function workerBrowser(): RollupOptions {
         context: 'self',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.browser.js',
+            file: './dist/workers/SignatureValidationWorker.browser.mjs',
             sourcemap: true,
         },
         plugins: [
