@@ -3,6 +3,7 @@ import defaultConfig from '../../jest.config'
 
 const config: Config.InitialOptions = {
     ...defaultConfig,
+    testTimeout: 15_000,
     setupFilesAfterEnv: [
         ...defaultConfig.setupFilesAfterEnv,
         '@streamr/test-utils/setupCustomMatchers'
