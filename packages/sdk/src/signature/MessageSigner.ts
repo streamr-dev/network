@@ -15,7 +15,7 @@ export class MessageSigner {
 
     constructor(
         @inject(IdentityInjectionToken) identity: Identity,
-        destroySignal?: DestroySignal
+            destroySignal?: DestroySignal
     ) {
         this.identity = identity
         destroySignal?.onDestroy.listen(() => this.destroy())
