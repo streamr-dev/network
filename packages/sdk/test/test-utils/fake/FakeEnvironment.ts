@@ -21,6 +21,7 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { DestroySignal } from '../../../src/DestroySignal'
+import { SigningService } from '../../../src/signature/SigningService'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -34,13 +35,16 @@ export class FakeEnvironment {
     private chain: FakeChain
     private logger: FakeLogger
     private dependencyContainer: DependencyContainer
-    private destroySignal = new DestroySignal()
+    private destroySignal: DestroySignal
+    private signingService: SigningService
 
     constructor() {
         this.network = new FakeNetwork()
         this.chain = new FakeChain()
         this.logger = new FakeLogger()
         this.dependencyContainer = container.createChildContainer()
+        this.destroySignal = new DestroySignal()
+        this.signingService = new SigningService(this.destroySignal)
         const loggerFactory = {
             createLogger: () => this.logger
         }
@@ -53,6 +57,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
         this.dependencyContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
         this.dependencyContainer.register(OperatorRegistry, FakeOperatorRegistry as any)
+        this.dependencyContainer.register(SigningService, { useValue: this.signingService })
     }
 
     createClient(opts?: StreamrClientConfig): StreamrClient {
