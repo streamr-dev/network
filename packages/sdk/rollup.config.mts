@@ -29,8 +29,10 @@ const browserAliases: Alias[] = [
 ]
 
 export default defineConfig([
-    workerNodejs(),
-    workerBrowser(),
+    validationWorkerNodejs(),
+    validationWorkerBrowser(),
+    signingWorkerNodejs(),
+    signingWorkerBrowser(),
     nodejs(),
     nodejsTypes(),
     browser(),
@@ -208,9 +210,9 @@ function umdMinified(): RollupOptions {
 }
 
 /**
- * Worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
+ * Signature validation worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
  */
-function workerNodejs(): RollupOptions {
+function validationWorkerNodejs(): RollupOptions {
     return {
         input: './dist/nodejs/src/signature/SignatureValidationWorker.js',
         context: 'globalThis',
@@ -235,15 +237,70 @@ function workerNodejs(): RollupOptions {
 }
 
 /**
- * Worker bundle for browser - ESM format for use with web-worker {type: 'module'}
+ * Signature validation worker bundle for browser - ESM format for use with web-worker {type: 'module'}
  */
-function workerBrowser(): RollupOptions {
+function validationWorkerBrowser(): RollupOptions {
     return {
         input: './dist/browser/src/signature/SignatureValidationWorker.js',
         context: 'self',
         output: {
             format: 'es',
             file: './dist/workers/SignatureValidationWorker.browser.mjs',
+            sourcemap: true,
+        },
+        plugins: [
+            json(),
+            alias({
+                entries: browserAliases,
+            }),
+            nodeResolve({
+                browser: true,
+                preferBuiltins: false,
+            }),
+            cjs(),
+        ],
+        external: [],
+        onwarn,
+    }
+}
+
+/**
+ * Signing worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
+ */
+function signingWorkerNodejs(): RollupOptions {
+    return {
+        input: './dist/nodejs/src/signature/SigningWorker.js',
+        context: 'globalThis',
+        output: {
+            format: 'es',
+            file: './dist/workers/SigningWorker.node.mjs',
+            sourcemap: true,
+        },
+        plugins: [
+            json(),
+            alias({
+                entries: nodejsAliases,
+            }),
+            nodeResolve({
+                preferBuiltins: true,
+            }),
+            cjs(),
+        ],
+        external: [/node_modules/, /@streamr\//],
+        onwarn,
+    }
+}
+
+/**
+ * Signing worker bundle for browser - ESM format for use with web-worker {type: 'module'}
+ */
+function signingWorkerBrowser(): RollupOptions {
+    return {
+        input: './dist/browser/src/signature/SigningWorker.js',
+        context: 'self',
+        output: {
+            format: 'es',
+            file: './dist/workers/SigningWorker.browser.mjs',
             sourcemap: true,
         },
         plugins: [
