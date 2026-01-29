@@ -49,6 +49,8 @@ import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SigningService } from '../../src/signature/SigningService'
+import { createSignatureFromData } from '../../src/signature/signingUtils'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
@@ -58,6 +60,25 @@ import { addAfterFn } from './jest-utils'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 
 const logger = new Logger('sdk-test-utils')
+
+/**
+ * Creates a mock SigningService that performs signing synchronously on the main thread.
+ * Use this in tests instead of the real SigningService which spawns a worker.
+ */
+export function createMockSigningService(): SigningService {
+    return {
+        sign: createSignatureFromData,
+        destroy: () => {}
+    } as unknown as SigningService
+}
+
+/**
+ * Creates a MessageSigner for testing purposes.
+ * Uses a mock SigningService that doesn't spawn a worker.
+ */
+export function createMessageSigner(identity: Identity): MessageSigner {
+    return new MessageSigner(identity, createMockSigningService())
+}
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
     return new LoggerFactory({
@@ -152,7 +173,7 @@ export const createMockMessage = async (
         }),
         groupKeyQueue: await createGroupKeyQueue(identity, opts.encryptionKey, opts.nextEncryptionKey),
         signatureValidator: mock<SignatureValidator>(),
-        messageSigner: new MessageSigner(identity)
+        messageSigner: createMessageSigner(identity)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

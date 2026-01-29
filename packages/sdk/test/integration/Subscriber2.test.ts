@@ -10,7 +10,7 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { createTestStream } from '../test-utils/utils'
+import { createMessageSigner, createTestStream } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
@@ -69,7 +69,7 @@ describe('Subscriber', () => {
             }
         })
         const publisherIdentity = EthereumKeyPairIdentity.fromPrivateKey(publisherWallet.privateKey)
-        messageSigner = new MessageSigner(publisherIdentity)
+        messageSigner = createMessageSigner(publisherIdentity)
     })
 
     afterAll(async () => {

@@ -11,11 +11,10 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { mockLoggerFactory } from '../test-utils/utils'
+import { createMessageSigner, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
@@ -40,7 +39,7 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const messageSigner = new MessageSigner(EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey))
+        const messageSigner = createMessageSigner(EthereumKeyPairIdentity.fromPrivateKey(publisher.privateKey))
         return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,

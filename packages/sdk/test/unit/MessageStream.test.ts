@@ -3,7 +3,7 @@ import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
-import { createRandomIdentity, waitForCalls } from '../test-utils/utils'
+import { createMessageSigner, createRandomIdentity, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessageType } from './../../src/protocol/StreamMessage'
@@ -28,7 +28,7 @@ describe('MessageStream', () => {
     }
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(await createRandomIdentity())
+        messageSigner = createMessageSigner(await createRandomIdentity())
     })
 
     it('onMessage', async () => {

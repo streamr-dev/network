@@ -4,7 +4,7 @@ import shuffle from 'lodash/shuffle'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import { createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
+import { createMessageSigner, createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
@@ -47,12 +47,8 @@ describe(waitForAssignmentsToPropagate, () => {
 
     beforeAll(async () => {
         const identity = await createRandomIdentity()
-        messageSigner = new MessageSigner(identity)
+        messageSigner = createMessageSigner(identity)
         publisherId = await identity.getUserId()
-    })
-
-    afterAll(() => {
-        messageSigner.destroy()
     })
 
     beforeEach(() => {

@@ -4,24 +4,19 @@ import { Identity, IdentityInjectionToken } from '../identity/Identity'
 import { StreamMessage, StreamMessageOptions } from '../protocol/StreamMessage'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
-import { Signing } from './Signing'
-import { DestroySignal } from '../DestroySignal'
+import { SigningService } from './SigningService'
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessageSigner {
     private readonly identity: Identity
-    private signing: Signing | undefined
+    private readonly signingService: SigningService
 
     constructor(
         @inject(IdentityInjectionToken) identity: Identity,
-            destroySignal?: DestroySignal
+            signingService: SigningService
     ) {
         this.identity = identity
-        destroySignal?.onDestroy.listen(() => this.destroy())
-    }
-
-    private getSigning(): Signing {
-        return this.signing ??= new Signing()
+        this.signingService = signingService
     }
 
     async createSignedMessage(
@@ -51,7 +46,7 @@ export class MessageSigner {
         signatureType: SignatureType,
         privateKey: Uint8Array
     ): Promise<Uint8Array> {
-        const result = await this.getSigning().createSignature({
+        const result = await this.signingService.sign({
             payloadInput: opts,
             privateKey,
             signatureType
@@ -62,15 +57,5 @@ export class MessageSigner {
         }
 
         return result.signature
-    }
-
-    /**
-     * Cleanup worker resources when the signer is no longer needed.
-     */
-    destroy(): void {
-        if (this.signing) {
-            this.signing.destroy()
-            this.signing = undefined
-        }
     }
 }
