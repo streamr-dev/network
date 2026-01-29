@@ -33,6 +33,11 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
         }),
         __dirname,
         {
+            /**
+             * Karma's Webpack copies workers from dist/workers to dist and hashes their names.
+             * We need to serve these files so they're accessible during tests. Normally Karma
+             * only serves test and setup files.
+             */
             servedFiles: ['dist/*.mjs']
         }
     )
