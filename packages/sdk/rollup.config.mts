@@ -40,7 +40,7 @@ const WORKERS: Record<string, string> = {
 
 export default defineConfig([
     workersNodejs(),
-    workersBrowser(),
+    ...workersBrowser(),
     nodejs(),
     nodejsTypes(),
     browser(),
@@ -250,18 +250,17 @@ function workersNodejs(): RollupOptions {
 
 /**
  * All worker bundles for browser - ESM format for use with web-worker {type: 'module'}
+ * Each worker is built as a self-contained bundle with all dependencies inlined.
+ * This avoids issues with webpack/karma not copying associated chunk files.
  */
-function workersBrowser(): RollupOptions {
-    return {
-        input: Object.fromEntries(
-            Object.entries(WORKERS).map(([name, path]) => [name, `./dist/browser/src/${path}.js`])
-        ),
+function workersBrowser(): RollupOptions[] {
+    return Object.entries(WORKERS).map(([name, path]) => ({
+        input: `./dist/browser/src/${path}.js`,
         context: 'self',
         output: {
             format: 'es',
-            dir: './dist/workers',
-            entryFileNames: '[name].browser.mjs',
-            chunkFileNames: '[name]-[hash].browser.mjs',
+            file: `./dist/workers/${name}.browser.mjs`,
+            inlineDynamicImports: true,
             sourcemap: true,
         },
         plugins: [
@@ -277,5 +276,5 @@ function workersBrowser(): RollupOptions {
         ],
         external: [],
         onwarn,
-    }
+    }))
 }
