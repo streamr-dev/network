@@ -1,4 +1,4 @@
-import { toStreamID, utf8ToBinary } from '@streamr/utils'
+import { toStreamID, utf8ToBinary, EcdsaSecp256k1Evm } from '@streamr/utils'
 import { SignatureType } from '@streamr/trackerless-network'
 import { SigningService } from '../../src/signature/SigningService'
 import { SigningRequest } from '../../src/signature/signingUtils'
@@ -6,7 +6,6 @@ import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { DestroySignal } from '../../src/DestroySignal'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
-import { EcdsaSecp256k1Evm } from '@streamr/utils'
 
 describe('SigningService', () => {
 
@@ -95,7 +94,7 @@ describe('SigningService', () => {
 
         expect(signatures).toHaveLength(3)
         // All signatures should be different (different payloads)
-        expect(new Set(signatures.map(s => Buffer.from(s).toString('hex'))).size).toBe(3)
+        expect(new Set(signatures.map((s) => Buffer.from(s).toString('hex'))).size).toBe(3)
     })
 
     it('returns error for unsupported signature type', async () => {
