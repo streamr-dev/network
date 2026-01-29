@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier-client",
-  "version": "103.2.2",
+  "version": "103.3.0",
   "description": "Autocertifier Client for Streamr Network",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/utils": "103.2.2",
+    "@streamr/utils": "103.3.0",
     "eventemitter3": "^5.0.0",
     "node-forge": "^1.3.2"
   },

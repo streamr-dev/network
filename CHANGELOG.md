@@ -10,6 +10,52 @@ Changes before Tatum release are not documented in this file.
 
 ### Breaking Changes
 
+### General
+
+#### Added
+
+#### Changed
+
+### @streamr/sdk
+
+#### Added
+
+#### Changed
+
+#### Fixed
+
+### @streamr/node
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+### @streamr/cli-tools
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+## [103.3.0] - 2026-01-29
+
+### Breaking Changes
+
 - **BREAKING CHANGE**: The following packages no longer include all source files in `dist`. They now export bundled artifacts for ESM, CJS, and TypeScript declarations only:
   - `@streamr/sdk`
   - `@streamr/utils`
@@ -60,34 +106,6 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Support TypeScript karma-setup files ([#3368])
-
-### @streamr/node
-
-#### Added
-
-#### Changed
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
-
-### @streamr/cli-tools
-
-#### Added
-
-#### Changed
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 ## [103.2.2] - 2026-01-19
 
@@ -623,7 +641,8 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.2.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.3.0...HEAD
+[103.3.0]: https://github.com/streamr-dev/network/compare/v103.2.2...v103.3.0
 [103.2.2]: https://github.com/streamr-dev/network/compare/v103.2.1...v103.2.2
 [103.2.1]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.1
 [103.2.0]: https://github.com/streamr-dev/network/compare/v103.1.2...v103.2.0
