@@ -5,10 +5,12 @@ import {
     EthereumKeyPairIdentity,
     MessageID,
     MessageSigner,
+    SigningService,
     SignatureType,
     StreamMessageType,
     StreamPermission,
-    StreamrClient
+    StreamrClient,
+    DestroySignal
 } from '@streamr/sdk'
 import { createTestPrivateKey } from '@streamr/test-utils'
 import { binaryToHex, keyToArrayIndex, StreamID, toLengthPrefixedFrame, toUserId, UserID } from '@streamr/utils'
@@ -24,6 +26,15 @@ describe('stream-publish', () => {
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let streamCreatorPrivateKey: string
+    let signingService: SigningService
+
+    beforeAll(() => {
+        signingService = new SigningService(new DestroySignal())
+    })
+
+    afterAll(() => {
+        signingService.destroy()
+    })
 
     function createSubscriber(): StreamrClient {
         return createTestClient(subscriberPrivateKey)
@@ -39,7 +50,7 @@ describe('stream-publish', () => {
     }
 
     async function createTestMessage(streamId: StreamID, partition: number, privateKey: string, content: Uint8Array, timestamp: number) {
-        const messageSigner = new MessageSigner(EthereumKeyPairIdentity.fromPrivateKey(privateKey))
+        const messageSigner = new MessageSigner(EthereumKeyPairIdentity.fromPrivateKey(privateKey), signingService)
         return await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, partition, timestamp, 0, toUserId(new Wallet(privateKey).address), 'mock-msgChainId'),
             content,
