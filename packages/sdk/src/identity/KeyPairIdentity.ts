@@ -30,8 +30,8 @@ export abstract class KeyPairIdentity extends Identity {
         return this.publicKeyString
     }
 
-    override getPrivateKey(): Promise<Uint8Array> {
-        return Promise.resolve(this.privateKey)
+    override getPrivateKey(): Uint8Array {
+        return this.privateKey
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -26,7 +26,7 @@ export abstract class Identity {
      * Returns undefined for identities that rely on external signers (e.g. browser wallets).
      */
     // eslint-disable-next-line class-methods-use-this
-    getPrivateKey(): Promise<Uint8Array> | undefined {
+    getPrivateKey(): Uint8Array | undefined {
         return undefined
     }
 }

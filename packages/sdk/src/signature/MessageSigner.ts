@@ -32,9 +32,9 @@ export class MessageSigner {
 
         // Use worker-based signing if identity provides a private key and signature type supports it
         // ERC-1271 signatures require on-chain verification and must be handled by the identity directly
-        const privateKeyPromise = this.identity.getPrivateKey()
-        if (privateKeyPromise !== undefined && signatureType !== SignatureType.ERC_1271) {
-            signature = await this.createSignatureInWorker(opts, signatureType, privateKeyPromise)
+        const privateKey = this.identity.getPrivateKey()
+        if (privateKey !== undefined && signatureType !== SignatureType.ERC_1271) {
+            signature = await this.createSignatureInWorker(opts, signatureType, privateKey)
         } else {
             signature = await this.identity.createMessageSignature(createSignaturePayload(opts))
         }
@@ -49,10 +49,8 @@ export class MessageSigner {
     private async createSignatureInWorker(
         opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>,
         signatureType: SignatureType,
-        privateKeyPromise: Promise<Uint8Array>
+        privateKey: Uint8Array
     ): Promise<Uint8Array> {
-        const privateKey = await privateKeyPromise
-        
         const result = await this.getSigning().createSignature({
             payloadInput: opts,
             privateKey,
