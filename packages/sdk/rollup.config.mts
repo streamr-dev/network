@@ -230,6 +230,7 @@ function workersNodejs(): RollupOptions {
             format: 'es',
             dir: './dist/workers',
             entryFileNames: '[name].node.mjs',
+            chunkFileNames: '[name]-[hash].node.mjs',
             sourcemap: true,
         },
         plugins: [
@@ -260,6 +261,7 @@ function workersBrowser(): RollupOptions {
             format: 'es',
             dir: './dist/workers',
             entryFileNames: '[name].browser.mjs',
+            chunkFileNames: '[name]-[hash].browser.mjs',
             sourcemap: true,
         },
         plugins: [
