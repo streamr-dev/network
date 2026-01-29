@@ -9,9 +9,8 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { PublishMetadata } from '../../src/publish/Publisher'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createStreamRegistry } from '../test-utils/utils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { EncryptionType, SignatureType, ContentType } from '@streamr/trackerless-network'
@@ -60,7 +59,7 @@ describe('MessageFactory', () => {
                     }),
                     groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
                     signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>(), new DestroySignal()),
-                    messageSigner: new MessageSigner(identity),
+                    messageSigner: createMessageSigner(identity),
                     config: {
                         validation: {
                             permissions: true,

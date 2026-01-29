@@ -1,8 +1,7 @@
 import { StreamID, toUserId } from '@streamr/utils'
-import { createTestClient, createTestStream } from '../test-utils/utils'
+import { createMessageSigner, createTestClient, createTestStream } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { Wallet } from 'ethers'
 import { MessageID } from '../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
@@ -29,7 +28,7 @@ describe('publish-subscribe-raw', () => {
     })
 
     async function createTestMessage() {
-        const messageSigner = new MessageSigner(EthereumKeyPairIdentity.fromPrivateKey(publisherWallet.privateKey))
+        const messageSigner = createMessageSigner(EthereumKeyPairIdentity.fromPrivateKey(publisherWallet.privateKey))
         return await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, 0, 123456789, 0, toUserId(publisherWallet.address), 'mock-msgChainId'),
             content: new Uint8Array([1, 2, 3]),

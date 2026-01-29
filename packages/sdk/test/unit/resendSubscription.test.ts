@@ -6,13 +6,12 @@ import isEqual from 'lodash/isEqual'
 import last from 'lodash/last'
 import { Message } from '../../src/Message'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscription'
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createGroupKeyQueue, createRandomIdentity, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createRandomIdentity, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 import { StreamMessage } from './../../src/protocol/StreamMessage'
 import { createStrictConfig } from '../../src/Config'
 
@@ -61,7 +60,7 @@ describe('resend subscription', () => {
             }),
             groupKeyQueue: await createGroupKeyQueue(identity),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(identity),
+            messageSigner: createMessageSigner(identity),
             config: createStrictConfig(),
         })
     })

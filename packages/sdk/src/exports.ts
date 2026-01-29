@@ -48,6 +48,7 @@ export {
     ConfigInjectionToken,
 } from './ConfigTypes'
 
+export { DestroySignal } from './DestroySignal'
 export { DEFAULT_KEY_TYPE } from './identity/IdentityMapping'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export type { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -60,6 +61,7 @@ export { EthereumProviderIdentity } from './identity/EthereumProviderIdentity'
 export { MLDSAKeyPairIdentity } from './identity/MLDSAKeyPairIdentity'
 export { ECDSAKeyPairIdentity } from './identity/ECDSAKeyPairIdentity'
 export { MessageSigner } from './signature/MessageSigner'
+export { SigningService } from './signature/SigningService'
 export { RpcProviderSource } from './RpcProviderSource'
 
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'

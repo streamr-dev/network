@@ -20,4 +20,13 @@ export abstract class Identity {
     abstract getSignatureType(): SignatureType
     abstract createMessageSignature(payload: Uint8Array): Promise<Uint8Array>
     abstract getTransactionSigner(rpcProviderSource: RpcProviderSource): Promise<SignerWithProvider>
+
+    /**
+     * Returns the private key if this identity supports worker-based signing.
+     * Returns undefined for identities that rely on external signers (e.g. browser wallets).
+     */
+    // eslint-disable-next-line class-methods-use-this
+    getPrivateKey(): Uint8Array | undefined {
+        return undefined
+    }
 }

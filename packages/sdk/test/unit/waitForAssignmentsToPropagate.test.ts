@@ -1,13 +1,12 @@
-import { StreamID, toStreamID, toStreamPartID, utf8ToBinary, wait } from '@streamr/utils'
+import { StreamID, toStreamID, toStreamPartID, UserID, utf8ToBinary, wait } from '@streamr/utils'
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import { createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
+import { createMessageSigner, createRandomIdentity, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { Identity } from '../../src/identity/Identity'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
 
 const RACE_TIMEOUT_IN_MS = 20
@@ -22,11 +21,12 @@ describe(waitForAssignmentsToPropagate, () => {
     let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
-    let identity: Identity
+    let messageSigner: MessageSigner
+    let publisherId: UserID
 
     async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-        return new MessageSigner(identity).createSignedMessage({
-            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await identity.getUserId(), 'msgChain'),
+        return messageSigner.createSignedMessage({
+            messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, publisherId, 'msgChain'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(content)),
             contentType: ContentType.JSON,
@@ -46,7 +46,9 @@ describe(waitForAssignmentsToPropagate, () => {
     }
 
     beforeAll(async () => {
-        identity = await createRandomIdentity()
+        const identity = await createRandomIdentity()
+        messageSigner = createMessageSigner(identity)
+        publisherId = await identity.getUserId()
     })
 
     beforeEach(() => {

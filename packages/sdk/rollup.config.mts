@@ -28,9 +28,19 @@ const browserAliases: Alias[] = [
     { find: 'stream', replacement: 'readable-stream' },
 ]
 
+/**
+ * Worker entry points - add new workers here.
+ * Key: output name (will become [name].node.mjs and [name].browser.mjs)
+ * Value: path relative to src/ (without extension)
+ */
+const WORKERS: Record<string, string> = {
+    'SignatureValidationWorker': 'signature/SignatureValidationWorker',
+    'SigningWorker': 'signature/SigningWorker',
+}
+
 export default defineConfig([
-    workerNodejs(),
-    workerBrowser(),
+    workersNodejs(),
+    ...workersBrowser(),
     nodejs(),
     nodejsTypes(),
     browser(),
@@ -208,15 +218,19 @@ function umdMinified(): RollupOptions {
 }
 
 /**
- * Worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
+ * All worker bundles for Node.js - ESM format for use with web-worker {type: 'module'}
  */
-function workerNodejs(): RollupOptions {
+function workersNodejs(): RollupOptions {
     return {
-        input: './dist/nodejs/src/signature/SignatureValidationWorker.js',
+        input: Object.fromEntries(
+            Object.entries(WORKERS).map(([name, path]) => [name, `./dist/nodejs/src/${path}.js`])
+        ),
         context: 'globalThis',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.node.mjs',
+            dir: './dist/workers',
+            entryFileNames: '[name].node.mjs',
+            chunkFileNames: '[name]-[hash].node.mjs',
             sourcemap: true,
         },
         plugins: [
@@ -235,15 +249,18 @@ function workerNodejs(): RollupOptions {
 }
 
 /**
- * Worker bundle for browser - ESM format for use with web-worker {type: 'module'}
+ * All worker bundles for browser - ESM format for use with web-worker {type: 'module'}
+ * Each worker is built as a self-contained bundle with all dependencies inlined.
+ * This avoids issues with webpack/karma not copying associated chunk files.
  */
-function workerBrowser(): RollupOptions {
-    return {
-        input: './dist/browser/src/signature/SignatureValidationWorker.js',
+function workersBrowser(): RollupOptions[] {
+    return Object.entries(WORKERS).map(([name, path]) => ({
+        input: `./dist/browser/src/${path}.js`,
         context: 'self',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.browser.mjs',
+            file: `./dist/workers/${name}.browser.mjs`,
+            inlineDynamicImports: true,
             sourcemap: true,
         },
         plugins: [
@@ -259,5 +276,5 @@ function workerBrowser(): RollupOptions {
         ],
         external: [],
         onwarn,
-    }
+    }))
 }

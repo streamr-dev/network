@@ -4,10 +4,9 @@ import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamMessage } from '../../src/protocol/StreamMessage'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
@@ -45,7 +44,7 @@ describe('gap fill', () => {
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(identity),
+            messageSigner: createMessageSigner(identity),
             config: createStrictConfig()
         })
     })

@@ -4,10 +4,9 @@ import { mock } from 'jest-mock-extended'
 import { Identity } from '../../src/identity/Identity'
 import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
-import { MOCK_CONTENT, createRandomIdentity } from '../test-utils/utils'
+import { MOCK_CONTENT, createMessageSigner, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
@@ -20,7 +19,7 @@ const groupKeyRequestToStreamMessage = async (
     prevMsgRef: MessageRef | undefined,
     identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(identity)
+    const messageSigner = createMessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
@@ -37,7 +36,7 @@ const groupKeyResponseToStreamMessage = async (
     prevMsgRef: MessageRef | undefined,
     identity: Identity
 ): Promise<StreamMessage> => {
-    const messageSigner = new MessageSigner(identity)
+    const messageSigner = createMessageSigner(identity)
     return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
@@ -100,7 +99,7 @@ describe('Validator2', () => {
             return userId === subscriber && streamId === 'streamId'
         }
 
-        const publisherSigner = new MessageSigner(publisherIdentity)
+        const publisherSigner = createMessageSigner(publisherIdentity)
 
         msg = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),

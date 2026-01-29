@@ -6,7 +6,7 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
-import { createRandomIdentity } from '../test-utils/utils'
+import { createMessageSigner, createRandomIdentity } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { ContentType, EncryptionType, SignatureType } from '@streamr/trackerless-network'
@@ -31,7 +31,7 @@ describe('PushPipeline', () => {
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        messageSigner = new MessageSigner(await createRandomIdentity())
+        messageSigner = createMessageSigner(await createRandomIdentity())
     })
 
     afterEach(async () => {

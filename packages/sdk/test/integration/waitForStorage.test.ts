@@ -6,7 +6,7 @@ import { StreamPermission } from '../../src/permission'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { MOCK_CONTENT, createRandomIdentity, createRelativeTestStreamId } from '../test-utils/utils'
+import { MOCK_CONTENT, createMessageSigner, createRandomIdentity, createRelativeTestStreamId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessageType } from './../../src/protocol/StreamMessage'
 import { randomUserId } from '@streamr/test-utils'
@@ -23,7 +23,7 @@ describe('waitForStorage', () => {
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        messageSigner = new MessageSigner(await createRandomIdentity())
+        messageSigner = createMessageSigner(await createRandomIdentity())
         environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await client.createStream({
