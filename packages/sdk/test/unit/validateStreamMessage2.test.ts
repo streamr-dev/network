@@ -12,6 +12,7 @@ import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
+import { DestroySignal } from '../../src/DestroySignal'
 
 const groupKeyRequestToStreamMessage = async (
     groupKeyRequest: GroupKeyRequest,
@@ -69,7 +70,7 @@ describe('Validator2', () => {
                     isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
                     isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
                 } as any,
-                new SignatureValidator(mock<ERC1271ContractFacade>()),
+                new SignatureValidator(mock<ERC1271ContractFacade>(), new DestroySignal()),
                 {
                     validation: {
                         permissions: true,
