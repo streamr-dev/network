@@ -28,11 +28,19 @@ const browserAliases: Alias[] = [
     { find: 'stream', replacement: 'readable-stream' },
 ]
 
+/**
+ * Worker entry points - add new workers here.
+ * Key: output name (will become [name].node.mjs and [name].browser.mjs)
+ * Value: path relative to src/ (without extension)
+ */
+const WORKERS: Record<string, string> = {
+    'SignatureValidationWorker': 'signature/SignatureValidationWorker',
+    'SigningWorker': 'signature/SigningWorker',
+}
+
 export default defineConfig([
-    validationWorkerNodejs(),
-    validationWorkerBrowser(),
-    signingWorkerNodejs(),
-    signingWorkerBrowser(),
+    workersNodejs(),
+    workersBrowser(),
     nodejs(),
     nodejsTypes(),
     browser(),
@@ -210,15 +218,18 @@ function umdMinified(): RollupOptions {
 }
 
 /**
- * Signature validation worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
+ * All worker bundles for Node.js - ESM format for use with web-worker {type: 'module'}
  */
-function validationWorkerNodejs(): RollupOptions {
+function workersNodejs(): RollupOptions {
     return {
-        input: './dist/nodejs/src/signature/SignatureValidationWorker.js',
+        input: Object.fromEntries(
+            Object.entries(WORKERS).map(([name, path]) => [name, `./dist/nodejs/src/${path}.js`])
+        ),
         context: 'globalThis',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.node.mjs',
+            dir: './dist/workers',
+            entryFileNames: '[name].node.mjs',
             sourcemap: true,
         },
         plugins: [
@@ -237,70 +248,18 @@ function validationWorkerNodejs(): RollupOptions {
 }
 
 /**
- * Signature validation worker bundle for browser - ESM format for use with web-worker {type: 'module'}
+ * All worker bundles for browser - ESM format for use with web-worker {type: 'module'}
  */
-function validationWorkerBrowser(): RollupOptions {
+function workersBrowser(): RollupOptions {
     return {
-        input: './dist/browser/src/signature/SignatureValidationWorker.js',
+        input: Object.fromEntries(
+            Object.entries(WORKERS).map(([name, path]) => [name, `./dist/browser/src/${path}.js`])
+        ),
         context: 'self',
         output: {
             format: 'es',
-            file: './dist/workers/SignatureValidationWorker.browser.mjs',
-            sourcemap: true,
-        },
-        plugins: [
-            json(),
-            alias({
-                entries: browserAliases,
-            }),
-            nodeResolve({
-                browser: true,
-                preferBuiltins: false,
-            }),
-            cjs(),
-        ],
-        external: [],
-        onwarn,
-    }
-}
-
-/**
- * Signing worker bundle for Node.js - ESM format for use with web-worker {type: 'module'}
- */
-function signingWorkerNodejs(): RollupOptions {
-    return {
-        input: './dist/nodejs/src/signature/SigningWorker.js',
-        context: 'globalThis',
-        output: {
-            format: 'es',
-            file: './dist/workers/SigningWorker.node.mjs',
-            sourcemap: true,
-        },
-        plugins: [
-            json(),
-            alias({
-                entries: nodejsAliases,
-            }),
-            nodeResolve({
-                preferBuiltins: true,
-            }),
-            cjs(),
-        ],
-        external: [/node_modules/, /@streamr\//],
-        onwarn,
-    }
-}
-
-/**
- * Signing worker bundle for browser - ESM format for use with web-worker {type: 'module'}
- */
-function signingWorkerBrowser(): RollupOptions {
-    return {
-        input: './dist/browser/src/signature/SigningWorker.js',
-        context: 'self',
-        output: {
-            format: 'es',
-            file: './dist/workers/SigningWorker.browser.mjs',
+            dir: './dist/workers',
+            entryFileNames: '[name].browser.mjs',
             sourcemap: true,
         },
         plugins: [
