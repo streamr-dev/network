@@ -53,6 +53,7 @@ Changes before Tatum release are not documented in this file.
 
 - Resolve circular dependencies in the SDK package ([#3361], [#3367])
 - Clean-up `tsyringe` setup ([#3362])
+- Fix ES module compatibility for migrations URL resolution ([#3373])
 
 ### @streamr/browser-test-runner
 
@@ -665,3 +666,4 @@ Autostaker changes:
 [#3367]: https://github.com/streamr-dev/network/pull/3367
 [#3368]: https://github.com/streamr-dev/network/pull/3368
 [#3369]: https://github.com/streamr-dev/network/pull/3369
+[#3373]: https://github.com/streamr-dev/network/pull/3373
