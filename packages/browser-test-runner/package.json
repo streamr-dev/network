@@ -31,7 +31,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@electron/rebuild": "^4.0.1",
+    "@electron/rebuild": "^4.0.3",
     "@jest/fake-timers": "^30.0.5",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "buffer": "^6.0.3",
@@ -48,11 +48,11 @@
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "rimraf": "^6.1.2",
-    "rollup": "^4.55.1",
+    "rollup": "^4.57.0",
     "rollup-plugin-dts": "^6.3.0",
     "ts-loader": "^9.5.4",
     "tsx": "^4.21.0",
-    "webpack": "^5.103.0",
+    "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
   }
 }

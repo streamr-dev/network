@@ -39,7 +39,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/haversine": "^1.1.8",
     "rimraf": "^6.1.2",
-    "rollup": "^4.55.1",
+    "rollup": "^4.57.0",
     "rollup-plugin-dts": "^6.3.0",
     "tsx": "^4.21.0"
   }
