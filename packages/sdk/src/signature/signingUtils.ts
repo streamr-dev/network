@@ -3,10 +3,9 @@
  * This file contains pure cryptographic signing functions without any network dependencies.
  */
 import { SigningUtil } from '@streamr/utils'
-import { EncryptedGroupKey, SignatureType } from '@streamr/trackerless-network'
+import { SignatureType } from '@streamr/trackerless-network'
 import { IDENTITY_MAPPING } from '../identity/IdentityMapping'
-import { createSignaturePayload, MessageIdLike, MessageRefLike } from './createSignaturePayload'
-import { StreamMessageType } from '../protocol/StreamMessage'
+import { createSignaturePayload, SignaturePayloadInput } from './createSignaturePayload'
 
 // Lookup structure SignatureType -> SigningUtil
 const signingUtilBySignatureType: Record<number, SigningUtil> = Object.fromEntries(
@@ -21,22 +20,10 @@ export type SigningResult =
     | { type: 'error', message: string }
 
 /**
- * Plain data type for message content that needs to be signed.
- * This contains only primitive values and simple objects (no class instances).
- */
-export interface SignaturePayloadData {
-    messageId: MessageIdLike
-    prevMsgRef?: MessageRefLike
-    messageType: StreamMessageType
-    content: Uint8Array
-    newGroupKey?: EncryptedGroupKey
-}
-
-/**
  * Complete signing request including private key and signature type.
  */
 export interface SigningRequest {
-    payloadData: SignaturePayloadData
+    payloadInput: SignaturePayloadInput
     privateKey: Uint8Array
     signatureType: SignatureType
 }
@@ -52,46 +39,10 @@ export async function createSignatureFromData(request: SigningRequest): Promise<
             return { type: 'error', message: `Unsupported signatureType: "${request.signatureType}"` }
         }
         
-        const payload = createSignaturePayload({
-            messageId: request.payloadData.messageId,
-            content: request.payloadData.content,
-            messageType: request.payloadData.messageType,
-            prevMsgRef: request.payloadData.prevMsgRef,
-            newGroupKey: request.payloadData.newGroupKey,
-        })
-        
+        const payload = createSignaturePayload(request.payloadInput)
         const signature = await signingUtil.createSignature(payload, request.privateKey)
         return { type: 'success', signature }
     } catch (err) {
         return { type: 'error', message: String(err) }
-    }
-}
-
-/**
- * Extract plain serializable payload data from message options for worker communication.
- */
-export function toSignaturePayloadData(opts: {
-    messageId: MessageIdLike
-    prevMsgRef?: MessageRefLike
-    messageType: StreamMessageType
-    content: Uint8Array
-    newGroupKey?: EncryptedGroupKey
-}): SignaturePayloadData {
-    return {
-        messageId: {
-            streamId: opts.messageId.streamId,
-            streamPartition: opts.messageId.streamPartition,
-            timestamp: opts.messageId.timestamp,
-            sequenceNumber: opts.messageId.sequenceNumber,
-            publisherId: opts.messageId.publisherId,
-            msgChainId: opts.messageId.msgChainId,
-        },
-        prevMsgRef: opts.prevMsgRef ? {
-            timestamp: opts.prevMsgRef.timestamp,
-            sequenceNumber: opts.prevMsgRef.sequenceNumber,
-        } : undefined,
-        messageType: opts.messageType,
-        content: opts.content,
-        newGroupKey: opts.newGroupKey,
     }
 }

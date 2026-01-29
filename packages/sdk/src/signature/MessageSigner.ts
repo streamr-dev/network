@@ -5,7 +5,6 @@ import { StreamMessage, StreamMessageOptions } from '../protocol/StreamMessage'
 import { createSignaturePayload } from './createSignaturePayload'
 import { SignatureType } from '@streamr/trackerless-network'
 import { Signing } from './Signing'
-import { toSignaturePayloadData } from './signingUtils'
 import { DestroySignal } from '../DestroySignal'
 
 @scoped(Lifecycle.ContainerScoped)
@@ -53,10 +52,9 @@ export class MessageSigner {
         privateKeyPromise: Promise<Uint8Array>
     ): Promise<Uint8Array> {
         const privateKey = await privateKeyPromise
-        const payloadData = toSignaturePayloadData(opts)
         
         const result = await this.getSigning().createSignature({
-            payloadData,
+            payloadInput: opts,
             privateKey,
             signatureType
         })

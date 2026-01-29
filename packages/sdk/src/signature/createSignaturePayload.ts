@@ -26,13 +26,18 @@ export interface MessageRefLike {
     sequenceNumber: number
 }
 
-export const createSignaturePayload = (opts: {
+/**
+ * Input data for creating a signature payload.
+ */
+export interface SignaturePayloadInput {
     messageId: MessageIdLike
     content: Uint8Array
     messageType: StreamMessageType
     prevMsgRef?: MessageRefLike
     newGroupKey?: EncryptedGroupKey
-}): Uint8Array | never => {
+}
+
+export const createSignaturePayload = (opts: SignaturePayloadInput): Uint8Array | never => {
     const header = Buffer.concat([
         Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
                 + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`),
