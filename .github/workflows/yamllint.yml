@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Check out the repo
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
             - name: Run YAML Lint
               uses: ibiqlik/action-yamllint@v3.1.1
               with:
