@@ -45,7 +45,7 @@ import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { EncryptionService } from '../../src/encryption/EncryptionService'
-import { encryptWithAES, decryptWithAES } from '../../src/encryption/aesUtils'
+import { encryptWithAES } from '../../src/encryption/aesUtils'
 import { encryptNextGroupKey, decryptNextGroupKey, decryptStreamMessageContent } from '../../src/encryption/encryptionUtils'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { StreamMessage } from '../../src/protocol/StreamMessage'
@@ -91,9 +91,6 @@ export function createMockEncryptionService(): EncryptionService {
     return {
         encryptWithAES: async (data: Uint8Array, cipherKey: Uint8Array) => {
             return encryptWithAES(data, cipherKey)
-        },
-        decryptWithAES: async (cipher: Uint8Array, cipherKey: Uint8Array) => {
-            return decryptWithAES(cipher, cipherKey)
         },
         encryptNextGroupKey: async (currentKey: GroupKey, nextKey: GroupKey) => {
             return encryptNextGroupKey(nextKey.id, nextKey.data, currentKey.data)

@@ -46,20 +46,6 @@ export class EncryptionService {
     }
 
     /**
-     * Decrypt AES-256-CTR encrypted data.
-     * Note: The input cipher buffer is transferred to the worker and becomes unusable after this call.
-     */
-    async decryptWithAES(cipher: Uint8Array, cipherKey: Uint8Array): Promise<Uint8Array> {
-        const result = await this.getWorkerApi().decrypt(
-            transfer({ cipher, cipherKey }, [cipher.buffer])
-        )
-        if (result.type === 'error') {
-            throw new Error(`AES decryption failed: ${result.message}`)
-        }
-        return result.data
-    }
-
-    /**
      * Encrypt the next group key using the current group key.
      */
     async encryptNextGroupKey(currentKey: GroupKey, nextKey: GroupKey): Promise<EncryptedGroupKey> {

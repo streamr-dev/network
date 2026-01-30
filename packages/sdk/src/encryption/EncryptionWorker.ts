@@ -3,18 +3,16 @@
  * Offloads CPU-intensive cryptographic operations to a separate thread.
  */
 import { expose, transfer } from 'comlink'
-import { decryptWithAES, encryptWithAES } from './aesUtils'
+import { encryptWithAES } from './aesUtils'
 import {
     encryptNextGroupKey,
     decryptNextGroupKey,
     decryptStreamMessageContent,
     AESEncryptRequest,
-    AESDecryptRequest,
     EncryptGroupKeyRequest,
     DecryptGroupKeyRequest,
     DecryptStreamMessageRequest,
     AESEncryptResult,
-    AESDecryptResult,
     EncryptGroupKeyResult,
     DecryptGroupKeyResult,
     DecryptStreamMessageResult
@@ -24,15 +22,6 @@ const workerApi = {
     encrypt: async (request: AESEncryptRequest): Promise<AESEncryptResult> => {
         try {
             const result = encryptWithAES(request.data, request.cipherKey)
-            return transfer({ type: 'success', data: result }, [result.buffer])
-        } catch (err) {
-            return { type: 'error', message: String(err) }
-        }
-    },
-
-    decrypt: async (request: AESDecryptRequest): Promise<AESDecryptResult> => {
-        try {
-            const result = decryptWithAES(request.cipher, request.cipherKey)
             return transfer({ type: 'success', data: result }, [result.buffer])
         } catch (err) {
             return { type: 'error', message: String(err) }

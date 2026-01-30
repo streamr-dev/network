@@ -18,7 +18,7 @@ describe('EncryptionService', () => {
         encryptionService.destroy()
     })
 
-    describe('encryptWithAES / decryptWithAES', () => {
+    describe('encryptWithAES', () => {
         it('encrypts and decrypts data correctly', async () => {
             const plaintextOriginal = utf8ToBinary('hello world')
             const key = GroupKey.generate()
@@ -32,7 +32,8 @@ describe('EncryptionService', () => {
             expect(ciphertext).not.toStrictEqual(plaintextOriginal)
             expect(ciphertext.length).toBeGreaterThan(plaintextOriginal.length)
 
-            const decrypted = await encryptionService.decryptWithAES(ciphertext, key.data)
+            // Use decryptStreamMessage to verify encryption worked correctly
+            const [decrypted] = await encryptionService.decryptStreamMessage(ciphertext, key)
             
             expect(decrypted).toStrictEqual(plaintextOriginal)
         })
@@ -55,7 +56,7 @@ describe('EncryptionService', () => {
                 Uint8Array.from(plaintextOriginal), 
                 key.data
             )
-            const decrypted = await encryptionService.decryptWithAES(ciphertext, key.data)
+            const [decrypted] = await encryptionService.decryptStreamMessage(ciphertext, key)
 
             expect(decrypted).toStrictEqual(plaintextOriginal)
         })
@@ -68,7 +69,7 @@ describe('EncryptionService', () => {
                 Uint8Array.from(plaintextOriginal), 
                 key.data
             )
-            const decrypted = await encryptionService.decryptWithAES(ciphertext, key.data)
+            const [decrypted] = await encryptionService.decryptStreamMessage(ciphertext, key)
 
             expect(decrypted).toStrictEqual(plaintextOriginal)
         })
@@ -200,7 +201,7 @@ describe('EncryptionService', () => {
                     Uint8Array.from(plaintext), 
                     key.data
                 )
-                const decrypted = await encryptionService.decryptWithAES(ciphertext, key.data)
+                const [decrypted] = await encryptionService.decryptStreamMessage(ciphertext, key)
                 results.push(decrypted)
             }
 

@@ -14,11 +14,6 @@ export interface AESEncryptRequest {
     cipherKey: Uint8Array
 }
 
-export interface AESDecryptRequest {
-    cipher: Uint8Array
-    cipherKey: Uint8Array
-}
-
 export interface EncryptGroupKeyRequest {
     nextGroupKeyId: string
     nextGroupKeyData: Uint8Array
@@ -44,10 +39,6 @@ export interface DecryptStreamMessageRequest {
  * Result types for worker communication
  */
 export type AESEncryptResult =
-    | { type: 'success', data: Uint8Array }
-    | { type: 'error', message: string }
-
-export type AESDecryptResult =
     | { type: 'success', data: Uint8Array }
     | { type: 'error', message: string }
 
