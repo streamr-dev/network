@@ -36,6 +36,7 @@ const browserAliases: Alias[] = [
 const WORKERS: Record<string, string> = {
     'SignatureValidationWorker': 'signature/SignatureValidationWorker',
     'SigningWorker': 'signature/SigningWorker',
+    'EncryptionWorker': 'encryption/EncryptionWorker',
 }
 
 export default defineConfig([

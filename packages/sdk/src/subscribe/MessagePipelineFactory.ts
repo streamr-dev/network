@@ -6,6 +6,7 @@ import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { EncryptionService } from '../encryption/EncryptionService'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -17,6 +18,7 @@ import { Tokens } from '../tokens'
 type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |
     'groupKeyManager' |
+    'encryptionService' |
     'streamRegistry' |
     'signatureValidator' |
     'destroySignal' |
@@ -32,6 +34,7 @@ export class MessagePipelineFactory {
     private readonly streamRegistry: StreamRegistry
     private readonly signatureValidator: SignatureValidator
     private readonly groupKeyManager: GroupKeyManager
+    private readonly encryptionService: EncryptionService
     private readonly config: MessagePipelineOptions['config']
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
@@ -43,6 +46,7 @@ export class MessagePipelineFactory {
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         signatureValidator: SignatureValidator,
         @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
+        encryptionService: EncryptionService,
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory
@@ -52,6 +56,7 @@ export class MessagePipelineFactory {
         this.streamRegistry = streamRegistry
         this.signatureValidator = signatureValidator
         this.groupKeyManager = groupKeyManager
+        this.encryptionService = encryptionService
         this.config = config
         this.destroySignal = destroySignal
         this.loggerFactory = loggerFactory
@@ -65,6 +70,7 @@ export class MessagePipelineFactory {
             streamRegistry: this.streamRegistry,
             signatureValidator: this.signatureValidator,
             groupKeyManager: this.groupKeyManager,
+            encryptionService: this.encryptionService,
             config: opts.config ?? this.config,
             destroySignal: this.destroySignal,
             loggerFactory: this.loggerFactory

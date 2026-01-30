@@ -8,7 +8,7 @@ import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createMessageSigner, createStreamRegistry } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createMockEncryptionService, createStreamRegistry } from '../test-utils/utils'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { createStrictConfig } from '../../src/Config'
 
@@ -45,6 +45,7 @@ describe('Resends', () => {
             groupKeyQueue: await createGroupKeyQueue(identity, groupKey),
             signatureValidator: mock<SignatureValidator>(),
             messageSigner: createMessageSigner(identity),
+            encryptionService: createMockEncryptionService(),
             config: createStrictConfig()
         })
         // store the encryption key publisher's local group key store
