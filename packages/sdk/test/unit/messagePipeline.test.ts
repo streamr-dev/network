@@ -6,15 +6,15 @@ import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
 import { DestroySignal } from '../../src/DestroySignal'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { encryptWithAES } from '../../src/encryption/aesUtils'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createMessageSigner, mockLoggerFactory } from '../test-utils/utils'
+import { createMessageSigner, createMockEncryptionService, mockLoggerFactory } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EncryptionType, ContentType, SignatureType } from '@streamr/trackerless-network'
@@ -95,6 +95,7 @@ describe('messagePipeline', () => {
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),
+            encryptionService: createMockEncryptionService(),
             config,
             destroySignal,
             loggerFactory: mockLoggerFactory(),
@@ -163,7 +164,7 @@ describe('messagePipeline', () => {
 
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
-        const content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
+        const content = encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
         await pipeline.push(await createMessage({
             content,
             encryptionType: EncryptionType.AES,

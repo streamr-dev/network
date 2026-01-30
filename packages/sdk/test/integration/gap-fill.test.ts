@@ -6,7 +6,14 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createMessageSigner, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
+import {
+    createGroupKeyQueue,
+    createMessageSigner,
+    createMockEncryptionService,
+    createStreamRegistry,
+    createTestStream,
+    startFailingStorageNode
+} from '../test-utils/utils'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
@@ -45,6 +52,7 @@ describe('gap fill', () => {
             groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
             signatureValidator: mock<SignatureValidator>(),
             messageSigner: createMessageSigner(identity),
+            encryptionService: createMockEncryptionService(),
             config: createStrictConfig()
         })
     })

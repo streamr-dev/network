@@ -1,8 +1,8 @@
 import { EncryptionType } from '@streamr/trackerless-network'
 import { DestroySignal } from '../DestroySignal'
-import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { EncryptionService } from '../encryption/EncryptionService'
 import { StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 import { StreamrClientError } from '../StreamrClientError'
 
@@ -12,6 +12,7 @@ import { StreamrClientError } from '../StreamrClientError'
 export const decrypt = async (
     streamMessage: StreamMessageAESEncrypted,
     groupKeyManager: GroupKeyManager,
+    encryptionService: EncryptionService,
     destroySignal: DestroySignal,
 ): Promise<StreamMessage> => {
     if (destroySignal.isDestroyed()) {
@@ -33,7 +34,22 @@ export const decrypt = async (
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
-    const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+    
+    let content: Uint8Array
+    let newGroupKey: GroupKey | undefined
+    try {
+        [content, newGroupKey] = await encryptionService.decryptStreamMessage(
+            streamMessage.content,
+            groupKey,
+            streamMessage.newGroupKey
+        )
+    } catch (err) {
+        if (err instanceof StreamrClientError) {
+            throw new StreamrClientError(err.message, 'DECRYPT_ERROR', streamMessage)
+        }
+        throw new StreamrClientError('AES decryption failed', 'DECRYPT_ERROR', streamMessage)
+    }
+    
     if (newGroupKey !== undefined) {
         await groupKeyManager.addKeyToLocalStore(newGroupKey, streamMessage.getPublisherId())
     }

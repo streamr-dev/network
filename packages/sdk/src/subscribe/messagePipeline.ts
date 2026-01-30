@@ -6,6 +6,7 @@ import type { StrictStreamrClientConfig } from '../ConfigTypes'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { EncryptionService } from '../encryption/EncryptionService'
 import { decrypt } from '../encryption/decrypt'
 import { StreamMessage } from '../protocol/StreamMessage'
 
@@ -28,6 +29,7 @@ export interface MessagePipelineOptions {
     streamRegistry: StreamRegistry
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
+    encryptionService: EncryptionService
     // eslint-disable-next-line max-len
     config: Pick<StrictStreamrClientConfig, 'encryption' | 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy' | 'validation'>
     destroySignal: DestroySignal
@@ -71,7 +73,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                decrypted = await decrypt(msg, opts.groupKeyManager, opts.encryptionService, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.messageId, err })

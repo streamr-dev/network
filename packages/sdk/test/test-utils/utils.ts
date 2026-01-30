@@ -44,6 +44,9 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { EncryptionService } from '../../src/encryption/EncryptionService'
+import { encryptWithAES, decryptWithAES } from '../../src/encryption/aesUtils'
+import { encryptNextGroupKey, decryptNextGroupKey, decryptStreamMessageContent } from '../../src/encryption/encryptionUtils'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
@@ -78,6 +81,45 @@ export function createMockSigningService(): SigningService {
  */
 export function createMessageSigner(identity: Identity): MessageSigner {
     return new MessageSigner(identity, createMockSigningService())
+}
+
+/**
+ * Creates a mock EncryptionService that performs encryption synchronously on the main thread.
+ * Use this in tests instead of the real EncryptionService which spawns a worker.
+ */
+export function createMockEncryptionService(): EncryptionService {
+    return {
+        encryptWithAES: async (data: Uint8Array, cipherKey: Uint8Array) => {
+            return encryptWithAES(data, cipherKey)
+        },
+        decryptWithAES: async (cipher: Uint8Array, cipherKey: Uint8Array) => {
+            return decryptWithAES(cipher, cipherKey)
+        },
+        encryptNextGroupKey: async (currentKey: GroupKey, nextKey: GroupKey) => {
+            return encryptNextGroupKey(nextKey.id, nextKey.data, currentKey.data)
+        },
+        decryptNextGroupKey: async (currentKey: GroupKey, encryptedKey: { id: string, data: Uint8Array }) => {
+            const result = decryptNextGroupKey(encryptedKey.id, encryptedKey.data, currentKey.data)
+            return new GroupKey(result.id, Buffer.from(result.data))
+        },
+        decryptStreamMessage: async (
+            content: Uint8Array,
+            groupKey: GroupKey,
+            encryptedNewGroupKey?: { id: string, data: Uint8Array }
+        ) => {
+            const result = decryptStreamMessageContent(
+                content,
+                groupKey.data,
+                encryptedNewGroupKey
+            )
+            let newGroupKey: GroupKey | undefined
+            if (result.newGroupKey) {
+                newGroupKey = new GroupKey(result.newGroupKey.id, Buffer.from(result.newGroupKey.data))
+            }
+            return [result.content, newGroupKey] as [Uint8Array, GroupKey?]
+        },
+        destroy: () => {}
+    } as unknown as EncryptionService
 }
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
@@ -173,7 +215,8 @@ export const createMockMessage = async (
         }),
         groupKeyQueue: await createGroupKeyQueue(identity, opts.encryptionKey, opts.nextEncryptionKey),
         signatureValidator: mock<SignatureValidator>(),
-        messageSigner: createMessageSigner(identity)
+        messageSigner: createMessageSigner(identity),
+        encryptionService: createMockEncryptionService()
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

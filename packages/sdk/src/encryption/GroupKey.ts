@@ -1,7 +1,6 @@
-import { EncryptedGroupKey } from '@streamr/trackerless-network'
-import { uuid } from '../utils/uuid'
-import { EncryptionUtil } from './EncryptionUtil'
 import { randomBytes } from '@noble/post-quantum/utils'
+import { uuid } from '../utils/uuid'
+
 export class GroupKeyError extends Error {
 
     public groupKey?: GroupKey
@@ -15,6 +14,9 @@ export class GroupKeyError extends Error {
 /**
  * GroupKeys are AES cipher keys, which are used to encrypt/decrypt StreamMessages (when encryptionType is AES).
  * Each group key contains 256 random bits of key data and an UUID.
+ *
+ * For encryption/decryption of group keys, use EncryptionService.encryptNextGroupKey()
+ * and EncryptionService.decryptNextGroupKey().
  */
 
 export class GroupKey {
@@ -67,21 +69,4 @@ export class GroupKey {
         const keyBytes = randomBytes(32)
         return new GroupKey(id, Buffer.from(keyBytes))
     }
-
-    /** @internal */
-    encryptNextGroupKey(nextGroupKey: GroupKey): EncryptedGroupKey {
-        return {
-            id: nextGroupKey.id, 
-            data: EncryptionUtil.encryptWithAES(nextGroupKey.data, this.data)
-        }
-    }
-
-    /** @internal */
-    decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
-        return new GroupKey(
-            nextGroupKey.id,
-            EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data)
-        )
-    }
-
 }

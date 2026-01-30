@@ -8,6 +8,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { getExplicitKey, GroupKeyManager } from '../encryption/GroupKeyManager'
+import { EncryptionService } from '../encryption/EncryptionService'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -54,6 +55,7 @@ export class Publisher {
     private readonly identity: Identity
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly encryptionService: EncryptionService
     private readonly config: StrictStreamrClientConfig
 
     constructor(
@@ -64,6 +66,7 @@ export class Publisher {
         @inject(IdentityInjectionToken) identity: Identity,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner,
+        encryptionService: EncryptionService,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
     ) {
         this.node = node
@@ -72,6 +75,7 @@ export class Publisher {
         this.identity = identity
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
+        this.encryptionService = encryptionService
         this.config = config
         this.messageFactories = createLazyMap({
             valueFactory: async (streamId) => {
@@ -142,6 +146,7 @@ export class Publisher {
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
             messageSigner: this.messageSigner,
+            encryptionService: this.encryptionService,
             config: this.config,
         })
     }

@@ -3,7 +3,7 @@ import { Publisher } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { createGroupKeyManager, createRandomIdentity } from '../test-utils/utils'
+import { createGroupKeyManager, createMockEncryptionService, createRandomIdentity } from '../test-utils/utils'
 import type { StrictStreamrClientConfig } from '../../src/ConfigTypes'
 
 describe('Publisher', () => {
@@ -22,6 +22,7 @@ describe('Publisher', () => {
             identity,
             mock<SignatureValidator>(),
             mock<MessageSigner>(),
+            createMockEncryptionService(),
             {
                 encryption: {},
                 validation: {
