@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { hexToBinary } from '../src/binaryUtils'
+import { areEqualBinaries, hexToBinary } from '../src/binaryUtils'
 import { EcdsaSecp256k1Evm, EcdsaSecp256r1, MlDsa87, SigningUtil } from '../src/SigningUtil'
 import { toUserId, toUserIdRaw } from '../src/UserID'
 
@@ -46,7 +46,9 @@ describe('EcdsaSecp256k1Evm', () => {
         it('produces correct signature', async () => {
             const payload = Buffer.from('data-to-sign')
             const signature = await util.createSignature(payload, privateKey)
-            expect(signature).toStrictEqual(hexToBinary('787cd72924153c88350e808de68b68c88030cbc34d053a5c696a5893d5e6fec1687c1b6205ec99aeb3375a81bf5cb8857ae39c1b55a41b32ed6399ae8da456a61b'))
+
+            const expectedSignature = hexToBinary('787cd72924153c88350e808de68b68c88030cbc34d053a5c696a5893d5e6fec1687c1b6205ec99aeb3375a81bf5cb8857ae39c1b55a41b32ed6399ae8da456a61b')
+            expect(areEqualBinaries(signature, expectedSignature)).toBeTrue()
         })
     })
     
