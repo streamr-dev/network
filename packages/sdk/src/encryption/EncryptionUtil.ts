@@ -1,17 +1,19 @@
 import { ml_kem1024 } from '@noble/post-quantum/ml-kem'
 import { randomBytes } from '@noble/post-quantum/utils'
-import { StreamMessageAESEncrypted } from '../protocol/StreamMessage'
-import { StreamrClientError } from '../StreamrClientError'
-import { GroupKey } from './GroupKey'
 import { AsymmetricEncryptionType } from '@streamr/trackerless-network'
-import { binaryToUtf8, createCipheriv, createDecipheriv, getSubtle, privateDecrypt, publicEncrypt } from '@streamr/utils'
-
-export const INITIALIZATION_VECTOR_LENGTH = 16
+import { binaryToUtf8, getSubtle, privateDecrypt, publicEncrypt } from '@streamr/utils'
+import { decryptWithAES, encryptWithAES } from './aesUtils'
 
 const INFO = Buffer.from('streamr-key-exchange')
 const KEM_CIPHER_LENGTH_BYTES = 1568
 const KDF_SALT_LENGTH_BYTES = 64
 
+/**
+ * Asymmetric encryption utility class for RSA and ML-KEM (post-quantum) key exchange.
+ *
+ * For AES symmetric encryption of stream messages, use EncryptionService instead.
+ * This class only handles asymmetric encryption for key exchange operations.
+ */
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
     /**
@@ -116,7 +118,7 @@ export class EncryptionUtil {
         const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
         
         // Encrypt plaintext with the AES wrapping key
-        const aesEncryptedPlaintext = this.encryptWithAES(plaintextBuffer, Buffer.from(wrappingAESKey))
+        const aesEncryptedPlaintext = encryptWithAES(plaintextBuffer, wrappingAESKey)
 
         // Concatenate the deliverables into a binary package
         return Buffer.concat([kemCipher, kdfSalt, aesEncryptedPlaintext])
@@ -138,44 +140,6 @@ export class EncryptionUtil {
         const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
 
         // Decrypt the aesEncryptedPlaintext
-        return this.decryptWithAES(aesEncryptedPlaintext, Buffer.from(wrappingAESKey))
-    }
-
-    /*
-     * Returns a hex string without the '0x' prefix.
-     */
-    static encryptWithAES(data: Uint8Array, cipherKey: Uint8Array): Uint8Array {
-        const iv = randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
-        const cipher = createCipheriv('aes-256-ctr', cipherKey, iv)
-        return Buffer.concat([iv, cipher.update(data), cipher.final()])
-    }
-
-    /*
-     * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
-     */
-    static decryptWithAES(cipher: Uint8Array, cipherKey: Uint8Array): Buffer {
-        const iv = cipher.slice(0, INITIALIZATION_VECTOR_LENGTH)
-        const decipher = createDecipheriv('aes-256-ctr', cipherKey, iv)
-        return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
-    }
-
-    static decryptStreamMessage(streamMessage: StreamMessageAESEncrypted, groupKey: GroupKey): [Uint8Array, GroupKey?] | never {
-        let content: Uint8Array
-        try {
-            content = this.decryptWithAES(streamMessage.content, groupKey.data)
-        } catch {
-            throw new StreamrClientError('AES decryption failed', 'DECRYPT_ERROR', streamMessage)
-        }
-
-        let newGroupKey: GroupKey | undefined = undefined
-        if (streamMessage.newGroupKey) {
-            try {
-                newGroupKey = groupKey.decryptNextGroupKey(streamMessage.newGroupKey)
-            } catch {
-                throw new StreamrClientError('Could not decrypt new encryption key', 'DECRYPT_ERROR', streamMessage)
-            }
-        }
-
-        return [content, newGroupKey]
+        return Buffer.from(decryptWithAES(aesEncryptedPlaintext, wrappingAESKey))
     }
 }

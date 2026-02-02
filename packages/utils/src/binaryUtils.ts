@@ -20,9 +20,12 @@ export const hexToBinary = (hex: string): Uint8Array => {
     if (hex.length % 2 !== 0) {
         throw new Error(`Hex string length must be even, received: 0x${hex}`)
     }
-    const result = Buffer.from(hex, 'hex')
-    if (hex.length !== result.length * 2) {
+    if (!/^[0-9a-fA-F]*$/.test(hex)) {
         throw new Error(`Hex string input is likely malformed, received: 0x${hex}`)
+    }
+    const result = new Uint8Array(hex.length / 2)
+    for (let i = 0; i < result.length; i++) {
+        result[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
     }
     return result
 }

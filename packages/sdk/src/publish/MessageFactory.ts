@@ -5,7 +5,7 @@ import { Identity } from '../identity/Identity'
 import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { EncryptionUtil } from '../encryption/EncryptionUtil'
+import { EncryptionService } from '../encryption/EncryptionService'
 
 import { MessageID } from '../protocol/MessageID'
 import { MessageRef } from '../protocol/MessageRef'
@@ -30,6 +30,7 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
+    encryptionService: EncryptionService
     config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
 }
 
@@ -45,6 +46,7 @@ export class MessageFactory {
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly encryptionService: EncryptionService
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption' | 'validation'>
     private firstMessage = true
 
@@ -55,6 +57,7 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
+        this.encryptionService = opts.encryptionService
         this.config = opts.config
         this.defaultMessageChainIds = createLazyMap<number, string>({
             valueFactory: async () => {
@@ -131,10 +134,10 @@ export class MessageFactory {
         }
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.groupKeyQueue.useGroupKey()
-            rawContent = EncryptionUtil.encryptWithAES(rawContent, keySequence.current.data)
+            rawContent = await this.encryptionService.encryptWithAES(rawContent, keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {
-                newGroupKey = keySequence.current.encryptNextGroupKey(keySequence.next)
+                newGroupKey = await this.encryptionService.encryptNextGroupKey(keySequence.current, keySequence.next)
             }
         }
 

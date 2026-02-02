@@ -13,6 +13,7 @@ const config: Config.InitialOptions = {
     moduleNameMapper: {
         "^@/createSignatureValidationWorker$": "<rootDir>/src/_jest/createSignatureValidationWorker.ts",
         "^@/createSigningWorker$": "<rootDir>/src/_jest/createSigningWorker.ts",
+        "^@/createEncryptionWorker$": "<rootDir>/src/_jest/createEncryptionWorker.ts",
         "^@/(.*)$": "<rootDir>/src/_nodejs/$1",
     },
     transform: {

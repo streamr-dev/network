@@ -10,7 +10,7 @@ import { StreamPermission } from '../../src/permission'
 import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { createGroupKeyQueue, createMessageSigner, createStreamRegistry } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createMockEncryptionService, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { createStrictConfig } from '../../src/Config'
@@ -73,6 +73,7 @@ describe('parallel key exchange', () => {
                 groupKeyQueue: await createGroupKeyQueue(identity, publisher.groupKey),
                 signatureValidator: mock<SignatureValidator>(),
                 messageSigner: createMessageSigner(identity),
+                encryptionService: createMockEncryptionService(),
                 config: createStrictConfig()
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {

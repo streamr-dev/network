@@ -10,7 +10,8 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { createGroupKeyQueue, createMessageSigner, createStreamRegistry } from '../test-utils/utils'
+import { createGroupKeyQueue, createMessageSigner, createMockEncryptionService, createStreamRegistry } from '../test-utils/utils'
+import { decryptNextGroupKey } from '../../src/encryption/encryptionUtils'
 import { StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
 import { EncryptionType, SignatureType, ContentType } from '@streamr/trackerless-network'
@@ -60,6 +61,7 @@ describe('MessageFactory', () => {
                     groupKeyQueue: await createGroupKeyQueue(identity, GROUP_KEY),
                     signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>(), new DestroySignal()),
                     messageSigner: createMessageSigner(identity),
+                    encryptionService: createMockEncryptionService(),
                     config: {
                         validation: {
                             permissions: true,
@@ -195,7 +197,8 @@ describe('MessageFactory', () => {
             id: nextGroupKey.id,
             data: expect.any(Uint8Array)
         })
-        expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
+        const decrypted = decryptNextGroupKey(msg.newGroupKey!.id, msg.newGroupKey!.data, GROUP_KEY.data)
+        expect(new GroupKey(decrypted.id, Buffer.from(decrypted.data))).toEqual(nextGroupKey)
     })
 
     it('not a publisher', async () => {

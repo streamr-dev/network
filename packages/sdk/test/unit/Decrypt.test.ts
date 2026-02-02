@@ -6,7 +6,7 @@ import { StreamrClientError } from '../../src/StreamrClientError'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { decrypt } from '../../src/encryption/decrypt'
-import { createGroupKeyManager, createMockMessage } from '../test-utils/utils'
+import { createGroupKeyManager, createMockEncryptionService, createMockMessage } from '../test-utils/utils'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
 import { EncryptionType } from '@streamr/trackerless-network'
 import { EthereumKeyPairIdentity } from '../../src/identity/EthereumKeyPairIdentity'
@@ -26,7 +26,7 @@ describe('Decrypt', () => {
             encryptionKey: groupKey,
             content: unencryptedContent
         }) as StreamMessageAESEncrypted
-        const decryptedMessage = await decrypt(encryptedMessage, groupKeyManager, destroySignal)
+        const decryptedMessage = await decrypt(encryptedMessage, groupKeyManager, createMockEncryptionService(), destroySignal)
         expect(decryptedMessage).toEqual(new StreamMessage({
             ...encryptedMessage,
             encryptionType: EncryptionType.NONE,
@@ -53,6 +53,7 @@ describe('Decrypt', () => {
             return decrypt(
                 msg as StreamMessageAESEncrypted,
                 groupKeyManager,
+                createMockEncryptionService(),
                 destroySignal)
         }).rejects.toThrowStreamrClientError(
             new StreamrClientError(`Could not get encryption key ${groupKey.id}`, 'DECRYPT_ERROR', msg)

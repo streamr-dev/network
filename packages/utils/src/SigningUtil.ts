@@ -82,8 +82,10 @@ export class EcdsaSecp256k1Evm extends SigningUtil {
     async createSignature(payload: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array> {
         const msgHash = this.keccakHash(payload)
         const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
-        const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
-        result.writeInt8(27 + sigObj.recid, result.length - 1)
+        // Return plain Uint8Array (not Buffer) for proper serialization across environments
+        const result = new Uint8Array(sigObj.signature.length + 1)
+        result.set(sigObj.signature)
+        result[result.length - 1] = 27 + sigObj.recid
         return result
     }
 
