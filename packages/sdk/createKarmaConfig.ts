@@ -17,6 +17,7 @@ export function createKarmaConfig(testPaths: string[]): ReturnType<typeof create
                 '@streamr/dht': resolve(__dirname, '../dht/dist/exports-browser.cjs'),
                 "@/createSignatureValidationWorker": resolve(__dirname, 'src/_karma/createSignatureValidationWorker.ts'),
                 "@/createSigningWorker": resolve(__dirname, 'src/_karma/createSigningWorker.ts'),
+                "@/createEncryptionWorker": resolve(__dirname, 'src/_karma/createEncryptionWorker.ts'),
                 '@': resolve(__dirname, 'src/_browser'),
             },
             fallback: {
