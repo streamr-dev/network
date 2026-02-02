@@ -86,10 +86,15 @@ export class StreamMessageTranslator {
         let groupKeyId: string | undefined = undefined
         if (msg.body.oneofKind === 'contentMessage') {
             messageType = StreamMessageType.MESSAGE
-            content = msg.body.contentMessage.content
+            content = new Uint8Array(msg.body.contentMessage.content)
             contentType = msg.body.contentMessage.contentType
             encryptionType = msg.body.contentMessage.encryptionType
-            newGroupKey = msg.body.contentMessage.newGroupKey
+            if (msg.body.contentMessage.newGroupKey) {
+                newGroupKey = {
+                    id: msg.body.contentMessage.newGroupKey.id,
+                    data: new Uint8Array(msg.body.contentMessage.newGroupKey.data)
+                }
+            }
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {
             messageType = StreamMessageType.GROUP_KEY_REQUEST
@@ -128,7 +133,7 @@ export class StreamMessageTranslator {
             messageType,
             content,
             contentType,
-            signature: msg.signature,
+            signature: new Uint8Array(msg.signature),
             signatureType: msg.signatureType,
             encryptionType,
             groupKeyId,
