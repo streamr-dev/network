@@ -17,7 +17,7 @@ describe('EncryptionUtil', () => {
         it('returns the initial plaintext after decrypting the ciphertext', async () => {
             const key = await RSAKeyPair.create(512)
             const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.RSA)
-            expect(await EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.RSA)).toStrictEqual(plaintext)
+            expect(await EncryptionUtil.decryptWithPrivateKey(ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.RSA)).toEqualBinary(plaintext)
         })
     
         it('produces different ciphertexts upon multiple encrypt() calls', async () => {
@@ -40,7 +40,7 @@ describe('EncryptionUtil', () => {
             const ciphertext = await EncryptionUtil.encryptForPublicKey(plaintext, key.getPublicKey(), AsymmetricEncryptionType.ML_KEM)
             expect(await EncryptionUtil.decryptWithPrivateKey(
                 ciphertext, key.getPrivateKey(), AsymmetricEncryptionType.ML_KEM
-            )).toStrictEqual(plaintext)
+            )).toEqualBinary(plaintext)
         })
     
         it('produces different ciphertexts upon multiple encrypt() calls', async () => {

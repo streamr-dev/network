@@ -36,8 +36,11 @@ export class EncryptionService {
      * Note: The input data buffer is transferred to the worker and becomes unusable after this call.
      */
     async encryptWithAES(data: Uint8Array, cipherKey: Uint8Array): Promise<Uint8Array> {
+        // Ensure we have plain Uint8Array instances for worker communication (not Buffer subclass)
+        const dataArray = new Uint8Array(data)
+        const keyArray = new Uint8Array(cipherKey)
         const result = await this.getWorkerApi().encrypt(
-            transfer({ data, cipherKey }, [data.buffer])
+            transfer({ data: dataArray, cipherKey: keyArray }, [dataArray.buffer])
         )
         if (result.type === 'error') {
             throw new Error(`AES encryption failed: ${result.message}`)
@@ -49,10 +52,11 @@ export class EncryptionService {
      * Encrypt the next group key using the current group key.
      */
     async encryptNextGroupKey(currentKey: GroupKey, nextKey: GroupKey): Promise<EncryptedGroupKey> {
+        // Convert Buffer to Uint8Array for worker communication
         const result = await this.getWorkerApi().encryptGroupKey({
             nextGroupKeyId: nextKey.id,
-            nextGroupKeyData: nextKey.data,
-            currentGroupKeyData: currentKey.data
+            nextGroupKeyData: new Uint8Array(nextKey.data),
+            currentGroupKeyData: new Uint8Array(currentKey.data)
         })
         if (result.type === 'error') {
             throw new Error(`Group key encryption failed: ${result.message}`)
@@ -67,10 +71,11 @@ export class EncryptionService {
      * Decrypt an encrypted group key using the current group key.
      */
     async decryptNextGroupKey(currentKey: GroupKey, encryptedKey: EncryptedGroupKey): Promise<GroupKey> {
+        // Convert Buffer to Uint8Array for worker communication
         const result = await this.getWorkerApi().decryptGroupKey({
             encryptedGroupKeyId: encryptedKey.id,
-            encryptedGroupKeyData: encryptedKey.data,
-            currentGroupKeyData: currentKey.data
+            encryptedGroupKeyData: new Uint8Array(encryptedKey.data),
+            currentGroupKeyData: new Uint8Array(currentKey.data)
         })
         if (result.type === 'error') {
             throw new Error(`Group key decryption failed: ${result.message}`)
@@ -88,12 +93,13 @@ export class EncryptionService {
         groupKey: GroupKey,
         encryptedNewGroupKey?: EncryptedGroupKey
     ): Promise<[Uint8Array, GroupKey?]> {
+        // Convert Buffer to Uint8Array for worker communication
         const request = {
             content,
-            groupKeyData: groupKey.data,
+            groupKeyData: new Uint8Array(groupKey.data),
             newGroupKey: encryptedNewGroupKey ? {
                 id: encryptedNewGroupKey.id,
-                data: encryptedNewGroupKey.data
+                data: new Uint8Array(encryptedNewGroupKey.data)
             } : undefined
         }
         const result = await this.getWorkerApi().decryptStreamMessage(

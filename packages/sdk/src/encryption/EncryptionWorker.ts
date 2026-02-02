@@ -21,8 +21,8 @@ import {
 const workerApi = {
     encrypt: async (request: AESEncryptRequest): Promise<AESEncryptResult> => {
         try {
-            const result = encryptWithAES(request.data, request.cipherKey)
-            return transfer({ type: 'success', data: result }, [result.buffer])
+            const data = encryptWithAES(request.data, request.cipherKey)
+            return transfer({ type: 'success', data }, [data.buffer])
         } catch (err) {
             return { type: 'error', message: String(err) }
         }

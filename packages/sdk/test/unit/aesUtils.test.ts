@@ -20,7 +20,7 @@ describe('aesUtils', () => {
         it('returns the initial plaintext after decrypting the ciphertext', () => {
             const key = GroupKey.generate()
             const ciphertext = encryptWithAES(plaintext, key.data)
-            expect(decryptWithAES(ciphertext, key.data)).toStrictEqual(plaintext)
+            expect(decryptWithAES(ciphertext, key.data)).toEqualBinary(plaintext)
         })
     
         it('preserves size (plaintext + iv)', () => {

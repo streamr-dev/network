@@ -118,7 +118,7 @@ export class EncryptionUtil {
         const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
         
         // Encrypt plaintext with the AES wrapping key
-        const aesEncryptedPlaintext = encryptWithAES(plaintextBuffer, Buffer.from(wrappingAESKey))
+        const aesEncryptedPlaintext = encryptWithAES(plaintextBuffer, wrappingAESKey)
 
         // Concatenate the deliverables into a binary package
         return Buffer.concat([kemCipher, kdfSalt, aesEncryptedPlaintext])
@@ -140,6 +140,6 @@ export class EncryptionUtil {
         const wrappingAESKey = await this.deriveAESWrapperKey(sharedSecret, kdfSalt)
 
         // Decrypt the aesEncryptedPlaintext
-        return decryptWithAES(aesEncryptedPlaintext, Buffer.from(wrappingAESKey))
+        return Buffer.from(decryptWithAES(aesEncryptedPlaintext, wrappingAESKey))
     }
 }
