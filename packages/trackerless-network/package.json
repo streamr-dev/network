@@ -41,7 +41,7 @@
     "@streamr/proto-rpc": "103.3.1",
     "@streamr/utils": "103.3.1",
     "eventemitter3": "^5.0.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "ts-essentials": "^10.1.1",
     "uuid": "^11.1.0",
     "yallist": "^5.0.0"
