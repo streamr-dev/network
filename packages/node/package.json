@@ -47,29 +47,29 @@
     "ajv-formats": "^3.0.1",
     "cassandra-driver": "^4.8.0",
     "chalk": "^4.0.0",
-    "commander": "^14.0.2",
+    "commander": "^14.0.3",
     "consistent-hash": "^1.1.1",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "ethers": "^6.13.0",
-    "eventemitter3": "^5.0.0",
-    "express": "^5.2.0",
+    "eventemitter3": "^5.0.4",
+    "express": "^5.2.1",
     "heap": "^0.2.6",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "merge2": "^1.4.1",
     "p-limit": "^3.1.0",
     "qs": "^6.14.0",
     "uuid": "^11.1.0",
-    "ws": "^8.18.3",
-    "zod": "^4.1.13"
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.51",
     "@streamr/network-contracts": "^9.1.0",
     "@streamr/test-utils": "103.3.1",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.1",
+    "@types/express": "^5.0.6",
     "@types/heap": "^0.2.35",
-    "@types/lodash": "^4.17.21",
+    "@types/lodash": "^4.17.23",
     "@types/merge2": "^1.4.4",
     "@types/qs": "^6.14.0",
     "@types/stream-to-array": "^2.3.3",
@@ -77,6 +77,6 @@
     "@types/ws": "^8.18.1",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
-    "supertest": "^7.1.4"
+    "supertest": "^7.2.2"
   }
 }
