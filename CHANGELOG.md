@@ -14,8 +14,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add `timers-browserify` polyfill to `@streamr/dht` for standalone browser usage ([#3379])
-
 #### Changed
 
 ### @streamr/sdk
@@ -53,6 +51,14 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+## [103.3.1] - 2026-02-03
+
+### General
+
+#### Added
+
+- Add `timers-browserify` polyfill to `@streamr/dht` for standalone browser usage ([#3379])
 
 ## [103.3.0] - 2026-01-29
 
@@ -643,7 +649,8 @@ Autostaker changes:
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v103.3.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v103.3.1...HEAD
+[103.3.1]: https://github.com/streamr-dev/network/compare/v103.3.0...v103.3.1
 [103.3.0]: https://github.com/streamr-dev/network/compare/v103.2.2...v103.3.0
 [103.2.2]: https://github.com/streamr-dev/network/compare/v103.2.1...v103.2.2
 [103.2.1]: https://github.com/streamr-dev/network/compare/v103.2.0...v103.2.1
