@@ -35,22 +35,22 @@
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/utils": "103.3.1",
-    "eventemitter3": "^5.0.0",
-    "lodash": "^4.17.21",
+    "eventemitter3": "^5.0.4",
+    "lodash": "^4.17.23",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "103.3.1",
-    "@types/lodash": "^4.17.21",
+    "@types/lodash": "^4.17.23",
     "rimraf": "^6.1.2",
-    "rollup": "^4.55.1",
+    "rollup": "^4.57.1",
     "rollup-plugin-dts": "^6.3.0",
     "tsx": "^4.21.0"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.9",
-    "utf-8-validate": "^6.0.5"
+    "bufferutil": "^4.1.0",
+    "utf-8-validate": "^6.0.6"
   }
 }

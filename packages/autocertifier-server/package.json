@@ -33,23 +33,23 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.936.0",
+    "@aws-sdk/client-route-53": "^3.981.0",
     "@streamr/autocertifier-client": "103.3.1",
     "@streamr/dht": "103.3.1",
     "@streamr/proto-rpc": "103.3.1",
     "@streamr/utils": "103.3.1",
     "acme-client": "^5.4.0",
-    "body-parser": "^2.2.1",
+    "body-parser": "^2.2.2",
     "dns2": "^2.1.0",
     "dotenv": "^17.2.3",
-    "express": "^5.2.0",
-    "lodash": "^4.17.21",
+    "express": "^5.2.1",
+    "lodash": "^4.17.23",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/dns2": "^2.0.10",
-    "@types/express": "^5.0.1"
+    "@types/express": "^5.0.6"
   }
 }
