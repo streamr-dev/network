@@ -21,6 +21,7 @@ const browserAliases: Alias[] = [
             new URL('./dist/browser/src/browser/', import.meta.url)
         ),
     },
+    { find: 'timers', replacement: 'timers-browserify' },
 ]
 
 export default defineConfig([

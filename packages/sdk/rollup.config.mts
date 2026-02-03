@@ -24,7 +24,6 @@ const browserAliases: Alias[] = [
             new URL('./dist/browser/src/_browser/', import.meta.url)
         ),
     },
-    { find: 'timers', replacement: 'timers-browserify' },
     { find: 'stream', replacement: 'readable-stream' },
 ]
 
