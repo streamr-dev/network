@@ -21,6 +21,7 @@ const browserAliases: Alias[] = [
             new URL('./dist/browser/src/browser/', import.meta.url)
         ),
     },
+    { find: 'timers', replacement: 'timers-browserify' },
 ]
 
 export default defineConfig([
@@ -54,11 +55,7 @@ function nodejs(): RollupOptions {
                 preferBuiltins: true,
             }),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
-
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -77,11 +74,7 @@ function nodejsTypes(): RollupOptions {
             nodeResolve(),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
-
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
@@ -110,19 +103,14 @@ function browser(): RollupOptions {
                 browser: true,
             }),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }
 
 function browserTypes(): RollupOptions {
     return {
         input: './dist/browser/src/exports.d.ts',
-        output: [
-            { file: './dist/exports-browser.d.ts' },
-        ],
+        output: [{ file: './dist/exports-browser.d.ts' }],
         plugins: [
             alias({
                 entries: browserAliases,
@@ -133,9 +121,6 @@ function browserTypes(): RollupOptions {
             }),
             dts(),
         ],
-        external: [
-            /node_modules/,
-            /@streamr\//,
-        ],
+        external: [/node_modules/, /@streamr\//],
     }
 }

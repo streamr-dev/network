@@ -14,6 +14,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add `timers-browserify` polyfill to `@streamr/dht` for standalone browser usage ([#3379])
+
 #### Changed
 
 ### @streamr/sdk
@@ -686,3 +688,4 @@ Autostaker changes:
 [#3368]: https://github.com/streamr-dev/network/pull/3368
 [#3369]: https://github.com/streamr-dev/network/pull/3369
 [#3373]: https://github.com/streamr-dev/network/pull/3373
+[#3379]: https://github.com/streamr-dev/network/pull/3379

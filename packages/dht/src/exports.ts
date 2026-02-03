@@ -1,3 +1,9 @@
+/**
+ * Importing 'timers' ensures `setImmediate` is available in browsers,
+ * as it's polyfilled by `timers-browserify`. In Node.js, it's already global.
+ */
+import 'timers'
+
 export { DhtNode, type DhtNodeEvents, type DhtNodeOptions } from './dht/DhtNode'
 export { ListeningRpcCommunicator } from './transport/ListeningRpcCommunicator'
 export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
