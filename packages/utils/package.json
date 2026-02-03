@@ -55,7 +55,7 @@
     "buffer-shim": "^1.0.1",
     "eventemitter3": "^5.0.0",
     "hash-base": "^3.1.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "path-browserify": "^1.0.1",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
