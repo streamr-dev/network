@@ -5,3 +5,4 @@ coverage
 generated
 test/data/nodeids.json
 test/data/orderedneighbors.json
+test-results

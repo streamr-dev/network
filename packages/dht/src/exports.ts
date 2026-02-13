@@ -37,3 +37,4 @@ export {
     areEqualPeerDescriptors,
     toNodeId
 } from './identifiers'
+export { installWebrtcBridge } from '@/installWebrtcBridge'
