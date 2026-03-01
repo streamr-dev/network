@@ -76,7 +76,7 @@
     "jest-matcher-utils": "^30.0.5",
     "nightwatch": "^3.12.3",
     "rimraf": "^6.1.2",
-    "rollup": "^4.55.1",
+    "rollup": "^4.59.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-dts": "^6.3.0",
     "ts-node": "^10.9.2",

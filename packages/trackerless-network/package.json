@@ -55,7 +55,7 @@
     "@types/yallist": "^5.0.0",
     "expect": "^30.0.5",
     "rimraf": "^6.1.2",
-    "rollup": "^4.55.1",
+    "rollup": "^4.59.0",
     "rollup-plugin-dts": "^6.3.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0"
