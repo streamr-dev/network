@@ -45,7 +45,8 @@
     "test-unit": "jest test/unit",
     "test-integration": "jest --bail test/integration",
     "test-end-to-end": "jest --bail test/end-to-end",
-    "benchmark": "jest test/benchmark"
+    "benchmark": "jest test/benchmark",
+    "test-playwright": "node test/playwright/bundle.mjs && npx playwright test --config test/playwright/playwright.config.ts"
   },
   "dependencies": {
     "@js-sdsl/ordered-map": "^4.4.2",
@@ -70,6 +71,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@rollup/plugin-alias": "^6.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
@@ -80,6 +82,7 @@
     "@types/lodash": "^4.17.21",
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.18.1",
+    "esbuild": "^0.24.2",
     "jest-leak-detector": "^27.3.1",
     "jest-matcher-utils": "^30.0.5",
     "rimraf": "^6.1.2",
