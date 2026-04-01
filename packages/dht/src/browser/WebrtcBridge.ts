@@ -64,6 +64,8 @@ export interface WebrtcBridgeApi {
         mid: string
     ): Promise<void>
 
+    renameConnection(oldId: string, newId: string): Promise<void>
+
     close(connectionId: string): Promise<void>
 }
 
@@ -208,6 +210,14 @@ export class WebrtcBridge implements WebrtcBridgeApi {
             await conn.pc.addIceCandidate({ candidate, sdpMid: mid })
         } catch (_err) {
             // intentionally swallowed
+        }
+    }
+
+    async renameConnection(oldId: string, newId: string): Promise<void> {
+        const conn = this.connections.get(oldId)
+        if (conn) {
+            this.connections.delete(oldId)
+            this.connections.set(newId, conn)
         }
     }
 

@@ -76,6 +76,7 @@ export class WorkerWebrtcConnection
     private connected = false
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
+    private startPromise?: Promise<void>
 
     constructor(params: WebrtcConnectionParams) {
         super()
@@ -91,7 +92,8 @@ export class WorkerWebrtcConnection
     // ── IWebrtcConnection ───────────────────────────────────────
 
     public start(isOffering: boolean): void {
-        this.doStart(isOffering).catch((err) => {
+        this.startPromise = this.doStart(isOffering)
+        this.startPromise.catch((err) => {
             logger.warn('Failed to start worker WebRTC connection', { err })
             this.doClose(false, 'Failed to start')
         })
@@ -152,7 +154,10 @@ export class WorkerWebrtcConnection
         description: string,
         type: string
     ): Promise<void> {
-        if (!this.bridge) {
+        if (this.startPromise) {
+            await this.startPromise
+        }
+        if (!this.bridge || this.closed) {
             return
         }
         const wasSet = await this.bridge.setRemoteDescription(
@@ -166,14 +171,19 @@ export class WorkerWebrtcConnection
     }
 
     public addRemoteCandidate(candidate: string, mid: string): void {
-        if (!this.bridge) {
+        this.doAddRemoteCandidate(candidate, mid).catch((err) => {
+            logger.warn('Failed to add remote candidate via bridge', { err })
+        })
+    }
+
+    private async doAddRemoteCandidate(candidate: string, mid: string): Promise<void> {
+        if (this.startPromise) {
+            await this.startPromise
+        }
+        if (!this.bridge || this.closed) {
             return
         }
-        this.bridge
-            .addRemoteCandidate(this.connectionId, candidate, mid)
-            .catch((err) => {
-                logger.warn('Failed to add remote candidate via bridge', { err })
-            })
+        await this.bridge.addRemoteCandidate(this.connectionId, candidate, mid)
     }
 
     public isOpen(): boolean {
@@ -198,13 +208,17 @@ export class WorkerWebrtcConnection
             } else {
                 this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
             }
-        } else {
-            logger.warn('Tried to send on a non-connected worker WebRTC connection')
+        } else if (!this.closed) {
+            this.messageQueue.push(data)
         }
     }
 
     public setConnectionId(connectionId: ConnectionID): void {
+        const oldId = this.connectionId
         this.connectionId = connectionId
+        if (this.bridge && oldId !== connectionId) {
+            this.bridge.renameConnection(oldId, connectionId).catch(() => {})
+        }
     }
 
     // ── DataChannel handling (runs entirely in the worker) ──────
@@ -247,7 +261,19 @@ export class WorkerWebrtcConnection
 
     private onDataChannelOpen(): void {
         this.connected = true
+        this.flushMessageQueue()
         this.emit('connected')
+    }
+
+    private flushMessageQueue(): void {
+        while (
+            this.messageQueue.length > 0 &&
+            this.dataChannel &&
+            this.dataChannel.bufferedAmount < this.bufferThresholdHigh
+        ) {
+            const data = this.messageQueue.shift()!
+            this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
+        }
     }
 
     // ── Teardown ────────────────────────────────────────────────
@@ -256,6 +282,7 @@ export class WorkerWebrtcConnection
         if (!this.closed) {
             this.closed = true
             this.connected = false
+            this.messageQueue.length = 0
             clearTimeout(this.earlyTimeout)
 
             this.stopListening()
