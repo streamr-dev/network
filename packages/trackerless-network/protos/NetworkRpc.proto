@@ -33,7 +33,7 @@ service NodeInfoRpc {
 }
 
 service PlumtreeRpc {
-  rpc pauseNeighbor (PauseNeighborRequest) returns (google.protobuf.Empty);
+  rpc pauseNeighbor (PauseNeighborRequest) returns (PauseNeighborResponse);
   rpc resumeNeighbor (ResumeNeighborRequest) returns (google.protobuf.Empty);
   rpc sendMetadata (MessageID) returns (google.protobuf.Empty);
 }
@@ -202,6 +202,10 @@ message NodeInfoResponse {
 
 message PauseNeighborRequest {
   string messageChainId = 1;
+}
+
+message PauseNeighborResponse {
+  bool accepted = 1;
 }
 
 message ResumeNeighborRequest {

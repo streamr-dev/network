@@ -8,14 +8,15 @@ export class PausedNeighbors {
         this.limit = limit
     }
 
-    add(node: DhtAddress, msgChainId: string): void {
+    add(node: DhtAddress, msgChainId: string): boolean {
         if (!this.pausedNeighbors.has(msgChainId)) {
             this.pausedNeighbors.set(msgChainId, new Set())
         }
         if (this.pausedNeighbors.get(msgChainId)!.size >= this.limit) {
-            return
+            return false
         }
         this.pausedNeighbors.get(msgChainId)!.add(node)
+        return true
     }
 
     delete(node: DhtAddress, msgChainId: string): void {

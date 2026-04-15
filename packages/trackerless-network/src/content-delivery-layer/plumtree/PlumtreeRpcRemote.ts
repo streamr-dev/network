@@ -11,11 +11,10 @@ export class PlumtreeRpcRemote extends RpcRemote<PlumtreeRpcClient> {
         await this.getClient().sendMetadata(msg, options)
     }
 
-    async pauseNeighbor(messageChainId: string): Promise<void> {
-        const options = this.formDhtRpcOptions({
-            notification: true
-        })
-        await this.getClient().pauseNeighbor({ messageChainId }, options)
+    async pauseNeighbor(messageChainId: string): Promise<boolean> {
+        const options = this.formDhtRpcOptions()
+        const response = await this.getClient().pauseNeighbor({ messageChainId }, options)
+        return response.accepted
     }
 
     async resumeNeighbor(fromTimestamp: number, messageChainId: string): Promise<void> {

@@ -33,26 +33,58 @@ describe('PlumtreeRpcLocal', () => {
         )
     })
 
-    it('pause neighbor', async () => {
+    it('pause neighbor returns accepted true', async () => {
+        const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        const response = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
+        expect(response.accepted).toBe(true)
+        expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(true)
+    })
+
+    it('pause neighbor returns accepted false when not in neighbors', async () => {
+        const neighbor = createMockPeerDescriptor()
+        const response = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
+        expect(response.accepted).toBe(false)
+        expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(false)
+    })
+
+    it('pause neighbor returns accepted false when limit reached', async () => {
+        const neighbor1 = createMockPeerDescriptor()
+        const neighbor2 = createMockPeerDescriptor()
+        const neighbor3 = createMockPeerDescriptor()
+        const neighbor4 = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor1, rpcCommunicator, ContentDeliveryRpcClient))
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor2, rpcCommunicator, ContentDeliveryRpcClient))
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor3, rpcCommunicator, ContentDeliveryRpcClient))
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor4, rpcCommunicator, ContentDeliveryRpcClient))
+        const resp1 = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor1 } as any)
+        const resp2 = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor2 } as any)
+        const resp3 = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor3 } as any)
+        const resp4 = await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor4 } as any)
+        expect(resp1.accepted).toBe(true)
+        expect(resp2.accepted).toBe(true)
+        expect(resp3.accepted).toBe(true)
+        expect(resp4.accepted).toBe(false)
+        expect(pausedNodes.isPaused(toNodeId(neighbor4), 'test')).toBe(false)
+    })
+
+    it('resume neighbor when in neighbors', async () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
         await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
         expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(true)
-    })
-
-    it('pause neighbor neighor not in neighbors', async () => {
-        const neighbor = createMockPeerDescriptor()
-        await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
+        await rpcLocal.resumeNeighbor({ fromTimestamp: 0, messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
         expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(false)
+        expect(sendBuffer).toHaveBeenCalledWith(0, 'test', neighbor)
     })
 
-    it('resume neighbor', async () => {
+    it('resume neighbor ignores non-neighbor', async () => {
         const neighbor = createMockPeerDescriptor()
-        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
-        await rpcLocal.pauseNeighbor({ messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
+        pausedNodes.add(toNodeId(neighbor), 'test')
         expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(true)
-        rpcLocal.resumeNeighbor({ fromTimestamp: 0, messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
-        expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(false)
+        await rpcLocal.resumeNeighbor({ fromTimestamp: 0, messageChainId: 'test' }, { incomingSourceDescriptor: neighbor } as any)
+        expect(pausedNodes.isPaused(toNodeId(neighbor), 'test')).toBe(true)
+        expect(sendBuffer).not.toHaveBeenCalled()
     })
 
     it('send metadata', async () => {

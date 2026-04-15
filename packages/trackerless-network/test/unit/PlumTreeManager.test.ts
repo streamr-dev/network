@@ -22,16 +22,32 @@ describe('PlumtreeManager', () => {
         manager = new PlumtreeManager({
             neighbors,
             localPeerDescriptor,
-            rpcCommunicator
+            rpcCommunicator,
+            recoveryCheckInterval: 50,
+            recoveryTimeout: 100,
+            recoveryCooldown: 200
         })
     })
 
-    it('should be able to pause and resume neighbors', async () => {
+    afterEach(() => {
+        manager.stop()
+    })
+
+    it('tracks local paused state via remotePausedNeighbors', () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
-        await manager.pauseNeighbor(neighbor, 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor), 'test')
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
-        await manager.resumeNeighbor(neighbor, 'test', 0)
+        manager.getRemotePausedNeighbors().delete(toNodeId(neighbor), 'test')
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(false)
+    })
+
+    it('tracks local paused state via localPausedNeighbors', () => {
+        const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        manager.getLocalPausedNeighbors().add(toNodeId(neighbor), 'test')
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
+        manager.getLocalPausedNeighbors().delete(toNodeId(neighbor), 'test')
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(false)
     })
 
@@ -41,15 +57,15 @@ describe('PlumtreeManager', () => {
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(false)
     })
 
-    it('should pause based on message chain id', async () => {
+    it('should pause based on message chain id', () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
-        await manager.pauseNeighbor(neighbor, 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor), 'test')
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(false)
-        await manager.pauseNeighbor(neighbor, 'test2')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor), 'test2')
         expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(true)
-        await manager.resumeNeighbor(neighbor, 'test2', 0)
+        manager.getRemotePausedNeighbors().delete(toNodeId(neighbor), 'test2')
         expect(manager.isNeighborPaused(neighbor, 'test2')).toBe(false)
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
     })
@@ -70,26 +86,26 @@ describe('PlumtreeManager', () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
         const msg = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), randomUserId(), 123)
-        await manager.pauseNeighbor(neighbor, msg.messageId!.messageChainId)
+        manager.getLocalPausedNeighbors().add(toNodeId(neighbor), msg.messageId!.messageChainId)
         expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
-        manager.on('message', (msg) => {
-            expect(msg.messageId!.messageChainId).toBe(msg.messageId!.messageChainId)
+        manager.on('message', (received) => {
+            expect(received.messageId!.messageChainId).toBe(msg.messageId!.messageChainId)
         })
         manager.broadcast(msg, toNodeId(neighbor))
         expect(manager.isNeighborPaused(neighbor, msg.messageId!.messageChainId)).toBe(true)
         await wait(100)
     })
 
-    it('removes paused node if neighbor is removed', async () => {
+    it('removes paused node if neighbor is removed', () => {
         const neighbor = createMockPeerDescriptor()
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
-        await manager.pauseNeighbor(neighbor, 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor), 'test')
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
         neighbors.remove(toNodeId(neighbor))
         expect(manager.isNeighborPaused(neighbor, 'test')).toBe(false)
     })
 
-    it('If neighbor is removed and it leads to all neighbors being paused, it resumes the first neighbor', async () => {
+    it('if neighbor is removed and it leads to all neighbors being paused, it resumes the first neighbor', async () => {
         const neighbor1 = createMockPeerDescriptor()
         const neighbor2 = createMockPeerDescriptor()
         const neighbor3 = createMockPeerDescriptor()
@@ -98,9 +114,9 @@ describe('PlumtreeManager', () => {
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor2, rpcCommunicator, ContentDeliveryRpcClient))
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor3, rpcCommunicator, ContentDeliveryRpcClient))
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor4, rpcCommunicator, ContentDeliveryRpcClient))
-        await manager.pauseNeighbor(neighbor1, 'test')
-        await manager.pauseNeighbor(neighbor2, 'test')
-        await manager.pauseNeighbor(neighbor3, 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor1), 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor2), 'test')
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor3), 'test')
         expect(manager.isNeighborPaused(neighbor1, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor2, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor3, 'test')).toBe(true)
@@ -111,7 +127,7 @@ describe('PlumtreeManager', () => {
         expect(manager.isNeighborPaused(neighbor3, 'test')).toBe(true)  
     })
 
-    it('cannot pause more than 3 neighbors', async () => {
+    it('cannot pause more than 3 neighbors via remotePausedNeighbors', () => {
         const neighbor1 = createMockPeerDescriptor()
         const neighbor2 = createMockPeerDescriptor()
         const neighbor3 = createMockPeerDescriptor()
@@ -120,13 +136,48 @@ describe('PlumtreeManager', () => {
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor2, rpcCommunicator, ContentDeliveryRpcClient))
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor3, rpcCommunicator, ContentDeliveryRpcClient))
         neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor4, rpcCommunicator, ContentDeliveryRpcClient))
-        await manager.pauseNeighbor(neighbor1, 'test')
-        await manager.pauseNeighbor(neighbor2, 'test')
-        await manager.pauseNeighbor(neighbor3, 'test')
-        await manager.pauseNeighbor(neighbor4, 'test')
+        expect(manager.getRemotePausedNeighbors().add(toNodeId(neighbor1), 'test')).toBe(true)
+        expect(manager.getRemotePausedNeighbors().add(toNodeId(neighbor2), 'test')).toBe(true)
+        expect(manager.getRemotePausedNeighbors().add(toNodeId(neighbor3), 'test')).toBe(true)
+        expect(manager.getRemotePausedNeighbors().add(toNodeId(neighbor4), 'test')).toBe(false)
         expect(manager.isNeighborPaused(neighbor1, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor2, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor3, 'test')).toBe(true)
         expect(manager.isNeighborPaused(neighbor4, 'test')).toBe(false)
+    })
+
+    it('stop() properly cleans up listener', () => {
+        const neighbor = createMockPeerDescriptor()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor), 'test')
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
+        manager.stop()
+        neighbors.remove(toNodeId(neighbor))
+        expect(manager.isNeighborPaused(neighbor, 'test')).toBe(true)
+    })
+
+    it('onNeighborRemoved cleans up recovery state candidates', () => {
+        const neighbor1 = createMockPeerDescriptor()
+        const neighbor2 = createMockPeerDescriptor()
+        const publisher = randomUserId()
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor1, rpcCommunicator, ContentDeliveryRpcClient))
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor2, rpcCommunicator, ContentDeliveryRpcClient))
+        const msg1 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), publisher, 100)
+        manager.broadcast(msg1, toNodeId(neighbor1))
+        manager.getRemotePausedNeighbors().add(toNodeId(neighbor1), msg1.messageId!.messageChainId)
+        neighbors.remove(toNodeId(neighbor1))
+        expect(manager.isNeighborPaused(neighbor1, msg1.messageId!.messageChainId)).toBe(false)
+    })
+
+    it('broadcast clears recovery state when real data arrives', () => {
+        const neighbor = createMockPeerDescriptor()
+        const publisher = randomUserId()
+        const chainId = `messageChain0-${publisher}`
+        neighbors.add(new ContentDeliveryRpcRemote(localPeerDescriptor, neighbor, rpcCommunicator, ContentDeliveryRpcClient))
+        const msg1 = createStreamMessage('test', StreamPartIDUtils.parse('test#0'), publisher, 100)
+        manager.broadcast(msg1, toNodeId(neighbor))
+        const msg2 = createStreamMessage('test2', StreamPartIDUtils.parse('test#0'), publisher, 200)
+        manager.broadcast(msg2, toNodeId(neighbor))
+        expect(manager.getLatestMessageTimestamp(chainId)).toBe(200)
     })
 })

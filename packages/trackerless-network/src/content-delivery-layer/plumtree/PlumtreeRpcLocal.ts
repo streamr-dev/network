@@ -1,5 +1,10 @@
 import { DhtCallContext, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { MessageID, PauseNeighborRequest, ResumeNeighborRequest } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import {
+    MessageID,
+    PauseNeighborRequest,
+    PauseNeighborResponse,
+    ResumeNeighborRequest
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../../generated/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { IPlumtreeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
@@ -33,18 +38,21 @@ export class PlumtreeRpcLocal implements IPlumtreeRpc {
         return Empty
     }
 
-    async pauseNeighbor(request: PauseNeighborRequest, context: ServerCallContext): Promise<Empty> {
+    async pauseNeighbor(request: PauseNeighborRequest, context: ServerCallContext): Promise<PauseNeighborResponse> {
         const sender = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
         if (this.neighbors.has(sender)) {
-            this.pausedNodes.add(sender, request.messageChainId)
+            const accepted = this.pausedNodes.add(sender, request.messageChainId)
+            return { accepted }
         }
-        return Empty
+        return { accepted: false }
     }
 
     async resumeNeighbor(request: ResumeNeighborRequest, context: ServerCallContext): Promise<Empty> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        this.pausedNodes.delete(toNodeId(sender), request.messageChainId)
-        await this.sendBuffer(request.fromTimestamp, request.messageChainId, sender)
+        if (this.neighbors.has(toNodeId(sender))) {
+            this.pausedNodes.delete(toNodeId(sender), request.messageChainId)
+            await this.sendBuffer(request.fromTimestamp, request.messageChainId, sender)
+        }
         return Empty
     }
 }

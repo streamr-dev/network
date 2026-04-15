@@ -2,6 +2,7 @@ import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '
 import { 
     MessageID,
     PauseNeighborRequest,
+    PauseNeighborResponse,
     ResumeNeighborRequest,
     StreamMessage
 } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
@@ -10,18 +11,32 @@ import { PlumtreeRpcLocal } from './PlumtreeRpcLocal'
 import { PlumtreeRpcRemote } from './PlumtreeRpcRemote'
 import { ContentDeliveryRpcClient, PlumtreeRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
-import { Logger } from '@streamr/utils'
+import { Logger, setAbortableInterval } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { PausedNeighbors } from './PausedNeighbors'
+
+interface RecoveryState {
+    timestampsAhead: Set<number>
+    metadataAheadSince: number
+    candidates: PeerDescriptor[]
+    lastAttemptedNode: PeerDescriptor | null
+    resumeInProgress: boolean
+}
 
 interface Options {
     neighbors: NodeList
     localPeerDescriptor: PeerDescriptor
     rpcCommunicator: ListeningRpcCommunicator
     maxPausedNeighbors?: number
+    recoveryTimeout?: number
+    recoveryCheckInterval?: number
+    recoveryCooldown?: number
 }
 
 export const MAX_PAUSED_NEIGHBORS_DEFAULT = 3
+const DEFAULT_RECOVERY_TIMEOUT = 500
+const DEFAULT_RECOVERY_CHECK_INTERVAL = 200
+const DEFAULT_RECOVERY_COOLDOWN = 2500
 const logger = new Logger('PlumtreeManager')
 
 interface Events {
@@ -31,15 +46,18 @@ interface Events {
 export class PlumtreeManager extends EventEmitter<Events> {
     private readonly neighbors: NodeList
     private readonly localPeerDescriptor: PeerDescriptor
-    // We have paused sending real data to these neighbrs and only send metadata
     private readonly localPausedNeighbors: PausedNeighbors
-    // We have asked these nodes to pause sending real data to us, used to limit sending of pausing and resuming requests
     private readonly remotePausedNeighbors: PausedNeighbors
     private readonly rpcLocal: PlumtreeRpcLocal
     private readonly latestMessages: Map<string, StreamMessage[]> = new Map()
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly metadataTimestampsAheadOfRealData: Map<string, Set<number>> = new Map()
     private readonly maxPausedNeighbors: number
+    private readonly recoveryState: Map<string, RecoveryState> = new Map()
+    private readonly recoveryCooldownUntil: Map<string, number> = new Map()
+    private readonly recoveryTimeout: number
+    private readonly recoveryCooldown: number
+    private readonly abortController: AbortController = new AbortController()
+
     constructor(options: Options) {
         super()
         this.neighbors = options.neighbors
@@ -47,6 +65,8 @@ export class PlumtreeManager extends EventEmitter<Events> {
         this.localPeerDescriptor = options.localPeerDescriptor
         this.localPausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
         this.remotePausedNeighbors = new PausedNeighbors(options.maxPausedNeighbors ?? MAX_PAUSED_NEIGHBORS_DEFAULT)
+        this.recoveryTimeout = options.recoveryTimeout ?? DEFAULT_RECOVERY_TIMEOUT
+        this.recoveryCooldown = options.recoveryCooldown ?? DEFAULT_RECOVERY_COOLDOWN
         this.rpcLocal = new PlumtreeRpcLocal(
             this.neighbors,
             this.localPausedNeighbors,
@@ -54,16 +74,26 @@ export class PlumtreeManager extends EventEmitter<Events> {
             (fromTimestamp: number, msgChainId: string, remotePeerDescriptor: PeerDescriptor) => 
                 this.sendBuffer(fromTimestamp, msgChainId, remotePeerDescriptor)
         )
-        this.neighbors.on('nodeRemoved', (nodeId: DhtAddress) => this.onNeighborRemoved(nodeId))
+        this.neighbors.on('nodeRemoved', this.onNeighborRemoved)
         this.rpcCommunicator = options.rpcCommunicator
         this.rpcCommunicator.registerRpcNotification(MessageID, 'sendMetadata', (msg: MessageID, context) => this.rpcLocal.sendMetadata(msg, context))
-        this.rpcCommunicator.registerRpcNotification(
+        this.rpcCommunicator.registerRpcMethod(
             PauseNeighborRequest,
+            PauseNeighborResponse,
             'pauseNeighbor',
             (msg: PauseNeighborRequest, context) => this.rpcLocal.pauseNeighbor(msg, context))
         this.rpcCommunicator.registerRpcNotification(
             ResumeNeighborRequest,
             'resumeNeighbor', (msg: ResumeNeighborRequest, context) => this.rpcLocal.resumeNeighbor(msg, context))
+
+        setAbortableInterval(() => {
+            const now = performance.now()
+            for (const [chainId, state] of this.recoveryState) {
+                if (now - state.metadataAheadSince >= this.recoveryTimeout && !state.resumeInProgress) {
+                    this.attemptRecovery(chainId, state, this.getLatestMessageTimestamp(chainId))
+                }
+            }
+        }, options.recoveryCheckInterval ?? DEFAULT_RECOVERY_CHECK_INTERVAL, this.abortController.signal)
     }
 
     async pauseNeighbor(node: PeerDescriptor, msgChainId: string): Promise<void> {
@@ -72,8 +102,15 @@ export class PlumtreeManager extends EventEmitter<Events> {
             && this.remotePausedNeighbors.size(msgChainId) < this.maxPausedNeighbors) {
             logger.debug(`Pausing neighbor ${toNodeId(node)}`)
             this.remotePausedNeighbors.add(toNodeId(node), msgChainId)
-            const remote = this.createRemote(node)
-            await remote.pauseNeighbor(msgChainId)
+            try {
+                const remote = this.createRemote(node)
+                const accepted = await remote.pauseNeighbor(msgChainId)
+                if (!accepted) {
+                    this.remotePausedNeighbors.delete(toNodeId(node), msgChainId)
+                }
+            } catch (_e) {
+                this.remotePausedNeighbors.delete(toNodeId(node), msgChainId)
+            }
         }
     }
 
@@ -86,9 +123,17 @@ export class PlumtreeManager extends EventEmitter<Events> {
         }
     }
 
-    private onNeighborRemoved(nodeId: DhtAddress): void {
+    private onNeighborRemoved = (nodeId: DhtAddress): void => {
         this.localPausedNeighbors.deleteAll(nodeId)
         this.remotePausedNeighbors.deleteAll(nodeId)
+
+        for (const [_chainId, state] of this.recoveryState) {
+            state.candidates = state.candidates.filter((c) => toNodeId(c) !== nodeId)
+            if (state.lastAttemptedNode !== null && toNodeId(state.lastAttemptedNode) === nodeId) {
+                state.lastAttemptedNode = null
+            }
+        }
+
         if (this.neighbors.size() > 0) {
             this.remotePausedNeighbors.forEach((pausedNeighbors, msgChainId) => {
                 if (pausedNeighbors.size >= this.neighbors.size()) {
@@ -114,23 +159,67 @@ export class PlumtreeManager extends EventEmitter<Events> {
     private async sendBuffer(fromTimestamp: number, msgChainId: string, neighbor: PeerDescriptor): Promise<void> {
         const remote = new ContentDeliveryRpcRemote(this.localPeerDescriptor, neighbor, this.rpcCommunicator, ContentDeliveryRpcClient)
         const messages = this.latestMessages.get(msgChainId)?.filter((msg) => msg.messageId!.timestamp > fromTimestamp) ?? []
-        await Promise.all(messages.map((msg) => remote.sendStreamMessage(msg)))
+        for (const msg of messages) {
+            await remote.sendStreamMessage(msg)
+        }
     }
 
     private async onMetadata(msg: MessageID, previousNode: PeerDescriptor): Promise<void> {
-        // If we receive newer metadata than messages in the buffer, resume the sending neighbor
-        const latestMessageTimestamp = this.getLatestMessageTimestamp(msg.messageChainId)
-        if (latestMessageTimestamp < msg.timestamp) {
-            if (!this.metadataTimestampsAheadOfRealData.has(msg.messageChainId)) {
-                this.metadataTimestampsAheadOfRealData.set(msg.messageChainId, new Set())
+        const latestTs = this.getLatestMessageTimestamp(msg.messageChainId)
+        if (latestTs >= msg.timestamp) {
+            return
+        }
+        const chainId = msg.messageChainId
+
+        const cooldownUntil = this.recoveryCooldownUntil.get(chainId)
+        if (cooldownUntil !== undefined && performance.now() < cooldownUntil) {
+            return
+        }
+
+        let state = this.recoveryState.get(chainId)
+        if (!state) {
+            state = {
+                timestampsAhead: new Set(),
+                metadataAheadSince: performance.now(),
+                candidates: [],
+                lastAttemptedNode: null,
+                resumeInProgress: false
             }
-            this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.add(msg.timestamp)
-            if (this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.size > 1) {
-                await this.resumeNeighbor(previousNode, msg.messageChainId, this.getLatestMessageTimestamp(msg.messageChainId))
-                this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.forEach((timestamp) => {
-                    this.metadataTimestampsAheadOfRealData.get(msg.messageChainId)!.delete(timestamp)
-                })
-            }
+            this.recoveryState.set(chainId, state)
+        }
+        state.timestampsAhead.add(msg.timestamp)
+
+        const nodeId = toNodeId(previousNode)
+        const isLastAttempted = state.lastAttemptedNode !== null && toNodeId(state.lastAttemptedNode) === nodeId
+        if (!isLastAttempted && !state.candidates.some((c) => toNodeId(c) === nodeId)) {
+            state.candidates.push(previousNode)
+        }
+
+        if (state.timestampsAhead.size > 1 && !state.resumeInProgress) {
+            await this.attemptRecovery(chainId, state, latestTs)
+        }
+    }
+
+    private async attemptRecovery(chainId: string, state: RecoveryState, latestTs: number): Promise<void> {
+        const candidate = state.candidates.shift()
+        if (!candidate) {
+            state.metadataAheadSince = performance.now()
+            return
+        }
+
+        state.resumeInProgress = true
+        state.lastAttemptedNode = candidate
+        state.candidates = []
+        state.timestampsAhead.clear()
+        state.metadataAheadSince = performance.now()
+
+        try {
+            const remote = this.createRemote(candidate)
+            await remote.resumeNeighbor(latestTs, chainId)
+        } catch (_e) {
+            logger.debug('Recovery resume failed, will retry with next candidate')
+        } finally {
+            state.resumeInProgress = false
         }
     }
 
@@ -149,9 +238,16 @@ export class PlumtreeManager extends EventEmitter<Events> {
             this.latestMessages.get(messageChainId)!.shift()
             this.latestMessages.get(messageChainId)!.push(msg)
         }
-        if (this.metadataTimestampsAheadOfRealData.has(msg.messageId!.messageChainId)) {
-            this.metadataTimestampsAheadOfRealData.get(msg.messageId!.messageChainId)!.delete(msg.messageId!.timestamp)
+
+        const state = this.recoveryState.get(messageChainId)
+        if (state) {
+            if (state.lastAttemptedNode) {
+                this.remotePausedNeighbors.delete(toNodeId(state.lastAttemptedNode), messageChainId)
+            }
+            this.recoveryState.delete(messageChainId)
+            this.recoveryCooldownUntil.set(messageChainId, performance.now() + this.recoveryCooldown)
         }
+
         this.emit('message', msg)
         const neighbors = this.neighbors.getAll().filter((neighbor) => toNodeId(neighbor.getPeerDescriptor()) !== previousNode)
         for (const neighbor of neighbors) {
@@ -169,7 +265,16 @@ export class PlumtreeManager extends EventEmitter<Events> {
             || this.remotePausedNeighbors.isPaused(toNodeId(node), msgChainId)
     }
 
+    getLocalPausedNeighbors(): PausedNeighbors {
+        return this.localPausedNeighbors
+    }
+
+    getRemotePausedNeighbors(): PausedNeighbors {
+        return this.remotePausedNeighbors
+    }
+
     stop(): void {
+        this.abortController.abort()
         this.neighbors.off('nodeRemoved', this.onNeighborRemoved)
     }
         
