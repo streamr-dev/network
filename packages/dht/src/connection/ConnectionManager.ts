@@ -3,6 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import * as Err from '../helpers/errors'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
 import {
     DisconnectMode,
     DisconnectNotice,
@@ -270,6 +271,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if ((this.state === ConnectionManagerState.STOPPED || this.state === ConnectionManagerState.STOPPING) && !opts.sendIfStopped) {
             return
         }
+        logGapDiagnosticSampled('dht.connMgr.send')
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
@@ -350,6 +352,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
+            logGapDiagnosticSampled('dht.connMgr.emitMessage')
             logger.trace('emit "message" ' + toNodeId(message.sourceDescriptor!)
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
@@ -360,6 +363,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.state === ConnectionManagerState.STOPPED) {
             return
         }
+        logGapDiagnosticSampled('dht.connMgr.onData')
         this.metrics.receiveBytesPerSecond.record(data.byteLength)
         this.metrics.receiveMessagesPerSecond.record(1)
         let message: Message | undefined

@@ -17,3 +17,4 @@ export {
 } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 export type { ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
 export type { NodeInfo, StreamPartitionInfo, ContentDeliveryLayerNeighborInfo } from './types'
+export { setGapDiagnosticsEnabled as setTrackerlessGapDiagnosticsEnabled, logGapDiagnosticSampled } from './GapDiagnostics'

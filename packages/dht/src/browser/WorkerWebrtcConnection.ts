@@ -23,6 +23,7 @@ import type { IceServer } from '../connection/webrtc/types'
 import type { WebrtcBridgeApi } from './WebrtcBridge'
 import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
 
 // ── Module-level bridge client (initialized once per worker) ────────
 
@@ -133,7 +134,7 @@ export class WorkerWebrtcConnection
                         state === DisconnectedState.DISCONNECTED ||
                         state === DisconnectedState.FAILED
                     ) {
-                        this.doClose(false)
+                        this.doClose(false, `pcState=${state}`)
                     }
                 },
 
@@ -203,6 +204,9 @@ export class WorkerWebrtcConnection
 
     public send(data: Uint8Array): void {
         if (this.connected && this.dataChannel) {
+            logGapDiagnosticSampled('dht.dc.send', {
+                detail: { bufferedAmount: this.dataChannel.bufferedAmount, queueLen: this.messageQueue.length }
+            })
             if (this.dataChannel.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
@@ -235,7 +239,7 @@ export class WorkerWebrtcConnection
 
         dataChannel.onclose = () => {
             logger.trace('dc.onClosed (worker)')
-            this.doClose(false)
+            this.doClose(false, 'dataChannel.onclose')
         }
 
         dataChannel.onerror = (err) => {
@@ -244,6 +248,7 @@ export class WorkerWebrtcConnection
 
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage (worker)')
+            logGapDiagnosticSampled('dht.dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
         }
 

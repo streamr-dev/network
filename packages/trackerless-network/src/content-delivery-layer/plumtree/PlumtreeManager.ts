@@ -276,6 +276,9 @@ export class PlumtreeManager extends EventEmitter<Events> {
     stop(): void {
         this.abortController.abort()
         this.neighbors.off('nodeRemoved', this.onNeighborRemoved)
+        this.latestMessages.clear()
+        this.recoveryState.clear()
+        this.recoveryCooldownUntil.clear()
     }
         
 }

@@ -38,3 +38,4 @@ export {
     toNodeId
 } from './identifiers'
 export { installWebrtcBridge } from '@/installWebrtcBridge'
+export { setGapDiagnosticsEnabled, logGapDiagnosticSampled } from './GapDiagnostics'

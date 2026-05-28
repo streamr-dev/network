@@ -1,6 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
+import { logGapDiagnosticSampled } from '../../GapDiagnostics'
 
 type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>
 
@@ -66,7 +67,8 @@ export class Propagation {
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-            (async () => {
+            logGapDiagnosticSampled('trackerless.propagation.sendToNeighbor')
+            ;(async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)
                 } catch {

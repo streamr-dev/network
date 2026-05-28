@@ -8,6 +8,7 @@ import {
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
 import {
     CloseTemporaryConnection,
     LeaveStreamPartNotice,
@@ -367,11 +368,15 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.options.neighborFinder.stop()
         this.options.neighborUpdateManager.stop()
         this.options.inspector.stop()
+        this.duplicateDetectors.clear()
     }
 
     broadcast(msg: StreamMessage, previousNode?: DhtAddress): void {
         if (!previousNode) {
+            logGapDiagnosticSampled('trackerless.cdNode.broadcastOut')
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
+        } else {
+            logGapDiagnosticSampled('trackerless.cdNode.broadcastIn')
         }
         this.emit('message', msg)
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)

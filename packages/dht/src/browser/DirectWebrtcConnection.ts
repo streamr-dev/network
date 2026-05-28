@@ -6,6 +6,7 @@ import { IceServer } from '../connection/webrtc/types'
 import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
 
 enum DisconnectedRtcPeerConnectionStateEnum {
     DISCONNECTED = 'disconnected',
@@ -172,6 +173,9 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
     public send(data: Uint8Array): void {
         if (this.lastState === 'connected') {
+            logGapDiagnosticSampled('dht.dc.send', {
+                detail: { bufferedAmount: this.dataChannel!.bufferedAmount, queueLen: this.messageQueue.length }
+            })
             if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
@@ -202,6 +206,7 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
+            logGapDiagnosticSampled('dht.dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
         }
         dataChannel.onbufferedamountlow = () => {

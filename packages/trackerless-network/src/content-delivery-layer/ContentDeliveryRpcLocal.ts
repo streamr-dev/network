@@ -10,6 +10,7 @@ import {
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { PlumtreeManager } from './plumtree/PlumtreeManager'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
@@ -31,6 +32,7 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     }
 
     async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
+        logGapDiagnosticSampled('trackerless.rpcLocal.sendStreamMessage')
         const previousNode = (context as DhtCallContext).incomingSourceDescriptor!
         const previousNodeId = toNodeId(previousNode)
         this.options.markForInspection(previousNodeId, message.messageId!)

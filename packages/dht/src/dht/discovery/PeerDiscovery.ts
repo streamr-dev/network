@@ -164,7 +164,7 @@ export class PeerDiscovery {
         } catch (_e) {
             logger.debug(`Ring join on ${this.options.serviceId} timed out`)
         } finally {
-            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
+            sessions.forEach((session) => this.ongoingRingDiscoverySessions.delete(session.id))
         }
     }
 
