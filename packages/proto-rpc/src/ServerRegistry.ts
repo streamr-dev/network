@@ -82,8 +82,13 @@ export class ServerRegistry {
         logger.trace(`Server processing RPC notification ${rpcMessage.requestId}`)
 
         const implementation = this.getImplementation(rpcMessage, this.notifications)
-        const timeout = implementation.options.timeout!
-        await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ?? new ProtoCallContext()))
+        // Notifications have no response and their rejection is swallowed by
+        // the caller (RpcCommunicator.handleNotification logs and drops it),
+        // so a per-message timeout — which armed/cleared a setTimeout on every
+        // inbound data-plane message — bought nothing but timer/promise churn.
+        // Requests keep their timeout in handleRequest (they have a caller
+        // awaiting a result).
+        await implementation.fn(rpcMessage.body!, callContext ?? new ProtoCallContext())
     }
 
     public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
