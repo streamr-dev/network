@@ -6,8 +6,6 @@ import {
     RpcTransport,
     MethodInfo,
     RpcError,
-    RpcMetadata,
-    RpcStatus,
     UnaryCall,
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
@@ -19,14 +17,18 @@ import { ProtoRpcOptions } from './ProtoCallContext'
 import { Any } from '../generated/google/protobuf/any'
 
 interface ClientTransportEvents {
-    rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
+    rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results: ResultParts) => void
+    // setSendResult lets the communicator hand the send promise back to the
+    // (fire-and-forget) caller; eventemitter3 invokes listeners synchronously,
+    // so it is set before notification() returns.
+    rpcNotification: (rpcMessage: RpcMessage, options: ProtoRpcOptions, setSendResult: (result: Promise<void>) => void) => void
 }
 
+// Only the response message is ever consumed by ProtoRpc clients (the
+// protobuf-ts header/status/trailer deferreds were always dummies), so a
+// request needs just one deferred + its parser.
 export interface ResultParts {
-    header: Deferred<RpcMetadata>
     message: Deferred<object>
-    status: Deferred<RpcStatus>
-    trailer: Deferred<RpcMetadata>
     messageParser: (bytes: Uint8Array) => object
 }
 
@@ -62,45 +64,44 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
-        if (!options?.isProtoRpc) {
-            // eslint-disable-next-line max-len
-            throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
-        }
-        const requestBody = Any.pack(input, method.I)
+    // ProtoRpc clients drive `request()` / `notification()` directly (via
+    // toProtoRpcClient); this RpcTransport entry point is only reached by a raw
+    // protobuf-ts client that was never wrapped — hence the guard.
+    // eslint-disable-next-line class-methods-use-this
+    unary<I extends object, O extends object>(_method: MethodInfo<I, O>, _input: I, _options: ProtoRpcOptions): UnaryCall<I, O> {
+        // eslint-disable-next-line max-len
+        throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
+    }
 
+    // Direct request path: one response deferred, no UnaryCall / header /
+    // status / trailer. Returns the response message promise.
+    request<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): Promise<O> {
         const request: RpcMessage = {
-            header: ClientTransport.createRequestHeaders(method, options.notification),
-            body: requestBody,
+            header: ClientTransport.createRequestHeaders(method, false),
+            body: Any.pack(input, method.I),
             requestId: v4()
         }
+        const message = new Deferred<O>()
+        logger.trace(`New rpc request, ${request.requestId}`)
+        this.emit('rpcRequest', request, options, {
+            message: message as Deferred<object>,
+            messageParser: (bytes: Uint8Array) => method.O.fromBinary(bytes)
+        })
+        return message.promise
+    }
 
-        const defHeader = new Deferred<RpcMetadata>()
-        const defMessage = new Deferred<O>()
-        const defStatus = new Deferred<RpcStatus>()
-        const defTrailer = new Deferred<RpcMetadata>()
-
-        const unary = new UnaryCall<I, O>(
-            method,
-            {},
-            input,
-            defHeader.promise,
-            defMessage.promise,
-            defStatus.promise,
-            defTrailer.promise,
-        )
-
-        const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
-        const deferred: ResultParts = {
-            message: defMessage,
-            header: defHeader,
-            trailer: defTrailer,
-            status: defStatus,
-            messageParser: deferredParser
+    // Direct notification path: fire-and-forget, no deferreds / OngoingRequest.
+    // Returns the send promise so the caller still sees send success/failure.
+    notification<I extends object>(method: MethodInfo<I, any>, input: I, options: ProtoRpcOptions): Promise<void> {
+        const request: RpcMessage = {
+            header: ClientTransport.createRequestHeaders(method, true),
+            body: Any.pack(input, method.I),
+            requestId: v4()
         }
-        logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-        this.emit('rpcRequest', request, options, deferred)
-        return unary
+        logger.trace(`New rpc notification, ${request.requestId}`)
+        let sendResult: Promise<void> = Promise.resolve()
+        this.emit('rpcNotification', request, options, (result) => { sendResult = result })
+        return sendResult
     }
 
     // eslint-disable-next-line class-methods-use-this

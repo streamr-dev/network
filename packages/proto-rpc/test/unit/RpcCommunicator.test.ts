@@ -5,7 +5,7 @@ import {
 } from '../../generated/ProtoRpc'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { ResultParts } from '../../src/ClientTransport'
-import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
+import { Deferred } from '@protobuf-ts/runtime-rpc'
 import * as Err from '../../src/errors'
 import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
@@ -24,10 +24,7 @@ describe('RpcCommunicator', () => {
         
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
-            header: new Deferred<RpcMetadata>(),
             message: new Deferred<PingResponse>(),
-            status: new Deferred<RpcStatus>(),
-            trailer: new Deferred<RpcMetadata>(),
             messageParser: deferredParser
         }
         request = {

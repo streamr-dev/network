@@ -1,5 +1,3 @@
-/* eslint-disable promise/catch-or-return */
-
 import * as Err from './errors'
 import { ErrorCode } from './errors'
 import {
@@ -55,18 +53,6 @@ class OngoingRequest<T extends ProtoCallContext> {
         this.resolveDeferredPromises(response)
     }
 
-    public resolveNotification() {
-        if (this.timeoutRef) {
-            clearTimeout(this.timeoutRef)
-        }
-        if (this.deferredPromises.message.state === DeferredState.PENDING) {
-            this.deferredPromises.message.resolve({})
-            this.deferredPromises.header.resolve({})
-            this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
-            this.deferredPromises.trailer.resolve({})
-        }
-    }
-
     public rejectRequest(error: Error, code: string) {
         if (this.timeoutRef) {
             clearTimeout(this.timeoutRef)
@@ -79,9 +65,6 @@ class OngoingRequest<T extends ProtoCallContext> {
             try {
                 const parsedResponse = this.deferredPromises.messageParser(response.body!.value)
                 this.deferredPromises.message.resolve(parsedResponse)
-                this.deferredPromises.header.resolve({})
-                this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
-                this.deferredPromises.trailer.resolve({})
             } catch (err) {
                 logger.debug(`Could not parse response, received message is likely `)
                 const error = new Err.FailedToParse(`Failed to parse received response, network protocol version likely is likely incompatible`, err)
@@ -90,12 +73,9 @@ class OngoingRequest<T extends ProtoCallContext> {
         }
     }
 
-    private rejectDeferredPromises(error: Error, code: string): void {
+    private rejectDeferredPromises(error: Error, _code: string): void {
         if (this.deferredPromises.message.state === DeferredState.PENDING) {
             this.deferredPromises.message.reject(error)
-            this.deferredPromises.header.reject(error)
-            this.deferredPromises.status.reject({ code, detail: error.message })
-            this.deferredPromises.trailer.reject(error)
         }
     }
 
@@ -140,9 +120,18 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         this.rpcClientTransport.on('rpcRequest', (
             rpcMessage: RpcMessage,
             options: ProtoRpcOptions,
-            deferredPromises: ResultParts | undefined
+            deferredPromises: ResultParts
         ) => {
             this.onOutgoingMessage(rpcMessage, options as T, deferredPromises)
+        })
+
+        // Client side listener for outgoing notification (fire-and-forget).
+        this.rpcClientTransport.on('rpcNotification', (
+            rpcMessage: RpcMessage,
+            options: ProtoRpcOptions,
+            setSendResult: (result: Promise<void>) => void
+        ) => {
+            setSendResult(this.onOutgoingNotification(rpcMessage, options as T))
         })
     }
 
@@ -189,6 +178,8 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         this.rpcClientTransport.stop()
     }
 
+    // Sends a client request (deferredPromises present) or a server response
+    // (deferredPromises undefined). Notifications use onOutgoingNotification.
     private onOutgoingMessage(rpcMessage: RpcMessage, callContext: T, deferredPromises?: ResultParts): void {
         if (this.stopped) {
             if (deferredPromises) {
@@ -197,11 +188,10 @@ export class RpcCommunicator<T extends ProtoCallContext> {
             }
             return
         }
-        const requestOptions = this.rpcClientTransport.mergeOptions(callContext)
 
-        // do not register a notification
-        if (deferredPromises && (!callContext || !callContext.notification)) {
-            this.registerRequest(rpcMessage.requestId, deferredPromises, callContext, requestOptions.timeout as number)
+        if (deferredPromises) {
+            const timeout = (callContext.timeout as number) ?? this.rpcRequestTimeout
+            this.registerRequest(rpcMessage.requestId, deferredPromises, callContext, timeout)
         }
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
@@ -210,28 +200,22 @@ export class RpcCommunicator<T extends ProtoCallContext> {
             this.outgoingMessageListener(rpcMessage, rpcMessage.requestId, callContext)
                 .catch((clientSideException) => {
                     if (deferredPromises) {
-                        if (this.ongoingRequests.has(rpcMessage.requestId)) {
-                            this.handleClientError(rpcMessage.requestId, clientSideException)
-                        } else {
-                            const ongoingRequest = new OngoingRequest(deferredPromises, callContext)
-                            ongoingRequest.rejectRequest(clientSideException, StatusCode.SERVER_ERROR)
-                        }
+                        this.handleClientError(rpcMessage.requestId, clientSideException)
                     }
                 })
-                .then(() => {
-                    if (deferredPromises) {
-                        if (!this.ongoingRequests.has(rpcMessage.requestId)) {
-                            const ongoingRequest = new OngoingRequest(deferredPromises, callContext)
-                            ongoingRequest.resolveNotification()
-                        }
-                    }
-                })
-        } else if (deferredPromises) {
-            if (!this.ongoingRequests.has(rpcMessage.requestId)) {
-                const ongoingRequest = new OngoingRequest(deferredPromises, callContext)
-                ongoingRequest.resolveNotification()
-            }
         }
+    }
+
+    // Fire-and-forget outgoing notification: no deferreds, no OngoingRequest.
+    // Returns the send promise so the caller observes send success/failure.
+    private onOutgoingNotification(rpcMessage: RpcMessage, callContext: T): Promise<void> {
+        if (this.stopped) {
+            return Promise.reject(new Error('stopped'))
+        }
+        if (this.outgoingMessageListener) {
+            return this.outgoingMessageListener(rpcMessage, rpcMessage.requestId, callContext)
+        }
+        return Promise.resolve()
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, callContext: T): Promise<void> {

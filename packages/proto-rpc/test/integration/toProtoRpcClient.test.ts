@@ -190,6 +190,25 @@ describe('toProtoRpcClient', () => {
 
     })
 
+    it('A notification registers no ongoing request on the client', async () => {
+        const communicator1 = new RpcCommunicator()
+        const wakeUpService = new WakeUpService()
+        communicator1.registerRpcNotification(WakeUpRequest, 'wakeUp', wakeUpService.wakeUp)
+
+        const communicator2 = new RpcCommunicator()
+        const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
+        communicator2.setOutgoingMessageListener(async (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg, new ProtoCallContext())
+        })
+
+        await wakeUpClient.wakeUp({ reason: 'School' })
+        // The fire-and-forget path must not allocate an OngoingRequest.
+        expect((communicator2 as any).ongoingRequests.size).toEqual(0)
+
+        communicator1.stop()
+        communicator2.stop()
+    })
+
     it('making a rpc call with protobuf-ts client throws', (done) => {
         // Setup server
         const communicator1 = new RpcCommunicator()
