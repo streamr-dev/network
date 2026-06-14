@@ -72,6 +72,10 @@ export interface ContentDeliveryManagerOptions {
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
     bufferWhileConnecting?: boolean
+    // When true, a node's OWN published messages are not delivered back to its
+    // local message listeners (no self-loop). Propagation to neighbours and
+    // duplicate detection are unaffected. Off by default.
+    suppressOwnMessageLoopback?: boolean
 }
 
 type PlumtreeOptions = {
@@ -294,6 +298,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
             bufferWhileConnecting: this.options.bufferWhileConnecting,
+            suppressOwnMessageLoopback: this.options.suppressOwnMessageLoopback,
             plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization?.enabled,
             plumtreeMaxPausedNeighbors: 
                 streamPartDeliveryOptions?.plumtreeOptimization?.enabled === true ? 

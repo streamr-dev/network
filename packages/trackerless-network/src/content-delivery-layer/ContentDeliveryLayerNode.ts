@@ -66,6 +66,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
     plumtreeManager?: PlumtreeManager
+    suppressOwnMessageLoopback?: boolean
 }
 
 export const DEFAULT_NODE_VIEW_SIZE = 20
@@ -378,7 +379,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         } else {
             logGapDiagnosticSampled('trackerless.cdNode.broadcastIn')
         }
-        this.emit('message', msg)
+        // Deliver to local listeners — except own publishes (no previousNode)
+        // when loopback is suppressed: nothing local consumes them and they
+        // would otherwise be re-serialized across a worker boundary just to be
+        // discarded. Propagation + duplicate detection below are unaffected.
+        if (previousNode !== undefined || !this.options.suppressOwnMessageLoopback) {
+            this.emit('message', msg)
+        }
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
         this.messagesPropagated += 1

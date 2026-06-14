@@ -35,6 +35,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         neighborUpdateInterval?: number
         maxPropagationBufferSize?: number
         bufferWhileConnecting?: boolean
+        suppressOwnMessageLoopback?: boolean
         plumtreeOptimization?: boolean
         plumtreeMaxPausedNeighbors?: number
     }

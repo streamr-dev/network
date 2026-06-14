@@ -1,4 +1,5 @@
-import { toNodeId } from '@streamr/dht'
+import { randomDhtAddress, toNodeId } from '@streamr/dht'
+import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
 import { NodeList } from '../../src/content-delivery-layer/NodeList'
@@ -8,7 +9,7 @@ import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
+import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 
 describe('ContentDeliveryLayerNode', () => {
 
@@ -108,5 +109,59 @@ describe('ContentDeliveryLayerNode', () => {
         expect(info[0].peerDescriptor).toEqual(nodeWithRtt.getPeerDescriptor())
         expect(info[1].rtt).toBeUndefined()
         expect(info[1].peerDescriptor).toEqual(nodeWithoutRtt.getPeerDescriptor())
+    })
+
+    describe('suppressOwnMessageLoopback', () => {
+        const STREAM_PART = StreamPartIDUtils.parse('stream#0')
+
+        const buildNode = (suppressOwnMessageLoopback: boolean) => {
+            const nodeId = toNodeId(peerDescriptor)
+            return createContentDeliveryLayerNode({
+                neighbors: new NodeList(nodeId, 10),
+                randomNodeView: new NodeList(nodeId, 10),
+                nearbyNodeView: new NodeList(nodeId, 10),
+                transport: new MockTransport(),
+                localPeerDescriptor: peerDescriptor,
+                discoveryLayerNode: new MockDiscoveryLayerNode(),
+                connectionLocker: mockConnectionLocker,
+                handshaker: new MockHandshaker() as any,
+                neighborUpdateManager: new MockNeighborUpdateManager() as any,
+                neighborFinder: new MockNeighborFinder() as any,
+                streamPartId: STREAM_PART,
+                isLocalNodeEntryPoint: () => false,
+                suppressOwnMessageLoopback
+            })
+        }
+        const ownMessage = () => createStreamMessage('x', STREAM_PART, randomUserId())
+
+        it('default (flag off): own publish is delivered to local listeners', async () => {
+            const node = buildNode(false)
+            await node.start()
+            let received = 0
+            node.on('message', () => { received += 1 })
+            node.broadcast(ownMessage()) // no previousNode = local publish
+            expect(received).toEqual(1)
+            node.stop()
+        })
+
+        it('flag on: own publish is NOT delivered to local listeners', async () => {
+            const node = buildNode(true)
+            await node.start()
+            let received = 0
+            node.on('message', () => { received += 1 })
+            node.broadcast(ownMessage()) // no previousNode = local publish
+            expect(received).toEqual(0)
+            node.stop()
+        })
+
+        it('flag on: forwarded message (previousNode set) IS still delivered', async () => {
+            const node = buildNode(true)
+            await node.start()
+            let received = 0
+            node.on('message', () => { received += 1 })
+            node.broadcast(ownMessage(), randomDhtAddress()) // forwarded
+            expect(received).toEqual(1)
+            node.stop()
+        })
     })
 })
