@@ -23,7 +23,76 @@ import type { IceServer } from '../connection/webrtc/types'
 import type { WebrtcBridgeApi } from './WebrtcBridge'
 import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
-import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { isGapDiagnosticsEnabled, logGapDiagnosticSampled } from '../GapDiagnostics'
+
+// ── agent log: layer0-vs-layer2 contention probe ────────────────────
+// Every DHT connection's datachannel `onmessage` runs in THIS one worker, and
+// `emit('data')` synchronously drives the downstream routing / RPC dispatch.
+// So timing each emit captures the per-message synchronous processing cost —
+// and aggregating across ALL connections tells us how much of the worker's
+// event loop is consumed servicing GLOBAL-DHT layer0 traffic (routing for the
+// hundreds of nodes we forward for) vs our handful of media messages. If a
+// media arrival gap coincides with a window of high non-media processing, that
+// is layer0 starving layer2. Emitted in the same `[gap-diagnostics]` line
+// shape the analyzer already parses.
+let dcWinStart = performance.now()
+let dcWinCount = 0
+let dcWinBusyMs = 0
+let dcWinMaxMs = 0
+function recordDcProcessing(procMs: number): void {
+    if (!isGapDiagnosticsEnabled() && !(globalThis as any).__dhtGapDiagEnabled) {
+        return
+    }
+    dcWinCount++
+    dcWinBusyMs += procMs
+    if (procMs > dcWinMaxMs) dcWinMaxMs = procMs
+    // Individual event for a single message whose inline processing blocked the
+    // loop unusually long (one expensive routing/RPC dispatch).
+    if (procMs > 15) {
+        try {
+            console.log(
+                '[gap-diagnostics]',
+                JSON.stringify({
+                    layer: 'dht.dc.processing.slow',
+                    timestampMs: performance.now(),
+                    deltaMs: +procMs.toFixed(2),
+                }),
+            )
+        } catch {
+            /* ignore */
+        }
+    }
+    const now = performance.now()
+    const winElapsed = now - dcWinStart
+    if (winElapsed >= 1000) {
+        try {
+            console.log(
+                '[gap-diagnostics]',
+                JSON.stringify({
+                    layer: 'dht.dc.processing.window',
+                    timestampMs: now,
+                    detail: {
+                        windowMs: +winElapsed.toFixed(0),
+                        count: dcWinCount,
+                        msgPerSec: +((dcWinCount / winElapsed) * 1000).toFixed(0),
+                        busyMs: +dcWinBusyMs.toFixed(1),
+                        occupancyPct: +(
+                            (dcWinBusyMs / winElapsed) *
+                            100
+                        ).toFixed(1),
+                        maxMs: +dcWinMaxMs.toFixed(1),
+                    },
+                }),
+            )
+        } catch {
+            /* ignore */
+        }
+        dcWinStart = now
+        dcWinCount = 0
+        dcWinBusyMs = 0
+        dcWinMaxMs = 0
+    }
+}
 
 // ── Module-level bridge client (initialized once per worker) ────────
 
@@ -78,6 +147,20 @@ export class WorkerWebrtcConnection
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
     private startPromise?: Promise<void>
+
+    // agent log: PER-CONNECTION datachannel receive cadence. The global
+    // `dht.dc.onmessage` accumulator can't isolate one stream; this tracks
+    // inter-message arrival on THIS connection so we can pick the connection
+    // carrying the composite media (highest count/bytes) and compare its
+    // datachannel-level gaps against messageArrival (post-routing) and
+    // videoFrameArrival (post-decrypt) — i.e. localize WHERE the gap is born.
+    private lastRecvMs?: number
+    private recvWinStart = 0
+    private recvCount = 0
+    private recvSumDelta = 0
+    private recvMaxDelta = 0
+    private recvBytes = 0
+    private recvMaxBytes = 0
 
     constructor(params: WebrtcConnectionParams) {
         super()
@@ -227,6 +310,58 @@ export class WorkerWebrtcConnection
 
     // ── DataChannel handling (runs entirely in the worker) ──────
 
+    private recordRecv(bytes: number): void {
+        if (!isGapDiagnosticsEnabled() && !(globalThis as any).__dhtGapDiagEnabled) {
+            return
+        }
+        const now = performance.now()
+        const conn = String(this.connectionId).slice(0, 8)
+        if (this.lastRecvMs !== undefined) {
+            const delta = now - this.lastRecvMs
+            this.recvSumDelta += delta
+            if (delta > this.recvMaxDelta) this.recvMaxDelta = delta
+            if (delta > 60) {
+                try {
+                    console.log('[gap-diagnostics]', JSON.stringify({
+                        layer: 'dht.dc.recvGap',
+                        timestampMs: now,
+                        deltaMs: +delta.toFixed(1),
+                        detail: { conn, bytes },
+                    }))
+                } catch (_e) { /* ignore */ }
+            }
+        }
+        this.lastRecvMs = now
+        this.recvCount++
+        this.recvBytes += bytes
+        if (bytes > this.recvMaxBytes) this.recvMaxBytes = bytes
+        if (this.recvWinStart === 0) this.recvWinStart = now
+        const elapsed = now - this.recvWinStart
+        if (elapsed >= 1000) {
+            try {
+                console.log('[gap-diagnostics]', JSON.stringify({
+                    layer: 'dht.dc.recv',
+                    timestampMs: now,
+                    detail: {
+                        conn,
+                        count: this.recvCount,
+                        perSec: Math.round((this.recvCount / elapsed) * 1000),
+                        meanMs: +(this.recvSumDelta / Math.max(1, this.recvCount)).toFixed(1),
+                        maxMs: +this.recvMaxDelta.toFixed(1),
+                        bytesPerSec: Math.round((this.recvBytes / elapsed) * 1000),
+                        maxBytes: this.recvMaxBytes,
+                    },
+                }))
+            } catch (_e) { /* ignore */ }
+            this.recvWinStart = now
+            this.recvCount = 0
+            this.recvSumDelta = 0
+            this.recvMaxDelta = 0
+            this.recvBytes = 0
+            this.recvMaxBytes = 0
+        }
+    }
+
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         this.dataChannel.binaryType = 'arraybuffer'
@@ -249,7 +384,12 @@ export class WorkerWebrtcConnection
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage (worker)')
             logGapDiagnosticSampled('dht.dc.onmessage')
+            this.recordRecv(
+                msg.data instanceof ArrayBuffer ? msg.data.byteLength : 0,
+            )
+            const t0 = performance.now()
             this.emit('data', new Uint8Array(msg.data))
+            recordDcProcessing(performance.now() - t0)
         }
 
         dataChannel.onbufferedamountlow = () => {

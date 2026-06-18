@@ -5,7 +5,7 @@ interface GapDiagnosticEvent {
     detail?: Record<string, unknown>
 }
 
-let enabled = false
+let enabled = true
 
 export function setGapDiagnosticsEnabled(val: boolean): void {
     enabled = val
@@ -33,7 +33,7 @@ export function logGapDiagnosticSampled(
     layer: string,
     opts: { detail?: Record<string, unknown>; outlierThresholdMs?: number } = {},
 ): void {
-    if (!enabled) return
+    if (!enabled && !(globalThis as any).__dhtGapDiagEnabled) return
     const now = performance.now()
     const threshold = opts.outlierThresholdMs ?? 30
 
