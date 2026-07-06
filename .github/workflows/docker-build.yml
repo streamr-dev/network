@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
