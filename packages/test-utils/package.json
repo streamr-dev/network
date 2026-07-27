@@ -63,7 +63,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@streamr/config": "^5.9.2",
+    "@streamr/config": "^5.9.3",
     "@streamr/network-contracts": "^9.1.0",
     "@streamr/utils": "103.3.1",
     "cors": "^2.8.5",

@@ -116,11 +116,9 @@ Where the `137` chainId refers to [Polygon POS](https://chainlist.org/).
 Example RPC section:
 ```
 rpcs: [{
-    url: "https://polygon-rpc.com",
+    url: "https://first-polygon-rpc",
   },
   {
-    url: "https://polygon-bor.publicnode.com",
+    url: "https://second-polygon-rpc",
   }],
 ```
-
-Note, this RPC config schema applies to Streamr node and SDK versions `100.2.5` and above.
