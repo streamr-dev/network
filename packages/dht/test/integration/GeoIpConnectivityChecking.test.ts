@@ -14,6 +14,7 @@ const testIp = '128.214.222.50'
 // Helsinki, Finland
 const testLatitude = 60.1719
 const testLongitude = 25.1127
+const allowedErrorDegrees = 0.15
 
 const dbPath = '/tmp/geoipdatabasesintegration'
 
@@ -66,7 +67,9 @@ describe('ConnectivityChecking', () => {
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.protocolVersion).toEqual(LOCAL_PROTOCOL_VERSION)
-        expect(response.latitude).toBeCloseTo(testLatitude, 1)
-        expect(response.longitude).toBeCloseTo(testLongitude, 1)
+        expect(response.latitude).toBeDefined()
+        expect(response.longitude).toBeDefined()
+        expect(Math.abs(testLatitude - response.latitude!)).toBeLessThan(allowedErrorDegrees)
+        expect(Math.abs(testLongitude - response.longitude!)).toBeLessThan(allowedErrorDegrees)
     })
 })

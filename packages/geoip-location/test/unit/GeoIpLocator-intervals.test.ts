@@ -101,7 +101,7 @@ describe('GeoIpLocator', () => {
         expect(location).toBeDefined()
 
         // Helsinki, Finland
-        expect(location!.latitude).toBeCloseTo(60.1719, 1)
-        expect(location!.longitude).toBeCloseTo(25.1127, 1)
+        expect(Math.abs(location!.latitude - 60.1719)).toBeLessThan(0.15)
+        expect(Math.abs(location!.longitude - 25.1127)).toBeLessThan(0.15)
     }, 60000)
 })

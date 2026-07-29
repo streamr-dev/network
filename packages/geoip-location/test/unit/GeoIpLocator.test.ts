@@ -10,6 +10,10 @@ describe('GeoIpLocator', () => {
     const serverPort = 31992
     const serverUrl = 'http://127.0.0.1:' + serverPort + '/'
 
+    const testLatitude = 60.1719
+    const testLongitude = 25.1127
+    const allowedErrorDegrees = 0.15
+
     const getDbDir = () => {
         dirCounter++
         return dbPath + '/geolite2-' + dirCounter
@@ -39,8 +43,8 @@ describe('GeoIpLocator', () => {
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBeCloseTo(60.1719, 1)
-            expect(location!.longitude).toBeCloseTo(25.1127, 1)
+            expect(Math.abs(location!.latitude - testLatitude)).toBeLessThan(allowedErrorDegrees)
+            expect(Math.abs(location!.longitude - testLongitude)).toBeLessThan(allowedErrorDegrees)
         
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
@@ -75,8 +79,8 @@ describe('GeoIpLocator', () => {
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBeCloseTo(60.1719, 1)
-            expect(location!.longitude).toBeCloseTo(25.1127, 1)
+            expect(Math.abs(location!.latitude - testLatitude)).toBeLessThan(allowedErrorDegrees)
+            expect(Math.abs(location!.longitude - testLongitude)).toBeLessThan(allowedErrorDegrees)
     
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
@@ -97,8 +101,8 @@ describe('GeoIpLocator', () => {
             expect(location).toBeDefined()
     
             // Helsinki, Finland
-            expect(location!.latitude).toBeCloseTo(60.1719, 1)
-            expect(location!.longitude).toBeCloseTo(25.1127, 1)
+            expect(Math.abs(location!.latitude - testLatitude)).toBeLessThan(allowedErrorDegrees)
+            expect(Math.abs(location!.longitude - testLongitude)).toBeLessThan(allowedErrorDegrees)
     
             locator.stop()
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')

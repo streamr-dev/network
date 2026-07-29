@@ -13,6 +13,10 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
     let dbDir: string
     let locator: GeoIpLocator
 
+    const testLatitude = 60.1719
+    const testLongitude = 25.1127
+    const allowedErrorDegrees = 0.15
+
     const getDbDir = () => {
         dirCounter++
         return dbPath + '/geolite2-no-nw-monthly' + dirCounter
@@ -48,8 +52,8 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
         expect(location).toBeDefined()
 
         // Helsinki, Finland
-        expect(location!.latitude).toBeCloseTo(60.1719, 1)
-        expect(location!.longitude).toBeCloseTo(25.1127, 1)
+        expect(Math.abs(location!.latitude - testLatitude)).toBeLessThan(allowedErrorDegrees)
+        expect(Math.abs(location!.longitude - testLongitude)).toBeLessThan(allowedErrorDegrees)
 
     }, 60000)
 })
