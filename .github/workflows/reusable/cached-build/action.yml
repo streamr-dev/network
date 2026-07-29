@@ -8,10 +8,12 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: '.nvmrc'
-        npm: '11.5.1'
         cache: 'npm'
         cache-dependency-path: package-lock.json
         registry-url: 'https://registry.npmjs.org'
+    - name: set npm version
+      run: npm install --global npm@11.5.1
+      shell: bash
     - name: cache node_modules
       id: cache-node-modules
       uses: actions/cache@v4
