@@ -52,6 +52,14 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
+## [103.3.2] - 2026-07-29
+
+### General
+
+#### Changed
+
+- Removed the deprecated polygon-rpc.com from the set of default RPCs for Polygon
+
 ## [103.3.1] - 2026-02-03
 
 ### General
