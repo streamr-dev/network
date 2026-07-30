@@ -39,7 +39,7 @@
     "@streamr/proto-rpc": "103.3.2",
     "@streamr/utils": "103.3.2",
     "acme-client": "^5.4.0",
-    "body-parser": "^2.2.1",
+    "body-parser": "^2.3.0",
     "dns2": "^2.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.0",
