@@ -66,7 +66,7 @@
     "timers-browserify": "^2.0.12",
     "uuid": "^11.1.0",
     "websocket": "^1.0.34",
-    "ws": "^8.18.3"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^6.0.0",
