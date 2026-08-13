@@ -39,3 +39,4 @@ export {
 } from './identifiers'
 export { installWebrtcBridge } from '@/installWebrtcBridge'
 export { setGapDiagnosticsEnabled, logGapDiagnosticSampled } from './GapDiagnostics'
+export { setConnectionDiagnosticsEnabled, isConnectionDiagnosticsEnabled } from './connection/ConnectionDiagnostics'

@@ -2,6 +2,7 @@ import { EventEmitter } from 'eventemitter3'
 import { createRandomConnectionId } from '../Connection'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { Logger } from '@streamr/utils'
+import { ConnectionInfo, logConnectionEvent } from '../ConnectionDiagnostics'
 
 export interface Socket {
     binaryType: string
@@ -27,6 +28,9 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
     protected abstract socket?: Socket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
     protected destroyed = false
+    protected targetUrl?: string
+    private wasConnected = false
+    private readonly constructedAt = Date.now()
     
     constructor() {
         super()
@@ -87,6 +91,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
         if (!this.destroyed) {
             logger.trace('WebSocket Client Connected')
             if (this.socket?.readyState === OPEN) {
+                this.wasConnected = true
                 this.emit('connected')
             }
         }
@@ -115,8 +120,27 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
         this.stopListening()
         this.socket = undefined
         const gracefulLeave = (code === GOING_AWAY) || (code === CUSTOM_GOING_AWAY)
+        if (!this.wasConnected) {
+            // an outgoing websocket that never reached OPEN — make the
+            // failure and its target visible in the console
+            logConnectionEvent({
+                ev: 'connect-failed',
+                type: this.connectionType,
+                url: this.targetUrl,
+                code,
+                reason,
+                ms: Date.now() - this.constructedAt
+            })
+        }
         this.emit('disconnected', gracefulLeave, code, reason)
         this.removeAllListeners()
+    }
+
+    public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        return {
+            url: this.targetUrl,
+            ms: Date.now() - this.constructedAt
+        }
     }
 
 }

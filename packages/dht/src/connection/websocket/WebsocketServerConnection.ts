@@ -5,6 +5,7 @@ import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './AbstractWebsocketClientConnection'
 import { createRandomConnectionId } from '../Connection'
+import { ConnectionInfo } from '../ConnectionDiagnostics'
 
 const logger = new Logger('WebsocketServerConnection')
 
@@ -38,6 +39,12 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     // use a getter to make it possible to mock the value in tests
     public getRemoteIpAddress(): string {
         return this.remoteIpAddress
+    }
+
+    public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        return {
+            remoteAddress: this.remoteIpAddress
+        }
     }
 
     private onMessage(message: WebSocket.RawData, isBinary: boolean): void {

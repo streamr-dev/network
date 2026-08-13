@@ -15,6 +15,7 @@ import * as Comlink from 'comlink'
 import type { Remote } from 'comlink'
 import { WebrtcConnectionEvents, IWebrtcConnection } from '../connection/webrtc/IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionType } from '../connection/IConnection'
+import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { Logger } from '@streamr/utils'
 import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
@@ -147,6 +148,8 @@ export class WorkerWebrtcConnection
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
     private startPromise?: Promise<void>
+    private renamePromise?: Promise<void>
+    private readonly constructedAt = Date.now()
 
     // agent log: PER-CONNECTION datachannel receive cadence. The global
     // `dht.dc.onmessage` accumulator can't isolate one stream; this tracks
@@ -304,7 +307,34 @@ export class WorkerWebrtcConnection
         const oldId = this.connectionId
         this.connectionId = connectionId
         if (this.bridge && oldId !== connectionId) {
-            this.bridge.renameConnection(oldId, connectionId).catch(() => {})
+            // remember the rename so bridge lookups by the new id can await it
+            this.renamePromise = this.bridge.renameConnection(oldId, connectionId)
+            this.renamePromise.catch(() => {})
+        }
+    }
+
+    public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        try {
+            if (this.startPromise) {
+                await this.startPromise
+            }
+            if (this.renamePromise) {
+                await this.renamePromise
+            }
+        } catch {
+            return undefined
+        }
+        if (!this.bridge || this.closed) {
+            return undefined
+        }
+        try {
+            const info = await this.bridge.getConnectionInfo(this.connectionId)
+            if (info !== undefined) {
+                info.ms = Date.now() - this.constructedAt
+            }
+            return info
+        } catch {
+            return undefined
         }
     }
 

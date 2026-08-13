@@ -13,6 +13,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
+            this.targetUrl = address
             this.socket = new WebSocket(address, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
             this.socket.on('error', (error: Error) => this.onError(error))

@@ -1,5 +1,6 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from '../connection/webrtc/IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID } from '../connection/IConnection'
+import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { EventEmitter } from 'eventemitter3'
 import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
@@ -49,6 +50,7 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
     private closed = false
     private offering?: boolean
     private readonly earlyTimeout: NodeJS.Timeout
+    private readonly constructedAt = Date.now()
 
     constructor(params: WebrtcConnectionParams) {
         super()
@@ -239,6 +241,33 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
 
     isOpen(): boolean {
         return !this.closed && this.lastState === 'connected' && !!this.dataChannel
+    }
+
+    public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        if (this.connection === undefined || this.closed) {
+            return undefined
+        }
+        try {
+            const pair = this.connection.getSelectedCandidatePair()
+            if (pair == null) {
+                return undefined
+            }
+            const info: ConnectionInfo = {
+                local: `${pair.local.type}/${pair.local.transportType}`.toLowerCase(),
+                remote: `${pair.remote.type}/${pair.remote.transportType}`.toLowerCase(),
+                ms: Date.now() - this.constructedAt
+            }
+            if (pair.local.type.toLowerCase().includes('relay')) {
+                info.relayAddr = `${pair.local.address}:${pair.local.port}`
+            }
+            const rtt = this.connection.rtt()
+            if (rtt >= 0) {
+                info.rttMs = rtt
+            }
+            return info
+        } catch {
+            return undefined
+        }
     }
 
     public setConnectionId(connectionId: ConnectionID): void {

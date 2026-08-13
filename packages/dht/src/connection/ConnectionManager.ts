@@ -27,7 +27,8 @@ import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../identifiers'
 import { getOfferer } from '../helpers/offering'
 import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
-import { IConnection } from './IConnection'
+import { ConnectionType, IConnection } from './IConnection'
+import { isConnectionDiagnosticsEnabled, logConnectionEvent, recordSummarizedConnectionEvent } from './ConnectionDiagnostics'
 import { PendingConnection } from './PendingConnection'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 
@@ -407,7 +408,39 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             this.setPrivateForConnection(peerDescriptor, this.privateClientMode).catch(() => {})
         }
         this.emit('connected', peerDescriptor)
+        this.logConnectedDiagnostics(nodeId, connection)
         this.onConnectionCountChange()
+    }
+
+    private readonly diagConnections = new Map<DhtAddress, { type?: ConnectionType, connectedAt: number }>()
+
+    private logConnectedDiagnostics(nodeId: DhtAddress, connection: IConnection): void {
+        if (!isConnectionDiagnosticsEnabled()) {
+            return
+        }
+        this.diagConnections.set(nodeId, { type: connection.connectionType, connectedAt: Date.now() })
+        // websocket connections churn heavily during DHT discovery — they are
+        // aggregated into a per-minute summary. WebRTC connections are rare
+        // and carry the interesting candidate-pair info, so they get an
+        // instant line.
+        if (connection.connectionType !== ConnectionType.WEBRTC) {
+            recordSummarizedConnectionEvent(`${connection.connectionType}.connected`)
+            return
+        }
+        void (async () => {
+            let info
+            try {
+                info = await connection.getConnectionInfo?.()
+            } catch {
+                // never let diagnostics interfere with connectivity
+            }
+            logConnectionEvent({
+                ev: 'connected',
+                type: connection.connectionType,
+                nodeId: nodeId.slice(0, 8),
+                ...info
+            })
+        })()
     }
 
     private onDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean) {
@@ -421,6 +454,21 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             }
             this.endpoints.delete(nodeId)
             logger.trace(nodeId + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
+            const diag = this.diagConnections.get(nodeId)
+            if (diag !== undefined) {
+                this.diagConnections.delete(nodeId)
+                if (diag.type !== ConnectionType.WEBRTC) {
+                    recordSummarizedConnectionEvent(`${diag.type}.disconnected`)
+                } else {
+                    logConnectionEvent({
+                        ev: 'disconnected',
+                        type: diag.type,
+                        nodeId: nodeId.slice(0, 8),
+                        gracefulLeave,
+                        lifeMs: Date.now() - diag.connectedAt
+                    })
+                }
+            }
             this.emit('disconnected', peerDescriptor, gracefulLeave)
             this.onConnectionCountChange()
         }

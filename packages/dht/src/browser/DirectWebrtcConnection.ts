@@ -7,6 +7,8 @@ import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
 import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
+import { getRtcConnectionInfo } from './rtcConnectionInfo'
 
 enum DisconnectedRtcPeerConnectionStateEnum {
     DISCONNECTED = 'disconnected',
@@ -33,6 +35,7 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
     private closed = false
     private earlyTimeout: NodeJS.Timeout
     private readonly messageQueue: Uint8Array[] = []
+    private readonly constructedAt = Date.now()
 
     constructor(params: WebrtcConnectionParams) {
         super()
@@ -252,5 +255,17 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
     public setConnectionId(connectionId: ConnectionID): void {
         this.connectionId = connectionId
+    }
+
+    public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        const peerConnection = this.peerConnection
+        if (peerConnection === undefined || this.closed) {
+            return undefined
+        }
+        const info = await getRtcConnectionInfo(peerConnection)
+        if (info !== undefined) {
+            info.ms = Date.now() - this.constructedAt
+        }
+        return info
     }
 }

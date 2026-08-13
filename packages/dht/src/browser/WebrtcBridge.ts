@@ -14,6 +14,9 @@
  */
 import * as Comlink from 'comlink'
 
+import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
+import { getRtcConnectionInfo } from './rtcConnectionInfo'
+
 // ── Types shared between main-thread bridge and worker client ───────
 
 export interface WebrtcBridgeCallbacks {
@@ -65,6 +68,12 @@ export interface WebrtcBridgeApi {
     ): Promise<void>
 
     renameConnection(oldId: string, newId: string): Promise<void>
+
+    /**
+     * Selected ICE candidate pair (+ RTT) of the connection's
+     * RTCPeerConnection, read on the main thread where the PC lives.
+     */
+    getConnectionInfo(connectionId: string): Promise<ConnectionInfo | undefined>
 
     close(connectionId: string): Promise<void>
 }
@@ -219,6 +228,14 @@ export class WebrtcBridge implements WebrtcBridgeApi {
             this.connections.delete(oldId)
             this.connections.set(newId, conn)
         }
+    }
+
+    async getConnectionInfo(connectionId: string): Promise<ConnectionInfo | undefined> {
+        const conn = this.connections.get(connectionId)
+        if (!conn) {
+            return undefined
+        }
+        return getRtcConnectionInfo(conn.pc)
     }
 
     async close(connectionId: string): Promise<void> {

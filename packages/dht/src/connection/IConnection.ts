@@ -1,4 +1,5 @@
 import { BrandedString } from '@streamr/utils'
+import { ConnectionInfo } from './ConnectionDiagnostics'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void
@@ -37,4 +38,12 @@ export interface IConnection {
     send(data: Uint8Array): void
     close(gracefulLeave: boolean): Promise<void>
     destroy(): void
+
+    readonly connectionType?: ConnectionType
+    /**
+     * Optional transport-specific diagnostics (selected ICE candidate pair,
+     * websocket url, ...) used for the `[conn-type]` connection logging.
+     * Must resolve quickly and never throw.
+     */
+    getConnectionInfo?(): Promise<ConnectionInfo | undefined>
 }
