@@ -28,6 +28,7 @@ import { getOfferer } from '../helpers/offering'
 import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
 import { ConnectionType, IConnection } from './IConnection'
+import type { IceServer } from './webrtc/types'
 import { isConnectionDiagnosticsEnabled, logConnectionEvent, recordSummarizedConnectionEvent } from './ConnectionDiagnostics'
 import { PendingConnection } from './PendingConnection'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
@@ -382,6 +383,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.debug(`Handling incoming data failed: ${e}`)
         }
+    }
+
+    /** Replace the ICE server list used for subsequently created WebRTC connections. */
+    public setIceServers(iceServers: IceServer[]): void {
+        this.connectorFacade.setIceServers?.(iceServers)
     }
 
     private onConnected(peerDescriptor: PeerDescriptor, connection: IConnection) {

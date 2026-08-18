@@ -190,8 +190,8 @@ export class WorkerWebrtcConnection
         this.bridge = await getBridgeProxy()
 
         const iceServers: RTCIceServer[] = this.iceServers.map(
-            ({ url, port, username, password }) => ({
-                urls: `${url}:${port}`,
+            ({ url, port, username, password, tcp }) => ({
+                urls: `${url}:${port}${tcp ? '?transport=tcp' : ''}`,
                 username,
                 credential: password,
             })

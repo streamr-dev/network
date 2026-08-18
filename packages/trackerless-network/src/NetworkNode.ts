@@ -1,6 +1,6 @@
 import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, IceServer, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
@@ -97,6 +97,14 @@ export class NetworkNode {
 
     getPeerDescriptor(): PeerDescriptor {
         return this.stack.getControlLayerNode().getLocalPeerDescriptor()
+    }
+
+    /**
+     * Replace the ICE server list (e.g. refreshed short-lived TURN
+     * credentials) used for subsequently created WebRTC connections.
+     */
+    setIceServers(iceServers: IceServer[]): void {
+        this.stack.getControlLayerNode().setIceServers?.(iceServers)
     }
 
     getMetricsContext(): MetricsContext {

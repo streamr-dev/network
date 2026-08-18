@@ -206,6 +206,17 @@ export class WebrtcConnector {
         })
     }
 
+    /**
+     * Replaces the ICE server list used for every subsequently created
+     * connection (createConnection() reads options.iceServers per
+     * connection). Existing connections keep the servers they were built
+     * with. Enables refreshing short-lived TURN credentials without
+     * restarting the node.
+     */
+    setIceServers(iceServers: IceServer[]): void {
+        this.options.iceServers = iceServers
+    }
+
     setLocalPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.localPeerDescriptor = peerDescriptor
     }

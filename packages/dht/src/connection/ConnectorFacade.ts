@@ -24,6 +24,8 @@ export interface ConnectorFacade {
         autoCertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
+    /** Optional: replace the ICE server list for subsequently created WebRTC connections. */
+    setIceServers?: (iceServers: IceServer[]) => void
 }
 
 const logger = new Logger('ConnectorFacade')
@@ -171,6 +173,11 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     getLocalPeerDescriptor(): PeerDescriptor | undefined {
         return this.localPeerDescriptor
+    }
+
+    setIceServers(iceServers: IceServer[]): void {
+        this.options.iceServers = iceServers
+        this.webrtcConnector?.setIceServers(iceServers)
     }
 
     async stop(): Promise<void> {

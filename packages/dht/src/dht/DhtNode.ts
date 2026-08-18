@@ -138,6 +138,7 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
     private readonly options: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
+    private ownConnectionManager?: ConnectionManager
     private localPeerDescriptor?: PeerDescriptor
     private router?: Router
     private storeManager?: StoreManager
@@ -252,6 +253,7 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
             this.connectionsView = connectionManager
             this.connectionLocker = connectionManager
             this.transport = connectionManager
+            this.ownConnectionManager = connectionManager
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(
@@ -640,6 +642,16 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     public getTransport(): ITransport {
         return this.transport!
+    }
+
+    /**
+     * Replace the ICE server list (e.g. refreshed short-lived TURN
+     * credentials) for subsequently created WebRTC connections. No-op for
+     * nodes running on an injected transport (layer-1 nodes).
+     */
+    public setIceServers(iceServers: IceServer[]): void {
+        this.options.iceServers = iceServers
+        this.ownConnectionManager?.setIceServers(iceServers)
     }
 
     public getLocalPeerDescriptor(): PeerDescriptor {

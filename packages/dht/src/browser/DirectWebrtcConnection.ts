@@ -48,8 +48,8 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
     public start(isOffering: boolean): void {
         this.isOffering = isOffering
-        const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password }) => ({
-            urls: `${url}:${port}`,
+        const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password, tcp }) => ({
+            urls: `${url}:${port}${tcp ? '?transport=tcp' : ''}`,
             username,
             credential: password
         }))

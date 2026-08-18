@@ -1,4 +1,4 @@
-import { ConnectionsView, DataEntry, DhtAddress, ITransport, PeerDescriptor } from '@streamr/dht'
+import { ConnectionsView, DataEntry, DhtAddress, IceServer, ITransport, PeerDescriptor } from '@streamr/dht'
 import { Any } from '../../generated/google/protobuf/any'
 
 export interface ControlLayerNode extends ITransport {
@@ -14,4 +14,6 @@ export interface ControlLayerNode extends ITransport {
     getConnectionsView(): ConnectionsView
     start(): Promise<void>
     stop(): Promise<void>
+    /** Optional: replace the ICE server list for subsequently created WebRTC connections. */
+    setIceServers?(iceServers: IceServer[]): void
 }
