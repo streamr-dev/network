@@ -29,7 +29,7 @@ import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
 import { ConnectionType, IConnection } from './IConnection'
 import type { IceServer } from './webrtc/types'
-import { isConnectionDiagnosticsEnabled, logConnectionEvent, recordSummarizedConnectionEvent } from './ConnectionDiagnostics'
+import { ConnectionInfo, isConnectionDiagnosticsEnabled, logConnectionEvent, recordSummarizedConnectionEvent } from './ConnectionDiagnostics'
 import { PendingConnection } from './PendingConnection'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './helpers/getNodeIdOrUnknownFromPeerDescriptor'
 
@@ -102,6 +102,11 @@ interface ConnectedEndpoint {
 type Endpoint = ConnectedEndpoint | ConnectingEndpoint
 
 const INTERNAL_SERVICE_ID = 'system/connection-manager'
+
+export interface ConnectionInfoReport extends ConnectionInfo {
+    nodeId: DhtAddress
+    type?: ConnectionType
+}
 
 export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
 
@@ -685,6 +690,22 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             // in getConnection() or in other methods which access this.endpoints directly?)
             .filter((endpoint) => endpoint.connected && !this.locks.isPrivate(toNodeId(endpoint.connection.getPeerDescriptor()!)))
             .map((endpoint) => endpoint.connection.getPeerDescriptor()!)
+    }
+
+    // One entry per connected peer with the connection type and, where the
+    // transport provides it, the live selected ICE candidate pair (relay vs
+    // direct). Unlike getConnections() this does not filter private-mode
+    // connections: a private connection still consumes TURN resources.
+    public async getConnectionInfos(): Promise<ConnectionInfoReport[]> {
+        // snapshot before awaiting so mid-flight disconnects cannot affect iteration
+        const connected = Array.from(this.endpoints.entries())
+            .filter(([, endpoint]) => endpoint.connected)
+            .map(([nodeId, endpoint]) => [nodeId, (endpoint as ConnectedEndpoint).connection] as const)
+        return Promise.all(connected.map(async ([nodeId, connection]) => ({
+            nodeId,
+            type: connection.getConnectionType(),
+            ...await connection.getConnectionInfo()
+        })))
     }
 
     private onConnectionCountChange() {

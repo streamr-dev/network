@@ -1,6 +1,6 @@
 import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtAddress, IceServer, PeerDescriptor } from '@streamr/dht'
+import { ConnectionInfoReport, DhtAddress, IceServer, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
@@ -105,6 +105,11 @@ export class NetworkNode {
      */
     setIceServers(iceServers: IceServer[]): void {
         this.stack.getControlLayerNode().setIceServers?.(iceServers)
+    }
+
+    /** Live per-connection report (type + selected ICE candidate pair, relay vs direct). */
+    async getConnectionInfos(): Promise<ConnectionInfoReport[]> {
+        return await this.stack.getControlLayerNode().getConnectionInfos?.() ?? []
     }
 
     getMetricsContext(): MetricsContext {

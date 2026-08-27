@@ -1,4 +1,5 @@
-import { ConnectionID, IConnection } from './IConnection'
+import { ConnectionID, ConnectionType, IConnection } from './IConnection'
+import { ConnectionInfo } from './ConnectionDiagnostics'
 import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
@@ -92,6 +93,20 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         return this.remotePeerDescriptor
     }
 
+    getConnectionType(): ConnectionType | undefined {
+        return this.connection.connectionType
+    }
+
+    // Live transport diagnostics (selected ICE candidate pair for webrtc,
+    // websocket url, ...). Never rejects.
+    async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
+        try {
+            return await this.connection.getConnectionInfo?.()
+        } catch {
+            return undefined
+        }
+    }
+
     getDiagnosticInfo(): Record<string, unknown> {
         return {
             remotePeerDescriptor: this.remotePeerDescriptor,
@@ -102,8 +117,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             bytesSent: this.bytesSent,
             bytesReceived: this.bytesReceived,
             messagesSent: this.messagesSent,
-            messagesReceived: this.messagesReceived
-            // Add connection type?
+            messagesReceived: this.messagesReceived,
+            connectionType: this.connection.connectionType
         }
 
     }

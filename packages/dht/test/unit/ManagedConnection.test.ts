@@ -1,5 +1,6 @@
 import { wait } from '@streamr/utils'
 import { ManagedConnection } from '../../src/connection/ManagedConnection'
+import { ConnectionType } from '../../src/connection/IConnection'
 import { MockConnection } from '../utils/mock/MockConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -22,6 +23,19 @@ describe('ManagedConnection', () => {
             done()
         })
         managedConnection.close(true)
+    })
+
+    it('exposes connection type and live connection info', async () => {
+        connection.connectionType = ConnectionType.WEBRTC
+        connection.connectionInfo = { local: 'relay/udp', remote: 'host/udp', rttMs: 12 }
+        expect(managedConnection.getConnectionType()).toBe(ConnectionType.WEBRTC)
+        expect(await managedConnection.getConnectionInfo()).toEqual({ local: 'relay/udp', remote: 'host/udp', rttMs: 12 })
+        expect(managedConnection.getDiagnosticInfo().connectionType).toBe(ConnectionType.WEBRTC)
+    })
+
+    it('getConnectionInfo never rejects', async () => {
+        connection.connectionInfo = 'throw'
+        expect(await managedConnection.getConnectionInfo()).toBeUndefined()
     })
 
     it('sends data', () => {

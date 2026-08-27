@@ -1,4 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { ConnectionType } from '../../src/connection/IConnection'
+import { toNodeId } from '../../src/identifiers'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
@@ -160,6 +162,31 @@ describe('WebRTC Connection Management', () => {
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
+    }, 20000)
+
+    it('getConnectionInfos reports webrtc connections with peer nodeIds', async () => {
+        const msg: Message = {
+            serviceId,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            }
+        }
+        const connectedPromise1 = new Promise<void>((resolve) => manager1.on('connected', () => resolve()))
+        const connectedPromise2 = new Promise<void>((resolve) => manager2.on('connected', () => resolve()))
+        msg.targetDescriptor = peerDescriptor2
+        manager1.send(msg).catch(() => {})
+        await Promise.all([connectedPromise1, connectedPromise2])
+
+        const infos1 = await manager1.getConnectionInfos()
+        expect(infos1).toHaveLength(1)
+        expect(infos1[0].nodeId).toEqual(toNodeId(peerDescriptor2))
+        expect(infos1[0].type).toEqual(ConnectionType.WEBRTC)
+        const infos2 = await manager2.getConnectionInfos()
+        expect(infos2).toHaveLength(1)
+        expect(infos2[0].nodeId).toEqual(toNodeId(peerDescriptor1))
+        expect(infos2[0].type).toEqual(ConnectionType.WEBRTC)
     }, 20000)
 
     it('failed connections are cleaned up', async () => {

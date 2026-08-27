@@ -1,5 +1,6 @@
 import { MetricsContext, until, waitForEvent } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { ConnectionType } from '../../src/connection/IConnection'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
@@ -156,6 +157,11 @@ describe('Websocket Connection Management', () => {
         await until(
             () => noWsServerManager.hasConnection(toNodeId(wsServerConnectorPeerDescriptor))
         )
+        // connection type is reported from both ends (client vs server role)
+        const clientInfos = await noWsServerManager.getConnectionInfos()
+        expect(clientInfos.map((c) => c.type)).toContain(ConnectionType.WEBSOCKET_CLIENT)
+        const serverInfos = await wsServerManager.getConnectionInfos()
+        expect(serverInfos.map((c) => c.type)).toContain(ConnectionType.WEBSOCKET_SERVER)
     })
 
     it('Connecting to self throws', async () => {

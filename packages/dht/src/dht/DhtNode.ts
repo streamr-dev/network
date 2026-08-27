@@ -10,7 +10,7 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import sample from 'lodash/sample'
 import type { MarkRequired } from 'ts-essentials'
-import { ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionInfoReport, ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ConnectionsView } from '../connection/ConnectionsView'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../connection/ConnectorFacade'
 import type { IceServer } from '../connection/webrtc/types'
@@ -652,6 +652,15 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
     public setIceServers(iceServers: IceServer[]): void {
         this.options.iceServers = iceServers
         this.ownConnectionManager?.setIceServers(iceServers)
+    }
+
+    /**
+     * Live per-connection report: connection type plus the selected ICE
+     * candidate pair (relay vs direct) where the transport provides it.
+     * Empty for nodes running on an injected transport (layer-1 nodes).
+     */
+    public async getConnectionInfos(): Promise<ConnectionInfoReport[]> {
+        return this.ownConnectionManager?.getConnectionInfos() ?? []
     }
 
     public getLocalPeerDescriptor(): PeerDescriptor {
