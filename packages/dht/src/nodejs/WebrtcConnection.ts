@@ -129,10 +129,25 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
         }
     }
 
+    private flushMessageQueue(): void {
+        while (this.messageQueue.length > 0 && this.dataChannel && this.dataChannel.bufferedAmount() < this.bufferThresholdHigh) {
+            const data = this.messageQueue.shift()
+            try {
+                this.dataChannel.sendMessageBinary(data as Buffer)
+            } catch (err) {
+                logger.debug('Failed to send binary message', { err })
+            }
+        }
+    }
+
     public send(data: Uint8Array): void {
         if (this.isOpen()) {
             try {
-                if (this.dataChannel!.bufferedAmount() < this.bufferThresholdHigh) {
+                if (this.messageQueue.length > 0) {
+                    // FIFO guard: never let a new message bypass queued ones (see browser/WorkerWebrtcConnection.send)
+                    this.messageQueue.push(data)
+                    this.flushMessageQueue()
+                } else if (this.dataChannel!.bufferedAmount() < this.bufferThresholdHigh) {
                     this.dataChannel!.sendMessageBinary(data as Buffer)
                 } else {
                     this.messageQueue.push(data)
@@ -200,16 +215,7 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
 
         dataChannel.onError((err) => logger.error('error', { err }))
 
-        dataChannel.onBufferedAmountLow(() => {
-            while (this.messageQueue.length > 0 && dataChannel.bufferedAmount() < this.bufferThresholdHigh) {
-                const data = this.messageQueue.shift()
-                try {
-                    dataChannel.sendMessageBinary(data as Buffer)
-                } catch (err) {
-                    logger.debug('Failed to send binary message', { err })
-                }
-            }
-        })
+        dataChannel.onBufferedAmountLow(() => this.flushMessageQueue())
 
         dataChannel.onMessage((msg) => {
             logger.trace(`dc.onMessage`)

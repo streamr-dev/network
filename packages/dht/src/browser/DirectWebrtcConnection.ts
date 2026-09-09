@@ -6,7 +6,7 @@ import { IceServer } from '../connection/webrtc/types'
 import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
-import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
 import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { getRtcConnectionInfo } from './rtcConnectionInfo'
 
@@ -179,7 +179,16 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
             logGapDiagnosticSampled('dht.dc.send', {
                 detail: { bufferedAmount: this.dataChannel!.bufferedAmount, queueLen: this.messageQueue.length }
             })
-            if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
+            if (this.messageQueue.length > 0) {
+                // FIFO guard: never let a new message bypass queued ones (see WorkerWebrtcConnection.send)
+                if (this.dataChannel!.bufferedAmount <= this.bufferThresholdHigh) {
+                    logGapDiagnosticEvent('dht.dc.orderGuard', {
+                        queueLen: this.messageQueue.length, bufferedAmount: this.dataChannel!.bufferedAmount
+                    })
+                }
+                this.messageQueue.push(data)
+                this.flushMessageQueue()
+            } else if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
                 this.dataChannel?.send(data as ArrayBufferView<ArrayBuffer>)
@@ -214,10 +223,18 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
         }
         dataChannel.onbufferedamountlow = () => {
             logger.trace('dc.onBufferedAmountLow')
-            while (this.messageQueue.length > 0 && this.dataChannel!.bufferedAmount < this.bufferThresholdHigh) {
-                const data = this.messageQueue.shift()!
-                this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
-            }
+            this.flushMessageQueue()
+        }
+    }
+
+    private flushMessageQueue(): void {
+        while (
+            this.messageQueue.length > 0 &&
+            this.dataChannel &&
+            this.dataChannel.bufferedAmount < this.bufferThresholdHigh
+        ) {
+            const data = this.messageQueue.shift()!
+            this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
         }
     }
 

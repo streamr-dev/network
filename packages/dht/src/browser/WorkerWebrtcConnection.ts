@@ -24,7 +24,7 @@ import type { IceServer } from '../connection/webrtc/types'
 import type { WebrtcBridgeApi } from './WebrtcBridge'
 import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
-import { isGapDiagnosticsEnabled, logGapDiagnosticSampled } from '../GapDiagnostics'
+import { isGapDiagnosticsEnabled, logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
 
 // ── agent log: layer0-vs-layer2 contention probe ────────────────────
 // Every DHT connection's datachannel `onmessage` runs in THIS one worker, and
@@ -46,7 +46,7 @@ function recordDcProcessing(procMs: number): void {
     }
     dcWinCount++
     dcWinBusyMs += procMs
-    if (procMs > dcWinMaxMs) dcWinMaxMs = procMs
+    if (procMs > dcWinMaxMs) {dcWinMaxMs = procMs}
     // Individual event for a single message whose inline processing blocked the
     // loop unusually long (one expensive routing/RPC dispatch).
     if (procMs > 15) {
@@ -293,7 +293,20 @@ export class WorkerWebrtcConnection
             logGapDiagnosticSampled('dht.dc.send', {
                 detail: { bufferedAmount: this.dataChannel.bufferedAmount, queueLen: this.messageQueue.length }
             })
-            if (this.dataChannel.bufferedAmount > this.bufferThresholdHigh) {
+            if (this.messageQueue.length > 0) {
+                // FIFO guard: while messages are queued behind backpressure, a new
+                // message must never bypass them, even if the channel buffer has
+                // momentarily dropped below the high watermark (that reordering
+                // lets a fresh message overtake seconds of queued stream data, and
+                // the receiver's duplicate detector then rejects the whole backlog).
+                if (this.dataChannel.bufferedAmount <= this.bufferThresholdHigh) {
+                    logGapDiagnosticEvent('dht.dc.orderGuard', {
+                        queueLen: this.messageQueue.length, bufferedAmount: this.dataChannel.bufferedAmount
+                    })
+                }
+                this.messageQueue.push(data)
+                this.flushMessageQueue()
+            } else if (this.dataChannel.bufferedAmount > this.bufferThresholdHigh) {
                 this.messageQueue.push(data)
             } else {
                 this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
@@ -349,7 +362,7 @@ export class WorkerWebrtcConnection
         if (this.lastRecvMs !== undefined) {
             const delta = now - this.lastRecvMs
             this.recvSumDelta += delta
-            if (delta > this.recvMaxDelta) this.recvMaxDelta = delta
+            if (delta > this.recvMaxDelta) {this.recvMaxDelta = delta}
             if (delta > 60) {
                 try {
                     console.log('[gap-diagnostics]', JSON.stringify({
@@ -364,8 +377,8 @@ export class WorkerWebrtcConnection
         this.lastRecvMs = now
         this.recvCount++
         this.recvBytes += bytes
-        if (bytes > this.recvMaxBytes) this.recvMaxBytes = bytes
-        if (this.recvWinStart === 0) this.recvWinStart = now
+        if (bytes > this.recvMaxBytes) {this.recvMaxBytes = bytes}
+        if (this.recvWinStart === 0) {this.recvWinStart = now}
         const elapsed = now - this.recvWinStart
         if (elapsed >= 1000) {
             try {
@@ -424,13 +437,7 @@ export class WorkerWebrtcConnection
 
         dataChannel.onbufferedamountlow = () => {
             logger.trace('dc.onBufferedAmountLow (worker)')
-            while (
-                this.messageQueue.length > 0 &&
-                this.dataChannel!.bufferedAmount < this.bufferThresholdHigh
-            ) {
-                const data = this.messageQueue.shift()!
-                this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
-            }
+            this.flushMessageQueue()
         }
     }
 
