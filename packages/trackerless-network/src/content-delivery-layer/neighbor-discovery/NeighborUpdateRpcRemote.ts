@@ -25,11 +25,14 @@ export class NeighborUpdateRpcRemote extends RpcRemote<NeighborUpdateRpcClient> 
                 removeMe: response.removeMe
             }
         } catch (err: any) {
+            // A failed/timed-out update carries no information about whether the
+            // remote still considers us a neighbor (on a congested link the response
+            // is simply queued behind stream data). Treating it as `removeMe` made
+            // the sender drop the neighbor and publish into the void for seconds to
+            // minutes. Propagate the error instead; connection-level disconnects and
+            // explicit removeMe/leave notices still remove neighbors.
             logger.debug(`updateNeighbors to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
-            return {
-                peerDescriptors: [],
-                removeMe: true
-            }
+            throw err
         }
     }
 }
