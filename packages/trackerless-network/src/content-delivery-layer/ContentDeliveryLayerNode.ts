@@ -8,7 +8,7 @@ import {
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
 import {
     CloseTemporaryConnection,
     LeaveStreamPartNotice,
@@ -31,7 +31,7 @@ import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManage
 import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
-import { markAndCheckDuplicate } from '../utils'
+import { getDuplicateDetectorLatest, markAndCheckDuplicate } from '../utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
 import { PlumtreeManager } from './plumtree/PlumtreeManager'
 
@@ -93,6 +93,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             streamPartId: this.options.streamPartId,
             rpcCommunicator: this.options.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
+            getDuplicateLatest: (msg: MessageID) => getDuplicateDetectorLatest(this.duplicateDetectors, msg),
             broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
             onLeaveNotice: (remoteNodeId: DhtAddress, sourceIsStreamEntryPoint: boolean) => {
                 if (this.abortController.signal.aborted) {
@@ -104,6 +105,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 ?? this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
+                    logGapDiagnosticEvent('trackerless.neighborRemoveReason', {
+                        part: this.options.streamPartId, node: remoteNodeId.slice(0, 8), reason: 'leaveNotice'
+                    })
                     this.options.discoveryLayerNode.removeContact(remoteNodeId)
                     this.options.neighbors.remove(remoteNodeId)
                     this.options.nearbyNodeView.remove(remoteNodeId)
@@ -171,6 +175,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.options.neighbors,
             'nodeAdded',
             (id, remote) => {
+                logGapDiagnosticEvent('trackerless.neighbor', {
+                    ev: 'added', part: this.options.streamPartId, node: id.slice(0, 8), count: this.options.neighbors.size()
+                })
                 this.options.propagation.onNeighborJoined(id)
                 this.options.connectionLocker.weakLockConnection(
                     toNodeId(remote.getPeerDescriptor()),
@@ -184,6 +191,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.options.neighbors,
             'nodeRemoved',
             (_id, remote) => {
+                logGapDiagnosticEvent('trackerless.neighbor', {
+                    ev: 'removed', part: this.options.streamPartId, node: _id.slice(0, 8), count: this.options.neighbors.size()
+                })
                 this.options.connectionLocker.weakUnlockConnection(
                     toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
@@ -334,6 +344,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
         const nodeId = toNodeId(peerDescriptor)
         if (this.options.neighbors.has(nodeId)) {
+            logGapDiagnosticEvent('trackerless.neighborRemoveReason', {
+                part: this.options.streamPartId, node: nodeId.slice(0, 8), reason: 'disconnected'
+            })
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
             this.options.temporaryConnectionRpcLocal.removeNode(nodeId)

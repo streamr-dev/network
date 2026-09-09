@@ -43,6 +43,10 @@ export class NumberPair {
     toString(): string {
         return `${this.a}|${this.b}`
     }
+
+    values(): [number, number] {
+        return [this.a, this.b]
+    }
 }
 
 export class InvalidNumberingError extends Error {
@@ -152,6 +156,11 @@ export class DuplicateMessageDetector {
             }
         }
         return false
+    }
+
+    /** Highest number seen so far (lower bound of the open-ended last gap). */
+    getLatestSeen(): NumberPair | undefined {
+        return this.gaps.length > 0 ? this.gaps[this.gaps.length - 1][0] : undefined
     }
 
     private dropLowestGapIfOverMaxGapCount(): void {

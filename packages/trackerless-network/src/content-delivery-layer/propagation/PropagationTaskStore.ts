@@ -3,6 +3,7 @@ import { MessageRef, StreamMessage } from '../../../generated/packages/trackerle
 import { FifoMapWithTTL } from './FifoMapWithTTL'
 
 export interface PropagationTask {
+    createdAt?: number
     message: StreamMessage
     source: string | null
     handledNeighbors: Set<DhtAddress>

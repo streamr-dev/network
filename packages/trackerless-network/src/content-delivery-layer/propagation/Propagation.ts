@@ -1,7 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
-import { logGapDiagnosticSampled } from '../../GapDiagnostics'
+import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../../GapDiagnostics'
 
 type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>
 
@@ -47,7 +47,8 @@ export class Propagation {
         const task = {
             message,
             source,
-            handledNeighbors: new Set<DhtAddress>()
+            handledNeighbors: new Set<DhtAddress>(),
+            createdAt: Date.now()
         }
         this.activeTaskStore.add(task)
         for (const target of targets) {
@@ -60,6 +61,14 @@ export class Propagation {
      */
     onNeighborJoined(neighborId: DhtAddress): void {
         const tasks = this.activeTaskStore.get()
+        const resend = tasks.filter((t) => !t.handledNeighbors.has(neighborId) && neighborId !== t.source)
+        const now = Date.now()
+        logGapDiagnosticEvent('trackerless.propagation.rejoin', {
+            neighbor: neighborId.slice(0, 8),
+            buffered: tasks.length,
+            resend: resend.length,
+            oldestMs: resend.length ? now - Math.min(...resend.map((t) => t.createdAt ?? now)) : 0
+        })
         for (const task of tasks) {
             this.sendAndAwaitThenMark(task, neighborId)
         }

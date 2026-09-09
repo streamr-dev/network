@@ -2,6 +2,14 @@ import { toUserId } from '@streamr/utils'
 import { MessageID, MessageRef } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { DuplicateMessageDetector, NumberPair } from './content-delivery-layer/DuplicateMessageDetector'
 
+export const getDuplicateDetectorLatest = (
+    duplicateDetectors: Map<string, DuplicateMessageDetector>,
+    message: MessageID
+): [number, number] | undefined => {
+    const detectorKey = `${toUserId(message.publisherId)}-${message.messageChainId}`
+    return duplicateDetectors.get(detectorKey)?.getLatestSeen()?.values()
+}
+
 export const markAndCheckDuplicate = (
     duplicateDetectors: Map<string, DuplicateMessageDetector>,
     currentMessage: MessageID, 

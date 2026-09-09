@@ -31,9 +31,9 @@ const accumulators = new Map<string, LayerAccumulator>()
 
 export function logGapDiagnosticSampled(
     layer: string,
-    opts: { detail?: Record<string, unknown>; outlierThresholdMs?: number } = {},
+    opts: { detail?: Record<string, unknown>, outlierThresholdMs?: number } = {},
 ): void {
-    if (!enabled) return
+    if (!enabled) {return}
     const now = performance.now()
     const threshold = opts.outlierThresholdMs ?? 30
 
@@ -47,9 +47,9 @@ export function logGapDiagnosticSampled(
     const deltaMs = now - acc.lastEventMs
     acc.lastEventMs = now
     acc.count++
-    if (deltaMs > acc.maxDeltaMs) acc.maxDeltaMs = deltaMs
+    if (deltaMs > acc.maxDeltaMs) {acc.maxDeltaMs = deltaMs}
     acc.sumDeltaMs += deltaMs
-    if (deltaMs > threshold) acc.outlierCount++
+    if (deltaMs > threshold) {acc.outlierCount++}
 
     if (deltaMs > threshold) {
         const payload: GapDiagnosticEvent = {
@@ -83,4 +83,29 @@ export function logGapDiagnosticSampled(
         acc.outlierCount = 0
         acc.lastReportMs = now
     }
+}
+
+// Per-event diagnostic line (rate-limited per layer) for rare/structural
+// events where the individual values matter (rejections, neighbor churn).
+const eventBudget = new Map<string, { windowStart: number, n: number }>()
+export function logGapDiagnosticEvent(
+    layer: string,
+    detail: Record<string, unknown>,
+    maxPerSecond = 20
+): void {
+    if (!isGapDiagnosticsEnabled()) {
+        return
+    }
+    const now = performance.now()
+    let b = eventBudget.get(layer)
+    if (b === undefined || now - b.windowStart >= 1000) {
+        b = { windowStart: now, n: 0 }
+        eventBudget.set(layer, b)
+    }
+    b.n++
+    if (b.n > maxPerSecond) {
+        return
+    }
+    // eslint-disable-next-line no-console
+    console.log('[gap-diagnostics]', JSON.stringify({ layer, timestampMs: now, detail }))
 }

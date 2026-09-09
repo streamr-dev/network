@@ -1,3 +1,4 @@
+import { logGapDiagnosticEvent } from '../../GapDiagnostics'
 import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID, scheduleAtInterval } from '@streamr/utils'
 import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
@@ -50,10 +51,25 @@ export class NeighborUpdateManager {
         const neighborDescriptors = this.options.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
         const startTime = Date.now()
         await Promise.allSettled(this.options.neighbors.getAll().map(async (neighbor) => {
-            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
             const nodeId = toNodeId(neighbor.getPeerDescriptor())
-            this.options.neighbors.get(nodeId)!.setRtt(Date.now() - startTime)
+            let res
+            try {
+                res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
+            } catch (e) {
+                logGapDiagnosticEvent('trackerless.neighborUpdate', {
+                    part: this.options.streamPartId,
+                    node: nodeId.slice(0, 8),
+                    result: 'error',
+                    ms: Date.now() - startTime,
+                    err: String(e).slice(0, 80)
+                })
+                throw e
+            }
+            this.options.neighbors.get(nodeId)?.setRtt(Date.now() - startTime)
             if (res.removeMe) {
+                logGapDiagnosticEvent('trackerless.neighborUpdate', {
+                    part: this.options.streamPartId, node: nodeId.slice(0, 8), result: 'removeMe', ms: Date.now() - startTime
+                })
                 this.options.neighbors.remove(nodeId)
                 this.options.neighborFinder.start([nodeId])
             }

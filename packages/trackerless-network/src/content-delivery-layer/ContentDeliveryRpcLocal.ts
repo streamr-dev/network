@@ -10,12 +10,13 @@ import {
 } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { PlumtreeManager } from './plumtree/PlumtreeManager'
-import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
+    getDuplicateLatest?: (messageId: MessageID) => [number, number] | undefined
     broadcast: (message: StreamMessage, previousNode?: DhtAddress) => void
     onLeaveNotice(remoteNodeId: DhtAddress, isLocalNodeEntryPoint: boolean): void
     markForInspection(remoteNodeId: DhtAddress, messageId: MessageID): void
@@ -31,13 +32,51 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
         this.options = options
     }
 
+    // Diagnostics: ring of recently ACCEPTED (ts,seq) per chain so a rejected
+    // message can be classified as a re-send (seen before) vs a reorder (never
+    // seen, only older than the detector's bar).
+    private readonly acceptedRing = new Map<string, number[]>()
+    private static readonly RING = 4000
+
+    private classify(messageId: MessageID, accepted: boolean, previousNodeId: DhtAddress): void {
+        const key = `${messageId.messageChainId}`
+        const code = Number(messageId.timestamp) * 4096 + messageId.sequenceNumber
+        let ring = this.acceptedRing.get(key)
+        if (ring === undefined) {
+            ring = []
+            this.acceptedRing.set(key, ring)
+        }
+        if (accepted) {
+            ring.push(code)
+            if (ring.length > ContentDeliveryRpcLocal.RING) {
+                ring.splice(0, ring.length - ContentDeliveryRpcLocal.RING)
+            }
+            return
+        }
+        const seenBefore = ring.includes(code)
+        const bar = this.options.getDuplicateLatest?.(messageId)
+        logGapDiagnosticEvent('trackerless.dupReject', {
+            part: this.options.streamPartId,
+            chain: messageId.messageChainId,
+            ts: Number(messageId.timestamp),
+            seq: messageId.sequenceNumber,
+            barTs: bar?.[0],
+            barSeq: bar?.[1],
+            behindBarMs: bar ? bar[0] - Number(messageId.timestamp) : undefined,
+            seenBefore,
+            from: previousNodeId.slice(0, 8)
+        })
+    }
+
     async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         logGapDiagnosticSampled('trackerless.rpcLocal.sendStreamMessage')
         const previousNode = (context as DhtCallContext).incomingSourceDescriptor!
         const previousNodeId = toNodeId(previousNode)
         this.options.markForInspection(previousNodeId, message.messageId!)
         if (this.options.plumtreeManager === undefined) {
-            if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+            const accepted = this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)
+            this.classify(message.messageId!, accepted, previousNodeId)
+            if (accepted) {
                 this.options.broadcast(message, previousNodeId)
             }
         } else if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
