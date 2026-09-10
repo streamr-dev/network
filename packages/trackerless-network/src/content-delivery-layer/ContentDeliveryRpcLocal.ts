@@ -38,6 +38,42 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     private readonly acceptedRing = new Map<string, number[]>()
     private static readonly RING = 4000
 
+    // Diagnostics: one-way delay of ACCEPTED messages (arrival - publisher's
+    // messageId.timestamp, i.e. the publisher's Date.now() at publish time),
+    // summarised per 2 s. With NTP-synced clocks this is the end-to-end network
+    // + sender-queue delay; the trend is meaningful even with a clock offset.
+    private delayWin?: { start: number, n: number, sum: number, min: number, max: number, last: number }
+
+    private recordDelay(messageId: MessageID): void {
+        const now = Date.now()
+        const d = now - Number(messageId.timestamp)
+        const w = this.delayWin
+        if (w === undefined) {
+            this.delayWin = { start: now, n: 1, sum: d, min: d, max: d, last: d }
+            return
+        }
+        w.n++
+        w.sum += d
+        w.last = d
+        if (d < w.min) {
+            w.min = d
+        }
+        if (d > w.max) {
+            w.max = d
+        }
+        if (now - w.start >= 2000) {
+            logGapDiagnosticEvent('trackerless.msgDelay', {
+                part: this.options.streamPartId,
+                count: w.n,
+                avgMs: Math.round(w.sum / w.n),
+                minMs: w.min,
+                maxMs: w.max,
+                lastMs: w.last
+            })
+            this.delayWin = undefined
+        }
+    }
+
     private classify(messageId: MessageID, accepted: boolean, previousNodeId: DhtAddress): void {
         const key = `${messageId.messageChainId}`
         const code = Number(messageId.timestamp) * 4096 + messageId.sequenceNumber
@@ -47,6 +83,7 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
             this.acceptedRing.set(key, ring)
         }
         if (accepted) {
+            this.recordDelay(messageId)
             ring.push(code)
             if (ring.length > ContentDeliveryRpcLocal.RING) {
                 ring.splice(0, ring.length - ContentDeliveryRpcLocal.RING)
