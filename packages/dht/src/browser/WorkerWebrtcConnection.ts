@@ -24,7 +24,9 @@ import type { IceServer } from '../connection/webrtc/types'
 import type { WebrtcBridgeApi } from './WebrtcBridge'
 import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
-import { isGapDiagnosticsEnabled, logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
+import { isGapDiagnosticsEnabled, logGapDiagnosticSampled } from '../GapDiagnostics'
+import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
+import { SendQueueStatistics } from '../connection/ConnectionStatistics'
 
 // ── agent log: layer0-vs-layer2 contention probe ────────────────────
 // Every DHT connection's datachannel `onmessage` runs in THIS one worker, and
@@ -146,7 +148,7 @@ export class WorkerWebrtcConnection
     private closed = false
     private connected = false
     private earlyTimeout: NodeJS.Timeout
-    private readonly messageQueue: Uint8Array[] = []
+    private readonly sendQueue: DataChannelSendQueue
     private startPromise?: Promise<void>
     private renamePromise?: Promise<void>
     private readonly constructedAt = Date.now()
@@ -171,6 +173,10 @@ export class WorkerWebrtcConnection
         this.iceServers = params.iceServers ?? []
         this.bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
+        this.sendQueue = new DataChannelSendQueue({
+            bufferedAmount: () => this.dataChannel?.bufferedAmount ?? 0,
+            send: (data: Uint8Array) => this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
+        }, { bufferThresholdHigh: this.bufferThresholdHigh })
         this.earlyTimeout = setTimeout(() => {
             this.doClose(false, 'timed out due to remote descriptor not being set')
         }, EARLY_TIMEOUT)
@@ -290,29 +296,10 @@ export class WorkerWebrtcConnection
 
     public send(data: Uint8Array): void {
         if (this.connected && this.dataChannel) {
-            logGapDiagnosticSampled('dht.dc.send', {
-                detail: { bufferedAmount: this.dataChannel.bufferedAmount, queueLen: this.messageQueue.length }
-            })
-            if (this.messageQueue.length > 0) {
-                // FIFO guard: while messages are queued behind backpressure, a new
-                // message must never bypass them, even if the channel buffer has
-                // momentarily dropped below the high watermark (that reordering
-                // lets a fresh message overtake seconds of queued stream data, and
-                // the receiver's duplicate detector then rejects the whole backlog).
-                if (this.dataChannel.bufferedAmount <= this.bufferThresholdHigh) {
-                    logGapDiagnosticEvent('dht.dc.orderGuard', {
-                        queueLen: this.messageQueue.length, bufferedAmount: this.dataChannel.bufferedAmount
-                    })
-                }
-                this.messageQueue.push(data)
-                this.flushMessageQueue()
-            } else if (this.dataChannel.bufferedAmount > this.bufferThresholdHigh) {
-                this.messageQueue.push(data)
-            } else {
-                this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
-            }
+            this.sendQueue.send(data)
         } else if (!this.closed) {
-            this.messageQueue.push(data)
+            // channel not open yet: hold the message, flushed in onDataChannelOpen()
+            this.sendQueue.enqueue(data)
         }
     }
 
@@ -349,6 +336,11 @@ export class WorkerWebrtcConnection
         } catch {
             return undefined
         }
+    }
+
+    /** Synchronous send-queue snapshot (see IConnection.getStatistics). */
+    public getStatistics(): SendQueueStatistics | undefined {
+        return this.closed ? undefined : this.sendQueue.getStatistics()
     }
 
     // ── DataChannel handling (runs entirely in the worker) ──────
@@ -437,25 +429,14 @@ export class WorkerWebrtcConnection
 
         dataChannel.onbufferedamountlow = () => {
             logger.trace('dc.onBufferedAmountLow (worker)')
-            this.flushMessageQueue()
+            this.sendQueue.flush()
         }
     }
 
     private onDataChannelOpen(): void {
         this.connected = true
-        this.flushMessageQueue()
+        this.sendQueue.flush()
         this.emit('connected')
-    }
-
-    private flushMessageQueue(): void {
-        while (
-            this.messageQueue.length > 0 &&
-            this.dataChannel &&
-            this.dataChannel.bufferedAmount < this.bufferThresholdHigh
-        ) {
-            const data = this.messageQueue.shift()!
-            this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
-        }
     }
 
     // ── Teardown ────────────────────────────────────────────────
@@ -464,7 +445,7 @@ export class WorkerWebrtcConnection
         if (!this.closed) {
             this.closed = true
             this.connected = false
-            this.messageQueue.length = 0
+            this.sendQueue.clear()
             clearTimeout(this.earlyTimeout)
 
             this.stopListening()

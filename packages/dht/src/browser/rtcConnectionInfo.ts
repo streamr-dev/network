@@ -31,7 +31,7 @@ export async function getRtcConnectionInfo(pc: RTCPeerConnection): Promise<Conne
     } catch {
         // stats unavailable — return whatever the ice transport gave us
     }
-    return (info.local !== undefined || info.rttMs !== undefined) ? info : undefined
+    return (info.local !== undefined || info.rttMs !== undefined || info.transportBytesSent !== undefined) ? info : undefined
 }
 
 function formatCandidate(type: string | null | undefined, protocol: string | null | undefined): string {
@@ -43,8 +43,16 @@ function enrichFromStats(report: RTCStatsReport, info: ConnectionInfo): void {
     const candidates = new Map<string, Record<string, unknown>>()
     let selectedPairId: string | undefined
     report.forEach((stat: Record<string, unknown>) => {
-        if ((stat.type === 'transport') && (typeof stat.selectedCandidatePairId === 'string')) {
-            selectedPairId = stat.selectedCandidatePairId
+        if (stat.type === 'transport') {
+            if (typeof stat.selectedCandidatePairId === 'string') {
+                selectedPairId = stat.selectedCandidatePairId
+            }
+            if (typeof stat.bytesSent === 'number') {
+                info.transportBytesSent = stat.bytesSent
+            }
+            if (typeof stat.bytesReceived === 'number') {
+                info.transportBytesReceived = stat.bytesReceived
+            }
         } else if (stat.type === 'candidate-pair') {
             pairs.set(stat.id as string, stat)
         } else if ((stat.type === 'local-candidate') || (stat.type === 'remote-candidate')) {

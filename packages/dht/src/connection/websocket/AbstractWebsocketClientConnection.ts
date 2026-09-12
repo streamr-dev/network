@@ -3,10 +3,14 @@ import { createRandomConnectionId } from '../Connection'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { ConnectionInfo, logConnectionEvent } from '../ConnectionDiagnostics'
+import { SendQueueStatistics } from '../ConnectionStatistics'
+import { ByteRateEstimator } from '../../helpers/ByteRateEstimator'
 
 export interface Socket {
     binaryType: string
     readyState: number
+    /** bytes queued in the socket, not yet on the wire (native WebSocket and `ws` both provide it) */
+    bufferedAmount?: number
     close(code?: number, reason?: string): void
     send(data: string | Buffer | ArrayBuffer | ArrayBufferView): void
 }
@@ -31,6 +35,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
     protected targetUrl?: string
     private wasConnected = false
     private readonly constructedAt = Date.now()
+    private readonly sendRate = new ByteRateEstimator()
     
     constructor() {
         super()
@@ -47,6 +52,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
             if (this.socket?.readyState === OPEN) {
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data)
+                this.sendRate.record(data.byteLength)
             } else {
                 // Could this throw for faster feedback on RPC calls?
                 // Currently this log line is seen if a connection is closing but the disconnected event has not been emitted yet.
@@ -140,6 +146,23 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
         return {
             url: this.targetUrl,
             ms: Date.now() - this.constructedAt
+        }
+    }
+
+    // A websocket has no JS-side backlog: everything not yet on the wire sits
+    // in the socket's own buffer (bufferedAmount), so offered == sent here.
+    public getStatistics(): SendQueueStatistics | undefined {
+        if (this.destroyed || this.socket === undefined) {
+            return undefined
+        }
+        const rate = this.sendRate.getBytesPerSecond()
+        return {
+            bufferedAmount: this.socket.bufferedAmount ?? 0,
+            queuedMessages: 0,
+            queuedBytes: 0,
+            oldestQueuedMs: 0,
+            offeredBytesPerSecond: rate,
+            sentBytesPerSecond: rate
         }
     }
 

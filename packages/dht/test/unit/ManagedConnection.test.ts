@@ -38,6 +38,30 @@ describe('ManagedConnection', () => {
         expect(await managedConnection.getConnectionInfo()).toBeUndefined()
     })
 
+    it('getStatistics is undefined for transports without statistics', () => {
+        expect(managedConnection.getStatistics()).toBeUndefined()
+        expect(managedConnection.getDiagnosticInfo().statistics).toBeUndefined()
+    })
+
+    it('getStatistics merges the transport snapshot with the receive rate', () => {
+        connection.sendStatistics = {
+            bufferedAmount: 10, queuedMessages: 2, queuedBytes: 30, oldestQueuedMs: 5, offeredBytesPerSecond: 100, sentBytesPerSecond: 60
+        }
+        connection.emitData(new Uint8Array(300))
+        const statistics = managedConnection.getStatistics()!
+        expect(statistics).toMatchObject({
+            bufferedAmount: 10, queuedMessages: 2, queuedBytes: 30, oldestQueuedMs: 5, offeredBytesPerSecond: 100, sentBytesPerSecond: 60,
+            backlogBytes: 40, receivedBytesPerSecond: 300
+        })
+        expect(Math.abs(statistics.sampledAt - Date.now())).toBeLessThan(1000)
+        expect(managedConnection.getDiagnosticInfo().statistics).toMatchObject({ backlogBytes: 40 })
+    })
+
+    it('getStatistics never throws', () => {
+        connection.sendStatistics = 'throw'
+        expect(managedConnection.getStatistics()).toBeUndefined()
+    })
+
     it('sends data', () => {
         const data = new Uint8Array([1, 2, 3])
         managedConnection.send(data)

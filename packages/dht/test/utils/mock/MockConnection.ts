@@ -1,12 +1,21 @@
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionInfo } from '../../../src/connection/ConnectionDiagnostics'
 import { ConnectionEvents, ConnectionType, IConnection } from '../../../src/connection/IConnection'
+import { SendQueueStatistics } from '../../../src/connection/ConnectionStatistics'
 
 export class MockConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public sentData: Uint8Array[] = []
     public connectionType?: ConnectionType
     public connectionInfo?: ConnectionInfo | 'throw'
+    public sendStatistics?: SendQueueStatistics | 'throw'
+
+    getStatistics(): SendQueueStatistics | undefined {
+        if (this.sendStatistics === 'throw') {
+            throw new Error('mock getStatistics failure')
+        }
+        return this.sendStatistics
+    }
 
     async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
         if (this.connectionInfo === 'throw') {

@@ -8,7 +8,9 @@ import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../helpers/errors'
 import { iceServerAsString } from '../connection/webrtc/iceServerAsString'
 import { IceServer } from '../connection/webrtc/types'
-import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import { DEFAULT_BUFFER_THRESHOLD_HIGH, DEFAULT_BUFFER_THRESHOLD_LOW, EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
+import { SendQueueStatistics } from '../connection/ConnectionStatistics'
 import { PortRange } from '../connection/ConnectionManager'
 import { toNodeId } from '../identifiers'
 import { createRandomConnectionId } from '../connection/Connection'
@@ -46,7 +48,7 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
     private readonly maxMessageSize?: number
-    private readonly messageQueue: Uint8Array[] = []
+    private readonly sendQueue: DataChannelSendQueue
     private closed = false
     private offering?: boolean
     private readonly earlyTimeout: NodeJS.Timeout
@@ -56,8 +58,21 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
-        this.bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
-        this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
+        this.bufferThresholdHigh = params.bufferThresholdHigh ?? DEFAULT_BUFFER_THRESHOLD_HIGH
+        this.bufferThresholdLow = params.bufferThresholdLow ?? DEFAULT_BUFFER_THRESHOLD_LOW
+        this.sendQueue = new DataChannelSendQueue({
+            bufferedAmount: () => this.dataChannel?.bufferedAmount() ?? 0,
+            send: (data: Uint8Array) => {
+                if (this.dataChannel === undefined) {
+                    return
+                }
+                try {
+                    this.dataChannel.sendMessageBinary(data as Buffer)
+                } catch (err) {
+                    logger.debug('Failed to send binary message to ' + toNodeId(this.remotePeerDescriptor), { err })
+                }
+            }
+        }, { bufferThresholdHigh: this.bufferThresholdHigh })
         this.remotePeerDescriptor = params.remotePeerDescriptor
         this.maxMessageSize = params.maxMessageSize ?? 1048576
         this.portRange = params.portRange
@@ -129,33 +144,9 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
         }
     }
 
-    private flushMessageQueue(): void {
-        while (this.messageQueue.length > 0 && this.dataChannel && this.dataChannel.bufferedAmount() < this.bufferThresholdHigh) {
-            const data = this.messageQueue.shift()
-            try {
-                this.dataChannel.sendMessageBinary(data as Buffer)
-            } catch (err) {
-                logger.debug('Failed to send binary message', { err })
-            }
-        }
-    }
-
     public send(data: Uint8Array): void {
         if (this.isOpen()) {
-            try {
-                if (this.messageQueue.length > 0) {
-                    // FIFO guard: never let a new message bypass queued ones (see browser/WorkerWebrtcConnection.send)
-                    this.messageQueue.push(data)
-                    this.flushMessageQueue()
-                } else if (this.dataChannel!.bufferedAmount() < this.bufferThresholdHigh) {
-                    this.dataChannel!.sendMessageBinary(data as Buffer)
-                } else {
-                    this.messageQueue.push(data)
-                }
-            } catch (err) {
-                const remoteNodeId = toNodeId(this.remotePeerDescriptor)
-                logger.debug('Failed to send binary message to ' + remoteNodeId + err)
-            }
+            this.sendQueue.send(data)
         }
     }
 
@@ -170,7 +161,8 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
             logger.trace(`Closing Node WebRTC Connection to ${remoteNodeId}` + `${(reason !== undefined) ? `, reason: ${reason}` : ''}`)
 
             this.closed = true
-            
+            this.sendQueue.clear()
+
             this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
 
@@ -215,7 +207,7 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
 
         dataChannel.onError((err) => logger.error('error', { err }))
 
-        dataChannel.onBufferedAmountLow(() => this.flushMessageQueue())
+        dataChannel.onBufferedAmountLow(() => this.sendQueue.flush())
 
         dataChannel.onMessage((msg) => {
             logger.trace(`dc.onMessage`)
@@ -247,6 +239,11 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
 
     isOpen(): boolean {
         return !this.closed && this.lastState === 'connected' && !!this.dataChannel
+    }
+
+    /** Synchronous send-queue snapshot (see IConnection.getStatistics). */
+    public getStatistics(): SendQueueStatistics | undefined {
+        return this.closed ? undefined : this.sendQueue.getStatistics()
     }
 
     public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {

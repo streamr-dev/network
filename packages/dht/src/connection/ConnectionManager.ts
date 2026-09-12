@@ -1,4 +1,14 @@
-import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent } from '@streamr/utils'
+import {
+    CountMetric,
+    LevelMetric,
+    Logger,
+    Metric,
+    MetricsContext,
+    MetricsDefinition,
+    RateMetric,
+    setAbortableInterval,
+    waitForEvent
+} from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
@@ -28,6 +38,7 @@ import { getOfferer } from '../helpers/offering'
 import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
 import { ConnectionType, IConnection } from './IConnection'
+import { ConnectionStatistics, DEFAULT_STATISTICS_INTERVAL } from './ConnectionStatistics'
 import type { IceServer } from './webrtc/types'
 import { ConnectionInfo, isConnectionDiagnosticsEnabled, logConnectionEvent, recordSummarizedConnectionEvent } from './ConnectionDiagnostics'
 import { PendingConnection } from './PendingConnection'
@@ -38,6 +49,8 @@ export interface ConnectionManagerOptions {
     metricsContext: MetricsContext
     allowIncomingPrivateConnections: boolean
     createConnectorFacade: () => ConnectorFacade
+    // Emit 'statisticsUpdated' for every connected peer this often (ms). 0 (default) disables the ticker.
+    statisticsInterval?: number
 }
 
 export enum NatType {
@@ -106,6 +119,7 @@ const INTERNAL_SERVICE_ID = 'system/connection-manager'
 export interface ConnectionInfoReport extends ConnectionInfo {
     nodeId: DhtAddress
     type?: ConnectionType
+    statistics?: ConnectionStatistics
 }
 
 export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
@@ -120,6 +134,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
+    private readonly statisticsAbortController = new AbortController()
     private state = ConnectionManagerState.IDLE
     private privateClientMode = false
 
@@ -220,6 +235,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.options.maxConnections ?? 80, LAST_USED_LIMIT)
         }, 5000)  // TODO use options option or named constant?
+        const statisticsInterval = this.options.statisticsInterval ?? DEFAULT_STATISTICS_INTERVAL
+        if (statisticsInterval > 0) {
+            setAbortableInterval(() => this.emitStatistics(), statisticsInterval, this.statisticsAbortController.signal)
+        }
     }
 
     public async stop(): Promise<void> {
@@ -231,6 +250,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.disconnectorIntervalRef) {
             clearInterval(this.disconnectorIntervalRef)
         }
+        this.statisticsAbortController.abort()
         await Promise.all(Array.from(this.endpoints.values()).map(async (endpoint) => {
             if (endpoint.connected) {
                 try {
@@ -704,8 +724,32 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return Promise.all(connected.map(async ([nodeId, connection]) => ({
             nodeId,
             type: connection.getConnectionType(),
+            statistics: connection.getStatistics(),
             ...await connection.getConnectionInfo()
         })))
+    }
+
+    // One 'statisticsUpdated' per connected peer (private-mode connections
+    // included: a proxied client's uplink is exactly where congestion matters).
+    // Endpoints still connecting are skipped. A throwing listener must not
+    // kill the ticker, so each emit is guarded.
+    private emitStatistics(): void {
+        if (this.state !== ConnectionManagerState.RUNNING) {
+            return
+        }
+        const connected = Array.from(this.endpoints.entries())
+            .filter(([, endpoint]) => endpoint.connected)
+            .map(([nodeId, endpoint]) => [nodeId, (endpoint as ConnectedEndpoint).connection] as const)
+        for (const [nodeId, connection] of connected) {
+            const statistics = connection.getStatistics()
+            if (statistics !== undefined) {
+                try {
+                    this.emit('statisticsUpdated', connection.getPeerDescriptor()!, statistics, nodeId)
+                } catch (err) {
+                    logger.warn('statisticsUpdated listener failed', { err })
+                }
+            }
+        }
     }
 
     private onConnectionCountChange() {

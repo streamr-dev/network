@@ -6,6 +6,8 @@ import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './AbstractWebsocketClientConnection'
 import { createRandomConnectionId } from '../Connection'
 import { ConnectionInfo } from '../ConnectionDiagnostics'
+import { SendQueueStatistics } from '../ConnectionStatistics'
+import { ByteRateEstimator } from '../../helpers/ByteRateEstimator'
 
 const logger = new Logger('WebsocketServerConnection')
 
@@ -17,6 +19,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     private readonly remoteIpAddress: string
     private socket?: WebSocket
     private stopped = false
+    private readonly sendRate = new ByteRateEstimator()
 
     constructor(socket: WebSocket, resourceURL: Url, remoteAddress: string) {
         super()
@@ -44,6 +47,22 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {
         return {
             remoteAddress: this.remoteIpAddress
+        }
+    }
+
+    // See AbstractWebsocketClientConnection.getStatistics(): no JS-side backlog, offered == sent.
+    public getStatistics(): SendQueueStatistics | undefined {
+        if (this.stopped || this.socket === undefined) {
+            return undefined
+        }
+        const rate = this.sendRate.getBytesPerSecond()
+        return {
+            bufferedAmount: this.socket.bufferedAmount,
+            queuedMessages: 0,
+            queuedBytes: 0,
+            oldestQueuedMs: 0,
+            offeredBytesPerSecond: rate,
+            sentBytesPerSecond: rate
         }
     }
 
@@ -83,6 +102,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             this.socket.send(data, { binary: true })
+            this.sendRate.record(data.byteLength)
         } else {
             logger.debug('Tried to call send() on a stopped socket')
         }

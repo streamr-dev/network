@@ -3,10 +3,12 @@ import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from '../co
 import { IConnection, ConnectionID, ConnectionType } from '../connection/IConnection'
 import { Logger } from '@streamr/utils'
 import { IceServer } from '../connection/webrtc/types'
-import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import { DEFAULT_BUFFER_THRESHOLD_HIGH, DEFAULT_BUFFER_THRESHOLD_LOW, EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
-import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../GapDiagnostics'
+import { logGapDiagnosticSampled } from '../GapDiagnostics'
+import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
+import { SendQueueStatistics } from '../connection/ConnectionStatistics'
 import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { getRtcConnectionInfo } from './rtcConnectionInfo'
 
@@ -27,20 +29,26 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
     private lastState: RTCPeerConnectionState = 'connecting'
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
-    private readonly bufferThresholdHigh = 2 ** 17
-    private readonly bufferThresholdLow = 2 ** 15
+    private readonly bufferThresholdHigh: number
+    private readonly bufferThresholdLow: number
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
     private closed = false
     private earlyTimeout: NodeJS.Timeout
-    private readonly messageQueue: Uint8Array[] = []
+    private readonly sendQueue: DataChannelSendQueue
     private readonly constructedAt = Date.now()
 
     constructor(params: WebrtcConnectionParams) {
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
+        this.bufferThresholdHigh = params.bufferThresholdHigh ?? DEFAULT_BUFFER_THRESHOLD_HIGH
+        this.bufferThresholdLow = params.bufferThresholdLow ?? DEFAULT_BUFFER_THRESHOLD_LOW
+        this.sendQueue = new DataChannelSendQueue({
+            bufferedAmount: () => this.dataChannel?.bufferedAmount ?? 0,
+            send: (data: Uint8Array) => this.dataChannel?.send(data as ArrayBufferView<ArrayBuffer>)
+        }, { bufferThresholdHigh: this.bufferThresholdHigh })
         this.earlyTimeout = setTimeout(() => {
             this.doClose(false, 'timed out due to remote descriptor not being set')
         }, EARLY_TIMEOUT)
@@ -140,6 +148,7 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
         if (!this.closed) {
             this.closed = true
             this.lastState = 'closed'
+            this.sendQueue.clear()
             clearTimeout(this.earlyTimeout)
 
             this.stopListening()
@@ -176,23 +185,7 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
     public send(data: Uint8Array): void {
         if (this.lastState === 'connected') {
-            logGapDiagnosticSampled('dht.dc.send', {
-                detail: { bufferedAmount: this.dataChannel!.bufferedAmount, queueLen: this.messageQueue.length }
-            })
-            if (this.messageQueue.length > 0) {
-                // FIFO guard: never let a new message bypass queued ones (see WorkerWebrtcConnection.send)
-                if (this.dataChannel!.bufferedAmount <= this.bufferThresholdHigh) {
-                    logGapDiagnosticEvent('dht.dc.orderGuard', {
-                        queueLen: this.messageQueue.length, bufferedAmount: this.dataChannel!.bufferedAmount
-                    })
-                }
-                this.messageQueue.push(data)
-                this.flushMessageQueue()
-            } else if (this.dataChannel!.bufferedAmount > this.bufferThresholdHigh) {
-                this.messageQueue.push(data)
-            } else {
-                this.dataChannel?.send(data as ArrayBufferView<ArrayBuffer>)
-            }
+            this.sendQueue.send(data)
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }
@@ -223,18 +216,7 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
         }
         dataChannel.onbufferedamountlow = () => {
             logger.trace('dc.onBufferedAmountLow')
-            this.flushMessageQueue()
-        }
-    }
-
-    private flushMessageQueue(): void {
-        while (
-            this.messageQueue.length > 0 &&
-            this.dataChannel &&
-            this.dataChannel.bufferedAmount < this.bufferThresholdHigh
-        ) {
-            const data = this.messageQueue.shift()!
-            this.dataChannel.send(data as ArrayBufferView<ArrayBuffer>)
+            this.sendQueue.flush()
         }
     }
 
@@ -272,6 +254,11 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
 
     public setConnectionId(connectionId: ConnectionID): void {
         this.connectionId = connectionId
+    }
+
+    /** Synchronous send-queue snapshot (see IConnection.getStatistics). */
+    public getStatistics(): SendQueueStatistics | undefined {
+        return this.closed ? undefined : this.sendQueue.getStatistics()
     }
 
     public async getConnectionInfo(): Promise<ConnectionInfo | undefined> {

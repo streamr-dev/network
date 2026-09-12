@@ -5,12 +5,13 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
-import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw, toNodeId } from '../../src/identifiers'
 import { ConnectivityResponse, Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import range from 'lodash/range'
+import { ConnectionStatistics } from '../../src/connection/ConnectionStatistics'
 
 const SERVICE_ID = 'demo'
 
@@ -29,7 +30,10 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
     let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
+    const createConnectionManager = (
+        opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>,
+        statisticsInterval?: number
+    ) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
                 createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
@@ -37,7 +41,8 @@ describe('ConnectionManager', () => {
                 ...opts
             }),
             metricsContext: new MetricsContext(),
-            allowIncomingPrivateConnections: true
+            allowIncomingPrivateConnections: true,
+            statisticsInterval
         })
     }
 
@@ -187,6 +192,62 @@ describe('ConnectionManager', () => {
         connectionManager1.send(msg)
 
         await Promise.all([promise, connectedPromise1, connectedPromise2])
+
+        await connectionManager1.stop()
+        await connectionManager2.stop()
+    })
+
+    it('emits per-connection statistics over websocket', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockConnectorTransport1,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 9985, max: 9985 }
+        }, 20)
+        await connectionManager1.start()
+        const connectionManager2 = createConnectionManager({
+            transport: mockConnectorTransport2,
+            websocketPortRange: { min: 9986, max: 9986 },
+            entryPoints: [
+                connectionManager1.getLocalPeerDescriptor()
+            ]
+        }, 20)
+        await connectionManager2.start()
+
+        const stats1: ConnectionStatistics[] = []
+        const stats2: ConnectionStatistics[] = []
+        connectionManager1.on('statisticsUpdated', (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => {
+            expect(nodeId).toEqual(toNodeId(peerDescriptor))
+            expect(nodeId).toEqual(toNodeId(connectionManager2.getLocalPeerDescriptor()))
+            stats1.push(statistics)
+        })
+        connectionManager2.on('statisticsUpdated', (_peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics) => {
+            stats2.push(statistics)
+        })
+        const connected = Promise.all([
+            waitForEvent(connectionManager1, 'connected'),
+            waitForEvent(connectionManager2, 'connected')
+        ])
+        for (let i = 0; i < 50; i++) {
+            const msg: Message = {
+                serviceId: SERVICE_ID,
+                messageId: `stats-${i}`,
+                body: {
+                    oneofKind: 'rpcMessage',
+                    rpcMessage: RpcMessage.create()
+                },
+                targetDescriptor: connectionManager2.getLocalPeerDescriptor()
+            }
+            connectionManager1.send(msg)
+        }
+        await connected
+        await until(() => stats1.some((s) => s.sentBytesPerSecond > 0) && stats2.some((s) => s.receivedBytesPerSecond > 0), 5000)
+        const sample = stats1.find((s) => s.sentBytesPerSecond > 0)!
+        expect(sample.queuedMessages).toBe(0)
+        expect(sample.queuedBytes).toBe(0)
+        expect(sample.oldestQueuedMs).toBe(0)
+        expect(typeof sample.bufferedAmount).toBe('number')
+        expect(sample.backlogBytes).toEqual(sample.bufferedAmount)
+        expect(sample.offeredBytesPerSecond).toEqual(sample.sentBytesPerSecond)
 
         await connectionManager1.stop()
         await connectionManager2.stop()

@@ -25,6 +25,10 @@ export interface ConnectionInfo {
     remoteAddress?: string
     /** milliseconds from connection construction to this event */
     ms?: number
+    /** cumulative transport-level (DTLS/SCTP) bytes sent, when the transport reports it */
+    transportBytesSent?: number
+    /** cumulative transport-level bytes received, when the transport reports it */
+    transportBytesReceived?: number
 }
 
 let enabled = true

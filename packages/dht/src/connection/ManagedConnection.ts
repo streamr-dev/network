@@ -1,5 +1,7 @@
 import { ConnectionID, ConnectionType, IConnection } from './IConnection'
 import { ConnectionInfo } from './ConnectionDiagnostics'
+import { ConnectionStatistics, SendQueueStatistics } from './ConnectionStatistics'
+import { ByteRateEstimator } from '../helpers/ByteRateEstimator'
 import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
@@ -30,6 +32,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     private bytesReceived = 0
     private messagesSent = 0
     private messagesReceived = 0
+    private readonly receiveRate = new ByteRateEstimator()
 
     constructor(peerDescriptor: PeerDescriptor, connection: IConnection) {
         super()
@@ -40,6 +43,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             this.lastUsedTimestamp = Date.now()
             this.messagesReceived += 1
             this.bytesReceived += bytes.length
+            this.receiveRate.record(bytes.length)
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
         connection.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
@@ -107,6 +111,27 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         }
     }
 
+    // Send-queue snapshot from the transport plus the receive rate counted
+    // here (every transport delivers through the 'data' event). Undefined for
+    // transports without statistics (simulator) and for closed connections.
+    getStatistics(): ConnectionStatistics | undefined {
+        let sendStatistics: SendQueueStatistics | undefined
+        try {
+            sendStatistics = this.connection.getStatistics?.()
+        } catch {
+            return undefined
+        }
+        if (sendStatistics === undefined) {
+            return undefined
+        }
+        return {
+            ...sendStatistics,
+            backlogBytes: sendStatistics.queuedBytes + sendStatistics.bufferedAmount,
+            receivedBytesPerSecond: this.receiveRate.getBytesPerSecond(),
+            sampledAt: Date.now()
+        }
+    }
+
     getDiagnosticInfo(): Record<string, unknown> {
         return {
             remotePeerDescriptor: this.remotePeerDescriptor,
@@ -118,7 +143,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             bytesReceived: this.bytesReceived,
             messagesSent: this.messagesSent,
             messagesReceived: this.messagesReceived,
-            connectionType: this.connection.connectionType
+            connectionType: this.connection.connectionType,
+            statistics: this.getStatistics()
         }
 
     }

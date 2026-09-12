@@ -1,6 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { toNodeId } from '../../src/identifiers'
+import { DhtAddress, toNodeId } from '../../src/identifiers'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
@@ -8,7 +8,8 @@ import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { MetricsContext } from '@streamr/utils'
+import { MetricsContext, until } from '@streamr/utils'
+import { ConnectionStatistics } from '../../src/connection/ConnectionStatistics'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
@@ -18,7 +19,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext(),
-        allowIncomingPrivateConnections: false
+        allowIncomingPrivateConnections: false,
+        statisticsInterval: 20
     })
 }
 
@@ -188,6 +190,51 @@ describe('WebRTC Connection Management', () => {
         expect(infos2[0].nodeId).toEqual(toNodeId(peerDescriptor1))
         expect(infos2[0].type).toEqual(ConnectionType.WEBRTC)
     }, 20000)
+
+    it('statisticsUpdated flows over webrtc and the send queue grows under a burst', async () => {
+        const stats1: ConnectionStatistics[] = []
+        const stats2: ConnectionStatistics[] = []
+        manager1.on('statisticsUpdated', (_peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => {
+            expect(nodeId).toEqual(toNodeId(peerDescriptor2))
+            stats1.push(statistics)
+        })
+        manager2.on('statisticsUpdated', (_peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics) => {
+            stats2.push(statistics)
+        })
+        const connectedPromise1 = new Promise<void>((resolve) => manager1.on('connected', () => resolve()))
+        const connectedPromise2 = new Promise<void>((resolve) => manager2.on('connected', () => resolve()))
+        manager1.send({
+            serviceId,
+            messageId: 'burst-0',
+            body: { oneofKind: 'rpcMessage', rpcMessage: RpcMessage.create() },
+            targetDescriptor: peerDescriptor2
+        }).catch(() => {})
+        await Promise.all([connectedPromise1, connectedPromise2])
+
+        // 300 x 16 KB synchronously: far above the 128 KB datachannel watermark,
+        // so the sender's queue must fill and later drain; unique messageIds
+        // keep the receiver's duplicate detector from dropping them
+        for (let i = 1; i <= 300; i++) {
+            manager1.send({
+                serviceId,
+                messageId: `burst-${i}`,
+                body: {
+                    oneofKind: 'rpcMessage',
+                    rpcMessage: { ...RpcMessage.create(), body: { typeUrl: 'burst', value: new Uint8Array(16 * 1024) } }
+                },
+                targetDescriptor: peerDescriptor2
+            }).catch(() => {})
+        }
+        await until(() => stats1.some((s) => (s.offeredBytesPerSecond > 0) && ((s.queuedMessages > 0) || (s.bufferedAmount > 0))), 10000)
+        await until(() => {
+            const latest = stats1[stats1.length - 1]
+            return (latest?.queuedMessages === 0) && (latest.bufferedAmount === 0)
+        }, 20000)
+        await until(() => stats2.some((s) => s.receivedBytesPerSecond > 0), 10000)
+        const peak = stats1.reduce((max, s) => Math.max(max, s.backlogBytes), 0)
+        expect(peak).toBeGreaterThan(0)
+        expect(stats1.every((s) => s.backlogBytes === s.queuedBytes + s.bufferedAmount)).toBe(true)
+    }, 40000)
 
     it('failed connections are cleaned up', async () => {
         const msg: Message = {

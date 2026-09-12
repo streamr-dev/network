@@ -37,6 +37,7 @@ import {
 } from '../../generated/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
+import { ConnectionStatistics } from '../connection/ConnectionStatistics'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../types/ServiceID'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
@@ -55,6 +56,8 @@ import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 import { isBrowserEnvironment } from '@/isBrowserEnvironment'
 import { CONTROL_LAYER_NODE_SERVICE_ID } from './consts'
+
+type StatisticsListener = (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => void
 
 export interface DhtNodeEvents extends TransportEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -105,6 +108,8 @@ export interface DhtNodeOptions {
     webrtcPortRange?: PortRange
     maxMessageSize?: number
     maxConnections?: number
+    // per-connection 'statisticsUpdated' ticker interval (ms); 0/undefined = off
+    statisticsInterval?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
     autoCertifierUrl?: string
@@ -247,7 +252,8 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
                 createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeOptions),
                 maxConnections: this.options.maxConnections,
                 metricsContext: this.options.metricsContext,
-                allowIncomingPrivateConnections: this.options.allowIncomingPrivateConnections ?? false
+                allowIncomingPrivateConnections: this.options.allowIncomingPrivateConnections ?? false,
+                statisticsInterval: this.options.statisticsInterval
             })
             await connectionManager.start()
             this.connectionsView = connectionManager
@@ -413,6 +419,14 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
                 }
                 this.router!.onNodeDisconnected(peerDescriptor)
                 this.emit('disconnected', peerDescriptor, gracefulLeave)
+            },
+            this.abortController.signal
+        )
+        addManagedEventListener<'statisticsUpdated', StatisticsListener>(  // TODO remove explicit type in NET-1449
+            this.transport!,
+            'statisticsUpdated',
+            (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => {
+                this.emit('statisticsUpdated', peerDescriptor, statistics, nodeId)
             },
             this.abortController.signal
         )

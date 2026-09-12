@@ -1,9 +1,14 @@
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectionStatistics } from '../connection/ConnectionStatistics'
+import { DhtAddress } from '../identifiers'
 
 export interface TransportEvents {
     connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
     message: (message: Message) => void
+    // periodic per-connection send/receive statistics (opt-in, see ConnectionManagerOptions.statisticsInterval);
+    // nodeId is toNodeId(peerDescriptor), passed along so listeners need not recompute it
+    statisticsUpdated: (peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => void
 }
 
 export interface SendOptions {
@@ -22,15 +27,21 @@ export interface ITransport {
     on<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
+    on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor,
+        statistics: ConnectionStatistics, nodeId: DhtAddress) => void): void
 
     once<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, 
         gracefulLeave: boolean) => void): void
+    once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor,
+        statistics: ConnectionStatistics, nodeId: DhtAddress) => void): void
 
     off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
+    off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor,
+        statistics: ConnectionStatistics, nodeId: DhtAddress) => void): void
 
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor

@@ -1,5 +1,6 @@
 import { BrandedString } from '@streamr/utils'
 import { ConnectionInfo } from './ConnectionDiagnostics'
+import { SendQueueStatistics } from './ConnectionStatistics'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void
@@ -46,4 +47,10 @@ export interface IConnection {
      * Must resolve quickly and never throw.
      */
     getConnectionInfo?(): Promise<ConnectionInfo | undefined>
+    /**
+     * Synchronous send-side statistics snapshot for transports that can
+     * provide one (WebRTC datachannels, websockets). Cheap, never throws;
+     * returns undefined once the connection is closed.
+     */
+    getStatistics?(): SendQueueStatistics | undefined
 }
