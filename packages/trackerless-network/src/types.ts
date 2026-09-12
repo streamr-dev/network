@@ -1,3 +1,4 @@
+import { ConnectionStatistics, DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { ChangeFieldType } from '@streamr/utils'
 import { MarkRequired } from 'ts-essentials'
 import {
@@ -11,3 +12,14 @@ import {
 export type ContentDeliveryLayerNeighborInfo = MarkRequired<ContentDeliveryLayerNeighborInfo_, 'peerDescriptor'>
 export type StreamPartitionInfo = ChangeFieldType<Required<StreamPartitionInfo_>, 'contentDeliveryLayerNeighbors', ContentDeliveryLayerNeighborInfo[]>
 export type NodeInfo = ChangeFieldType<Required<NodeInfoResponse>, 'streamPartitions', StreamPartitionInfo[]>
+
+/**
+ * Public per-neighbor view of a stream part. Plain data only (no class
+ * instances), so it can be posted across worker boundaries as is.
+ */
+export interface NeighborInfo {
+    nodeId: DhtAddress
+    peerDescriptor: PeerDescriptor
+    rtt?: number
+    statistics?: ConnectionStatistics
+}

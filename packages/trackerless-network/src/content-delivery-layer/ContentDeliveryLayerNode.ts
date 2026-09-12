@@ -1,5 +1,6 @@
 import {
     ConnectionLocker,
+    ConnectionStatistics,
     DhtAddress,
     ITransport,
     ListeningRpcCommunicator,
@@ -32,12 +33,16 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { getDuplicateDetectorLatest, markAndCheckDuplicate } from '../utils'
-import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { ContentDeliveryLayerNeighborInfo, NeighborInfo } from '../types'
 import { PlumtreeManager } from './plumtree/PlumtreeManager'
 
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
+    // a statistics tick for one neighbor (see ConnectionManagerOptions.statisticsInterval)
+    neighborStatisticsUpdated: (info: NeighborInfo) => void
+    // the neighbor set changed (add/remove) — topology only, never per tick
+    neighborListUpdated: (neighbors: NeighborInfo[]) => void
     entryPointLeaveDetected: () => void
 }
 
@@ -72,6 +77,13 @@ export interface StrictContentDeliveryLayerNodeOptions {
 export const DEFAULT_NODE_VIEW_SIZE = 20
 export const DEFAULT_NEIGHBOR_TARGET_COUNT = 4
 export const DEFAULT_ACCEPT_PROXY_CONNECTIONS = false
+
+const toNeighborInfo = (nodeId: DhtAddress, remote: ContentDeliveryRpcRemote): NeighborInfo => ({
+    nodeId,
+    peerDescriptor: remote.getPeerDescriptor(),
+    rtt: remote.getRtt(),
+    statistics: remote.getStatistics()
+})
 
 const logger = new Logger('ContentDeliveryLayerNode')
 
@@ -172,6 +184,14 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.abortController.signal
         )
         addManagedEventListener(
+            this.options.transport,
+            'statisticsUpdated',
+            (_peerDescriptor: PeerDescriptor, statistics: ConnectionStatistics, nodeId: DhtAddress) => {
+                this.onStatisticsUpdated(nodeId, statistics)
+            },
+            this.abortController.signal
+        )
+        addManagedEventListener(
             this.options.neighbors,
             'nodeAdded',
             (id, remote) => {
@@ -184,6 +204,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.options.streamPartId
                 )
                 this.emit('neighborConnected', id)
+                this.emit('neighborListUpdated', this.getNeighborInfos())
             },
             this.abortController.signal
         )
@@ -198,6 +219,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
+                this.emit('neighborListUpdated', this.getNeighborInfos())
             },
             this.abortController.signal
         )
@@ -353,6 +375,17 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         }
     }
 
+    // Statistics arrive for every connection of the shared transport; only
+    // the ones belonging to this stream part's neighbors are kept and re-emitted.
+    private onStatisticsUpdated(nodeId: DhtAddress, statistics: ConnectionStatistics): void {
+        const remote = this.options.neighbors.get(nodeId)
+        if (remote === undefined) {
+            return
+        }
+        remote.setStatistics(statistics)
+        this.emit('neighborStatisticsUpdated', toNeighborInfo(nodeId, remote))
+    }
+
     hasProxyConnection(nodeId: DhtAddress): boolean {
         if (this.options.proxyConnectionRpcLocal) {
             return this.options.proxyConnectionRpcLocal.hasConnection(nodeId)
@@ -439,6 +472,10 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 rtt: n.getRtt()
             }
         })
+    }
+
+    getNeighborInfos(): NeighborInfo[] {
+        return this.options.neighbors.getAll().map((remote) => toNeighborInfo(toNodeId(remote.getPeerDescriptor()), remote))
     }
 
     getNearbyNodeView(): NodeList {

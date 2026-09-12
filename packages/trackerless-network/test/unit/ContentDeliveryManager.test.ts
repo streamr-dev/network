@@ -1,6 +1,8 @@
-import { areEqualPeerDescriptors } from '@streamr/dht'
+import { areEqualPeerDescriptors, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/ContentDeliveryManager'
+import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
+import { NeighborInfo } from '../../src/types'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
@@ -54,6 +56,25 @@ describe('ContentDeliveryManager', () => {
         it('broadcast joins stream', async () => {
             manager.broadcast(message)
             await until(() => manager.hasStreamPart(streamPartId))
+        })
+
+        it('re-emits neighbor statistics and neighbor list events with the stream part id', () => {
+            manager.joinStreamPart(streamPartId)
+            const delivery = manager.getStreamPartDelivery(streamPartId)!
+            expect(delivery.proxied).toBe(false)
+            const node = (delivery as { node: ContentDeliveryLayerNode }).node
+            const onStatistics = jest.fn()
+            const onList = jest.fn()
+            manager.on('neighborStatisticsUpdated', onStatistics)
+            manager.on('neighborListUpdated', onList)
+            const neighborPeerDescriptor = createMockPeerDescriptor()
+            const info: NeighborInfo = { nodeId: toNodeId(neighborPeerDescriptor), peerDescriptor: neighborPeerDescriptor }
+            node.emit('neighborStatisticsUpdated', info)
+            node.emit('neighborListUpdated', [info])
+            expect(onStatistics).toHaveBeenCalledWith(streamPartId, info)
+            expect(onList).toHaveBeenCalledWith(streamPartId, [info])
+            expect(manager.getNeighborInfos(streamPartId)).toEqual([])
+            expect(manager.getNeighborInfos(StreamPartIDUtils.parse('other#0'))).toEqual([])
         })
     })
 

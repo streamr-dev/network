@@ -30,7 +30,7 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './content-delivery-layer/createContentDeliveryLayerNode'
 import { ProxyClient } from './content-delivery-layer/proxy/ProxyClient'
-import { StreamPartitionInfo } from './types'
+import { NeighborInfo, StreamPartitionInfo } from './types'
 import {
     DEFAULT_MAX_PROPAGATION_BUFFER_SIZE,
     DEFAULT_MIN_PROPAGATION_TARGETS,
@@ -54,6 +54,8 @@ export type StreamPartDelivery = {
 
 export interface Events {
     newMessage: (msg: StreamMessage) => void
+    neighborStatisticsUpdated: (streamPartId: StreamPartID, info: NeighborInfo) => void
+    neighborListUpdated: (streamPartId: StreamPartID, neighbors: NeighborInfo[]) => void
 }
 
 const logger = new Logger('ContentDeliveryManager')
@@ -203,6 +205,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
+        })
+        node.on('neighborStatisticsUpdated', (info: NeighborInfo) => {
+            this.emit('neighborStatisticsUpdated', streamPartId, info)
+        })
+        node.on('neighborListUpdated', (neighbors: NeighborInfo[]) => {
+            this.emit('neighborListUpdated', streamPartId, neighbors)
         })
         const handleEntryPointLeave = async () => {
             if (this.destroyed || peerDescriptorStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
@@ -413,6 +421,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         const streamPart = this.streamParts.get(streamPartId)
         return streamPart?.proxied === false
             ? streamPart.node.getNeighbors().map((n) => toNodeId(n))
+            : []
+    }
+
+    getNeighborInfos(streamPartId: StreamPartID): NeighborInfo[] {
+        const streamPart = this.streamParts.get(streamPartId)
+        return streamPart?.proxied === false
+            ? streamPart.node.getNeighborInfos()
             : []
     }
 

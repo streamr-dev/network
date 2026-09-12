@@ -6,7 +6,7 @@ import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './control-layer/ExternalNetworkRpc'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
-import { NodeInfo } from './types'
+import { NeighborInfo, NodeInfo } from './types'
 import { StreamPartDeliveryOptions } from './ContentDeliveryManager'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
@@ -74,6 +74,25 @@ export class NetworkNode {
         this.stack.getContentDeliveryManager().off('newMessage', listener)
     }
 
+    // Per-neighbor send/receive statistics, one event per neighbor per tick.
+    // Requires the layer0 option `statisticsInterval` (off by default).
+    addNeighborStatisticsListener(listener: (streamPartId: StreamPartID, info: NeighborInfo) => void): void {
+        this.stack.getContentDeliveryManager().on('neighborStatisticsUpdated', listener)
+    }
+
+    removeNeighborStatisticsListener(listener: (streamPartId: StreamPartID, info: NeighborInfo) => void): void {
+        this.stack.getContentDeliveryManager().off('neighborStatisticsUpdated', listener)
+    }
+
+    // Fired when a stream part's neighbor set changes (topology only, never per statistics tick)
+    addNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: NeighborInfo[]) => void): void {
+        this.stack.getContentDeliveryManager().on('neighborListUpdated', listener)
+    }
+
+    removeNeighborListUpdatedListener(listener: (streamPartId: StreamPartID, neighbors: NeighborInfo[]) => void): void {
+        this.stack.getContentDeliveryManager().off('neighborListUpdated', listener)
+    }
+
     async leave(streamPartId: StreamPartID): Promise<void> {
         if (this.stopped) {
             return
@@ -83,6 +102,11 @@ export class NetworkNode {
 
     getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         return this.stack.getContentDeliveryManager().getNeighbors(streamPartId)
+    }
+
+    /** Synchronous snapshot of a stream part's neighbors with their latest statistics (if the ticker is on). */
+    getNeighborInfos(streamPartId: StreamPartID): NeighborInfo[] {
+        return this.stack.getContentDeliveryManager().getNeighborInfos(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {

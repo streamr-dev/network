@@ -1,4 +1,4 @@
-import { randomDhtAddress, toNodeId } from '@streamr/dht'
+import { ConnectionStatistics, randomDhtAddress, toNodeId } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/content-delivery-layer/ContentDeliveryLayerNode'
@@ -21,9 +21,11 @@ describe('ContentDeliveryLayerNode', () => {
     let randomNodeView: NodeList
 
     let discoveryLayerNode: MockDiscoveryLayerNode
+    let transport: MockTransport
 
     beforeEach(async () => {
         const nodeId = toNodeId(peerDescriptor)
+        transport = new MockTransport()
 
         neighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
@@ -34,7 +36,7 @@ describe('ContentDeliveryLayerNode', () => {
             neighbors,
             randomNodeView,
             nearbyNodeView,
-            transport: new MockTransport(),
+            transport,
             localPeerDescriptor: peerDescriptor,
             discoveryLayerNode,
             connectionLocker: mockConnectionLocker,
@@ -109,6 +111,68 @@ describe('ContentDeliveryLayerNode', () => {
         expect(info[0].peerDescriptor).toEqual(nodeWithRtt.getPeerDescriptor())
         expect(info[1].rtt).toBeUndefined()
         expect(info[1].peerDescriptor).toEqual(nodeWithoutRtt.getPeerDescriptor())
+    })
+
+    describe('neighbor statistics', () => {
+
+        const STATISTICS: ConnectionStatistics = {
+            bufferedAmount: 1, queuedMessages: 2, queuedBytes: 3, oldestQueuedMs: 4, offeredBytesPerSecond: 5, sentBytesPerSecond: 6,
+            backlogBytes: 4, receivedBytesPerSecond: 7, sampledAt: 8
+        }
+
+        it('stores statistics of a neighbor and emits neighborStatisticsUpdated', () => {
+            const remote = createMockContentDeliveryRpcRemote()
+            neighbors.add(remote)
+            const nodeId = toNodeId(remote.getPeerDescriptor())
+            const listener = jest.fn()
+            contentDeliveryLayerNode.on('neighborStatisticsUpdated', listener)
+            transport.emit('statisticsUpdated', remote.getPeerDescriptor(), STATISTICS, nodeId)
+            expect(remote.getStatistics()).toEqual(STATISTICS)
+            expect(listener).toHaveBeenCalledTimes(1)
+            expect(listener.mock.calls[0][0]).toEqual({
+                nodeId,
+                peerDescriptor: remote.getPeerDescriptor(),
+                rtt: undefined,
+                statistics: STATISTICS
+            })
+        })
+
+        it('ignores statistics of connections that are not neighbors', () => {
+            const remote = createMockContentDeliveryRpcRemote()
+            const listener = jest.fn()
+            contentDeliveryLayerNode.on('neighborStatisticsUpdated', listener)
+            transport.emit('statisticsUpdated', remote.getPeerDescriptor(), STATISTICS, toNodeId(remote.getPeerDescriptor()))
+            expect(listener).not.toHaveBeenCalled()
+            expect(remote.getStatistics()).toBeUndefined()
+        })
+
+        it('getNeighborInfos carries rtt and statistics', () => {
+            const remote = createMockContentDeliveryRpcRemote()
+            neighbors.add(remote)
+            remote.setRtt(42)
+            const nodeId = toNodeId(remote.getPeerDescriptor())
+            expect(contentDeliveryLayerNode.getNeighborInfos()).toEqual([
+                { nodeId, peerDescriptor: remote.getPeerDescriptor(), rtt: 42, statistics: undefined }
+            ])
+            transport.emit('statisticsUpdated', remote.getPeerDescriptor(), STATISTICS, nodeId)
+            expect(contentDeliveryLayerNode.getNeighborInfos()[0].statistics).toEqual(STATISTICS)
+        })
+
+        it('emits neighborListUpdated on add and remove (not on statistics ticks)', () => {
+            const remote = createMockContentDeliveryRpcRemote()
+            const nodeId = toNodeId(remote.getPeerDescriptor())
+            const listener = jest.fn()
+            contentDeliveryLayerNode.on('neighborListUpdated', listener)
+            neighbors.add(remote)
+            expect(listener).toHaveBeenCalledTimes(1)
+            expect(listener.mock.calls[0][0]).toHaveLength(1)
+            expect(listener.mock.calls[0][0][0].nodeId).toEqual(nodeId)
+            transport.emit('statisticsUpdated', remote.getPeerDescriptor(), STATISTICS, nodeId)
+            expect(listener).toHaveBeenCalledTimes(1)
+            neighbors.remove(nodeId)
+            expect(listener).toHaveBeenCalledTimes(2)
+            expect(listener.mock.calls[1][0]).toEqual([])
+        })
     })
 
     describe('suppressOwnMessageLoopback', () => {

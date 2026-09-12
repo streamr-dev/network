@@ -1,4 +1,4 @@
-import { RpcRemote } from '@streamr/dht'
+import { ConnectionStatistics, RpcRemote } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
@@ -11,6 +11,7 @@ const logger = new Logger('ContentDeliveryRpcRemote')
 export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 
     private rtt?: number
+    private statistics?: ConnectionStatistics
 
     async sendStreamMessage(msg: StreamMessage, bufferWhileConnecting?: boolean): Promise<void> {
         const options = this.formDhtRpcOptions({
@@ -41,5 +42,13 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
 
     getRtt(): number | undefined {
         return this.rtt
+    }
+
+    setStatistics(statistics: ConnectionStatistics): void {
+        this.statistics = statistics
+    }
+
+    getStatistics(): ConnectionStatistics | undefined {
+        return this.statistics
     }
 }
