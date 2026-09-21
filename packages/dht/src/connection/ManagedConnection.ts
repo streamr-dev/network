@@ -1,6 +1,6 @@
 import { ConnectionID, ConnectionType, IConnection } from './IConnection'
 import { ConnectionInfo } from './ConnectionDiagnostics'
-import { ConnectionStatistics, SendQueueStatistics } from './ConnectionStatistics'
+import { ConnectionStatistics, SendQueueStatistics, SendQueueHint } from './ConnectionStatistics'
 import { ByteRateEstimator } from '../helpers/ByteRateEstimator'
 import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
@@ -67,14 +67,18 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.replacedAsDuplicate = true
     }
 
-    send(data: Uint8Array): void {
+    send(data: Uint8Array, hint?: SendQueueHint): void {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
         this.lastUsedTimestamp = Date.now()
         this.messagesSent += 1
         this.bytesSent += data.length
-        this.connection.send(data)
+        this.connection.send(data, hint)
+    }
+
+    purgeSendQueue(purgeKey: string): number {
+        return this.stopped ? 0 : (this.connection.purgeSendQueue?.(purgeKey) ?? 0)
     }
 
     async close(gracefulLeave: boolean): Promise<void> {

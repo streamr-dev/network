@@ -321,10 +321,18 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.metrics.sendMessagesPerSecond.record(1)
 
         if (this.endpoints.get(nodeId)!.connected) {
-            (connection as ManagedConnection).send(binary)
+            (connection as ManagedConnection).send(binary, opts.sendQueueHint)
         } else if (opts.bufferWhileConnecting) {
             return (this.endpoints.get(nodeId)! as ConnectingEndpoint).buffer.push(binary)
         }
+    }
+
+    public purgeSendQueue(nodeId: DhtAddress, purgeKey: string): number {
+        const endpoint = this.endpoints.get(nodeId)
+        if (!endpoint?.connected) {
+            return 0
+        }
+        return endpoint.connection.purgeSendQueue(purgeKey)
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean {

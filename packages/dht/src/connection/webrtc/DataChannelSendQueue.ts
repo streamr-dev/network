@@ -1,6 +1,6 @@
 import { logGapDiagnosticEvent, logGapDiagnosticSampled } from '../../GapDiagnostics'
 import { ByteRateEstimator } from '../../helpers/ByteRateEstimator'
-import { SendQueueStatistics } from '../ConnectionStatistics'
+import { SendQueueStatistics, SendQueueHint } from '../ConnectionStatistics'
 
 /** Minimal view of an RTCDataChannel / node-datachannel DataChannel. */
 export interface DataChannelSendAdapter {
@@ -19,7 +19,12 @@ export interface DataChannelSendQueueOptions {
 interface QueuedMessage {
     data: Uint8Array
     enqueuedAt: number
+    maxQueueAgeMs?: number
+    purgeKey?: string
 }
+
+/** how often a send() sweeps the whole backlog for expired messages */
+const EXPIRY_SWEEP_INTERVAL_MS = 250
 
 /**
  * Backpressure queue in front of a WebRTC datachannel, shared by the worker,
@@ -30,6 +35,10 @@ interface QueuedMessage {
  * `bufferedamountlow`. While anything is queued, EVERY new message goes to the
  * back of the queue — a fresh message must never overtake the backlog, because
  * the receiver's duplicate detector would then reject everything behind it.
+ *
+ * A message sent with a `SendQueueHint.maxQueueAgeMs` is dropped instead of
+ * sent once it has waited longer than that; the order of the surviving
+ * messages never changes. Messages without the hint are always delivered.
  *
  * The queue also keeps the counters behind `SendQueueStatistics`: backlog
  * size/age plus offered vs. actually-sent byte rates.
@@ -43,6 +52,9 @@ export class DataChannelSendQueue {
     private queuedBytes = 0
     private readonly offeredRate: ByteRateEstimator
     private readonly sentRate: ByteRateEstimator
+    private expiredMessages = 0
+    private purgedMessages = 0
+    private lastExpirySweepAt = 0
 
     constructor(channel: DataChannelSendAdapter, options: DataChannelSendQueueOptions) {
         this.channel = channel
@@ -53,7 +65,8 @@ export class DataChannelSendQueue {
     }
 
     /** Send on an open channel with FIFO-guarded backpressure. */
-    send(data: Uint8Array): void {
+    send(data: Uint8Array, hint?: SendQueueHint): void {
+        this.sweepExpired()
         const bufferedAmount = this.channel.bufferedAmount()
         logGapDiagnosticSampled('dht.dc.send', {
             detail: { bufferedAmount, queueLen: this.queue.length }
@@ -65,28 +78,43 @@ export class DataChannelSendQueue {
                     queueLen: this.queue.length, bufferedAmount
                 })
             }
-            this.push(data)
+            this.push(data, hint)
             this.flush()
         } else if (bufferedAmount > this.bufferThresholdHigh) {
-            this.push(data)
+            this.push(data, hint)
         } else {
             this.sendNow(data)
         }
     }
 
     /** Hold a message without touching the channel (channel not open yet). */
-    enqueue(data: Uint8Array): void {
+    enqueue(data: Uint8Array, hint?: SendQueueHint): void {
         this.offeredRate.record(data.byteLength)
-        this.push(data)
+        this.push(data, hint)
     }
 
-    /** Drain the backlog head-first while the channel has room. */
+    /** Drain the backlog head-first while the channel has room; expired messages are skipped. */
     flush(): void {
+        const now = this.now()
         while ((this.queue.length > 0) && (this.channel.bufferedAmount() < this.bufferThresholdHigh)) {
             const message = this.queue.shift()!
             this.queuedBytes -= message.data.byteLength
+            if (this.isExpired(message, now)) {
+                this.expiredMessages += 1
+                continue
+            }
             this.sendNow(message.data)
         }
+    }
+
+    /**
+     * Withdraw every queued message sent under `purgeKey` (e.g. the receiver
+     * left the stream part they belong to). Returns how many were removed.
+     */
+    purge(purgeKey: string): number {
+        const removed = this.removeWhere((message) => message.purgeKey === purgeKey)
+        this.purgedMessages += removed
+        return removed
     }
 
     /** Drop the backlog (connection closing). */
@@ -106,13 +134,54 @@ export class DataChannelSendQueue {
             queuedBytes: this.queuedBytes,
             oldestQueuedMs: (this.queue.length > 0) ? Math.max(0, this.now() - this.queue[0].enqueuedAt) : 0,
             offeredBytesPerSecond: this.offeredRate.getBytesPerSecond(),
-            sentBytesPerSecond: this.sentRate.getBytesPerSecond()
+            sentBytesPerSecond: this.sentRate.getBytesPerSecond(),
+            expiredMessages: this.expiredMessages,
+            purgedMessages: this.purgedMessages
         }
     }
 
-    private push(data: Uint8Array): void {
-        this.queue.push({ data, enqueuedAt: this.now() })
+    private push(data: Uint8Array, hint?: SendQueueHint): void {
+        this.queue.push({
+            data,
+            enqueuedAt: this.now(),
+            maxQueueAgeMs: hint?.maxQueueAgeMs,
+            purgeKey: hint?.purgeKey
+        })
         this.queuedBytes += data.byteLength
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private isExpired(message: QueuedMessage, now: number): boolean {
+        return (message.maxQueueAgeMs !== undefined) && (now - message.enqueuedAt > message.maxQueueAgeMs)
+    }
+
+    /**
+     * While the channel is stuck nothing drains, so expired messages would
+     * otherwise sit in memory (and in the statistics) until it moves again.
+     */
+    private sweepExpired(): void {
+        const now = this.now()
+        if ((this.queue.length === 0) || (now - this.lastExpirySweepAt < EXPIRY_SWEEP_INTERVAL_MS)) {
+            return
+        }
+        this.lastExpirySweepAt = now
+        this.expiredMessages += this.removeWhere((message) => this.isExpired(message, now))
+    }
+
+    /** removes matching messages, keeping the order of the rest */
+    private removeWhere(predicate: (message: QueuedMessage) => boolean): number {
+        let kept = 0
+        for (const message of this.queue) {
+            if (predicate(message)) {
+                this.queuedBytes -= message.data.byteLength
+            } else {
+                this.queue[kept] = message
+                kept += 1
+            }
+        }
+        const removed = this.queue.length - kept
+        this.queue.length = kept
+        return removed
     }
 
     private sendNow(data: Uint8Array): void {

@@ -62,7 +62,9 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
             queuedBytes: 0,
             oldestQueuedMs: 0,
             offeredBytesPerSecond: rate,
-            sentBytesPerSecond: rate
+            sentBytesPerSecond: rate,
+            expiredMessages: 0,
+            purgedMessages: 0
         }
     }
 

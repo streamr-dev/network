@@ -51,7 +51,8 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
                 } : {
                     connect: callContext?.connect ?? DEFAULT_SEND_OPTIONS.connect,
                     sendIfStopped: callContext?.sendIfStopped ?? DEFAULT_SEND_OPTIONS.sendIfStopped,
-                    bufferWhileConnecting: callContext?.bufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.bufferWhileConnecting
+                    bufferWhileConnecting: callContext?.bufferWhileConnecting ?? DEFAULT_SEND_OPTIONS.bufferWhileConnecting,
+                    sendQueueHint: callContext?.sendQueueHint
                 }
             return sendFn(message, sendOpts)
         })

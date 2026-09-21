@@ -26,7 +26,7 @@ import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
 import { isGapDiagnosticsEnabled, logGapDiagnosticSampled } from '../GapDiagnostics'
 import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
-import { SendQueueStatistics } from '../connection/ConnectionStatistics'
+import { SendQueueStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
 
 // ── agent log: layer0-vs-layer2 contention probe ────────────────────
 // Every DHT connection's datachannel `onmessage` runs in THIS one worker, and
@@ -294,13 +294,17 @@ export class WorkerWebrtcConnection
         this.doClose(false)
     }
 
-    public send(data: Uint8Array): void {
+    public send(data: Uint8Array, hint?: SendQueueHint): void {
         if (this.connected && this.dataChannel) {
-            this.sendQueue.send(data)
+            this.sendQueue.send(data, hint)
         } else if (!this.closed) {
             // channel not open yet: hold the message, flushed in onDataChannelOpen()
-            this.sendQueue.enqueue(data)
+            this.sendQueue.enqueue(data, hint)
         }
+    }
+
+    public purgeSendQueue(purgeKey: string): number {
+        return this.sendQueue.purge(purgeKey)
     }
 
     public setConnectionId(connectionId: ConnectionID): void {

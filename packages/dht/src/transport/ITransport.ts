@@ -1,5 +1,5 @@
 import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
-import { ConnectionStatistics } from '../connection/ConnectionStatistics'
+import { ConnectionStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
 import { DhtAddress } from '../identifiers'
 
 export interface TransportEvents {
@@ -15,6 +15,8 @@ export interface SendOptions {
     connect: boolean
     sendIfStopped: boolean
     bufferWhileConnecting: boolean
+    /** see SendQueueHint: only live media should ever set this */
+    sendQueueHint?: SendQueueHint
 }
 
 export const DEFAULT_SEND_OPTIONS = {
@@ -44,6 +46,8 @@ export interface ITransport {
         statistics: ConnectionStatistics, nodeId: DhtAddress) => void): void
 
     send(msg: Message, opts?: SendOptions): Promise<void>
+    /** withdraw the messages queued for `nodeId` under `purgeKey`; returns how many */
+    purgeSendQueue?(nodeId: DhtAddress, purgeKey: string): number
     getLocalPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
     getDiagnosticInfo(): Record<string, unknown>

@@ -162,7 +162,9 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
             queuedBytes: 0,
             oldestQueuedMs: 0,
             offeredBytesPerSecond: rate,
-            sentBytesPerSecond: rate
+            sentBytesPerSecond: rate,
+            expiredMessages: 0,
+            purgedMessages: 0
         }
     }
 

@@ -10,7 +10,7 @@ import { iceServerAsString } from '../connection/webrtc/iceServerAsString'
 import { IceServer } from '../connection/webrtc/types'
 import { DEFAULT_BUFFER_THRESHOLD_HIGH, DEFAULT_BUFFER_THRESHOLD_LOW, EARLY_TIMEOUT } from '../connection/webrtc/consts'
 import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
-import { SendQueueStatistics } from '../connection/ConnectionStatistics'
+import { SendQueueStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
 import { PortRange } from '../connection/ConnectionManager'
 import { toNodeId } from '../identifiers'
 import { createRandomConnectionId } from '../connection/Connection'
@@ -144,10 +144,14 @@ export class WebrtcConnection extends EventEmitter<WebrtcConnectionEvents> imple
         }
     }
 
-    public send(data: Uint8Array): void {
+    public send(data: Uint8Array, hint?: SendQueueHint): void {
         if (this.isOpen()) {
-            this.sendQueue.send(data)
+            this.sendQueue.send(data, hint)
         }
+    }
+
+    public purgeSendQueue(purgeKey: string): number {
+        return this.sendQueue.purge(purgeKey)
     }
 
     public async close(gracefulLeave: boolean, reason?: string): Promise<void> {

@@ -122,7 +122,9 @@ describe('DataChannelSendQueue', () => {
                 queuedBytes: 0,
                 oldestQueuedMs: 0,
                 offeredBytesPerSecond: 0,
-                sentBytesPerSecond: 0
+                sentBytesPerSecond: 0,
+                expiredMessages: 0,
+                purgedMessages: 0
             })
         })
 
@@ -154,6 +156,82 @@ describe('DataChannelSendQueue', () => {
             const statistics = queue.getStatistics()
             expect(statistics.offeredBytesPerSecond).toBe(250)
             expect(statistics.sentBytesPerSecond).toBe(250)
+        })
+    })
+
+    describe('expiry (SendQueueHint.maxQueueAgeMs)', () => {
+
+        it('drops a message that waited too long instead of sending it, keeps the rest in order', () => {
+            bufferedAmount = HIGH + 1
+            queue.send(msg(100, 1), { maxQueueAgeMs: 2000 })
+            queue.send(msg(100, 2))                              // no hint: always delivered
+            queue.send(msg(100, 3), { maxQueueAgeMs: 2000 })
+            now += 1500
+            queue.send(msg(100, 4), { maxQueueAgeMs: 2000 })
+            now += 1000    // 1 and 3 are 2.5 s old, 4 is 1 s old
+            bufferedAmount = 0
+            queue.flush()
+            expect(tags(sent)).toEqual([2, 4])
+            expect(queue.size()).toBe(0)
+            expect(queue.getStatistics().expiredMessages).toBe(2)
+            expect(queue.getStatistics().queuedBytes).toBe(0)
+        })
+
+        it('a message without the hint is delivered however long it waited', () => {
+            bufferedAmount = HIGH + 1
+            queue.send(msg(100, 1))
+            now += 60_000
+            bufferedAmount = 0
+            queue.flush()
+            expect(tags(sent)).toEqual([1])
+            expect(queue.getStatistics().expiredMessages).toBe(0)
+        })
+
+        it('a stuck channel does not let expired messages pile up: the next send sweeps them', () => {
+            bufferedAmount = HIGH + 1
+            for (let i = 0; i < 50; i++) {
+                queue.send(msg(100, i), { maxQueueAgeMs: 2000 })
+                now += 100
+            }
+            // 5 s of sends into a channel that never drained: only the last ~2 s remain
+            expect(queue.size()).toBeLessThanOrEqual(23)
+            expect(queue.getStatistics().oldestQueuedMs).toBeLessThanOrEqual(2300)
+            expect(queue.getStatistics().expiredMessages).toBeGreaterThanOrEqual(27)
+            expect(sent).toEqual([])
+            // what is left still goes out in order once the channel moves
+            while (queue.size() > 0) {
+                bufferedAmount = 0
+                queue.flush()
+            }
+            const out = tags(sent)
+            expect(out).toEqual([...out].sort((a, b) => a - b))
+            expect(out[out.length - 1]).toBe(49)
+        })
+    })
+
+    describe('purge (SendQueueHint.purgeKey)', () => {
+
+        it('withdraws only the messages queued under the key, keeping the order of the rest', () => {
+            bufferedAmount = HIGH + 1
+            queue.send(msg(100, 1), { purgeKey: 'stream#0' })
+            queue.send(msg(100, 2), { purgeKey: 'stream#3' })
+            queue.send(msg(100, 3))
+            queue.send(msg(100, 4), { purgeKey: 'stream#0', maxQueueAgeMs: 2000 })
+            queue.send(msg(100, 5), { purgeKey: 'stream#3' })
+            expect(queue.purge('stream#0')).toBe(2)
+            expect(queue.purge('stream#0')).toBe(0)
+            expect(queue.size()).toBe(3)
+            expect(queue.getStatistics().queuedBytes).toBe(300)
+            expect(queue.getStatistics().purgedMessages).toBe(2)
+            bufferedAmount = 0
+            queue.flush()
+            expect(tags(sent)).toEqual([2, 3, 5])
+        })
+
+        it('a message sent directly was never queued, so there is nothing to purge', () => {
+            queue.send(msg(100, 1), { purgeKey: 'stream#0' })
+            expect(tags(sent)).toEqual([1])
+            expect(queue.purge('stream#0')).toBe(0)
         })
     })
 })

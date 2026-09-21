@@ -8,7 +8,7 @@ import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
 import { logGapDiagnosticSampled } from '../GapDiagnostics'
 import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
-import { SendQueueStatistics } from '../connection/ConnectionStatistics'
+import { SendQueueStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
 import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { getRtcConnectionInfo } from './rtcConnectionInfo'
 
@@ -183,9 +183,13 @@ export class DirectWebrtcConnection extends EventEmitter<WebrtcConnectionEvents>
         this.doClose(false)
     }
 
-    public send(data: Uint8Array): void {
+    public purgeSendQueue(purgeKey: string): number {
+        return this.sendQueue.purge(purgeKey)
+    }
+
+    public send(data: Uint8Array, hint?: SendQueueHint): void {
         if (this.lastState === 'connected') {
-            this.sendQueue.send(data)
+            this.sendQueue.send(data, hint)
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }

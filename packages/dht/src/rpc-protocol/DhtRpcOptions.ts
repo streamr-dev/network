@@ -1,3 +1,4 @@
+import { SendQueueHint } from '../connection/ConnectionStatistics'
 import { ProtoRpcOptions } from '@streamr/proto-rpc'
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
@@ -8,4 +9,5 @@ export interface DhtRpcOptions extends ProtoRpcOptions {
     connect?: boolean
     sendIfStopped?: boolean
     bufferWhileConnecting?: boolean
+    sendQueueHint?: SendQueueHint
 }

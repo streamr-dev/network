@@ -1,6 +1,6 @@
 import { BrandedString } from '@streamr/utils'
 import { ConnectionInfo } from './ConnectionDiagnostics'
-import { SendQueueStatistics } from './ConnectionStatistics'
+import { SendQueueStatistics, SendQueueHint } from './ConnectionStatistics'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void
@@ -36,7 +36,10 @@ export interface IConnection {
     off(event: 'connected', listener: () => void): void
     off(event: 'disconnected', listener: (gracefulLeave: boolean, code?: number, reason?: string) => void): void
     
-    send(data: Uint8Array): void
+    /** `hint` only matters to connections with a send queue (WebRTC) */
+    send(data: Uint8Array, hint?: SendQueueHint): void
+    /** withdraw the queued messages sent under `purgeKey`; returns how many */
+    purgeSendQueue?(purgeKey: string): number
     close(gracefulLeave: boolean): Promise<void>
     destroy(): void
 

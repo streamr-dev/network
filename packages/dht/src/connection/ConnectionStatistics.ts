@@ -18,6 +18,25 @@ export interface SendQueueStatistics {
     offeredBytesPerSecond: number
     /** bytes actually handed to the channel/socket over the last ~second */
     sentBytesPerSecond: number
+    /** messages dropped from the backlog because they outlived their `maxQueueAgeMs` (cumulative) */
+    expiredMessages: number
+    /** messages removed from the backlog by `purge(purgeKey)` (cumulative) */
+    purgedMessages: number
+}
+
+/**
+ * What a sender may say about a message's place in the send queue. Without a
+ * hint a message is delivered however long it waits (RPC, control traffic).
+ *
+ * Live media is different: a frame that waited for seconds behind a slow link
+ * is worthless, and delivering it anyway delays every fresher message behind
+ * it (one FIFO per connection). `maxQueueAgeMs` lets the queue drop such a
+ * message instead of sending it; `purgeKey` lets the owner withdraw everything
+ * it queued under a key, e.g. when the receiver has left a stream part.
+ */
+export interface SendQueueHint {
+    maxQueueAgeMs?: number
+    purgeKey?: string
 }
 
 export interface ConnectionStatistics extends SendQueueStatistics {
