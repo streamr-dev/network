@@ -219,6 +219,15 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
+                // It is no longer a neighbor on this stream part (it left, or was
+                // dropped): what is still queued for it here would only delay the
+                // other stream parts sharing the connection.
+                const purged = this.options.transport.purgeSendQueue?.(_id, this.options.streamPartId) ?? 0
+                if (purged > 0) {
+                    logGapDiagnosticEvent('trackerless.sendQueuePurged', {
+                        part: this.options.streamPartId, node: _id.slice(0, 8), purged
+                    })
+                }
                 this.emit('neighborListUpdated', this.getNeighborInfos())
             },
             this.abortController.signal

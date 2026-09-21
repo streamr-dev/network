@@ -88,6 +88,14 @@ type PlumtreeOptions = {
 }
 export interface StreamPartDeliveryOptions {
     plumtreeOptimization?: PlumtreeOptions
+    /**
+     * For stream parts that carry live media: a message that waited longer
+     * than this in a neighbor's send queue is dropped instead of delivered
+     * late (every connection has one FIFO shared by all stream parts, so a
+     * late message also delays everything queued behind it). Leave undefined
+     * for stream parts whose every message matters.
+     */
+    maxSendQueueAgeMs?: number
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -308,6 +316,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             bufferWhileConnecting: this.options.bufferWhileConnecting,
             suppressOwnMessageLoopback: this.options.suppressOwnMessageLoopback,
             plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization?.enabled,
+            maxSendQueueAgeMs: streamPartDeliveryOptions?.maxSendQueueAgeMs,
             plumtreeMaxPausedNeighbors: 
                 streamPartDeliveryOptions?.plumtreeOptimization?.enabled === true ? 
                     streamPartDeliveryOptions?.plumtreeOptimization?.maxPausedNeighbors : undefined

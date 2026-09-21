@@ -1,4 +1,4 @@
-import { DhtAddress, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, toNodeId, SendQueueHint } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { DEFAULT_NEIGHBOR_UPDATE_INTERVAL, NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -38,6 +38,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         suppressOwnMessageLoopback?: boolean
         plumtreeOptimization?: boolean
         plumtreeMaxPausedNeighbors?: number
+        maxSendQueueAgeMs?: number
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
@@ -76,6 +77,12 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
         rpcCommunicator,
         maxPausedNeighbors: options.plumtreeMaxPausedNeighbors
     }) : undefined
+    // every message of this stream part is queued under the part's id, so a
+    // neighbor's backlog can be withdrawn when it leaves the part
+    const sendQueueHint: SendQueueHint = {
+        purgeKey: options.streamPartId,
+        maxQueueAgeMs: options.maxSendQueueAgeMs
+    }
     const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,
         maxMessages: maxPropagationBufferSize,
@@ -84,7 +91,7 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
             const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
-                await remote.sendStreamMessage(msg, options.bufferWhileConnecting)
+                await remote.sendStreamMessage(msg, options.bufferWhileConnecting, sendQueueHint)
             } else if (proxyConnection) {
                 await proxyConnection.remote.sendStreamMessage(msg)
             } else {

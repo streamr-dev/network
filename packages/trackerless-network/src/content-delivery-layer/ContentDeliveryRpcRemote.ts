@@ -1,4 +1,4 @@
-import { ConnectionStatistics, RpcRemote } from '@streamr/dht'
+import { ConnectionStatistics, RpcRemote, SendQueueHint } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
@@ -13,10 +13,11 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
     private rtt?: number
     private statistics?: ConnectionStatistics
 
-    async sendStreamMessage(msg: StreamMessage, bufferWhileConnecting?: boolean): Promise<void> {
+    async sendStreamMessage(msg: StreamMessage, bufferWhileConnecting?: boolean, sendQueueHint?: SendQueueHint): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true,
-            bufferWhileConnecting
+            bufferWhileConnecting,
+            sendQueueHint
         })
         this.getClient().sendStreamMessage(msg, options).catch(() => {
             logger.trace('Failed to sendStreamMessage')
