@@ -105,4 +105,44 @@ describeOnlyInNodeJs('operatorContractUtils', () => {
         )
         expect(await sponsorshipContract.stakedWei(operatorContract.getAddress())).toBe(parseEther('7000'))
     })
+
+    it('rebalanceStake', async () => {
+        const operator = await createTestWallet({ gas: true, tokens: true })
+        const operatorContract = await _operatorContractUtils.deployOperatorContract({
+            deployer: operator,
+            environmentId: 'dev2'
+        })
+        const operatorContractAddress = await operatorContract.getAddress()
+        const deploySponsorship = async () => {
+            const stream = await createTestStream(createTestClient((await createTestWallet({ gas: true })).privateKey), module)
+            return _operatorContractUtils.deploySponsorshipContract({
+                streamId: stream.id,
+                deployer: operator,
+                earningsPerSecond: 123n,
+                environmentId: 'dev2'
+            })
+        }
+        const sponsorship1 = await deploySponsorship()
+        const sponsorship2 = await deploySponsorship()
+        const sponsorship3 = await deploySponsorship()
+        await _operatorContractUtils.delegate(operator, operatorContractAddress, parseEther('20000'))
+        await _operatorContractUtils.stake(operator, operatorContractAddress, await sponsorship1.getAddress(), parseEther('10000'))
+        await _operatorContractUtils.stake(operator, operatorContractAddress, await sponsorship2.getAddress(), parseEther('10000'))
+
+        // reduce stake in sponsorship1, unstake completely from sponsorship2, stake into sponsorship3
+        await _operatorContractUtils.rebalanceStake(
+            operator,
+            operatorContractAddress,
+            [
+                { sponsorshipContractAddress: await sponsorship1.getAddress(), targetAmount: parseEther('6000') },
+                { sponsorshipContractAddress: await sponsorship2.getAddress(), targetAmount: 0n }
+            ],
+            [
+                { sponsorshipContractAddress: await sponsorship3.getAddress(), amount: parseEther('14000') }
+            ]
+        )
+        expect(await sponsorship1.stakedWei(operatorContractAddress)).toBe(parseEther('6000'))
+        expect(await sponsorship2.stakedWei(operatorContractAddress)).toBe(0n)
+        expect(await sponsorship3.stakedWei(operatorContractAddress)).toBe(parseEther('14000'))
+    })
 })

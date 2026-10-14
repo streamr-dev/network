@@ -230,6 +230,63 @@ export const unstake = async (
     }
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface StakeReduction {
+    sponsorshipContractAddress: string
+    // the stake to leave in the sponsorship (zero means unstake completely)
+    targetAmount: WeiAmount
+}
+
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface StakeIncrease {
+    sponsorshipContractAddress: string
+    amount: WeiAmount
+}
+
+/**
+ * Reduces stake in some sponsorships and stakes into others atomically, in one transaction.
+ * The transaction fails fast (before any stake is touched) if one of the sponsorships to stake into is already full.
+ */
+export const rebalanceStake = async (
+    staker: SignerWithProvider,
+    operatorContractAddress: string,
+    reductions: StakeReduction[],
+    increases: StakeIncrease[],
+    txOpts: TransactionOpts = {},
+    onSubmit: (tx: ContractTransactionResponse) => void = () => {},
+    transactionTimeout?: number
+): Promise<ContractTransactionReceipt | null> => {
+    logger.debug('Rebalance stake', {
+        reductions: reductions.map((r) => ({ ...r, targetAmount: formatEther(r.targetAmount) })),
+        increases: increases.map((i) => ({ ...i, amount: formatEther(i.amount) }))
+    })
+    const operatorContract = getOperatorContract(operatorContractAddress).connect(staker)
+    const tx = await operatorContract.rebalanceStake(
+        reductions.map((r) => r.sponsorshipContractAddress),
+        reductions.map((r) => r.targetAmount),
+        increases.map((i) => i.sponsorshipContractAddress),
+        increases.map((i) => i.amount),
+        txOpts
+    )
+    logger.debug('Rebalance stake: transaction submitted', { tx: tx.hash, nonce: tx.nonce })
+    onSubmit(tx)
+    logger.debug('Rebalance stake: waiting for transaction to be mined', { tx: tx.hash, timeout: transactionTimeout })
+    try {
+        const receipt = await tx.wait(undefined, transactionTimeout)
+        logger.debug('Rebalance stake: confirmation received', { receipt: receipt?.hash })
+        return receipt
+    } catch (error) {
+        logger.error(`Rebalance stake: error waiting for tx to be mined`, { tx: tx.hash, error })
+        throw error
+    }
+}
+
 export const sponsor = async (
     sponsorer: SignerWithProvider,
     sponsorshipContractAddress: string,
