@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.51",
-    "@streamr/network-contracts": "^9.1.0",
+    "@streamr/network-contracts": "^9.2.0",
     "@streamr/test-utils": "103.3.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",

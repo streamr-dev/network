@@ -111,9 +111,12 @@ import {
     sponsor,
     stake,
     unstake,
+    rebalanceStake,
     DeploySponsorshipContractOpts,
     getOperatorContract,
-    TransactionOpts
+    TransactionOpts,
+    StakeReduction,
+    StakeIncrease
 } from './contracts/operatorContractUtils'
 
 /**
@@ -128,11 +131,12 @@ const _operatorContractUtils = {
     sponsor,
     stake,
     unstake,
+    rebalanceStake,
     deployOperatorContract,
     getOperatorContract,
 }
 export { _operatorContractUtils }
-export type { DeployOperatorContractOpts, DeploySponsorshipContractOpts, TransactionOpts }
+export type { DeployOperatorContractOpts, DeploySponsorshipContractOpts, TransactionOpts, StakeReduction, StakeIncrease }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { AbstractSigner, Eip1193Provider, Overrides } from 'ethers'

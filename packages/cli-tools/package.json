@@ -34,7 +34,7 @@
   "dependencies": {
     "@streamr/config": "^5.9.3",
     "@streamr/dht": "103.3.2",
-    "@streamr/network-contracts": "^9.1.0",
+    "@streamr/network-contracts": "^9.2.0",
     "@streamr/sdk": "103.3.2",
     "@streamr/trackerless-network": "103.3.2",
     "@streamr/utils": "103.3.2",

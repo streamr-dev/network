@@ -30,6 +30,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Autostaker plugin executes all unstake and stake actions of a run atomically in a single `rebalanceStake` transaction instead of one transaction per action
+
 #### Deprecated
 
 #### Removed

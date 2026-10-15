@@ -1,4 +1,11 @@
-import { _operatorContractUtils, type SignerWithProvider, type SponsorshipCreatedEvent, StreamrClient, type TransactionOpts } from '@streamr/sdk'
+import {
+    _operatorContractUtils,
+    type SignerWithProvider,
+    type SponsorshipCreatedEvent,
+    type StakeIncrease,
+    type StakeReduction,
+    StreamrClient
+} from '@streamr/sdk'
 import { collect, Logger, retry, scheduleAtApproximateInterval, TheGraphClient, toEthereumAddress, WeiAmount } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { ContractTransactionReceipt, ContractTransactionResponse, formatEther, parseEther } from 'ethers'
@@ -52,10 +59,9 @@ const logger = new Logger('AutostakerPlugin')
 const MIN_SPONSORSHIP_TOTAL_PAYOUT_PER_SECOND = 1000000000000n
 const ACTION_SUBMIT_RETRY_COUNT = 5
 const ACTION_SUBMIT_RETRY_DELAY_MS = 5000
-const ACTION_GAS_LIMIT = 750000n
 const TRANSACTION_TIMEOUT = 180 * 1000
 
-interface SubmitActionResult {
+interface SubmitActionsResult {
     txResponse: ContractTransactionResponse
     txReceiptPromise: Promise<ContractTransactionReceipt | null>
 }
@@ -73,23 +79,38 @@ const fetchMinStakePerSponsorship = async (theGraphClient: TheGraphClient): Prom
     return BigInt(queryResult.network.minimumStakeWei)
 }
 
-const getStakeOrUnstakeFunction = (action: Action): (
-    operatorOwnerWallet: SignerWithProvider,
-    operatorContractAddress: string,
-    sponsorshipContractAddress: string,
-    amount: WeiAmount,
-    txOpts: TransactionOpts,
-    onSubmit: (tx: ContractTransactionResponse) => void,
-    transactionTimeout?: number
-) => Promise<ContractTransactionReceipt | null> => {
-    switch (action.type) {
-        case 'stake':
-            return _operatorContractUtils.stake
-        case 'unstake':
-            return _operatorContractUtils.unstake
-        default:
-            throw new Error('assertion failed')
+/*
+ * Converts the actions to the parameters of the Operator contract's `rebalanceStake` function:
+ * unstake actions are expressed as the stake to leave in the sponsorship, and stake actions as the amount to add.
+ */
+const toRebalanceParams = (
+    actions: Action[],
+    myCurrentStakes: Map<SponsorshipID, WeiAmount>
+): { reductions: StakeReduction[], increases: StakeIncrease[] } => {
+    const reductions: StakeReduction[] = []
+    const increases: StakeIncrease[] = []
+    for (const action of actions) {
+        switch (action.type) {
+            case 'unstake': {
+                const currentAmount = myCurrentStakes.get(action.sponsorshipId)
+                if (currentAmount === undefined) {
+                    throw new Error(`assertion failed: no current stake for sponsorship ${action.sponsorshipId}`)
+                }
+                const targetAmount = currentAmount - action.amount
+                if (targetAmount < 0n) {
+                    throw new Error(`assertion failed: unstake amount exceeds current stake for sponsorship ${action.sponsorshipId}`)
+                }
+                reductions.push({ sponsorshipContractAddress: action.sponsorshipId, targetAmount })
+                break
+            }
+            case 'stake':
+                increases.push({ sponsorshipContractAddress: action.sponsorshipId, amount: action.amount })
+                break
+            default:
+                throw new Error('assertion failed')
+        }
     }
+    return { reductions, increases }
 }
 
 export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
@@ -142,19 +163,22 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
         })
     }
 
-    // Broadcasts a transaction corresponding to the action without waiting for it to be mined
-    private async submitAction(action: Action, signer: SignerWithProvider, txOpts: TransactionOpts): Promise<SubmitActionResult> {
-        logger.info(`Execute action: ${action.type} ${formatEther(action.amount)} ${action.sponsorshipId}`)
-        const stakeOrUnstakeFunction = getStakeOrUnstakeFunction(action)
+    // Broadcasts a single transaction which executes all the actions atomically, without waiting for it to be mined
+    private async submitActions(
+        reductions: StakeReduction[],
+        increases: StakeIncrease[],
+        signer: SignerWithProvider
+    ): Promise<SubmitActionsResult> {
         return new Promise((resolve, reject) => {
-            const txReceiptPromise = stakeOrUnstakeFunction(signer,
+            const txReceiptPromise = _operatorContractUtils.rebalanceStake(
+                signer,
                 this.pluginConfig.operatorContractAddress,
-                action.sponsorshipId,
-                action.amount,
-                txOpts,
-                // resolve on the onSubmit callback (=tx is broadcasted) instead of when the stakeOrUnstakeFunction resolves (=tx is mined)
+                reductions,
+                increases,
+                {},
+                // resolve on the onSubmit callback (=tx is broadcasted) instead of when rebalanceStake resolves (=tx is mined)
                 (txResponse) => resolve({ txResponse, txReceiptPromise }),
-                TRANSACTION_TIMEOUT 
+                TRANSACTION_TIMEOUT
             )
             // Propagate errors that occur before onSubmit is called
             txReceiptPromise.catch(reject)
@@ -162,13 +186,17 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
     }
 
     // This will retry the transaction preflight checks, defends against various transient errors
-    private async submitActionWithRetry(action: Action, signer: SignerWithProvider, txOpts: TransactionOpts): Promise<SubmitActionResult> {
+    private async submitActionsWithRetry(
+        reductions: StakeReduction[],
+        increases: StakeIncrease[],
+        signer: SignerWithProvider
+    ): Promise<SubmitActionsResult> {
         return await retry(
-            () => this.submitAction(action, signer, txOpts),
+            () => this.submitActions(reductions, increases, signer),
             (message, error) => {
                 logger.error(message, { error })
             },
-            `Submit action to ${action.type} ${formatEther(action.amount)} from ${action.sponsorshipId}`,
+            `Submit rebalance transaction (${reductions.length} unstake actions, ${increases.length} stake actions)`,
             ACTION_SUBMIT_RETRY_COUNT,
             ACTION_SUBMIT_RETRY_DELAY_MS,
         )
@@ -211,47 +239,26 @@ export class AutostakerPlugin extends Plugin<AutostakerPluginConfig> {
             logger.info('Analysis done, no actions to execute')
             return
         }
-        logger.info(`Analysis done, proceeding to execute plan with ${actions.length} actions`, {
+        logger.info(`Analysis done, proceeding to execute plan with ${actions.length} actions in one transaction`, {
             actions: actions.map((a) => ({
                 ...a,
                 amount: formatEther(a.amount)
             }))
         })
 
-        // Ensure that all unstake actions are executed before any stake actions to ensure sufficient liquidity
-        const orderedActions = [
-            ...actions.filter((a) => a.type === 'unstake'), 
-            ...actions.filter((a) => a.type === 'stake')
-        ]
-        const allSubmitActionPromises: Promise<SubmitActionResult>[] = []
+        // All actions are executed atomically in a single `rebalanceStake` transaction: the contract first reduces
+        // the stakes (which ensures sufficient liquidity) and then stakes into the sponsorships. If any of the
+        // actions can't be executed (e.g. a sponsorship is full), the whole transaction fails and no stake is touched.
+        const { reductions, increases } = toRebalanceParams(actions, myCurrentStakes)
+        const { txResponse, txReceiptPromise } = await this.submitActionsWithRetry(reductions, increases, signer)
+        logger.info('Rebalance transaction submitted, waiting for it to be mined', { tx: txResponse.hash })
 
-        // Set nonce explicitly, because ethers tends to mess up nonce if we submit 
-        // multiple transactions in quick succession
-        const address = await signer.getAddress()
-        let nonce = await signer.provider.getTransactionCount(address)
-
-        // Broadcast each action but don't wait for them to be mined
-        for (const action of orderedActions) {
-            const submitActionPromise = this.submitActionWithRetry(action, signer, {
-                // Use a fixed gas limit - gas estimation of stake transactions would fails 
-                // with "not enough balance", because we first need to unstake before we stake
-                gasLimit: ACTION_GAS_LIMIT,
-                // Explicit nonce
-                nonce: nonce++,
-            })
-            allSubmitActionPromises.push(submitActionPromise)
-        }
-
-        const allReceiptPromises = allSubmitActionPromises.map(async (p) => (await p).txReceiptPromise)
-
-        // Wait for all transactions to be mined (don't stop waiting if some of them fail)
         // Note that if the actual submitted transaction errors, it won't get retried. This should be rare.
-        const settledResults = await Promise.allSettled(allReceiptPromises)
-        const successfulResults = settledResults.filter((r) => r.status === 'fulfilled')
-        const failedResults = settledResults.filter((r) => r.status === 'rejected')
-        logger.info(`All actions finished. Successful actions: ${successfulResults.length}, Failed actions: ${failedResults.length}`)
-        if (failedResults.length > 0) {
-            logger.error('Failed to execute some actions:', { failedResults })
+        try {
+            const receipt = await txReceiptPromise
+            logger.info(`All ${actions.length} actions executed successfully`, { tx: receipt?.hash })
+        } catch (err) {
+            logger.error('Failed to execute actions', { tx: txResponse.hash, err })
         }
     }
 
