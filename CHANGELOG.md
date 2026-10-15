@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Changes before Tatum release are not documented in this file.
-
 ## [Unreleased]
 
 ### Breaking Changes
@@ -30,8 +28,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Autostaker plugin executes all unstake and stake actions of a run atomically in a single `rebalanceStake` transaction instead of one transaction per action
-
 #### Deprecated
 
 #### Removed
@@ -53,6 +49,21 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [103.4.0] - 2026-10-15
+
+### General
+
+#### Added
+
+### @streamr/node
+
+#### Added
+
+#### Changed
+
+- Added support for the `rebalanceStake` function, present in Operator contract v4, to the SDK and node. The autostaker plugin now uses it to execute all unstake and stake actions atomically in a single transaction (as opposed to one transaction per action). This version is incompatible with previous Operator contract versions, but those older versions are being abandoned anyway due to a recently discovered vulnerability. ([#3507])
 
 ## [103.3.2] - 2026-07-29
 
