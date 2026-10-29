@@ -56,4 +56,14 @@ export interface IConnection {
      * returns undefined once the connection is closed.
      */
     getStatistics?(): SendQueueStatistics | undefined
+    /**
+     * Transport features this end advertises in the handshake (e.g. the
+     * WebRTC media channel). Undefined/empty for transports without any.
+     */
+    getLocalCapabilities?(): string[]
+    /**
+     * The features the remote end advertised in its handshake message; the
+     * Handshaker calls this before completing the handshake.
+     */
+    setRemoteCapabilities?(capabilities: string[]): void
 }

@@ -5,9 +5,13 @@
  * bridge port message from installWebrtcBridge().
  *
  * Then this script waits for instructions from the main thread to:
- *   - create a WorkerWebrtcConnection (Peer B – answerer)
+ *   - create a WorkerWebrtcConnection (Peer B – offerer or answerer)
  *   - relay signaling events back to the main thread
- *   - send / receive data via the transferred DataChannel
+ *   - hand over the remote peer's capabilities (the handshake's job in
+ *     production), which makes an offering Peer B open the media channel
+ *     through the bridge
+ *   - send / receive data via the transferred DataChannel(s)
+ *   - report the connection info and send statistics
  */
 import { WorkerWebrtcConnection } from '../../../src/browser/WorkerWebrtcConnection'
 
@@ -19,14 +23,25 @@ function randomPeerDescriptor() {
     return { nodeId, type: 0 }
 }
 
+async function report(requestId: number) {
+    const info = await peerB?.getConnectionInfo()
+    self.postMessage({
+        type: 'info',
+        requestId,
+        mediaChannel: info?.mediaChannel,
+        statistics: peerB?.getStatistics()
+    })
+}
+
 self.addEventListener('message', async (e: MessageEvent) => {
     const { type } = e.data
 
-    // ── Create Peer B (answerer) ────────────────────────────────
+    // ── Create Peer B ───────────────────────────────────────────
     if (type === 'create-peer') {
         peerB = new WorkerWebrtcConnection({
             remotePeerDescriptor: randomPeerDescriptor(),
             iceServers: [],
+            mediaChannel: e.data.mediaChannel
         })
 
         // Signaling events → main thread
@@ -51,8 +66,7 @@ self.addEventListener('message', async (e: MessageEvent) => {
             self.postMessage({ type: 'disconnected' })
         })
 
-        // Start as answerer
-        peerB.start(false)
+        peerB.start(e.data.offerer === true)
     }
 
     // ── Relay incoming signaling from main thread → Peer B ──────
@@ -64,9 +78,23 @@ self.addEventListener('message', async (e: MessageEvent) => {
         peerB.addRemoteCandidate(e.data.candidate, e.data.mid)
     }
 
-    // ── Send data from Peer B ───────────────────────────────────
+    // ── What the handshake would tell the connection ────────────
+    if (type === 'remote-capabilities' && peerB) {
+        peerB.setRemoteCapabilities(e.data.capabilities)
+    }
+
+    // ── Send data from Peer B (optionally hinted to a channel) ──
     if (type === 'send-data' && peerB) {
-        peerB.send(new Uint8Array(e.data.bytes))
+        const hint = e.data.channel !== undefined ? { channel: e.data.channel } : undefined
+        peerB.send(new Uint8Array(e.data.bytes), hint)
+        if (e.data.requestId !== undefined) {
+            // snapshot right after the send so the offered rate still shows it
+            self.postMessage({ type: 'sent', requestId: e.data.requestId, statistics: peerB.getStatistics() })
+        }
+    }
+
+    if (type === 'get-info' && peerB) {
+        await report(e.data.requestId)
     }
 
     // ── Tear down ───────────────────────────────────────────────

@@ -226,6 +226,9 @@ message HandshakeRequest {
   optional PeerDescriptor targetPeerDescriptor = 2;
   string protocolVersion = 3;
   string applicationVersion = 4;
+  // optional transport features this end supports (e.g. "webrtc-media-channel/1");
+  // peers that predate the field send none and get none
+  repeated string capabilities = 5;
 }
 
 message HandshakeResponse {
@@ -233,6 +236,7 @@ message HandshakeResponse {
   optional HandshakeError error = 2;
   string protocolVersion = 3;
   string applicationVersion = 4;
+  repeated string capabilities = 5;
 }
 
 enum HandshakeError {

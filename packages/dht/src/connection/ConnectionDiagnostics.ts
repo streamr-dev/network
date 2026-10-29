@@ -29,6 +29,8 @@ export interface ConnectionInfo {
     transportBytesSent?: number
     /** cumulative transport-level bytes received, when the transport reports it */
     transportBytesReceived?: number
+    /** WebRTC: state of the partially reliable media channel, if the connection has one */
+    mediaChannel?: 'open' | 'closed' | 'none'
 }
 
 let enabled = true

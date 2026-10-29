@@ -109,12 +109,17 @@ export const acceptHandshake = (handshaker: Handshaker, pendingConnection: Pendi
     pendingConnection.onHandshakeCompleted(connection)
 }
 
-export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): Message => {
+export const createHandshakeRequest = (
+    localPeerDescriptor: PeerDescriptor,
+    remotePeerDescriptor: PeerDescriptor,
+    capabilities: string[] = []
+): Message => {
     const outgoingHandshake: HandshakeRequest = {
         sourcePeerDescriptor: localPeerDescriptor,
         targetPeerDescriptor: remotePeerDescriptor,
         protocolVersion: LOCAL_PROTOCOL_VERSION,
-        applicationVersion
+        applicationVersion,
+        capabilities
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -126,12 +131,17 @@ export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remo
     }
 }
 
-export const createHandshakeResponse = (localPeerDescriptor: PeerDescriptor, error?: HandshakeError): Message => {
+export const createHandshakeResponse = (
+    localPeerDescriptor: PeerDescriptor,
+    error?: HandshakeError,
+    capabilities: string[] = []
+): Message => {
     const outgoingHandshakeResponse: HandshakeResponse = {
         sourcePeerDescriptor: localPeerDescriptor,
         error,
         protocolVersion: LOCAL_PROTOCOL_VERSION,
-        applicationVersion
+        applicationVersion,
+        capabilities
     }
     return {
         serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -166,6 +176,9 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeRequest') {
                 logger.trace('handshake request received')
                 const handshake = message.body.handshakeRequest
+                // the remote's transport features are known before the handshake
+                // is accepted, so the connection can set up e.g. the media channel
+                this.connection.setRemoteCapabilities?.(handshake.capabilities ?? [])
                 this.emit(
                     'handshakeRequest',
                     handshake.sourcePeerDescriptor!,
@@ -181,6 +194,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
+                    this.connection.setRemoteCapabilities?.(handshake.capabilities ?? [])
                     this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
                 }
             }
@@ -191,13 +205,13 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     public sendHandshakeRequest(remotePeerDescriptor?: PeerDescriptor): void {
-        const msg = createHandshakeRequest(this.localPeerDescriptor, remotePeerDescriptor!)
+        const msg = createHandshakeRequest(this.localPeerDescriptor, remotePeerDescriptor!, this.connection.getLocalCapabilities?.() ?? [])
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake request sent')
     }
 
     public sendHandshakeResponse(error?: HandshakeError): void {
-        const msg = createHandshakeResponse(this.localPeerDescriptor, error)
+        const msg = createHandshakeResponse(this.localPeerDescriptor, error, this.connection.getLocalCapabilities?.() ?? [])
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake response sent')
     }

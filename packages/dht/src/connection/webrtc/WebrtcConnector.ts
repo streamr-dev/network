@@ -20,7 +20,7 @@ import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 import { isMaybeSupportedProtocolVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
-import type { IceServer } from './types'
+import type { IceServer, WebrtcMediaChannelOptions } from './types'
 
 const logger = new Logger('WebrtcConnector')
 
@@ -43,6 +43,7 @@ export interface WebrtcConnectorOptions {
     maxMessageSize?: number
     externalIp?: string
     portRange?: PortRange
+    mediaChannel?: WebrtcMediaChannelOptions
 }
 
 export interface ConnectingConnection {
@@ -201,7 +202,8 @@ export class WebrtcConnector {
             iceServers: this.options.iceServers,
             bufferThresholdLow: this.options.bufferThresholdLow,
             bufferThresholdHigh: this.options.bufferThresholdHigh,
-            portRange: this.options.portRange
+            portRange: this.options.portRange,
+            mediaChannel: this.options.mediaChannel
             // TODO should we pass maxMessageSize?
         })
     }

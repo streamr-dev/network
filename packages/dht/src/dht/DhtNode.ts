@@ -13,7 +13,7 @@ import type { MarkRequired } from 'ts-essentials'
 import { ConnectionInfoReport, ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ConnectionsView } from '../connection/ConnectionsView'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../connection/ConnectorFacade'
-import type { IceServer } from '../connection/webrtc/types'
+import type { IceServer, WebrtcMediaChannelOptions } from '../connection/webrtc/types'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, toNodeId } from '../identifiers'
 import { Any } from '../../generated/google/protobuf/any'
@@ -105,6 +105,8 @@ export interface DhtNodeOptions {
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
+    /** the ordered, partially reliable media channel (default enabled, 1500 ms lifetime) */
+    webrtcMediaChannel?: WebrtcMediaChannelOptions
     webrtcPortRange?: PortRange
     maxMessageSize?: number
     maxConnections?: number
@@ -225,6 +227,7 @@ export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
                 webrtcAllowPrivateAddresses: this.options.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.options.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.options.webrtcDatachannelBufferThresholdHigh,
+                webrtcMediaChannel: this.options.webrtcMediaChannel,
                 webrtcPortRange: this.options.webrtcPortRange,
                 maxMessageSize: this.options.maxMessageSize,
                 websocketServerEnableTls: this.options.websocketServerEnableTls,

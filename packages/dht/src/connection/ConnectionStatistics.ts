@@ -6,7 +6,11 @@
  * receive side and is what `ConnectionManager` emits as `statisticsUpdated`.
  * All fields are plain numbers so the objects are structured-clone safe.
  */
-export interface SendQueueStatistics {
+/** which data channel of a WebRTC connection a message goes on */
+export type SendQueueChannel = 'reliable' | 'media'
+
+/** Send-side counters of one channel/socket. */
+export interface ChannelSendQueueStatistics {
     /** bytes accepted by the channel/socket but not yet handed to the transport */
     bufferedAmount: number
     /** messages held back in the JS-side backlog (WebRTC only; 0 for websockets) */
@@ -25,6 +29,16 @@ export interface SendQueueStatistics {
 }
 
 /**
+ * Send-side statistics of a connection: the sum over its channels (one for
+ * websockets and single-channel WebRTC connections), plus the per-channel
+ * breakdown when the connection has a media channel. Plain numbers only, so
+ * the objects stay structured-clone safe.
+ */
+export interface SendQueueStatistics extends ChannelSendQueueStatistics {
+    channels?: Partial<Record<SendQueueChannel, ChannelSendQueueStatistics>>
+}
+
+/**
  * What a sender may say about a message's place in the send queue. Without a
  * hint a message is delivered however long it waits (RPC, control traffic).
  *
@@ -37,6 +51,12 @@ export interface SendQueueStatistics {
 export interface SendQueueHint {
     maxQueueAgeMs?: number
     purgeKey?: string
+    /**
+     * 'media': send on the ordered, partially reliable media channel when the
+     * connection has one open, otherwise on the reliable channel. Undefined
+     * or 'reliable': the reliable channel.
+     */
+    channel?: SendQueueChannel
 }
 
 export interface ConnectionStatistics extends SendQueueStatistics {

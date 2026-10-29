@@ -12,11 +12,16 @@ import { MetricsContext, until } from '@streamr/utils'
 import { ConnectionStatistics } from '../../src/connection/ConnectionStatistics'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (
+    localPeerDescriptor: PeerDescriptor,
+    transport: ITransport,
+    facadeOptions: Partial<ConstructorParameters<typeof DefaultConnectorFacade>[0]> = {}
+) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createLocalPeerDescriptor: async () => localPeerDescriptor
+            createLocalPeerDescriptor: async () => localPeerDescriptor,
+            ...facadeOptions
         }),
         metricsContext: new MetricsContext(),
         allowIncomingPrivateConnections: false,
@@ -259,4 +264,81 @@ describe('WebRTC Connection Management', () => {
             disconnectedPromise1
         ])
     }, 20000)
+
+    describe('media channel', () => {
+
+        const connect = async (sender: ConnectionManager, target: PeerDescriptor) => {
+            const connectedPromise = new Promise<void>((resolve) => sender.on('connected', () => resolve()))
+            sender.send({
+                serviceId,
+                messageId: 'media-0',
+                body: { oneofKind: 'rpcMessage', rpcMessage: RpcMessage.create() },
+                targetDescriptor: target
+            }).catch(() => {})
+            await connectedPromise
+        }
+
+        const burst = (sender: ConnectionManager, target: PeerDescriptor, hint?: { channel: 'media' }) => {
+            for (let i = 1; i <= 50; i++) {
+                sender.send({
+                    serviceId,
+                    messageId: `media-${i}`,
+                    body: {
+                        oneofKind: 'rpcMessage',
+                        rpcMessage: { ...RpcMessage.create(), body: { typeUrl: 'media', value: new Uint8Array(8 * 1024) } }
+                    },
+                    targetDescriptor: target
+                }, hint ? { sendQueueHint: hint } : undefined).catch(() => {})
+            }
+        }
+
+        it('both ends capable: the media channel opens and media-hinted sends use it', async () => {
+            const stats1: ConnectionStatistics[] = []
+            manager1.on('statisticsUpdated', (_pd: PeerDescriptor, statistics: ConnectionStatistics) => {
+                stats1.push(statistics)
+            })
+            const received: Message[] = []
+            manager2.on('message', (message: Message) => {
+                if (message.serviceId === serviceId) {
+                    received.push(message)
+                }
+            })
+            await connect(manager1, peerDescriptor2)
+            // the media channel is created after the handshake (so a send right at
+            // 'connected' still goes reliable) and shows up in the breakdown once open
+            await until(() => stats1.some((s) => s.channels?.media !== undefined), 10000)
+            burst(manager1, peerDescriptor2, { channel: 'media' })
+            await until(() => stats1.some((s) => (s.channels?.media?.offeredBytesPerSecond ?? 0) > 0), 10000)
+            await until(() => received.length >= 50, 20000)
+            const latest = stats1[stats1.length - 1]
+            expect(latest.channels?.reliable).toBeDefined()
+            const infos = await manager1.getConnectionInfos()
+            expect(infos.length).toBeGreaterThan(0)
+        }, 40000)
+
+        it('a peer without the capability keeps a single reliable channel and still receives media-hinted sends', async () => {
+            // manager2 is the "old" peer: it neither advertises nor accepts the media channel
+            const oldManager2 = manager2
+            await oldManager2.stop()
+            // eslint-disable-next-line require-atomic-updates
+            manager2 = createConnectionManager(peerDescriptor2, connectorTransport2, { webrtcMediaChannel: { enabled: false } })
+            await manager2.start()
+            const stats1: ConnectionStatistics[] = []
+            manager1.on('statisticsUpdated', (_pd: PeerDescriptor, statistics: ConnectionStatistics) => {
+                stats1.push(statistics)
+            })
+            const received: Message[] = []
+            manager2.on('message', (message: Message) => {
+                if (message.serviceId === serviceId) {
+                    received.push(message)
+                }
+            })
+            await connect(manager1, peerDescriptor2)
+            burst(manager1, peerDescriptor2, { channel: 'media' })
+            await until(() => received.length >= 50, 20000)
+            // a second of statistics after everything arrived: still no media channel anywhere
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            expect(stats1.every((s) => s.channels === undefined)).toBe(true)
+        }, 40000)
+    })
 })

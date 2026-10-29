@@ -1,6 +1,6 @@
 import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { PortRange } from '../connection/ConnectionManager'
-import { IceServer } from '../connection/webrtc/types'
+import { IceServer, WebrtcMediaChannelOptions } from '../connection/webrtc/types'
 
 export interface WebrtcConnectionParams {
     remotePeerDescriptor: PeerDescriptor
@@ -9,4 +9,5 @@ export interface WebrtcConnectionParams {
     maxMessageSize?: number
     iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
+    mediaChannel?: WebrtcMediaChannelOptions
 }

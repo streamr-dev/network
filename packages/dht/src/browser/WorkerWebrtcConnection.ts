@@ -5,10 +5,16 @@
  * DirectWebrtcConnection, but delegates RTCPeerConnection management to
  * the main-thread {@link WebrtcBridge} via Comlink.
  *
- * The RTCDataChannel is **transferred** from the main thread and lives
+ * The RTCDataChannels are **transferred** from the main thread and live
  * entirely in the worker — all data events (onmessage, onopen, onclose,
  * onbufferedamountlow) fire in the worker's event loop.  The main thread
  * is never involved in the data path.
+ *
+ * Two channels: the reliable `streamrDataChannel` (its open = connected, its
+ * close = the connection closes) and, towards peers that advertised the
+ * capability in the handshake, the ordered-but-partially-reliable
+ * `streamrMediaChannel`, created by the offerer after the handshake through
+ * the bridge. Media-hinted messages use it while it is open (DataChannelSet).
  */
 import { EventEmitter } from 'eventemitter3'
 import * as Comlink from 'comlink'
@@ -17,16 +23,24 @@ import { WebrtcConnectionEvents, IWebrtcConnection } from '../connection/webrtc/
 import { IConnection, ConnectionID, ConnectionType } from '../connection/IConnection'
 import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { Logger } from '@streamr/utils'
-import { EARLY_TIMEOUT } from '../connection/webrtc/consts'
+import {
+    DEFAULT_MEDIA_BUFFER_THRESHOLD_HIGH,
+    DEFAULT_MEDIA_BUFFER_THRESHOLD_LOW,
+    DEFAULT_MEDIA_CHANNEL_MAX_PACKET_LIFE_TIME_MS,
+    EARLY_TIMEOUT,
+    MEDIA_CHANNEL_CAPABILITY,
+    MEDIA_CHANNEL_LABEL,
+    RELIABLE_CHANNEL_LABEL
+} from '../connection/webrtc/consts'
 import { createRandomConnectionId } from '../connection/Connection'
 import type { WebrtcConnectionParams } from '../types/WebrtcConnectionParams'
-import type { IceServer } from '../connection/webrtc/types'
+import type { IceServer, WebrtcMediaChannelOptions } from '../connection/webrtc/types'
 import type { WebrtcBridgeApi } from './WebrtcBridge'
 import { WEBRTC_BRIDGE_PORT_MESSAGE_TYPE } from './installWebrtcBridge'
 import { isWorkerEnvironment } from './isWorkerEnvironment'
 import { isGapDiagnosticsEnabled, logGapDiagnosticSampled } from '../GapDiagnostics'
-import { DataChannelSendQueue } from '../connection/webrtc/DataChannelSendQueue'
-import { SendQueueStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
+import { DataChannelSet } from '../connection/webrtc/DataChannelSet'
+import { SendQueueChannel, SendQueueStatistics, SendQueueHint } from '../connection/ConnectionStatistics'
 
 // ── agent log: layer0-vs-layer2 contention probe ────────────────────
 // Every DHT connection's datachannel `onmessage` runs in THIS one worker, and
@@ -141,14 +155,19 @@ export class WorkerWebrtcConnection
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
     private readonly iceServers: IceServer[]
-    private readonly bufferThresholdHigh: number
     private readonly bufferThresholdLow: number
-    private dataChannel?: RTCDataChannel
+    private readonly mediaChannelOptions: Required<WebrtcMediaChannelOptions>
+    private reliableChannel?: RTCDataChannel
+    private mediaChannel?: RTCDataChannel
+    private mediaChannelClosed = false
+    private mediaChannelRequested = false
+    private remoteCapabilities: string[] = []
+    private isOffering = false
     private bridge?: Remote<WebrtcBridgeApi>
     private closed = false
     private connected = false
     private earlyTimeout: NodeJS.Timeout
-    private readonly sendQueue: DataChannelSendQueue
+    private readonly channels: DataChannelSet
     private startPromise?: Promise<void>
     private renamePromise?: Promise<void>
     private readonly constructedAt = Date.now()
@@ -171,12 +190,27 @@ export class WorkerWebrtcConnection
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
-        this.bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
+        const bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
-        this.sendQueue = new DataChannelSendQueue({
-            bufferedAmount: () => this.dataChannel?.bufferedAmount ?? 0,
-            send: (data: Uint8Array) => this.dataChannel!.send(data as ArrayBufferView<ArrayBuffer>)
-        }, { bufferThresholdHigh: this.bufferThresholdHigh })
+        this.mediaChannelOptions = {
+            enabled: params.mediaChannel?.enabled ?? true,
+            maxPacketLifeTimeMs: params.mediaChannel?.maxPacketLifeTimeMs ?? DEFAULT_MEDIA_CHANNEL_MAX_PACKET_LIFE_TIME_MS,
+            bufferThresholdHigh: params.mediaChannel?.bufferThresholdHigh ?? DEFAULT_MEDIA_BUFFER_THRESHOLD_HIGH,
+            bufferThresholdLow: params.mediaChannel?.bufferThresholdLow ?? DEFAULT_MEDIA_BUFFER_THRESHOLD_LOW
+        }
+        this.channels = new DataChannelSet({
+            reliable: {
+                bufferedAmount: () => this.reliableChannel?.bufferedAmount ?? 0,
+                send: (data: Uint8Array) => this.reliableChannel!.send(data as ArrayBufferView<ArrayBuffer>)
+            },
+            media: {
+                bufferedAmount: () => this.mediaChannel?.bufferedAmount ?? 0,
+                send: (data: Uint8Array) => this.mediaChannel!.send(data as ArrayBufferView<ArrayBuffer>)
+            }
+        }, {
+            bufferThresholdHigh,
+            mediaBufferThresholdHigh: this.mediaChannelOptions.bufferThresholdHigh
+        })
         this.earlyTimeout = setTimeout(() => {
             this.doClose(false, 'timed out due to remote descriptor not being set')
         }, EARLY_TIMEOUT)
@@ -185,6 +219,7 @@ export class WorkerWebrtcConnection
     // ── IWebrtcConnection ───────────────────────────────────────
 
     public start(isOffering: boolean): void {
+        this.isOffering = isOffering
         this.startPromise = this.doStart(isOffering)
         this.startPromise.catch((err) => {
             logger.warn('Failed to start worker WebRTC connection', { err })
@@ -232,11 +267,7 @@ export class WorkerWebrtcConnection
 
                 onDataChannel: (channel: RTCDataChannel) => {
                     if (!this.closed) {
-                        this.setupDataChannel(channel)
-                        // If the channel was already open at transfer time
-                        if (channel.readyState === 'open') {
-                            this.onDataChannelOpen()
-                        }
+                        this.onDataChannel(channel)
                     }
                 },
             })
@@ -295,16 +326,59 @@ export class WorkerWebrtcConnection
     }
 
     public send(data: Uint8Array, hint?: SendQueueHint): void {
-        if (this.connected && this.dataChannel) {
-            this.sendQueue.send(data, hint)
+        if (this.connected && this.reliableChannel) {
+            this.channels.send(data, hint)
         } else if (!this.closed) {
             // channel not open yet: hold the message, flushed in onDataChannelOpen()
-            this.sendQueue.enqueue(data, hint)
+            this.channels.enqueue(data, hint)
         }
     }
 
     public purgeSendQueue(purgeKey: string): number {
-        return this.sendQueue.purge(purgeKey)
+        return this.channels.purge(purgeKey)
+    }
+
+    // ── capabilities / media channel ────────────────────────────
+
+    public getLocalCapabilities(): string[] {
+        return this.mediaChannelOptions.enabled ? [MEDIA_CHANNEL_CAPABILITY] : []
+    }
+
+    public setRemoteCapabilities(capabilities: string[]): void {
+        this.remoteCapabilities = capabilities
+        if (
+            this.isOffering
+            && this.mediaChannelOptions.enabled
+            && capabilities.includes(MEDIA_CHANNEL_CAPABILITY)
+            && !this.closed
+            && !this.mediaChannelRequested
+        ) {
+            this.mediaChannelRequested = true
+            this.createMediaChannel().catch((err) => {
+                logger.warn('Failed to create the media channel, media stays on the reliable channel', { err })
+            })
+        }
+    }
+
+    private async createMediaChannel(): Promise<void> {
+        if (this.startPromise) {
+            await this.startPromise
+        }
+        if (this.renamePromise) {
+            await this.renamePromise
+        }
+        if (!this.bridge || this.closed) {
+            return
+        }
+        // the bridge creates the channel on the main thread and transfers it
+        // to this worker through onDataChannel (dispatched on the label)
+        const created = await this.bridge.createDataChannel(this.connectionId, MEDIA_CHANNEL_LABEL, {
+            ordered: true,
+            maxPacketLifeTime: this.mediaChannelOptions.maxPacketLifeTimeMs
+        })
+        if (!created) {
+            logger.warn('bridge could not create the media channel, media stays on the reliable channel')
+        }
     }
 
     public setConnectionId(connectionId: ConnectionID): void {
@@ -335,6 +409,9 @@ export class WorkerWebrtcConnection
             const info = await this.bridge.getConnectionInfo(this.connectionId)
             if (info !== undefined) {
                 info.ms = Date.now() - this.constructedAt
+                info.mediaChannel = (this.mediaChannel === undefined && !this.mediaChannelClosed)
+                    ? 'none'
+                    : (this.channels.isOpen('media') ? 'open' : 'closed')
             }
             return info
         } catch {
@@ -344,12 +421,12 @@ export class WorkerWebrtcConnection
 
     /** Synchronous send-queue snapshot (see IConnection.getStatistics). */
     public getStatistics(): SendQueueStatistics | undefined {
-        return this.closed ? undefined : this.sendQueue.getStatistics()
+        return this.closed ? undefined : this.channels.getStatistics()
     }
 
     // ── DataChannel handling (runs entirely in the worker) ──────
 
-    private recordRecv(bytes: number): void {
+    private recordRecv(bytes: number, channel: SendQueueChannel): void {
         if (!isGapDiagnosticsEnabled() && !(globalThis as any).__dhtGapDiagEnabled) {
             return
         }
@@ -365,7 +442,7 @@ export class WorkerWebrtcConnection
                         layer: 'dht.dc.recvGap',
                         timestampMs: now,
                         deltaMs: +delta.toFixed(1),
-                        detail: { conn, bytes },
+                        detail: { conn, bytes, ch: channel === 'media' ? 'm' : 'r' },
                     }))
                 } catch (_e) { /* ignore */ }
             }
@@ -401,10 +478,53 @@ export class WorkerWebrtcConnection
         }
     }
 
-    private setupDataChannel(dataChannel: RTCDataChannel): void {
-        this.dataChannel = dataChannel
-        this.dataChannel.binaryType = 'arraybuffer'
-        this.dataChannel.bufferedAmountLowThreshold = this.bufferThresholdLow
+    /** a channel transferred from the main thread: ours (offerer) or the peer's (answerer) */
+    private onDataChannel(channel: RTCDataChannel): void {
+        if (channel.label === RELIABLE_CHANNEL_LABEL) {
+            this.setupReliableChannel(channel)
+            // If the channel was already open at transfer time
+            if (channel.readyState === 'open') {
+                this.onDataChannelOpen()
+            }
+        } else if (channel.label === MEDIA_CHANNEL_LABEL) {
+            if (!this.mediaChannelOptions.enabled || this.mediaChannel !== undefined) {
+                logger.warn(`unexpected media channel (enabled=${this.mediaChannelOptions.enabled}), closing it`)
+                try {
+                    channel.close()
+                } catch {
+                    // ignore
+                }
+                return
+            }
+            this.setupMediaChannel(channel)
+        } else {
+            logger.warn(`unknown data channel label "${channel.label}", closing it`)
+            try {
+                channel.close()
+            } catch {
+                // ignore
+            }
+        }
+    }
+
+    private wireMessages(dataChannel: RTCDataChannel, channel: SendQueueChannel): void {
+        dataChannel.onmessage = (msg) => {
+            logger.trace('dc.onmessage (worker)')
+            logGapDiagnosticSampled('dht.dc.onmessage')
+            this.recordRecv(
+                msg.data instanceof ArrayBuffer ? msg.data.byteLength : 0,
+                channel
+            )
+            const t0 = performance.now()
+            this.emit('data', new Uint8Array(msg.data))
+            recordDcProcessing(performance.now() - t0)
+        }
+    }
+
+    private setupReliableChannel(dataChannel: RTCDataChannel): void {
+        this.reliableChannel = dataChannel
+        dataChannel.binaryType = 'arraybuffer'
+        dataChannel.bufferedAmountLowThreshold = this.bufferThresholdLow
 
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen (worker)')
@@ -420,26 +540,44 @@ export class WorkerWebrtcConnection
             logger.warn('Data channel error (worker)', { err })
         }
 
-        dataChannel.onmessage = (msg) => {
-            logger.trace('dc.onmessage (worker)')
-            logGapDiagnosticSampled('dht.dc.onmessage')
-            this.recordRecv(
-                msg.data instanceof ArrayBuffer ? msg.data.byteLength : 0,
-            )
-            const t0 = performance.now()
-            this.emit('data', new Uint8Array(msg.data))
-            recordDcProcessing(performance.now() - t0)
-        }
+        this.wireMessages(dataChannel, 'reliable')
 
         dataChannel.onbufferedamountlow = () => {
             logger.trace('dc.onBufferedAmountLow (worker)')
-            this.sendQueue.flush()
+            this.channels.flush('reliable')
+        }
+    }
+
+    private setupMediaChannel(dataChannel: RTCDataChannel): void {
+        this.mediaChannel = dataChannel
+        dataChannel.binaryType = 'arraybuffer'
+        dataChannel.bufferedAmountLowThreshold = this.mediaChannelOptions.bufferThresholdLow
+        const markOpen = () => {
+            logger.trace('media dc.onOpen (worker)')
+            this.channels.setOpen('media', true)
+        }
+        dataChannel.onopen = markOpen
+        if (dataChannel.readyState === 'open') {
+            markOpen()
+        }
+        dataChannel.onclose = () => {
+            logger.debug('media channel closed, media falls back to the reliable channel')
+            this.mediaChannelClosed = true
+            this.channels.detachMedia()
+        }
+        dataChannel.onerror = (err) => {
+            logger.warn('Media channel error (worker)', { err })
+        }
+        this.wireMessages(dataChannel, 'media')
+        dataChannel.onbufferedamountlow = () => {
+            this.channels.flush('media')
         }
     }
 
     private onDataChannelOpen(): void {
         this.connected = true
-        this.sendQueue.flush()
+        this.channels.setOpen('reliable', true)
+        this.channels.flush('reliable')
         this.emit('connected')
     }
 
@@ -449,21 +587,24 @@ export class WorkerWebrtcConnection
         if (!this.closed) {
             this.closed = true
             this.connected = false
-            this.sendQueue.clear()
+            this.channels.clear()
             clearTimeout(this.earlyTimeout)
 
             this.stopListening()
             this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
 
-            if (this.dataChannel !== undefined) {
-                try {
-                    this.dataChannel.close()
-                } catch (err) {
-                    logger.warn('Failed to close data channel (worker)', { err })
+            for (const channel of [this.mediaChannel, this.reliableChannel]) {
+                if (channel !== undefined) {
+                    try {
+                        channel.close()
+                    } catch (err) {
+                        logger.warn('Failed to close data channel (worker)', { err })
+                    }
                 }
             }
-            this.dataChannel = undefined
+            this.reliableChannel = undefined
+            this.mediaChannel = undefined
 
             // Tell the main-thread bridge to tear down the RTCPeerConnection.
             // Fire-and-forget — we don't block on this.
@@ -476,12 +617,14 @@ export class WorkerWebrtcConnection
     }
 
     private stopListening(): void {
-        if (this.dataChannel !== undefined) {
-            this.dataChannel.onopen = null
-            this.dataChannel.onclose = null
-            this.dataChannel.onerror = null
-            this.dataChannel.onbufferedamountlow = null
-            this.dataChannel.onmessage = null
+        for (const channel of [this.reliableChannel, this.mediaChannel]) {
+            if (channel !== undefined) {
+                channel.onopen = null
+                channel.onclose = null
+                channel.onerror = null
+                channel.onbufferedamountlow = null
+                channel.onmessage = null
+            }
         }
     }
 }

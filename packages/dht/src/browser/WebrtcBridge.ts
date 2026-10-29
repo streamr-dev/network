@@ -13,6 +13,7 @@
  * the worker's event loop — the main thread never touches data traffic.
  */
 import * as Comlink from 'comlink'
+import { RELIABLE_CHANNEL_LABEL } from '../connection/webrtc/consts'
 
 import { ConnectionInfo } from '../connection/ConnectionDiagnostics'
 import { getRtcConnectionInfo } from './rtcConnectionInfo'
@@ -24,8 +25,10 @@ export interface WebrtcBridgeCallbacks {
     onLocalDescription(description: string, type: string): void
     onConnectionStateChange(state: string): void
     /**
-     * Called exactly once per connection.  The RTCDataChannel is
-     * **transferred** (not cloned) so the worker receives sole ownership.
+     * Called once per data channel of the connection (the reliable channel,
+     * and the media channel when one is created or received later). The
+     * RTCDataChannel is **transferred** (not cloned) so the worker receives
+     * sole ownership; the worker dispatches on `channel.label`.
      */
     onDataChannel(channel: RTCDataChannel): void
 }
@@ -68,6 +71,15 @@ export interface WebrtcBridgeApi {
     ): Promise<void>
 
     renameConnection(oldId: string, newId: string): Promise<void>
+
+    /**
+     * Create an additional data channel on an existing RTCPeerConnection
+     * (in-band DCEP open, no renegotiation) and transfer it to the worker
+     * through `onDataChannel` in the same task — a channel can only be
+     * transferred before it is used. Resolves false if the connection is
+     * unknown or the channel could not be created.
+     */
+    createDataChannel(connectionId: string, label: string, init: RTCDataChannelInit): Promise<boolean>
 
     /**
      * Selected ICE candidate pair (+ RTT) of the connection's
@@ -147,7 +159,7 @@ export class WebrtcBridge implements WebrtcBridgeApi {
                 conn.makingOffer = false
             }
 
-            const dc = pc.createDataChannel('streamrDataChannel')
+            const dc = pc.createDataChannel(RELIABLE_CHANNEL_LABEL)
             // Transfer DataChannel ownership to the worker immediately.
             // The worker will attach onopen/onclose/onmessage handlers.
             callbacks.onDataChannel(
@@ -227,6 +239,22 @@ export class WebrtcBridge implements WebrtcBridgeApi {
         if (conn) {
             this.connections.delete(oldId)
             this.connections.set(newId, conn)
+        }
+    }
+
+    async createDataChannel(connectionId: string, label: string, init: RTCDataChannelInit): Promise<boolean> {
+        const conn = this.connections.get(connectionId)
+        if (!conn) {
+            return false
+        }
+        try {
+            const dc = conn.pc.createDataChannel(label, init)
+            conn.callbacks.onDataChannel(
+                Comlink.transfer(dc, [dc]) as unknown as RTCDataChannel
+            )
+            return true
+        } catch (_err) {
+            return false
         }
     }
 

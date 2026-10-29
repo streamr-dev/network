@@ -8,7 +8,7 @@ import { PortRange, TlsCertificate } from './ConnectionManager'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { WebrtcConnector } from './webrtc/WebrtcConnector'
-import type { IceServer } from './webrtc/types'
+import type { IceServer, WebrtcMediaChannelOptions } from './webrtc/types'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorOptions } from './websocket/WebsocketServerConnector'
@@ -40,6 +40,7 @@ export interface DefaultConnectorFacadeOptions {
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
+    webrtcMediaChannel?: WebrtcMediaChannelOptions
     externalIp?: string
     webrtcPortRange?: PortRange
     maxMessageSize?: number
@@ -108,6 +109,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             allowPrivateAddresses: this.options.webrtcAllowPrivateAddresses,
             bufferThresholdLow: this.options.webrtcDatachannelBufferThresholdLow,
             bufferThresholdHigh: this.options.webrtcDatachannelBufferThresholdHigh,
+            mediaChannel: this.options.webrtcMediaChannel,
             externalIp: this.options.externalIp,
             portRange: this.options.webrtcPortRange,
             maxMessageSize: this.options.maxMessageSize
