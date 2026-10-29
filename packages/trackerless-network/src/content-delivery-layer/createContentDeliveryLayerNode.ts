@@ -1,4 +1,4 @@
-import { DhtAddress, ListeningRpcCommunicator, toNodeId, SendQueueHint } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, toNodeId, SendQueueChannel, SendQueueHint } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { DEFAULT_NEIGHBOR_UPDATE_INTERVAL, NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -39,6 +39,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
         plumtreeOptimization?: boolean
         plumtreeMaxPausedNeighbors?: number
         maxSendQueueAgeMs?: number
+        channel?: SendQueueChannel
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
@@ -81,7 +82,8 @@ const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): Str
     // neighbor's backlog can be withdrawn when it leaves the part
     const sendQueueHint: SendQueueHint = {
         purgeKey: options.streamPartId,
-        maxQueueAgeMs: options.maxSendQueueAgeMs
+        maxQueueAgeMs: options.maxSendQueueAgeMs,
+        channel: options.channel
     }
     const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,

@@ -101,7 +101,41 @@ describe('ContentDeliveryLayerNode', () => {
                 randomUserId()
             ))
             await until(() => calls.length === 1)
-            expect(calls[0][2]).toEqual({ purgeKey: 'stream#3', maxQueueAgeMs: 2500 })
+            expect(calls[0][2]).toEqual({ purgeKey: 'stream#3', maxQueueAgeMs: 2500, channel: undefined })
+        } finally {
+            node.stop()
+        }
+    })
+
+    it('a media stream part hints every propagated message onto the media channel', async () => {
+        const node = createContentDeliveryLayerNode({
+            transport,
+            localPeerDescriptor: createMockPeerDescriptor(),
+            discoveryLayerNode,
+            connectionLocker: mockConnectionLocker,
+            handshaker: new MockHandshaker() as any,
+            neighborUpdateManager: new MockNeighborUpdateManager() as any,
+            neighborFinder: new MockNeighborFinder() as any,
+            streamPartId: StreamPartIDUtils.parse('stream#3'),
+            isLocalNodeEntryPoint: () => false,
+            maxSendQueueAgeMs: 2500,
+            channel: 'media'
+        })
+        await node.start()
+        try {
+            const mockRemote = createMockContentDeliveryRpcRemote()
+            const calls: unknown[][] = []
+            mockRemote.sendStreamMessage = async (...args: unknown[]) => {
+                calls.push(args)
+            }
+            ;(node as any).options.neighbors.add(mockRemote)
+            node.broadcast(createStreamMessage(
+                JSON.stringify({ hello: 'world' }),
+                StreamPartIDUtils.parse('stream#3'),
+                randomUserId()
+            ))
+            await until(() => calls.length === 1)
+            expect(calls[0][2]).toEqual({ purgeKey: 'stream#3', maxQueueAgeMs: 2500, channel: 'media' })
         } finally {
             node.stop()
         }

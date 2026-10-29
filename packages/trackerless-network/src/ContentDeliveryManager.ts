@@ -7,8 +7,7 @@ import {
     ITransport,
     PeerDescriptor,
     toDhtAddress,
-    toNodeId
-} from '@streamr/dht'
+    toNodeId, SendQueueChannel } from '@streamr/dht'
 import {
     computeSha1,
     Logger,
@@ -96,6 +95,15 @@ export interface StreamPartDeliveryOptions {
      * for stream parts whose every message matters.
      */
     maxSendQueueAgeMs?: number
+    /**
+     * Which data channel of a WebRTC connection carries this stream part's
+     * messages: 'media' = the ordered, partially reliable media channel (a
+     * message not delivered within the channel's lifetime is abandoned
+     * instead of blocking everything behind it; falls back to the reliable
+     * channel towards peers without one), undefined/'reliable' = the
+     * reliable channel. Only for live media.
+     */
+    channel?: SendQueueChannel
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -317,6 +325,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             suppressOwnMessageLoopback: this.options.suppressOwnMessageLoopback,
             plumtreeOptimization: streamPartDeliveryOptions?.plumtreeOptimization?.enabled,
             maxSendQueueAgeMs: streamPartDeliveryOptions?.maxSendQueueAgeMs,
+            channel: streamPartDeliveryOptions?.channel,
             plumtreeMaxPausedNeighbors: 
                 streamPartDeliveryOptions?.plumtreeOptimization?.enabled === true ? 
                     streamPartDeliveryOptions?.plumtreeOptimization?.maxPausedNeighbors : undefined
